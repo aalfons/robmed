@@ -33,7 +33,9 @@ print.sobelMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   cat("\nIndirect effect (ab path)\n")
   ab <- t(c(x$ab, x$se, x$statistic, x$pValue))
   m <- names(x$data)[3]
-  dimnames(ab) <- list(m, c("Estimate", "Std. Error", "z value", "Pr(>|z|)"))
+  pn <- switch(x$alternative, twosided="Pr(>|z|)", 
+               less="Pr(<z)", greater="Pr(>z)")
+  dimnames(ab) <- list(m, c("Estimate", "Std. Error", "z value", pn))
   printCoefmat(ab, digits=digits, ...)
   # return object invisibly
   invisible(x)

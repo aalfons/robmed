@@ -4,9 +4,10 @@
 \alias{summary.sobelMA}
 \title{(Robust) mediation analysis}
 \usage{
-  mediate(x, y, m, method = c("boot", "sobel"), R = 5000,
-    alpha = 0.05, robust = TRUE, transform = FALSE,
-    control, ...)
+  mediate(x, y, m, method = c("boot", "sobel"),
+    alternative = c("twosided", "less", "greater"),
+    R = 5000, alpha = 0.05, robust = TRUE,
+    transform = FALSE, control, ...)
 }
 \arguments{
   \item{x}{the explanatory variable.}

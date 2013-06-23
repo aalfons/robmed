@@ -31,9 +31,10 @@
 #' 
 #' @export
 
-mediate <- function(x, y, m, method = c("boot", "sobel"), R = 5000, 
-                    alpha = 0.05, robust = TRUE, transform = FALSE, 
-                    control, ...) {
+mediate <- function(x, y, m, method = c("boot", "sobel"), 
+                    alternative = c("twosided", "less", "greater"), 
+                    R = 5000, alpha = 0.05, robust = TRUE, 
+                    transform = FALSE, control, ...) {
   ## initializations
   # prepare data frame containing all variables with original names
   x <- substitute(x)
@@ -48,6 +49,7 @@ mediate <- function(x, y, m, method = c("boot", "sobel"), R = 5000,
   if(n <= 3) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
+  alternative <- match.arg(alternative)
   robust <- isTRUE(robust)
   transform <- isTRUE(transform)
   if(robust && missing(control)) {
@@ -134,11 +136,18 @@ mediate <- function(x, y, m, method = c("boot", "sobel"), R = 5000,
     }
     # extract bootstrap replicates and confidence interval for indirect effect
     reps <- bootstrap$t
-    ci <- boot.ci(bootstrap, conf=1-alpha, type="perc")
+    if(alternative == "twosided") {
+      ci <- boot.ci(bootstrap, conf=1-alpha, type="perc")$percent[4:5]
+    } else {
+      ci <- boot.ci(bootstrap, conf=1-2*alpha, type="perc")$percent[4:5]
+      if(alternative == "less") ci[1] <- -Inf
+      else ci[2] <- Inf
+    }
     # construct return object
-    result <- list(ab=mean(reps, na.rm=TRUE), ci=ci$percent[4:5], reps=reps, 
-                   R=R, alpha=alpha, robust=robust, transform=transform, 
-                   fitYX=fitYX, fitMX=fitMX, fitYMX=fitYMX, data=data)
+    result <- list(ab=mean(reps, na.rm=TRUE), ci=ci, reps=reps, R=R, 
+                   alpha=alpha, alternative=alternative, robust=robust, 
+                   transform=transform, fitYX=fitYX, fitMX=fitMX, 
+                   fitYMX=fitYMX, data=data)
     class(result) <- "bootMA"
   } else {
     ## Sobel test
@@ -153,11 +162,12 @@ mediate <- function(x, y, m, method = c("boot", "sobel"), R = 5000,
     ab <- a * b
     se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
     z <- ab / se
-    pValue <- 1 - pnorm(abs(z))
+    pValue <- switch(alternative, twosided=2*pnorm(-abs(z)), less=pnorm(z), 
+                     greater=pnorm(z, lower.tail=FALSE))
     # construct return item
-    result <- list(ab=ab, se=se, statistic=z, pValue=pValue, robust=robust, 
-                   transform=transform, fitYX=fitYX, fitMX=fitMX, 
-                   fitYMX=fitYMX, data=data)
+    result <- list(ab=ab, se=se, statistic=z, pValue=pValue, 
+                   alternative=alternative, robust=robust, transform=transform, 
+                   fitYX=fitYX, fitMX=fitMX, fitYMX=fitYMX, data=data)
     class(result) <- "sobelMA"
   }
   ## return test results
@@ -170,8 +180,7 @@ localBoot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
 # psi function (derivative of the rho function) as used by lmrob()
 psi <- function(x, control, derivative = 0) {
-  robustbase:::lmrob.psifun(x, cc=control$tuning.psi, psi=control$psi, 
-                            deriv=derivative)
+  Mpsi(x, cc=control$tuning.psi, psi=control$psi, deriv=derivative)
 }
 
 # get control arguments for psi function as used in a given model fit
