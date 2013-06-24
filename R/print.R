@@ -43,7 +43,10 @@ print.sobelMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
 
 
 #' @S3method print summaryMA
-print.summaryMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
+print.summaryMA <- function(x, digits = max(3, getOption("digits")-3), 
+                            signif.stars = getOption("show.signif.stars"), 
+                            signif.legend = signif.stars, ...) {
+  # print information on data
   nam <- names(x$object$data)
   cat("\nIndependent, dependent and proposed mediator variables:\n")
   cat(sprintf("x = %s\n", nam[1]))
@@ -56,15 +59,17 @@ print.summaryMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   bc <- x$summaryYMX$coefficients[-1, , drop=FALSE]
   cPrime <- x$summaryYX$coefficients[-1, , drop=FALSE]
   cat("---\nEffect of x on m (a path)\n")
-  printCoefmat(a, digits=digits, signif.legend=FALSE, ...)
+  printCoefmat(a, digits=digits, signif.stars=signif.stars, 
+               signif.legend=FALSE, ...)
   cat("\nDirect effect of m on y (b path)\n")
-  printCoefmat(bc[1, , drop=FALSE], digits=digits, signif.legend=FALSE, ...)
+  printCoefmat(bc[1, , drop=FALSE], digits=digits, signif.stars=signif.stars, 
+               signif.legend=FALSE, ...)
   cat("\nTotal effect of x on y (c' path)\n")
-  printCoefmat(cPrime, digits=digits, signif.legend=FALSE, ...)
+  printCoefmat(cPrime, digits=digits, signif.stars=signif.stars, 
+               signif.legend=FALSE, ...)
   cat("\nDirect effect of x on y (c path)\n")
-  printCoefmat(bc[2, , drop=FALSE], digits=digits, 
-               signif.legend=inherits(x$object, "bootMA"), 
-               ...)
+  printCoefmat(bc[2, , drop=FALSE], digits=digits, signif.stars=signif.stars, 
+               signif.legend=FALSE, ...)
   # print model summary for y ~ m + x
   s <- x$summaryYMX
   cat("---\nModel summary for y ~ m + x\n")
@@ -87,7 +92,12 @@ print.summaryMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   }
   # print indirect effect
   cat("---\n")
-  print(x$object, digits=digits, ...)
+  print(x$object, digits=digits, signif.stars=signif.stars, 
+        signif.legend=FALSE, ...)
+  # print legend for significance stars
+  if(isTRUE(signif.stars) && isTRUE(signif.legend)) {
+    cat("---\nSignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1\n")
+  }
   # return object invisibly
   invisible(x)
 }
