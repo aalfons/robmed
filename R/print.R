@@ -96,7 +96,8 @@ print.summaryMA <- function(x, digits = max(3, getOption("digits")-3),
         signif.legend=FALSE, ...)
   # print legend for significance stars
   if(isTRUE(signif.stars) && isTRUE(signif.legend)) {
-    cat("---\nSignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1\n")
+    cat("---\nSignif. codes:  0", sQuote("***"), "0.001", sQuote("**"), 
+        "0.01", sQuote("*"), "0.05", sQuote("."), "0.1", sQuote(" "), "1\n")
   }
   # return object invisibly
   invisible(x)
