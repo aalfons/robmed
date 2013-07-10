@@ -76,6 +76,8 @@ mediate <- function(x, y, m, method = c("boot", "sobel"),
   }
   ## perform mediation analysis
   if(method == "boot") {
+    alpha <- rep(as.numeric(alpha), length.out=1)
+    if(is.na(alpha) || alpha < 0 || alpha > 1) alpha <- formals()$alpha
     ## bootstrap test
     if(robust && !transform) {
       # extract (square root of) robustness weights and combine data into matrix
@@ -134,18 +136,11 @@ mediate <- function(x, y, m, method = c("boot", "sobel"),
         unname(coefMi[2]) * unname(coefYi[2])
       }, R=R, ...)
     }
-    # extract bootstrap replicates and confidence interval for indirect effect
-    reps <- bootstrap$t
-    if(alternative == "twosided") {
-      ci <- boot.ci(bootstrap, conf=1-alpha, type="perc")$percent[4:5]
-    } else {
-      ci <- boot.ci(bootstrap, conf=1-2*alpha, type="perc")$percent[4:5]
-      if(alternative == "less") ci[1] <- -Inf
-      else ci[2] <- Inf
-    }
+    # extract confidence interval for indirect effect
+    ci <- confint(bootstrap, level=1-alpha, alternative=alternative)
     # construct return object
-    result <- list(ab=mean(reps, na.rm=TRUE), ci=ci, reps=reps, R=R, 
-                   alpha=alpha, alternative=alternative, robust=robust, 
+    result <- list(ab=mean(bootstrap$t, na.rm=TRUE), ci=ci, reps=bootstrap, 
+                   R=R, alpha=alpha, alternative=alternative, robust=robust, 
                    transform=transform, fitYX=fitYX, fitMX=fitMX, 
                    fitYMX=fitYMX, data=data)
     class(result) <- "bootMA"
@@ -162,8 +157,7 @@ mediate <- function(x, y, m, method = c("boot", "sobel"),
     ab <- a * b
     se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
     z <- ab / se
-    pValue <- switch(alternative, twosided=2*pnorm(-abs(z)), less=pnorm(z), 
-                     greater=pnorm(z, lower.tail=FALSE))
+    pValue <- pvalZ(z, alternative=alternative)
     # construct return item
     result <- list(ab=ab, se=se, statistic=z, pValue=pValue, 
                    alternative=alternative, robust=robust, transform=transform, 
@@ -174,20 +168,29 @@ mediate <- function(x, y, m, method = c("boot", "sobel"),
   result
 }
 
-# wrapper function for boot() that ignores unused arguments, but allows 
-# arguments for parallel computing to be passed down
+## wrapper function for boot() that ignores unused arguments, but allows 
+## arguments for parallel computing to be passed down
 localBoot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
-# psi function (derivative of the rho function) as used by lmrob()
+## psi function (derivative of the rho function) as used by lmrob()
 psi <- function(x, control, derivative = 0) {
   Mpsi(x, cc=control$tuning.psi, psi=control$psi, deriv=derivative)
 }
 
-# get control arguments for psi function as used in a given model fit
+## get control arguments for psi function as used in a given model fit
 getPsiControl <- function(object) object$control[c("tuning.psi", "psi")]
 
-# compute matrix for linear correction
+## compute matrix for linear correction
 correctionMatrix <- function(X, weights, residuals, scale, psiControl) {
   tmp <- psi(residuals / scale, control=psiControl, derivative=1)
   solve(crossprod(X, tmp * X)) %*% crossprod(weights * X)
+}
+
+## internal function to compute p-value based on normal distribution
+pvalZ <- function(z, alternative = c("twosided", "less", "greater")) {
+  # initializations
+  alternative <- match.arg(alternative)
+  # compute p-value
+  switch(alternative, twosided=2*pnorm(-abs(z)), less=pnorm(z), 
+         greater=pnorm(z, lower.tail=FALSE))
 }
