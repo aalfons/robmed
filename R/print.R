@@ -16,7 +16,7 @@ print.bootMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   print(ab, digits=digits, ...)
   # print confidence interval
   cat("\n")
-  cat(format(100 * (1-x$alpha)), "percent confidence interval:\n")
+  cat(format(100 * x$level), "percent confidence interval:\n")
   ci <- t(x$ci)
   dimnames(ci) <- list(m, c("Lower", "Upper"))
   print(ci, digits=digits, ...)

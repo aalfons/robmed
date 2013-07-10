@@ -6,45 +6,10 @@
 #' @method confint bootMA
 #' @export
 
-# confint.bootMA <- function(object, parm = NULL, level = NULL, 
-#                            alternative = c("twosided", "less", "greater"), 
-#                            ...) {
-#   # initializations
-#   if(!is.null(level)) {
-#     level <- rep(as.numeric(level), length.out=1)
-#     if(is.na(level) || level < 0 || level > 1) level <- NULL
-#   }
-#   if(missing(alternative)) alternative <- object$alternative
-#   else alternative <- match.arg(alternative)
-#   recompute <- !(is.null(level) && alternative == object$alternative)
-#   if(is.null(level)) level <- 1 - object$alpha
-#   # confidence interval for indirect effect
-#   if(recompute) ci <- confint(object$reps, level=level, alternative=alternative)
-#   else ci <- object$ci
-#   ci <- t(ci)
-#   rownames(ci) <- "ab"
-#   # confidence interval for other effects
-#   ciYX <- confint(object$fitYX, parm=2, level=level)
-#   rownames(ciYX) <- "c'"
-#   ciMX <- confint(object$fitMX, parm=2, level=level)
-#   rownames(ciMX) <- "a"
-#   ciYMX <- confint(object$fitYMX, parm=2:3, level=level)
-#   rownames(ciYMX) <- c("b", "c")
-#   # combine confidence intervals into one matrix
-#   ci <- rbind(ciMX, ciYMX["b", , drop=FALSE], ciYX, 
-#               ciYMX["c", , drop=FALSE], ci)
-#   if(alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
-#   # if requested, take subset of effects
-#   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
-#   ci
-# }
-
 ## argument 'level' is ignored
 confint.bootMA <- function(object, parm = NULL, level = NULL, ...) {
-  # initializations
-  level <- 1 - object$alpha
   # combine confidence interval of indirect effect with those of other effects
-  ci <- rbind(confintEffects(object, level=level), ab=object$ci)
+  ci <- rbind(confintEffects(object, level=object$level), ab=object$ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
@@ -75,15 +40,17 @@ confint.sobelMA <- function(object, parm = NULL, level = 0.95, ...) {
 ## argument 'parm' is ignored
 confint.boot <- function(object, parm, level = 0.95, 
                          alternative = c("twosided", "less", "greater"), 
-                         ...) {
+                         type = c("bca", "perc"), ...) {
   # initializations
   alternative <- match.arg(alternative)
+  type <- match.arg(type)
+  component <- if(type == "perc") "percent" else type
   # extract confidence interval
   if(alternative == "twosided") {
-    ci <- boot.ci(object, conf=level, type="perc")$percent[4:5]
+    ci <- boot.ci(object, conf=level, type=type)[[component]][4:5]
   } else {
-    alpha <- 1-level
-    ci <- boot.ci(object, conf=1-2*alpha, type="perc")$percent[4:5]
+    alpha <- 1 - level
+    ci <- boot.ci(object, conf=1-2*alpha, type=type)[[component]][4:5]
     if(alternative == "less") ci[1] <- -Inf
     else ci[2] <- Inf
   }

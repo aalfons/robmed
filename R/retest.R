@@ -8,17 +8,20 @@ retest <- function(object, ...) UseMethod("retest")
 
 #' @method retest bootMA
 #' @export
-retest.bootMA <- function(object, alpha = 0.05, 
+retest.bootMA <- function(object, 
                           alternative = c("twosided", "less", "greater"), 
-                          ...) {
+                          level = 0.95, type = c("bca", "perc"), ...) {
   # initializations
-  alpha <- rep(as.numeric(alpha), length.out=1)
-  if(is.na(alpha) || alpha < 0 || alpha > 1) alpha <- formals()$alpha
   alternative <- match.arg(alternative)
+  level <- rep(as.numeric(level), length.out=1)
+  if(is.na(level) || level < 0 || level > 1) level <- formals()$level
+  type <- match.arg(type)
   # recompute confidence interval and modify object
-  object$ci <- confint(object$reps, level=1-alpha, alternative=alternative)
-  object$alpha <- alpha
+  object$ci <- confint(object$reps, level=level, alternative=alternative, 
+                       type=type)
+  object$level <- level
   object$alternative <- alternative
+  object$type <- type
   # return modified object
   object
 }

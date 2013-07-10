@@ -34,7 +34,7 @@ fortify.bootMA <- function(model, data, method = c("dot", "density"),
     ci <- model$ci
     # add additional information as attributes
     attr(data, "mapping") <- aes_string(x="ab")
-    attr(data, "geom") <- geom_density
+    attr(data, "geom") <- function(..., stat) geom_density(..., stat="density")
     attr(data, "main") <- "Bootstrap distribution"
     attr(data, "ci") <- data.frame(ab, lower=ci[1], upper=ci[2])
   }
@@ -82,7 +82,7 @@ fortify.sobelMA <- function(model, data, method = c("dot", "density"),
     data <- data.frame(ab=x, density=y)
     # add additional information as attributes
     attr(data, "mapping") <- aes_string(x="ab", y="density")
-    attr(data, "geom") <- geom_line
+    attr(data, "geom") <- function(..., stat) geom_density(..., stat="identity")
     attr(data, "main") <- "Assumed normal distribution"
     attr(data, "ci") <- data.frame(ab, density=dnorm(ab, mean=ab, sd=se), 
                                    lower=ci[1], upper=ci[2])
