@@ -50,8 +50,7 @@ mediatePlot <- function(object, ...) UseMethod("mediatePlot")
 mediatePlot.bootMA <- function(object, method = c("dot", "density"), 
                                parm = c("c", "ab"), ...) {
   data <- fortify(object, method=method, parm=parm)
-  if(attr(data, "method") == "dot") dotPlot(data, ...)
-  else densityPlot(data, ...)
+  mediatePlot(data, ...)
 }
 
 
@@ -62,8 +61,7 @@ mediatePlot.bootMA <- function(object, method = c("dot", "density"),
 mediatePlot.sobelMA <- function(object, data, method = c("dot", "density"), 
                                 parm = c("c", "ab"), level = 0.95, ...) {
   data <- fortify(object, data=data, method=method, parm=parm, level=level)
-  if(attr(data, "method") == "dot") dotPlot(data, ...)
-  else densityPlot(data, ...)
+  mediatePlot(data, ...)
 }
 
 
@@ -73,7 +71,7 @@ mediatePlot.sobelMA <- function(object, data, method = c("dot", "density"),
 
 mediatePlot.default <- function(object, mapping, ...) {
   # define aesthetic mapping for selected plot
-  if(missing(mapping)) mapping <- attr(data, "mapping")
+  if(missing(mapping)) mapping <- attr(object, "mapping")
   # create selected plot
   if(attr(object, "method") == "dot") dotPlot(object, mapping, ...)
   else densityPlot(object, mapping, ...)
