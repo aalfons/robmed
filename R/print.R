@@ -7,7 +7,7 @@
 print.bootMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   cat("Bootstrap results for indirect effect\n")
   # print indirect effect
-  cat("\nIndirect effect (ab path)\n")
+  cat("\nIndirect effect (ab path):\n")
   a <- unname(coef(x$fitMX)[2])
   b <- unname(coef(x$fitYMX)[2])
   ab <- t(c(a*b, x$ab))
@@ -26,11 +26,20 @@ print.bootMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   invisible(x)
 }
 
+#' @S3method print covHuber
+print.covHuber <- function(x, ...) {
+  cat("Huber-type M-estimator\n")
+  cat("\nLocation estimate:\n")
+  print(x$center)
+  cat("\nScatter matrix estimate:\n")
+  print(x$cov)
+}
+
 #' @S3method print sobelMA
 print.sobelMA <- function(x, digits = max(3, getOption("digits")-3), ...) {
   cat("Normal theory test for indirect effect\n")
   # print indirect effect
-  cat("\nIndirect effect (ab path)\n")
+  cat("\nIndirect effect (ab path):\n")
   ab <- t(c(x$ab, x$se, x$statistic, x$pValue))
   m <- names(x$data)[3]
   pn <- switch(x$alternative, twosided="Pr(>|z|)", 
@@ -58,16 +67,16 @@ print.summaryMA <- function(x, digits = max(3, getOption("digits")-3),
   a <- x$summaryMX$coefficients[-1, , drop=FALSE]
   bc <- x$summaryYMX$coefficients[-1, , drop=FALSE]
   cPrime <- x$summaryYX$coefficients[-1, , drop=FALSE]
-  cat("---\nEffect of x on m (a path)\n")
+  cat("---\nEffect of x on m (a path):\n")
   printCoefmat(a, digits=digits, signif.stars=signif.stars, 
                signif.legend=FALSE, ...)
-  cat("\nDirect effect of m on y (b path)\n")
+  cat("\nDirect effect of m on y (b path):\n")
   printCoefmat(bc[1, , drop=FALSE], digits=digits, signif.stars=signif.stars, 
                signif.legend=FALSE, ...)
-  cat("\nTotal effect of x on y (c' path)\n")
+  cat("\nTotal effect of x on y (c' path):\n")
   printCoefmat(cPrime, digits=digits, signif.stars=signif.stars, 
                signif.legend=FALSE, ...)
-  cat("\nDirect effect of x on y (c path)\n")
+  cat("\nDirect effect of x on y (c path):\n")
   printCoefmat(bc[2, , drop=FALSE], digits=digits, signif.stars=signif.stars, 
                signif.legend=FALSE, ...)
   # print model summary for y ~ m + x

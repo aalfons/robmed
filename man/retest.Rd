@@ -1,0 +1,56 @@
+\name{retest}
+\alias{retest}
+\alias{retest.bootMA}
+\alias{retest.sobelMA}
+\title{Retest for mediation}
+\usage{
+  retest(object, ...)
+
+  \method{retest}{bootMA} (object,
+    alternative = c("twosided", "less", "greater"),
+    level = 0.95, type = c("bca", "perc"), ...)
+
+  \method{retest}{sobelMA} (object,
+    alternative = c("twosided", "less", "greater"), ...)
+}
+\arguments{
+  \item{object}{an object of class \code{"bootMA"} or
+  \code{"sobelMA"} containing results from (robust)
+  mediation analysis, as returned by
+  \code{\link{mediate}}.}
+
+  \item{alternative}{a character string specifying the
+  alternative hypothesis in the test for the indirect
+  effect.  Possible values are \code{"twosided"} (the
+  default), \code{"less"} or \code{"greater"}.}
+
+  \item{level}{numeric; the confidence level of the
+  confidence interval in the bootstrap test.  The default
+  is to compute a 95\% confidence interval.}
+
+  \item{type}{a character string specifying the type of
+  confidence interval to be computed in the bootstrap test.
+  Possible values are \code{"bca"} (the default) for the
+  bias-corrected and accelerated bootstrap, or
+  \code{"perc"} for the percentile bootstrap.}
+
+  \item{\dots}{additional arguments to be passed down to
+  methods.}
+}
+\value{
+  An object of the same class as \code{object} with updated
+  test results (see \code{\link{mediate}}).
+}
+\description{
+  Reperform a (fast and robust) bootstrap test or Sobel's
+  test for the indirect effect based on results from
+  (robust) mediation analysis.
+}
+\author{
+  Andreas Alfons
+}
+\seealso{
+  \code{\link{mediate}}
+}
+\keyword{multivariate}
+

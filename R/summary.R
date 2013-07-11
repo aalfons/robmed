@@ -3,8 +3,8 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
-#' @S3method summary bootMA
-summary.bootMA <- function(object, ...) {
+## internal function
+summaryMA <- function(object, ...) {
   result <- list(object=object, 
                  summaryMX=summary(object$fitMX), 
                  summaryYX=summary(object$fitYX), 
@@ -13,5 +13,10 @@ summary.bootMA <- function(object, ...) {
   result
 }
 
+
+#' @S3method summary bootMA
+summary.bootMA <- summaryMA
+
+
 #' @S3method summary sobelMA
-summary.sobelMA <- summary.bootMA
+summary.sobelMA <- summaryMA

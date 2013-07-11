@@ -3,7 +3,34 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
+#' Confidence intervals for (robust) mediation analysis
+#' 
+#' Extract or compute confidence intervals for coefficients from (robust) 
+#' mediation analysis.
+#' 
 #' @method confint bootMA
+#' 
+#' @param object  an object of class \code{"bootMA"} or \code{"sobelMA"} 
+#' containing results from (robust) mediation analysis, as returned by 
+#' \code{\link{mediate}}.
+#' @param parm  an integer, character or logical vector specifying the 
+#' coefficients for which to extract or compute confidence intervals, or 
+#' \code{NULL} to extract or compute confidence intervals for all coefficients.
+#' @param level  for the \code{"bootMA"} method, this is ignored and the 
+#' confidence level of the bootstrap confidence interval for the indirect 
+#' effect is used.  For the \code{"sobelMA"} method, the confidence level of 
+#' the confidence intervals to be computed.  The default is to compute 95\% 
+#' confidence intervals.
+#' @param \dots  additional arguments are currently ignored.
+#' 
+#' @return A numeric matrix containing the requested confidence intervals.
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link{mediate}}, \code{\link[=coef.bootMA]{coef}}
+#' 
+#' @keywords utilities
+#' 
 #' @export
 
 ## argument 'level' is ignored
@@ -17,6 +44,7 @@ confint.bootMA <- function(object, parm = NULL, level = NULL, ...) {
 }
 
 
+#' @rdname confint.bootMA
 #' @method confint sobelMA
 #' @export
 

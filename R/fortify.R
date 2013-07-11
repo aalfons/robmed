@@ -3,7 +3,43 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
+#' Convert (robust) mediation analysis results into a data frame for plotting
+#' 
+#' Supplement the estimated coefficients with other useful information for 
+#' informative visualization of the (robust) mediation analysis results.  It is 
+#' thereby possible to construct data frames for dot plots of selected 
+#' coefficients, as well as density plots of the indirect effect.
+#' 
 #' @method fortify bootMA
+#' 
+#' @param model  an object of class \code{"bootMA"} or \code{"sobelMA"} 
+#' containing results from (robust) mediation analysis, as returned by 
+#' \code{\link{mediate}}.
+#' @param data  for the \code{"bootMA"} method, this is currently ignored.  For 
+#' the \code{"sobelMA"} method, this is an optional numeric vector containing 
+#' the \eqn{x}-values at which to evaluate the assumed normal density from 
+#' Sobel's test (only used in case of a density plot).  The default is to take 
+#' 100 equally spaced points between the estimated indirect effect 
+#' \eqn{\pm}{+/-} three times the standard error according to Sobel's formula.
+#' @param method  a character string specifying for which plot to construct the 
+#' data frame.  Possible values are \code{"dot"} for a dot plot of selected 
+#' coefficients, or \code{"density"} for a density plot of the indirect effect.
+#' @param parm  a character string specifying the coefficients to be included 
+#' in a dot plot.  The default is to include the direct and the indirect effect.
+#' @param level  numeric;  the confidence level of the confidence intervals 
+#' from Sobel's test to be included in a dot plot.  The default is to include 
+#' 95\% confidence intervals.
+#' @param \dots  additional arguments are currently ignored.
+#' 
+#' @return A data frame containing the necessary data for the selected plot, as 
+#' well as additional information stored in attributes.
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link{mediate}}, \code{\link[=mediatePlot]{plot}}
+#' 
+#' @keywords utilities
+#' 
 #' @import ggplot2
 #' @export
 
@@ -22,6 +58,7 @@ fortify.bootMA <- function(model, data, method = c("dot", "density"),
     # construct data frame
     data <- data.frame(effect=factor(effect, levels=effect), 
                        point=coef[effect], ci)
+    rownames(data) <- NULL
     # add additional information as attributes
     attr(data, "mapping") <- aes_string(x="effect", y="point", 
                                         ymin="lower", ymax="upper")
@@ -44,6 +81,7 @@ fortify.bootMA <- function(model, data, method = c("dot", "density"),
 }
 
 
+#' @rdname fortify.bootMA
 #' @method fortify sobelMA
 #' @import ggplot2
 #' @export
@@ -65,6 +103,7 @@ fortify.sobelMA <- function(model, data, method = c("dot", "density"),
     # construct data frame
     data <- data.frame(effect=factor(effect, levels=effect), 
                        point=coef[effect], ci)
+    rownames(data) <- NULL
     # add additional information as attributes
     attr(data, "mapping") <- aes_string(x="effect", y="point", 
                                         ymin="lower", ymax="upper")

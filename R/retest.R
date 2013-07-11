@@ -3,11 +3,43 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
+#' Retest for mediation
+#' 
+#' Reperform a (fast and robust) bootstrap test or Sobel's test for the 
+#' indirect effect based on results from (robust) mediation analysis.
+#' 
+#' @param object  an object of class \code{"bootMA"} or \code{"sobelMA"} 
+#' containing results from (robust) mediation analysis, as returned by 
+#' \code{\link{mediate}}.
+#' @param alternative  a character string specifying the alternative hypothesis 
+#' in the test for the indirect effect.  Possible values are \code{"twosided"} 
+#' (the default), \code{"less"} or \code{"greater"}.
+#' @param level  numeric; the confidence level of the confidence interval in 
+#' the bootstrap test.  The default is to compute a 95\% confidence interval.
+#' @param type  a character string specifying the type of confidence interval 
+#' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the 
+#' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"} 
+#' for the percentile bootstrap.
+#' @param \dots  additional arguments to be passed down to methods.
+#' 
+#' @return An object of the same class as \code{object} with updated test 
+#' results (see \code{\link{mediate}}).
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link{mediate}}
+#' 
+#' @keywords multivariate
+#' 
 #' @export
+
 retest <- function(object, ...) UseMethod("retest")
 
+
+#' @rdname retest
 #' @method retest bootMA
 #' @export
+
 retest.bootMA <- function(object, 
                           alternative = c("twosided", "less", "greater"), 
                           level = 0.95, type = c("bca", "perc"), ...) {
@@ -26,8 +58,11 @@ retest.bootMA <- function(object,
   object
 }
 
+
+#' @rdname retest
 #' @method retest sobelMA
 #' @export
+
 retest.sobelMA <- function(object, 
                            alternative = c("twosided", "less", "greater"), 
                            ...) {
