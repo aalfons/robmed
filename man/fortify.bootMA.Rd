@@ -1,5 +1,6 @@
 \name{fortify.bootMA}
 \alias{fortify.bootMA}
+\alias{fortify.list}
 \alias{fortify.sobelMA}
 \title{Convert (robust) mediation analysis results into a data frame for plotting}
 \usage{
@@ -9,6 +10,8 @@
   \method{fortify}{sobelMA} (model, data,
     method = c("dot", "density"), parm = c("c", "ab"),
     level = 0.95, ...)
+
+  \method{fortify}{list} (model, data, ...)
 }
 \arguments{
   \item{model}{an object of class \code{"bootMA"} or

@@ -10,7 +10,8 @@
 #' 
 #' @param object,x  an object of class \code{"bootMA"} or \code{"sobelMA"} 
 #' containing results from (robust) mediation analysis, as returned by 
-#' \code{\link{mediate}}.
+#' \code{\link{mediate}}.  For \code{mediatePlot}, a list of such objects may 
+#' be supplied as well.
 #' @param data  an optional numeric vector containing the \eqn{x}-values at 
 #' which to evaluate the assumed normal density from Sobel's test (only used in 
 #' case of a density plot).  The default is to take 100 equally spaced points 
@@ -26,6 +27,10 @@
 #' 95\% confidence intervals.
 #' @param mapping  an aesthetic mapping to override the default behavior (see 
 #' \code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_string}}).
+#' @param facets  a faceting formula to override the default behavior (only 
+#' used in case of a dot plot).  If supplied, \code{\link[ggplot2]{facet_wrap}} 
+#' or \code{\link[ggplot2]{facet_grid}} is called depending on whether the 
+#' formula is one-sided or two-sided.
 #' @param \dots  additional arguments to be passed to and from methods.
 #' 
 #' @return An object of class \code{"ggplot"} (see 
@@ -66,14 +71,23 @@ mediatePlot.sobelMA <- function(object, data, method = c("dot", "density"),
 
 
 #' @rdname mediatePlot
+#' @method mediatePlot list
+#' @export
+
+mediatePlot.list <- function(object, data, ...) {
+  data <- fortify(object, data=data, ...)
+  mediatePlot(data, ...)
+}
+
+
+#' @rdname mediatePlot
 #' @method mediatePlot default
 #' @export
 
-mediatePlot.default <- function(object, mapping, ...) {
-  # define aesthetic mapping for selected plot
-  if(missing(mapping)) mapping <- attr(object, "mapping")
+mediatePlot.default <- function(object, mapping = attr(object, "mapping"), 
+                                facets = attr(object, "facets"), ...) {
   # create selected plot
-  if(attr(object, "method") == "dot") dotPlot(object, mapping, ...)
+  if(attr(object, "method") == "dot") dotPlot(object, mapping, facets, ...)
   else densityPlot(object, mapping, ...)
 }
 
@@ -107,10 +121,17 @@ plot.sobelMA <- function(x, ...) mediatePlot(x, ...)
 
 
 ## internal function for dot plot
-dotPlot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL, ...) {
+dotPlot <- function(data, mapping, facets, main = NULL, 
+                    xlab = NULL, ylab = NULL, ...) {
   # generate plot
   geom <- attr(data, "geom")
-  ggplot(data, mapping) + geom(...) + labs(title=main, x=xlab, y=ylab)
+  p <- ggplot(data, mapping) + geom(...) + labs(title=main, x=xlab, y=ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2) p <- p + facet_wrap(facets) 
+    else p <- p + facet_grid(facets)
+  }
+  p
 }
 
 
@@ -123,11 +144,17 @@ densityPlot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL,
   if(is.null(ylab)) ylab <- "Density"
   # extract point estimate and confidence interval
   ci <- attr(data, "ci")
+  if("Method" %in% names(data)) {
+    mappingLine <- aes_string(xintercept="ab", color="Method")
+    mappingRect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf, 
+                              fill="Method")
+  } else {
+    mappingLine <- aes_string(xintercept="ab")
+    mappingRect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf)
+  }
   # generate plot
   geom <- attr(data, "geom")
-  ggplot(data, mapping) + geom(...) + 
-    geom_vline(aes_string(xintercept="ab"), data=ci, ...) + 
-    geom_rect(aes_string(xmin="lower", xmax="upper", ymin=-Inf, ymax=Inf), 
-              data=ci, col=NA, alpha=0.2, ...) + 
+  ggplot(data, mapping) + geom(...) + geom_vline(mappingLine, data=ci, ...) + 
+    geom_rect(mappingRect, data=ci, color=NA, alpha=0.2, ...) + 
     labs(title=main, x=xlab, y=ylab)
 }

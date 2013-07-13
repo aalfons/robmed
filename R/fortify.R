@@ -54,26 +54,28 @@ fortify.bootMA <- function(model, data, method = c("dot", "density"),
     # extract confidence intervals
     ci <- confint(model, parm=parm)
     effect <- rownames(ci)
-    dimnames(ci) <- list(NULL, c("lower", "upper"))
+    dimnames(ci) <- list(NULL, c("Lower", "Upper"))
     # construct data frame
-    data <- data.frame(effect=factor(effect, levels=effect), 
-                       point=coef[effect], ci)
+    data <- data.frame(Effect=factor(effect, levels=effect), 
+                       Point=coef[effect], ci)
     rownames(data) <- NULL
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="effect", y="point", 
-                                        ymin="lower", ymax="upper")
+    attr(data, "mapping") <- aes_string(x="Effect", y="Point", 
+                                        ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
-    # construct data frame containing bootstrap replicates
-    data <- data.frame(ab=model$reps$t)
+    # construct data frame containing bootstrap density
+    pdf <- density(model$reps$t)
+    data <- data.frame(ab=pdf$x, Density=pdf$y)
     # extract point estimate and confidence interval
     ab <- model$ab
     ci <- model$ci
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="ab")
-    attr(data, "geom") <- function(..., stat) geom_density(..., stat="density")
+    attr(data, "mapping") <- aes_string(x="ab", y="Density")
+    attr(data, "geom") <- function(..., stat) geom_density(..., stat="identity")
     attr(data, "main") <- "Bootstrap distribution"
-    attr(data, "ci") <- data.frame(ab, lower=ci[1], upper=ci[2])
+    attr(data, "ci") <- data.frame(ab, Density=NA_real_, 
+                                   Lower=ci[1], Upper=ci[2])
   }
   # return data frame
   attr(data, "method") <- method
@@ -99,14 +101,14 @@ fortify.sobelMA <- function(model, data, method = c("dot", "density"),
     # extract confidence intervals
     ci <- confint(model, parm=parm, level=level)
     effect <- rownames(ci)
-    dimnames(ci) <- list(NULL, c("lower", "upper"))
+    dimnames(ci) <- list(NULL, c("Lower", "Upper"))
     # construct data frame
-    data <- data.frame(effect=factor(effect, levels=effect), 
-                       point=coef[effect], ci)
+    data <- data.frame(Effect=factor(effect, levels=effect), 
+                       Point=coef[effect], ci)
     rownames(data) <- NULL
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="effect", y="point", 
-                                        ymin="lower", ymax="upper")
+    attr(data, "mapping") <- aes_string(x="Effect", y="Point", 
+                                        ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
     # extract point estimate and standard error
@@ -118,15 +120,78 @@ fortify.sobelMA <- function(model, data, method = c("dot", "density"),
     if(missing(data)) x <- seq(ab - 3 * se, ab + 3 * se, length.out=100)
     else x <- as.numeric(data)
     y <- dnorm(x, mean=ab, sd=se)
-    data <- data.frame(ab=x, density=y)
+    data <- data.frame(ab=x, Density=y)
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="ab", y="density")
+    attr(data, "mapping") <- aes_string(x="ab", y="Density")
     attr(data, "geom") <- function(..., stat) geom_density(..., stat="identity")
     attr(data, "main") <- "Assumed normal distribution"
-    attr(data, "ci") <- data.frame(ab, density=dnorm(ab, mean=ab, sd=se), 
-                                   lower=ci[1], upper=ci[2])
+    attr(data, "ci") <- data.frame(ab, Density=dnorm(ab, mean=ab, sd=se), 
+                                   Lower=ci[1], Upper=ci[2])
   }
   # return data frame
   attr(data, "method") <- method
+  data
+}
+
+
+#' @rdname fortify.bootMA
+#' @method fortify list
+#' @import ggplot2
+#' @export
+
+fortify.list <- function(model, data, ...) {
+  ## initializations
+  isBootMA <- sapply(model, inherits, "bootMA")
+  isSobelMA <- sapply(model, inherits, "sobelMA")
+  model <- model[isBootMA | isSobelMA]
+  if(length(model) == 0) {
+    stop('no objects inheriting from class "bootMA" or "sobelMA"')
+  }
+  # check names of list elements
+  methods <- names(model)
+  if(is.null(methods)) methods <- seq_along(model)
+  else {
+    replace <- methods == "" | duplicated(methods)
+    methods[replace] <- seq_along(model)[replace]
+  }
+  ## fortify each list element
+  if(missing(data)) data <- lapply(model, fortify, ...)
+  else data <- lapply(model, fortify, data=data, ...)
+  ## extract additional information
+  info <- lapply(data, function(x) attributes(x)[-(1:3)])
+  if(info[[1]]$method == "density") ci <- lapply(info, "[[", "ci")
+  info <- info[[1]]
+  ## combine information into one data frame
+  data <- mapply(function(x, method) {
+    cbind(Method=rep.int(method, nrow(x)), x, stringsAsFactors=FALSE)
+  }, data, methods, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+  data <- do.call(rbind, data)
+  data$Method <- factor(data$Method, levels=methods)
+  ## modify additional information
+  if(info$method == "dot") {
+    # additional information for dot plot
+    if(nlevels(data$Effect) == 1) {
+      # only one effect to be plotted, use method on x-axis
+      info$mapping <- aes_string(x="Method", y="Point", 
+                                 ymin="Lower", ymax="Upper")
+    } else {
+      # split plot into different panels
+      info$facets <- ~ Method
+    }
+  } else {
+    # additional information for density plot
+    info$mapping <- aes_string(x="ab", y="Density", color="Method")
+    if(any(isBootMA) && any(isSobelMA)) {
+      info$geom <- function(..., stat) geom_density(..., stat="identity")
+      info$main <- NULL
+    }
+    # combine confidence intervals for the methods
+    ci <- do.call(rbind, ci)
+    ci <- cbind(Method=factor(methods, levels=methods), ci)
+    rownames(ci) <- NULL
+    info$ci <- ci
+  }
+  # add additional information and return data frame
+  attributes(data) <- c(attributes(data), info)
   data
 }
