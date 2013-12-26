@@ -148,7 +148,7 @@ mediate <- function(x, y, m, method = c("boot", "sobel"),
   robust <- isTRUE(robust)
   transform <- robust && isTRUE(transform)
   if(robust && missing(control)) {
-    control <- if(transform) covHuber.control() else lmrob.control()
+    control <- if(transform) covHuber.control(...) else lmrob.control(...)
   }
   ## check if the robust transformation of Zu & Yuan (2010) should be applied
   if(robust && transform) {
