@@ -149,6 +149,10 @@
   does not account for the variability from cleaning the
   data.
 }
+\examples{
+data("superbowl")
+with(superbowl, mediate(frequency, liking, clutter))
+}
 \author{
   Andreas Alfons
 }

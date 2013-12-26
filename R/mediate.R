@@ -116,6 +116,9 @@
 #' \code{\link[boot]{boot}}, \code{\link[robustbase]{lmrob}}, 
 #' \code{\link[stats]{lm}}, \code{\link{covHuber}}
 #' 
+#' @examples
+#' data("superbowl")
+#' with(superbowl, mediate(frequency, liking, clutter))
 #' 
 #' @keywords multivariate
 #' 
