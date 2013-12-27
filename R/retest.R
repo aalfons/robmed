@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Retest for mediation
 #' 
@@ -69,7 +69,7 @@ retest.sobelMA <- function(object,
   # initializations
   alternative <- match.arg(alternative)
   # recompute confidence interval and modify object
-  object$pValue <- pvalZ(object$statistic, alternative=alternative)
+  object$pValue <- pValueZ(object$statistic, alternative=alternative)
   object$alternative <- alternative
   # return modified object
   object

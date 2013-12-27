@@ -9,7 +9,7 @@
   mediate(x, y, m, method = c("boot", "sobel"),
     alternative = c("twosided", "less", "greater"),
     R = 5000, level = 0.95, type = c("bca", "perc"),
-    robust = TRUE, transform = FALSE, control, ...)
+    robust = TRUE, covariance = FALSE, control, ...)
 }
 \arguments{
   \item{x}{a numeric vector containing the independent
@@ -175,7 +175,7 @@ with(superbowl, mediate(frequency, liking, clutter))
   Behavioral Research}, \bold{45}(1), 1--44.
 }
 \seealso{
-  \code{\link[=coef.bootMA]{coef}},
+  \code{\link[=coef.testMA]{coef}},
   \code{\link[=confint.bootMA]{confint}},
   \code{\link[=fortify.bootMA]{fortify}} and
   \code{\link[=mediatePlot]{plot}} methods

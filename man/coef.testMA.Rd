@@ -1,11 +1,8 @@
-\name{coef.bootMA}
-\alias{coef.bootMA}
-\alias{coef.sobelMA}
+\name{coef.testMA}
+\alias{coef.testMA}
 \title{Coefficients in (robust) mediation analysis}
 \usage{
-  \method{coef}{bootMA} (object, parm = NULL, ...)
-
-  \method{coef}{sobelMA} (object, parm = NULL, ...)
+  \method{coef}{testMA} (object, parm = NULL, ...)
 }
 \arguments{
   \item{object}{an object of class \code{"bootMA"} or

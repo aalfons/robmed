@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Huber-type M-estimator of location and scatter
 #' 
@@ -40,7 +40,7 @@
 #' @export
 
 covHuber <- function(x, control = covHuber.control(...), ...) {
-  ## initialization
+  ## initializations
   x <- as.matrix(x)
   n <- nrow(x)
   p <- ncol(x)
@@ -55,8 +55,11 @@ covHuber <- function(x, control = covHuber.control(...), ...) {
   maxIterations <- control$maxIterations
   if(!is.finite(maxIterations) || maxIterations < 0) maxIterations <- 0
   ## compute starting values for location vector and scatter matrix
-  mu <- colMeans(x)
-  Sigma <- cov(x)
+#   mu <- colMeans(x)
+#   Sigma <- crossprod(sweep(x, 2, mu, check.margin=FALSE)) / n  # MLE
+  initial <- covMLE(x)
+  mu <- initial$center
+  Sigma <- initial$cov
   ## perform iterative reweighting
   i <- 0
   if(prob < 1) {
@@ -85,16 +88,15 @@ covHuber <- function(x, control = covHuber.control(...), ...) {
     if(i == maxIterations && continue) {
       warning(sprintf("no convergence in %d iterations", maxIterations))
     }
-    # compute weights
-    if(i > 0) weights <-  u / sqrt(tau)
-  }
+    converged <- !continue
+  } else converged <- TRUE
   ## return results
   if(i == 0) {
     tau <- 1
-    weights <- rep.int(1, n)
+    u <- rep.int(1, n)
   }
-  result <- list(center=mu, cov=Sigma, weights=weights, nIterations=i, 
-                 prob=prob, tau=tau)
+  result <- list(center=mu, cov=Sigma, prob=prob, weights=u, tau=tau, 
+                 converged=converged, iterations=i)
   class(result) <- "covHuber"
   result
 }

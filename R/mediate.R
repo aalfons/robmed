@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' (Robust) mediation analysis
 #' 
@@ -109,7 +109,7 @@
 #' 1--44.
 #' 
 #' @seealso 
-#' \code{\link[=coef.bootMA]{coef}}, \code{\link[=confint.bootMA]{confint}}, 
+#' \code{\link[=coef.testMA]{coef}}, \code{\link[=confint.bootMA]{confint}}, 
 #' \code{\link[=fortify.bootMA]{fortify}} and \code{\link[=mediatePlot]{plot}} 
 #' methods
 #' 
@@ -129,13 +129,17 @@
 mediate <- function(x, y, m, method = c("boot", "sobel"), 
                     alternative = c("twosided", "less", "greater"), 
                     R = 5000, level = 0.95, type = c("bca", "perc"), 
-                    robust = TRUE, transform = FALSE, control, ...) {
+                    robust = TRUE, covariance = FALSE, control, ...) {
   ## initializations
   # prepare data frame containing all variables with original names
   x <- substitute(x)
   y <- substitute(y)
   m <- substitute(m)
   data <- eval.parent(call("data.frame", x, y, m))
+  # convert names to character strings
+  x <- as.character(x)
+  y <- as.character(y)
+  m <- as.character(m)
   # make sure that variables are numeric
   convert <- !sapply(data, is.numeric)
   data[convert] <- lapply(data[convert], as.numeric)
@@ -146,120 +150,130 @@ mediate <- function(x, y, m, method = c("boot", "sobel"),
   method <- match.arg(method)
   alternative <- match.arg(alternative)
   robust <- isTRUE(robust)
-  transform <- robust && isTRUE(transform)
+  covariance <- isTRUE(covariance)
   if(robust && missing(control)) {
-    control <- if(transform) covHuber.control(...) else lmrob.control(...)
+    control <- if(covariance) covHuber.control(...) else lmrob.control(...)
   }
-  ## check if the robust transformation of Zu & Yuan (2010) should be applied
-  if(robust && transform) {
-    huber <- covHuber(data, control=control)
-    data[] <- mapply("-", data, huber$center, SIMPLIFY=FALSE, USE.NAMES=FALSE)
-    data <- huber$weights * data
-  }
-  ## compute regression coefficients
-  fYX <- as.formula(paste(y, "~", x))
-  fMX <- as.formula(paste(m, "~", x))
-  fYMX <- as.formula(paste(y, "~", m, "+", x))
-  if(robust && !transform) {
-    fitMX <- lmrob(fMX, data=data, control=control)
-    fitYX <- lmrob(fYX, data=data, control=control)
-    fitYMX <- lmrob(fYMX, data=data, control=control)
-  } else {
-    fitYX <- lm(fYX, data=data)
-    fitMX <- lm(fMX, data=data)
-    fitYMX <- lm(fYMX, data=data)
-  }
+  ## compute coefficients
+  if(covariance) {
+    fit <- covMA(x, y, m, data=data, robust=robust, control=control)
+  } else fit <- regMA(x, y, m, data=data, robust=robust, control=control)
   ## perform mediation analysis
   if(method == "boot") {
     level <- rep(as.numeric(level), length.out=1)
     if(is.na(level) || level < 0 || level > 1) level <- formals()$level
     type <- match.arg(type)
     ## bootstrap test
-    if(robust && !transform) {
-      # extract (square root of) robustness weights and combine data into matrix
-      wM <- sqrt(weights(fitMX, type="robustness"))
-      wY <- sqrt(weights(fitYMX, type="robustness"))
-      z <- cbind(rep.int(1, n), as.matrix(data), wM, wY)
-      # compute matrices for linear corrections
-      psiControl <- getPsiControl(fitMX)  # the same for both model fits
-      corrM <- correctionMatrix(z[, 1:2], weights=wM, 
-                                residuals=residuals(fitMX), 
-                                scale=fitMX$scale, 
-                                psiControl=psiControl)
-      coefM <- coef(fitMX)
-      corrY <- correctionMatrix(z[, c(1, 4, 2)], weights=wY, 
+    if(covariance) {
+      # check if the robust transformation of Zu & Yuan (2010) should be applied
+      if(robust) {
+        cov <- fit$cov
+        data[] <- mapply("-", data, cov$center, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+        data <- weights(cov, type="consistent") * data
+      }
+      # perform bootstrap
+      bootstrap <- localBoot(data, function(z, i) {
+        # extract bootstrap sample from the data
+        zi <- z[i, , drop=FALSE]
+        # compute MLE of covariance matrix on bootstrap sample
+        S <- covMLE(zi)$cov
+        # compute indirect effect
+        a <- S[m, x] / S[x, x]
+        b <- (-S[m,x]*S[y,x] + S[x,x]*S[y,m]) / (S[x,x]*S[m,m] - S[m,x]^2)
+        a * b
+      }, R=R, ...)
+    } else {
+      # check if fast and robust bootstrap should be applied
+      if(robust) {
+        # extract regression models
+        fitMX <- fit$fitMX
+        fitYMX <- fit$fitYMX
+        # extract (square root of) robustness weights and combine data
+        wM <- sqrt(weights(fitMX, type="robustness"))
+        wY <- sqrt(weights(fitYMX, type="robustness"))
+        z <- cbind(rep.int(1, n), as.matrix(data), wM, wY)
+        # compute matrices for linear corrections
+        psiControl <- getPsiControl(fitMX)  # the same for both model fits
+        corrM <- correctionMatrix(z[, 1:2], weights=wM, 
+                                  residuals=residuals(fitMX), 
+                                  scale=fitMX$scale, 
+                                  psiControl=psiControl)
+        coefM <- coef(fitMX)
+        corrY <- correctionMatrix(z[, c(1, 4, 2)], weights=wY, 
                                   residuals=residuals(fitYMX), 
                                   scale=fitYMX$scale, 
                                   psiControl=psiControl)
-      coefY <- coef(fitYMX)
-      # perform fast and robust bootstrap
-      bootstrap <- localBoot(z, function(z, i, corrM, coefM, corrY, coefY) {
-        # extract bootstrap sample from the data
-        zi <- z[i, , drop=FALSE]
-        wMi <- zi[, "wM"]
-        wYi <- zi[, "wY"]
-        # check whether there are enough observations with nonzero weights
-        if(sum(wMi > 0) <= 2 || sum(wYi > 0) <= 3) return(NA)
-        # compute coefficients from weighted regression m ~ x
-        wxi <- wMi * zi[, 1:2]
-        wmi <- wMi * zi[, 4]
-        coefMi <- solve(crossprod(wxi)) %*% crossprod(wxi, wmi)
-        # compute coefficients from weighted regression y ~ m + x
-        wmxi <- wYi * zi[, c(1, 4, 2)]
-        wyi <- wYi * zi[, 3]
-        coefYi <- solve(crossprod(wmxi)) %*% crossprod(wmxi, wyi)
-        # compute corrected coefficients
-        coefMi <- drop(coefM + corrM %*% (coefMi - coefM))
-        coefYi <- drop(coefY + corrY %*% (coefYi - coefY))
-        # compute indirect effect
-        unname(coefMi[2]) * unname(coefYi[2])
-      }, R=R, corrM=corrM, coefM=coefM, corrY=corrY, coefY=coefY, ...)
-      R <- sum(!is.na(bootstrap$t))  # adjust number of replicates for NAs
-    } else {
-      z <- cbind(rep.int(1, n), as.matrix(data))
-      bootstrap <- localBoot(z, function(z, i) {
-        # extract bootstrap sample from the data
-        zi <- z[i, , drop=FALSE]
-        # compute coefficients from regression m ~ x
-        xi <- zi[, 1:2]
-        mi <- zi[, 4]
-        coefMi <- drop(solve(crossprod(xi)) %*% crossprod(xi, mi))
-        # compute coefficients from regression y ~ m + x
-        mxi <- zi[, c(1, 4, 2)]
-        yi <- zi[, 3]
-        coefYi <- drop(solve(crossprod(mxi)) %*% crossprod(mxi, yi))
-        # compute indirect effect
-        unname(coefMi[2]) * unname(coefYi[2])
-      }, R=R, ...)
+        coefY <- coef(fitYMX)
+        # perform fast and robust bootstrap
+        bootstrap <- localBoot(z, function(z, i, corrM, coefM, corrY, coefY) {
+          # extract bootstrap sample from the data
+          zi <- z[i, , drop=FALSE]
+          wMi <- zi[, "wM"]
+          wYi <- zi[, "wY"]
+          # check whether there are enough observations with nonzero weights
+          if(sum(wMi > 0) <= 2 || sum(wYi > 0) <= 3) return(NA)
+          # compute coefficients from weighted regression m ~ x
+          wxi <- wMi * zi[, 1:2]
+          wmi <- wMi * zi[, 4]
+          coefMi <- solve(crossprod(wxi)) %*% crossprod(wxi, wmi)
+          # compute coefficients from weighted regression y ~ m + x
+          wmxi <- wYi * zi[, c(1, 4, 2)]
+          wyi <- wYi * zi[, 3]
+          coefYi <- solve(crossprod(wmxi)) %*% crossprod(wmxi, wyi)
+          # compute corrected coefficients
+          coefMi <- drop(coefM + corrM %*% (coefMi - coefM))
+          coefYi <- drop(coefY + corrY %*% (coefYi - coefY))
+          # compute indirect effect
+          unname(coefMi[2]) * unname(coefYi[2])
+        }, R=R, corrM=corrM, coefM=coefM, corrY=corrY, coefY=coefY, ...)
+        R <- sum(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+      } else {
+        # combine data
+        z <- cbind(rep.int(1, n), as.matrix(data))
+        # perform bootstrap
+        bootstrap <- localBoot(z, function(z, i) {
+          # extract bootstrap sample from the data
+          zi <- z[i, , drop=FALSE]
+          # compute coefficients from regression m ~ x
+          xi <- zi[, 1:2]
+          mi <- zi[, 4]
+          coefMi <- drop(solve(crossprod(xi)) %*% crossprod(xi, mi))
+          # compute coefficients from regression y ~ m + x
+          mxi <- zi[, c(1, 4, 2)]
+          yi <- zi[, 3]
+          coefYi <- drop(solve(crossprod(mxi)) %*% crossprod(mxi, yi))
+          # compute indirect effect
+          unname(coefMi[2]) * unname(coefYi[2])
+        }, R=R, ...)
+      }
     }
     # extract confidence interval for indirect effect
     ci <- confint(bootstrap, level=level, alternative=alternative, type=type)
     # construct return object
     result <- list(ab=mean(bootstrap$t, na.rm=TRUE), ci=ci, reps=bootstrap, 
                    alternative=alternative, R=R, level=level, type=type, 
-                   robust=robust, transform=transform, fitYX=fitYX, 
-                   fitMX=fitMX, fitYMX=fitYMX, data=data)
-    class(result) <- "bootMA"
+                   robust=robust, covariance=covariance, fit=fit, data=data)
+    class(result) <- c("bootMA", "testMA")
   } else {
     ## Sobel test
-    a <- unname(coef(fitMX)[2])
-    b <- unname(coef(fitYMX)[2])
+    # extract coefficients
+    a <- fit$a
+    b <- fit$b
     # compute standard errors
-    summaryMX <- summary(fitMX)
-    sa <- coef(summaryMX)[2, 2]
-    summaryYMX <- summary(fitYMX)
-    sb <- coef(summaryYMX)[2, 2]
+    summary <- summary(fit)
+    sa <- summary$a[1, 2]
+    sb <- summary$b[1, 2]
     # compute test statistic and p-Value
     ab <- a * b
     se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
     z <- ab / se
-    pValue <- pvalZ(z, alternative=alternative)
+    pValue <- pValueZ(z, alternative=alternative)
     # construct return item
     result <- list(ab=ab, se=se, statistic=z, pValue=pValue, 
-                   alternative=alternative, robust=robust, transform=transform, 
-                   fitYX=fitYX, fitMX=fitMX, fitYMX=fitYMX, data=data)
-    class(result) <- "sobelMA"
-  }
+                   alternative=alternative, robust=robust, 
+                   covariance=covariance, fit=fit, data=data)
+    class(result) <- c("sobelMA", "testMA")
+  }  
   ## return test results
   result
 }
@@ -283,10 +297,10 @@ correctionMatrix <- function(X, weights, residuals, scale, psiControl) {
 }
 
 ## internal function to compute p-value based on normal distribution
-pvalZ <- function(z, alternative = c("twosided", "less", "greater")) {
+pValueZ <- function(z, alternative = c("twosided", "less", "greater")) {
   # initializations
   alternative <- match.arg(alternative)
   # compute p-value
-  switch(alternative, twosided=2*pnorm(-abs(z)), less=pnorm(z), 
-         greater=pnorm(z, lower.tail=FALSE))
+  switch(alternative, twosided=2*pnorm(abs(z), lower.tail=FALSE), 
+         less=pnorm(z), greater=pnorm(z, lower.tail=FALSE))
 }

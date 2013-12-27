@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Confidence intervals for (robust) mediation analysis
 #' 
@@ -27,7 +27,7 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{mediate}}, \code{\link[=coef.bootMA]{coef}}
+#' @seealso \code{\link{mediate}}, \code{\link[=coef.testMA]{coef}}
 #' 
 #' @keywords utilities
 #' 
@@ -36,7 +36,7 @@
 ## argument 'level' is ignored
 confint.bootMA <- function(object, parm = NULL, level = NULL, ...) {
   # combine confidence interval of indirect effect with those of other effects
-  ci <- rbind(confintEffects(object, level=object$level), ab=object$ci)
+  ci <- rbind(confint(object$fit, level=object$level), ab=object$ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
@@ -56,7 +56,7 @@ confint.sobelMA <- function(object, parm = NULL, level = 0.95, ...) {
   ci <- confintZ(object$ab, object$se, level=level, 
                  alternative=object$alternative)
   # combine with confidence intervalse of other effects
-  ci <- rbind(confintEffects(object, level=level), ab=ci)
+  ci <- rbind(confint(object$fit, level=level), ab=ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
@@ -64,8 +64,42 @@ confint.sobelMA <- function(object, parm = NULL, level = 0.95, ...) {
 }
 
 
-## internal function to extract confidence interval from bootstrap results
-## argument 'parm' is ignored
+## internal functions
+
+# extract confidence intervals for effects other than the indirect effect from 
+# a mediation model fit based on regression
+confint.regMA <- function(object, parm = NULL, level = 0.95, ...) {
+  # extract confidence intervals and combine into one matrix
+  ci <- rbind(confint(object$fitMX, parm=2, level=level), 
+              confint(object$fitYMX, parm=2:3, level=level), 
+              confint(object$fitYX, parm=2, level=level))
+  rownames(ci) <- c("a", "b", "c", "c'")
+  # if requested, take subset of effects
+  if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
+  ci
+}
+
+# extract confidence intervals for effects other than the indirect effect from 
+# a mediation model fit based on a scatter matrix
+confint.covMA <- function(object, parm = NULL, level = 0.95, ...) {
+  # initializations
+  alpha <- 1 - level
+  # compute standard errors
+  summary <- summary(object)
+  # compute confidence intervals and combine into one matrix
+  ci <- rbind(confintZ(object$a, summary$a[1,2], level=level), 
+              confintZ(object$b, summary$b[1,2], level=level), 
+              confintZ(object$c, summary$c[1,2], level=level), 
+              confintZ(object$cPrime, summary$cPrime[1,2], level=level))
+  cn <- paste(format(100 * c(alpha/2, 1-alpha/2), trim=TRUE), "%")
+  dimnames(ci) <- list(c("a", "b", "c", "c'"), cn)
+  # if requested, take subset of effects
+  if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
+  ci
+}
+
+# extract confidence interval from bootstrap results 
+# (argument 'parm' is ignored)
 confint.boot <- function(object, parm, level = 0.95, 
                          alternative = c("twosided", "less", "greater"), 
                          type = c("bca", "perc"), ...) {
@@ -86,8 +120,7 @@ confint.boot <- function(object, parm, level = 0.95,
   ci
 }
 
-
-## internal function for confidence interval based on normal distribution
+# compute confidence interval based on normal distribution
 confintZ <- function(mean = 0, sd = 1, level = 0.95, 
                      alternative = c("twosided", "less", "greater")) {
   # initializations
@@ -97,18 +130,4 @@ confintZ <- function(mean = 0, sd = 1, level = 0.95,
   switch(alternative, twosided=qnorm(c(alpha/2, 1-alpha/2), mean=mean, sd=sd), 
          less=c(-Inf, qnorm(level, mean=mean, sd=sd)), 
          greater=c(qnorm(alpha, mean=mean, sd=sd), Inf))
-}
-
-
-## internal function to extract confidence intervals for effects other than 
-## the indirect effect
-confintEffects <- function(object, level = 0.95) {
-  ciYX <- confint(object$fitYX, parm=2, level=level)
-  rownames(ciYX) <- "c'"
-  ciMX <- confint(object$fitMX, parm=2, level=level)
-  rownames(ciMX) <- "a"
-  ciYMX <- confint(object$fitYMX, parm=2:3, level=level)
-  rownames(ciYMX) <- c("b", "c")
-  # combine confidence intervals into one matrix
-  rbind(ciMX, ciYMX["b", , drop=FALSE], ciYX, ciYMX["c", , drop=FALSE])
 }

@@ -41,7 +41,7 @@
   Andreas Alfons
 }
 \seealso{
-  \code{\link{mediate}}, \code{\link[=coef.bootMA]{coef}}
+  \code{\link{mediate}}, \code{\link[=coef.testMA]{coef}}
 }
 \keyword{utilities}
 
