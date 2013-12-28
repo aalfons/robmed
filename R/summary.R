@@ -3,24 +3,16 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-## summary of mediation analysis objects
-#' @S3method summary testMA
-summary.testMA <- function(object, ...) {
-  result <- list(object=object, summary=summary(object$fit))
-  class(result) <- "summaryTestMA"
-  result
-}
-
-
-## internal functions
-
-# summary of a mediation model fit based on a scatter matrix
-summary.covMA <- function(object, ...) {
+## summary of a mediation model fit based on a scatter matrix
+#' @S3method summary covFitMediation
+summary.covFitMediation <- function(object, ...) {
   # extract covariance matrix
   S <- object$cov$cov
-  x <- colnames(S)[1]
-  y <- colnames(S)[2]
-  m <- colnames(S)[3]
+  # extract variable names
+  cn <- names(object$data)
+  x <- cn[1]
+  y <- cn[2]
+  m <- cn[3]
   # extract number of observations
   n <- nobs(object$cov)
   # compute the inverse of the Fisher information matrix for the unique 
@@ -60,13 +52,14 @@ summary.covMA <- function(object, ...) {
                  b=coefficients[2, , drop=FALSE], 
                  c=coefficients[3, , drop=FALSE], 
                  cPrime=coefficients[4, , drop=FALSE], 
-                 robust=object$robust, s=s, n=n)
-  class(result) <- "summaryCovMA"
+                 robust=object$robust, s=s, n=n, variables=cn)
+  class(result) <- "summaryFitMediation"
   result
 }
 
-# summary of a mediation model fit based on regression
-summary.regMA <- function(object, ...) {
+## summary of a mediation model fit based on regression
+#' @S3method summary regFitMediation
+summary.regFitMediation <- function(object, ...) {
   # initializations
   robust <- object$robust
   # compute summaries of regression models and extract t-tests for coefficients
@@ -89,9 +82,18 @@ summary.regMA <- function(object, ...) {
     result$FTest <- list(R2=tmp$r.squared, adjR2=tmp$adj.r.squared, 
                          statistic=statistic, df=df, pValue=pValue)
   }
-  # add number of observations
+  # add number of observations and variable names
   result$n <- nobs(object$fitYMX)
+  result$variables <- names(object$data)
   ## add class and return results
-  class(result) <- "summaryRegMA"
+  class(result) <- "summaryFitMediation"
+  result
+}
+
+## summary of mediation analysis objects
+#' @S3method summary testMediation
+summary.testMediation <- function(object, ...) {
+  result <- list(object=object, summary=summary(object$fit))
+  class(result) <- "summaryTestMediation"
   result
 }

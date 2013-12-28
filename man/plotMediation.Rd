@@ -1,44 +1,37 @@
-\name{mediatePlot}
-\alias{autoplot.bootMA}
-\alias{autoplot.sobelMA}
-\alias{mediatePlot}
-\alias{mediatePlot.bootMA}
-\alias{mediatePlot.default}
-\alias{mediatePlot.list}
-\alias{mediatePlot.sobelMA}
-\alias{plot.bootMA}
-\alias{plot.sobelMA}
+\name{plotMediation}
+\alias{autoplot.testMediation}
+\alias{plot.testMediation}
+\alias{plotMediation}
+\alias{plotMediation.bootTestMediation}
+\alias{plotMediation.default}
+\alias{plotMediation.list}
+\alias{plotMediation.sobelTestMediation}
 \title{Plot (robust) mediation analysis results}
 \usage{
-  mediatePlot(object, ...)
+  plotMediation(object, ...)
 
-  \method{mediatePlot}{bootMA} (object,
+  \method{plotMediation}{bootTestMediation} (object,
     method = c("dot", "density"), parm = c("c", "ab"), ...)
 
-  \method{mediatePlot}{sobelMA} (object, data,
+  \method{plotMediation}{sobelTestMediation} (object, data,
     method = c("dot", "density"), parm = c("c", "ab"),
     level = 0.95, ...)
 
-  \method{mediatePlot}{list} (object, data, ...)
+  \method{plotMediation}{list} (object, data, ...)
 
-  \method{mediatePlot}{default} (object,
+  \method{plotMediation}{default} (object,
     mapping = attr(object, "mapping"),
     facets = attr(object, "facets"), ...)
 
-  \method{autoplot}{bootMA} (object, ...)
+  \method{autoplot}{testMediation} (object, ...)
 
-  \method{autoplot}{sobelMA} (object, ...)
-
-  \method{plot}{bootMA} (x, ...)
-
-  \method{plot}{sobelMA} (x, ...)
+  \method{plot}{testMediation} (x, ...)
 }
 \arguments{
-  \item{object,x}{an object of class \code{"bootMA"} or
-  \code{"sobelMA"} containing results from (robust)
-  mediation analysis, as returned by \code{\link{mediate}}.
-  For \code{mediatePlot}, a list of such objects may be
-  supplied as well.}
+  \item{object,x}{an object inheriting from class
+  \code{"\link{testMediation}"} containing results from
+  (robust) mediation analysis.  For \code{plotMediation}, a
+  list of such objects may be supplied as well.}
 
   \item{data}{an optional numeric vector containing the
   \eqn{x}-values at which to evaluate the assumed normal
@@ -88,8 +81,8 @@
   Andreas Alfons
 }
 \seealso{
-  \code{\link{mediate}},
-  \code{\link[=fortify.bootMA]{fortify}}
+  \code{\link{testMediation}},
+  \code{\link[=fortify.testMediation]{fortify}}
 }
 \keyword{hplot}
 

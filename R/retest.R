@@ -8,9 +8,8 @@
 #' Reperform a (fast and robust) bootstrap test or Sobel's test for the 
 #' indirect effect based on results from (robust) mediation analysis.
 #' 
-#' @param object  an object of class \code{"bootMA"} or \code{"sobelMA"} 
-#' containing results from (robust) mediation analysis, as returned by 
-#' \code{\link{mediate}}.
+#' @param object  an object inheriting from class \code{"\link{testMediation}"} 
+#' containing results from (robust) mediation analysis.
 #' @param alternative  a character string specifying the alternative hypothesis 
 #' in the test for the indirect effect.  Possible values are \code{"twosided"} 
 #' (the default), \code{"less"} or \code{"greater"}.
@@ -23,11 +22,11 @@
 #' @param \dots  additional arguments to be passed down to methods.
 #' 
 #' @return An object of the same class as \code{object} with updated test 
-#' results (see \code{\link{mediate}}).
+#' results (see \code{\link{testMediation}}).
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{mediate}}
+#' @seealso \code{\link{testMediation}}
 #' 
 #' @keywords multivariate
 #' 
@@ -37,12 +36,13 @@ retest <- function(object, ...) UseMethod("retest")
 
 
 #' @rdname retest
-#' @method retest bootMA
+#' @method retest bootTestMediation
 #' @export
 
-retest.bootMA <- function(object, 
-                          alternative = c("twosided", "less", "greater"), 
-                          level = 0.95, type = c("bca", "perc"), ...) {
+retest.bootTestMediation <- function(object, 
+                                     alternative = c("twosided", "less", "greater"), 
+                                     level = 0.95, type = c("bca", "perc"), 
+                                     ...) {
   # initializations
   alternative <- match.arg(alternative)
   level <- rep(as.numeric(level), length.out=1)
@@ -60,12 +60,12 @@ retest.bootMA <- function(object,
 
 
 #' @rdname retest
-#' @method retest sobelMA
+#' @method retest sobelTestMediation
 #' @export
 
-retest.sobelMA <- function(object, 
-                           alternative = c("twosided", "less", "greater"), 
-                           ...) {
+retest.sobelTestMediation <- function(object, 
+                                      alternative = c("twosided", "less", "greater"), 
+                                      ...) {
   # initializations
   alternative <- match.arg(alternative)
   # recompute confidence interval and modify object

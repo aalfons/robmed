@@ -1,23 +1,22 @@
 \name{retest}
 \alias{retest}
-\alias{retest.bootMA}
-\alias{retest.sobelMA}
+\alias{retest.bootTestMediation}
+\alias{retest.sobelTestMediation}
 \title{Retest for mediation}
 \usage{
   retest(object, ...)
 
-  \method{retest}{bootMA} (object,
+  \method{retest}{bootTestMediation} (object,
     alternative = c("twosided", "less", "greater"),
     level = 0.95, type = c("bca", "perc"), ...)
 
-  \method{retest}{sobelMA} (object,
+  \method{retest}{sobelTestMediation} (object,
     alternative = c("twosided", "less", "greater"), ...)
 }
 \arguments{
-  \item{object}{an object of class \code{"bootMA"} or
-  \code{"sobelMA"} containing results from (robust)
-  mediation analysis, as returned by
-  \code{\link{mediate}}.}
+  \item{object}{an object inheriting from class
+  \code{"\link{testMediation}"} containing results from
+  (robust) mediation analysis.}
 
   \item{alternative}{a character string specifying the
   alternative hypothesis in the test for the indirect
@@ -39,7 +38,7 @@
 }
 \value{
   An object of the same class as \code{object} with updated
-  test results (see \code{\link{mediate}}).
+  test results (see \code{\link{testMediation}}).
 }
 \description{
   Reperform a (fast and robust) bootstrap test or Sobel's
@@ -50,7 +49,7 @@
   Andreas Alfons
 }
 \seealso{
-  \code{\link{mediate}}
+  \code{\link{testMediation}}
 }
 \keyword{multivariate}
 

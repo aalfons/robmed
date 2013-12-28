@@ -1,33 +1,33 @@
-\name{fortify.bootMA}
-\alias{fortify.bootMA}
+\name{fortify.testMediation}
+\alias{fortify.bootTestMediation}
 \alias{fortify.list}
-\alias{fortify.sobelMA}
+\alias{fortify.sobelTestMediation}
+\alias{fortify.testMediation}
 \title{Convert (robust) mediation analysis results into a data frame for plotting}
 \usage{
-  \method{fortify}{bootMA} (model, data,
+  \method{fortify}{bootTestMediation} (model, data,
     method = c("dot", "density"), parm = c("c", "ab"), ...)
 
-  \method{fortify}{sobelMA} (model, data,
+  \method{fortify}{sobelTestMediation} (model, data,
     method = c("dot", "density"), parm = c("c", "ab"),
     level = 0.95, ...)
 
   \method{fortify}{list} (model, data, ...)
 }
 \arguments{
-  \item{model}{an object of class \code{"bootMA"} or
-  \code{"sobelMA"} containing results from (robust)
-  mediation analysis, as returned by
-  \code{\link{mediate}}.}
+  \item{model}{an object inheriting from class
+  \code{"\link{testMediation}"} containing results from
+  (robust) mediation analysis.}
 
-  \item{data}{for the \code{"bootMA"} method, this is
-  currently ignored.  For the \code{"sobelMA"} method, this
-  is an optional numeric vector containing the
-  \eqn{x}-values at which to evaluate the assumed normal
-  density from Sobel's test (only used in case of a density
-  plot).  The default is to take 100 equally spaced points
-  between the estimated indirect effect \eqn{\pm}{+/-}
-  three times the standard error according to Sobel's
-  formula.}
+  \item{data}{for the \code{"bootTestMediation"} method,
+  this is currently ignored.  For the
+  \code{"sobelTestMediation"} method, this is an optional
+  numeric vector containing the \eqn{x}-values at which to
+  evaluate the assumed normal density from Sobel's test
+  (only used in case of a density plot).  The default is to
+  take 100 equally spaced points between the estimated
+  indirect effect \eqn{\pm}{+/-} three times the standard
+  error according to Sobel's formula.}
 
   \item{method}{a character string specifying for which
   plot to construct the data frame.  Possible values are
@@ -63,7 +63,7 @@
   Andreas Alfons
 }
 \seealso{
-  \code{\link{mediate}}, \code{\link[=mediatePlot]{plot}}
+  \code{\link{testMediation}}, \code{\link{plotMediation}}
 }
 \keyword{utilities}
 

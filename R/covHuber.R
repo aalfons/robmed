@@ -3,10 +3,10 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-#' Huber-type M-estimator of location and scatter
+#' Huber M-estimator of location and scatter
 #' 
-#' Compute a Huber-type M-estimator of location and scatter, which is 
-#' reasonably robust for a small number of variables.
+#' Compute a Huber M-estimator of location and scatter, which is reasonably 
+#' robust for a small number of variables.
 #' 
 #' @aliases print.covHuber
 #' 
@@ -17,11 +17,18 @@
 #' directly instead of via \code{control}.
 #' 
 #' @returnClass covHuber
-#' @returnItem center  a numeric vector containing the location estimates.
+#' @returnItem center  a numeric vector containing the location vector estimate.
 #' @returnItem cov  a numeric matrix containing the scatter matrix estimate.
-#' @returnItem weights  a numeric vector containing the robustness weights for 
-#' the observations.
-#' @returnItem nIterations  an integer giving the number of iterations required 
+#' @returnItem prob  numeric; probability for the quantile of the 
+#' \eqn{\chi^{2}}{chi-squared} distribution used as cutoff point in the Huber 
+#' weight function.
+#' @returnItem weights  a numeric vector containing the relative robustness 
+#' weights for the observations.
+#' @returnItem tau  numeric; correction for Fisher consistency under 
+#' multivariate normal distributions.
+#' @returnItem converged  a logical indicating whether the iterative 
+#' reweighting algorithm converged.
+#' @returnItem iterations  an integer giving the number of iterations required 
 #' to obtain the solution.
 #' 
 #' @author Andreas Alfons
@@ -33,7 +40,8 @@
 #' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1), 
 #' 1--44.
 #' 
-#' @seealso \code{\link{covHuber.control}}, \code{\link{mediate}}
+#' @seealso \code{\link{covHuber.control}}, \code{\link{testMediation}}, 
+#' \code{\link{fitMediation}}
 #' 
 #' @keywords multivariate
 #' 
@@ -55,9 +63,7 @@ covHuber <- function(x, control = covHuber.control(...), ...) {
   maxIterations <- control$maxIterations
   if(!is.finite(maxIterations) || maxIterations < 0) maxIterations <- 0
   ## compute starting values for location vector and scatter matrix
-#   mu <- colMeans(x)
-#   Sigma <- crossprod(sweep(x, 2, mu, check.margin=FALSE)) / n  # MLE
-  initial <- covMLE(x)
+  initial <- covML(x)
   mu <- initial$center
   Sigma <- initial$cov
   ## perform iterative reweighting
@@ -65,7 +71,7 @@ covHuber <- function(x, control = covHuber.control(...), ...) {
   if(prob < 1) {
     # define tuning parameters
     # tau is chosen such that E[chi_p^2 u^2(chi_p^2)] / tau = p
-    # (i.e., such that Sigma is asymptotically unbiased)
+    # (i.e., such that Sigma is Fisher consistent)
     kappa <- 1 - prob
     r <- qchisq(prob, df=p)  # squared cutoff point
     tau <- (-2*dchisq(r, df=p) + kappa) * r / p + prob
@@ -102,13 +108,13 @@ covHuber <- function(x, control = covHuber.control(...), ...) {
 }
 
 
-#' Tuning parameters for Huber-type M-estimation of location and scatter
+#' Tuning parameters for Huber M-estimation of location and scatter
 #' 
 #' Obtain a list with tuning paramters for \code{\link{covHuber}}.
 #' 
 #' @param prob  numeric; probability for the quantile of the 
 #' \eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the 
-#' Huber-type weight function (defaults to 0.95).
+#' Huber weight function (defaults to 0.95).
 #' @param tol  a small positive numeric value to be used to determine 
 #' convergence of the iteratively reweighted algorithm.
 #' @param maxIterations  an integer giving the maximum number of iterations in 

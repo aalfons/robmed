@@ -1,0 +1,41 @@
+\name{covML}
+\alias{covML}
+\alias{print.covML}
+\title{Maximum likelihood estimator of mean vector and covariance matrix}
+\usage{
+  covML(x, ...)
+}
+\arguments{
+  \item{x}{a numeric matrix or data frame.}
+
+  \item{\dots}{additional arguments are currently ignored.}
+}
+\value{
+  An object of class \code{"covML"} with the following
+  components:
+
+  \item{center}{a numeric vector containing the mean vector
+  estimate.}
+
+  \item{cov}{a numeric matrix containing the covariance
+  matrix estimate.}
+
+  \item{n}{an integer giving the number of observations.}
+}
+\description{
+  Compute the maximum likelihood estimator of the mean
+  vector and the covariance matrix.
+}
+\author{
+  Andreas Alfons
+}
+\references{
+  Zu, J. and Yuan, K.-H. (2010) Local influence and robust
+  procedures for mediation analysis. \emph{Multivariate
+  Behavioral Research}, \bold{45}(1), 1--44.
+}
+\seealso{
+  \code{\link{testMediation}}, \code{\link{fitMediation}}
+}
+\keyword{multivariate}
+

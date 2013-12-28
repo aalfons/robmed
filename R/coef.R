@@ -5,14 +5,14 @@
 
 #' Coefficients in (robust) mediation analysis
 #' 
-#' Extract coefficients from regression models computed in (robust) mediation 
-#' analysis.
+#' Extract coefficients from models computed in (robust) mediation analysis.
 #' 
-#' @method coef testMA
+#' @method coef testMediation
 #' 
-#' @param object  an object of class \code{"bootMA"} or \code{"sobelMA"} 
-#' containing results from (robust) mediation analysis, as returned by 
-#' \code{\link{mediate}}.
+#' @param object  an object inheriting from class \code{"\link{testMediation}"} 
+#' containing results from (robust) mediation analysis, or an object inheriting 
+#' from class \code{"\link{fitMediation}"} containing a (robust) mediation 
+#' model fit.
 #' @param parm  an integer, character or logical vector specifying the 
 #' coefficients to be extracted, or \code{NULL} to extract all coefficients.
 #' @param \dots  additional arguments are currently ignored.
@@ -21,25 +21,27 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{mediate}}, \code{\link[=confint.bootMA]{confint}}
+#' @seealso \code{\link{testMediation}}, \code{\link{fitMediation}}, 
+#' \code{\link[=confint.testMediation]{confint}}
 #' 
 #' @keywords utilities
 #' 
 #' @export
 
-coef.testMA <- function(object, parm = NULL, ...) {
-  # extract effects other than indirect effect from mediation model fit
-  coef <- coef(object$fit)
-  # add coefficient of indirect effect
-  coef <- c(coef, ab=object$ab)
+coef.testMediation <- function(object, parm = NULL, ...) {
+  # extract effects (including indirect effect)
+  coef <- c(coef(object$fit), ab=object$ab)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
   coef
 }
 
 
-## internal function to extract coefficients from mediation model fit
-coef.fitMA <- function(object, parm = NULL, ...) {
+#' @rdname coef.testMediation
+#' @method coef fitMediation
+#' @export
+
+coef.fitMediation <- function(object, parm = NULL, ...) {
   # extract effects
   coef <- c(object$a, object$b, object$c, object$cPrime)
   names(coef) <- c("a", "b", "c", "c'")

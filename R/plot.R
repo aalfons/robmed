@@ -8,10 +8,10 @@
 #' Produce dot plots of selected coefficients from regression models computed 
 #' in (robust) mediation analysis, or density plots of the indirect effect.
 #' 
-#' @param object,x  an object of class \code{"bootMA"} or \code{"sobelMA"} 
-#' containing results from (robust) mediation analysis, as returned by 
-#' \code{\link{mediate}}.  For \code{mediatePlot}, a list of such objects may 
-#' be supplied as well.
+#' @param object,x  an object inheriting from class 
+#' \code{"\link{testMediation}"} containing results from (robust) mediation 
+#' analysis.  For \code{plotMediation}, a list of such objects may be supplied 
+#' as well.
 #' @param data  an optional numeric vector containing the \eqn{x}-values at 
 #' which to evaluate the assumed normal density from Sobel's test (only used in 
 #' case of a density plot).  The default is to take 100 equally spaced points 
@@ -38,86 +38,77 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{mediate}}, \code{\link[=fortify.bootMA]{fortify}}
+#' @seealso \code{\link{testMediation}}, 
+#' \code{\link[=fortify.testMediation]{fortify}}
 #' 
 #' @keywords hplot
 #' 
 #' @import ggplot2
 #' @export
 
-mediatePlot <- function(object, ...) UseMethod("mediatePlot")
+plotMediation <- function(object, ...) UseMethod("plotMediation")
 
 
-#' @rdname mediatePlot
-#' @method mediatePlot bootMA
+#' @rdname plotMediation
+#' @method plotMediation bootTestMediation
 #' @export
 
-mediatePlot.bootMA <- function(object, method = c("dot", "density"), 
-                               parm = c("c", "ab"), ...) {
+plotMediation.bootTestMediation <- function(object, 
+                                            method = c("dot", "density"), 
+                                            parm = c("c", "ab"), 
+                                            ...) {
   data <- fortify(object, method=method, parm=parm)
-  mediatePlot(data, ...)
+  plotMediation(data, ...)
 }
 
 
-#' @rdname mediatePlot
-#' @method mediatePlot sobelMA
+#' @rdname plotMediation
+#' @method plotMediation sobelTestMediation
 #' @export
 
-mediatePlot.sobelMA <- function(object, data, method = c("dot", "density"), 
-                                parm = c("c", "ab"), level = 0.95, ...) {
+plotMediation.sobelTestMediation <- function(object, data, 
+                                             method = c("dot", "density"), 
+                                             parm = c("c", "ab"), 
+                                             level = 0.95, ...) {
   data <- fortify(object, data=data, method=method, parm=parm, level=level)
-  mediatePlot(data, ...)
+  plotMediation(data, ...)
 }
 
 
-#' @rdname mediatePlot
-#' @method mediatePlot list
+#' @rdname plotMediation
+#' @method plotMediation list
 #' @export
 
-mediatePlot.list <- function(object, data, ...) {
+plotMediation.list <- function(object, data, ...) {
   data <- fortify(object, data=data, ...)
-  mediatePlot(data, ...)
+  plotMediation(data, ...)
 }
 
 
-#' @rdname mediatePlot
-#' @method mediatePlot default
+#' @rdname plotMediation
+#' @method plotMediation default
 #' @export
 
-mediatePlot.default <- function(object, mapping = attr(object, "mapping"), 
-                                facets = attr(object, "facets"), ...) {
+plotMediation.default <- function(object, mapping = attr(object, "mapping"), 
+                                  facets = attr(object, "facets"), ...) {
   # create selected plot
   if(attr(object, "method") == "dot") dotPlot(object, mapping, facets, ...)
   else densityPlot(object, mapping, ...)
 }
 
 
-#' @rdname mediatePlot
-#' @method autoplot bootMA
+#' @rdname plotMediation
+#' @method autoplot testMediation
 #' @export
 
-autoplot.bootMA <- function(object, ...) mediatePlot(object, ...)
+autoplot.testMediation <- function(object, ...) plotMediation(object, ...)
 
 
-#' @rdname mediatePlot
-#' @method autoplot sobelMA
+#' @rdname plotMediation
+#' @method plot testMediation
 #' @export
 
-autoplot.sobelMA <- function(object, ...) mediatePlot(object, ...)
-
-
-#' @rdname mediatePlot
-#' @method plot bootMA
-#' @export
-
-plot.bootMA <- function(x, ...) mediatePlot(x, ...)
-
-
-#' @rdname mediatePlot
-#' @method plot sobelMA
-#' @export
-
-plot.sobelMA <- function(x, ...) mediatePlot(x, ...)
+plot.testMediation <- function(x, ...) plotMediation(x, ...)
 
 
 ## internal function for dot plot

@@ -3,8 +3,7 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-## extract number of observations from Huber-type M-estimator of 
-## location and scatter
+## extract number of observations from Huber M-estimator of location and scatter
 #' @S3method nobs covHuber
 #' @import stats
 nobs.covHuber <- function(object, ...) {
@@ -12,5 +11,7 @@ nobs.covHuber <- function(object, ...) {
   length(weights)
 }
 
-## extract number of observations from MLE of location and scatter
-nobs.covMLE <- function(object, ...) object$n
+## extract number of observations from MLE of mean vector and covariance matrix
+#' @S3method nobs covML
+#' @import stats
+nobs.covML <- function(object, ...) object$n

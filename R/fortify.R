@@ -10,17 +10,17 @@
 #' thereby possible to construct data frames for dot plots of selected 
 #' coefficients, as well as density plots of the indirect effect.
 #' 
-#' @method fortify bootMA
+#' @name fortify.testMediation
 #' 
-#' @param model  an object of class \code{"bootMA"} or \code{"sobelMA"} 
-#' containing results from (robust) mediation analysis, as returned by 
-#' \code{\link{mediate}}.
-#' @param data  for the \code{"bootMA"} method, this is currently ignored.  For 
-#' the \code{"sobelMA"} method, this is an optional numeric vector containing 
-#' the \eqn{x}-values at which to evaluate the assumed normal density from 
-#' Sobel's test (only used in case of a density plot).  The default is to take 
-#' 100 equally spaced points between the estimated indirect effect 
-#' \eqn{\pm}{+/-} three times the standard error according to Sobel's formula.
+#' @param model  an object inheriting from class \code{"\link{testMediation}"} 
+#' containing results from (robust) mediation analysis.
+#' @param data  for the \code{"bootTestMediation"} method, this is currently 
+#' ignored.  For the \code{"sobelTestMediation"} method, this is an optional 
+#' numeric vector containing the \eqn{x}-values at which to evaluate the 
+#' assumed normal density from Sobel's test (only used in case of a density 
+#' plot).  The default is to take 100 equally spaced points between the 
+#' estimated indirect effect \eqn{\pm}{+/-} three times the standard error 
+#' according to Sobel's formula.
 #' @param method  a character string specifying for which plot to construct the 
 #' data frame.  Possible values are \code{"dot"} for a dot plot of selected 
 #' coefficients, or \code{"density"} for a density plot of the indirect effect.
@@ -36,15 +36,21 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{mediate}}, \code{\link[=mediatePlot]{plot}}
+#' @seealso \code{\link{testMediation}}, \code{\link{plotMediation}}
 #' 
 #' @keywords utilities
-#' 
+
+NULL
+
+
+#' @rdname fortify.testMediation
+#' @method fortify bootTestMediation
 #' @import ggplot2
 #' @export
 
-fortify.bootMA <- function(model, data, method = c("dot", "density"), 
-                           parm = c("c", "ab"), ...) {
+fortify.bootTestMediation <- function(model, data, 
+                                      method = c("dot", "density"), 
+                                      parm = c("c", "ab"), ...) {
   # initialization
   method <- match.arg(method)
   # construct data fram with relevant information
@@ -83,13 +89,15 @@ fortify.bootMA <- function(model, data, method = c("dot", "density"),
 }
 
 
-#' @rdname fortify.bootMA
-#' @method fortify sobelMA
+#' @rdname fortify.testMediation
+#' @method fortify sobelTestMediation
 #' @import ggplot2
 #' @export
 
-fortify.sobelMA <- function(model, data, method = c("dot", "density"), 
-                            parm = c("c", "ab"), level = 0.95, ...) {
+fortify.sobelTestMediation <- function(model, data, 
+                                       method = c("dot", "density"), 
+                                       parm = c("c", "ab"), 
+                                       level = 0.95, ...) {
   # initialization
   method <- match.arg(method)
   level <- rep(as.numeric(level), length.out=1)
@@ -134,18 +142,18 @@ fortify.sobelMA <- function(model, data, method = c("dot", "density"),
 }
 
 
-#' @rdname fortify.bootMA
+#' @rdname fortify.testMediation
 #' @method fortify list
 #' @import ggplot2
 #' @export
 
 fortify.list <- function(model, data, ...) {
   ## initializations
-  isBootMA <- sapply(model, inherits, "bootMA")
-  isSobelMA <- sapply(model, inherits, "sobelMA")
-  model <- model[isBootMA | isSobelMA]
+  isBoot <- sapply(model, inherits, "bootTestMediation")
+  isSobel <- sapply(model, inherits, "sobelTestMediation")
+  model <- model[isBoot | isSobel]
   if(length(model) == 0) {
-    stop('no objects inheriting from class "bootMA" or "sobelMA"')
+    stop('no objects inheriting from class "testMediation"')
   }
   # check names of list elements
   methods <- names(model)
@@ -181,7 +189,7 @@ fortify.list <- function(model, data, ...) {
   } else {
     # additional information for density plot
     info$mapping <- aes_string(x="ab", y="Density", color="Method")
-    if(any(isBootMA) && any(isSobelMA)) {
+    if(any(isBoot) && any(isSobel)) {
       info$geom <- function(..., stat) geom_density(..., stat="identity")
       info$main <- NULL
     }

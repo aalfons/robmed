@@ -8,18 +8,19 @@
 #' Extract or compute confidence intervals for coefficients from (robust) 
 #' mediation analysis.
 #' 
-#' @method confint bootMA
+#' @name confint.testMediation
 #' 
-#' @param object  an object of class \code{"bootMA"} or \code{"sobelMA"} 
-#' containing results from (robust) mediation analysis, as returned by 
-#' \code{\link{mediate}}.
+#' @param object  an object inheriting from class \code{"\link{testMediation}"} 
+#' containing results from (robust) mediation analysis, or an object inheriting 
+#' from class \code{"\link{fitMediation}"} containing a (robust) mediation 
+#' model fit.
 #' @param parm  an integer, character or logical vector specifying the 
 #' coefficients for which to extract or compute confidence intervals, or 
 #' \code{NULL} to extract or compute confidence intervals for all coefficients.
-#' @param level  for the \code{"bootMA"} method, this is ignored and the 
-#' confidence level of the bootstrap confidence interval for the indirect 
-#' effect is used.  For the \code{"sobelMA"} method, the confidence level of 
-#' the confidence intervals to be computed.  The default is to compute 95\% 
+#' @param level  for the \code{"bootTestMediation"} method, this is ignored and 
+#' the confidence level of the bootstrap confidence interval for the indirect 
+#' effect is used.  For the other methods, the confidence level of the 
+#' confidence intervals to be computed.  The default is to compute 95\% 
 #' confidence intervals.
 #' @param \dots  additional arguments are currently ignored.
 #' 
@@ -27,14 +28,20 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{mediate}}, \code{\link[=coef.testMA]{coef}}
+#' @seealso \code{\link{testMediation}}, \code{\link{fitMediation}}, 
+#' \code{\link[=coef.testMediation]{coef}}
 #' 
 #' @keywords utilities
-#' 
+
+NULL
+
+
+#' @rdname confint.testMediation
+#' @method confint bootTestMediation
 #' @export
 
 ## argument 'level' is ignored
-confint.bootMA <- function(object, parm = NULL, level = NULL, ...) {
+confint.bootTestMediation <- function(object, parm = NULL, level = NULL, ...) {
   # combine confidence interval of indirect effect with those of other effects
   ci <- rbind(confint(object$fit, level=object$level), ab=object$ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
@@ -44,11 +51,11 @@ confint.bootMA <- function(object, parm = NULL, level = NULL, ...) {
 }
 
 
-#' @rdname confint.bootMA
-#' @method confint sobelMA
+#' @rdname confint.testMediation
+#' @method confint sobelTestMediation
 #' @export
 
-confint.sobelMA <- function(object, parm = NULL, level = 0.95, ...) {
+confint.sobelTestMediation <- function(object, parm = NULL, level = 0.95, ...) {
   # initializations
   level <- rep(as.numeric(level), length.out=1)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
@@ -64,11 +71,11 @@ confint.sobelMA <- function(object, parm = NULL, level = 0.95, ...) {
 }
 
 
-## internal functions
+#' @rdname confint.testMediation
+#' @method confint regFitMediation
+#' @export
 
-# extract confidence intervals for effects other than the indirect effect from 
-# a mediation model fit based on regression
-confint.regMA <- function(object, parm = NULL, level = 0.95, ...) {
+confint.regFitMediation <- function(object, parm = NULL, level = 0.95, ...) {
   # extract confidence intervals and combine into one matrix
   ci <- rbind(confint(object$fitMX, parm=2, level=level), 
               confint(object$fitYMX, parm=2:3, level=level), 
@@ -79,9 +86,12 @@ confint.regMA <- function(object, parm = NULL, level = 0.95, ...) {
   ci
 }
 
-# extract confidence intervals for effects other than the indirect effect from 
-# a mediation model fit based on a scatter matrix
-confint.covMA <- function(object, parm = NULL, level = 0.95, ...) {
+
+#' @rdname confint.testMediation
+#' @method confint covFitMediation
+#' @export
+
+confint.covFitMediation <- function(object, parm = NULL, level = 0.95, ...) {
   # initializations
   alpha <- 1 - level
   # compute standard errors
@@ -97,6 +107,9 @@ confint.covMA <- function(object, parm = NULL, level = 0.95, ...) {
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
   ci
 }
+
+
+## internal functions
 
 # extract confidence interval from bootstrap results 
 # (argument 'parm' is ignored)
