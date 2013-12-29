@@ -104,16 +104,25 @@ print.summaryFitMediation <- function(x, digits = max(3, getOption("digits")-3),
                signif.legend=FALSE, ...)
   # print model summary for y ~ m + x
   cat("---\nModel summary for y ~ m + x\n")
-  prefix <- if(x$robust) "Robust residual" else "Residual"
-  postfix <- sprintf(" on %d degrees of freedom", x$s$df)
-  cat("\n", prefix, " standard error: ", format(signif(x$s$value, digits)), 
-      postfix, "\n", sep="")
-  if(!is.null(x$FTest)) {
-    cat("Multiple R-squared:  ", formatC(x$FTest$R2, digits=digits), 
-        ",\tAdjusted R-squared:  ", formatC(x$FTest$adjR2, digits=digits), 
-        "\nF-statistic: ", formatC(x$FTest$statistic, digits=digits), " on ", 
-        x$FTest$df[1], " and ", x$FTest$df[2], " DF,  p-value: ", 
-        format.pval(x$FTest$pValue, digits=digits), "\n", sep="")
+  if(x$robust) {
+    cat("\nRobust residual standard error: ", format(signif(x$s$value, digits)), 
+        "\n", sep="")
+    if(!is.null(x$FTest)) {
+      cat("Robust R-squared:  ", formatC(x$FTest$R2, digits=digits), 
+          ",\tAdjusted robust R-squared:  ", formatC(x$FTest$adjR2, digits=digits), 
+          "\n", sep="")
+    }
+  } else {
+    postfix <- sprintf(" on %d degrees of freedom", x$s$df)
+    cat("\nResidual standard error: ", format(signif(x$s$value, digits)), 
+        postfix, "\n", sep="")
+    if(!is.null(x$FTest)) {
+      cat("Multiple R-squared:  ", formatC(x$FTest$R2, digits=digits), 
+          ",\tAdjusted R-squared:  ", formatC(x$FTest$adjR2, digits=digits), 
+          "\nF-statistic: ", formatC(x$FTest$statistic, digits=digits), " on ", 
+          x$FTest$df[1], " and ", x$FTest$df[2], " DF,  p-value: ", 
+          format.pval(x$FTest$pValue, digits=digits), "\n", sep="")
+    }
   }
   # print legend for significance stars
   if(isTRUE(signif.stars) && isTRUE(signif.legend)) printLegend()

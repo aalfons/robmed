@@ -75,7 +75,10 @@ summary.regFitMediation <- function(object, ...) {
   # construct return object
   result <- list(a=a, b=b, c=c, cPrime=cPrime, robust=robust, s=s)
   # add R-squared and F-test for nonrobust fit
-  if(!robust) {
+  if(robust) {
+    # robust F-test not yet implemented, only robust R-squared
+    result$FTest <- robR2(object$fitYMX)
+  } else {
     statistic <- unname(tmp$fstatistic[1])
     df <- unname(tmp$fstatistic[-1])
     pValue <- pf(statistic, df[1], df[2], lower.tail=FALSE)

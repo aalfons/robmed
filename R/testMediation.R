@@ -202,12 +202,12 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
         corrM <- correctionMatrix(z[, 1:2], weights=wM, 
                                   residuals=residuals(fitMX), 
                                   scale=fitMX$scale, 
-                                  psiControl=psiControl)
+                                  control=psiControl)
         coefM <- coef(fitMX)
         corrY <- correctionMatrix(z[, c(1, 4, 2)], weights=wY, 
                                   residuals=residuals(fitYMX), 
                                   scale=fitYMX$scale, 
-                                  psiControl=psiControl)
+                                  control=psiControl)
         coefY <- coef(fitYMX)
         # perform fast and robust bootstrap
         bootstrap <- localBoot(z, function(z, i, corrM, coefM, corrY, coefY) {
@@ -305,17 +305,12 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
 ## arguments for parallel computing to be passed down
 localBoot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
-## psi function (derivative of the rho function) as used by lmrob()
-psi <- function(x, control, derivative = 0) {
-  Mpsi(x, cc=control$tuning.psi, psi=control$psi, deriv=derivative)
-}
-
 ## get control arguments for psi function as used in a given model fit
 getPsiControl <- function(object) object$control[c("tuning.psi", "psi")]
 
 ## compute matrix for linear correction
-correctionMatrix <- function(X, weights, residuals, scale, psiControl) {
-  tmp <- psi(residuals / scale, control=psiControl, derivative=1)
+correctionMatrix <- function(X, weights, residuals, scale, control) {
+  tmp <- Mpsi(residuals/scale, cc=control$tuning.psi, psi=control$psi, deriv=1)
   solve(crossprod(X, tmp * X)) %*% crossprod(weights * X)
 }
 
