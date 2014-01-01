@@ -1,7 +1,7 @@
 \name{covHuber}
 \alias{covHuber}
 \alias{print.covHuber}
-\title{Huber M-estimator of location and scatter}
+\title{(Skipped) Huber M-estimator of location and scatter}
 \usage{
   covHuber(x, control = covHuber.control(...), ...)
 }
@@ -27,7 +27,11 @@
 
   \item{prob}{numeric; probability for the quantile of the
   \eqn{\chi^{2}}{chi-squared} distribution used as cutoff
-  point in the Huber weight function.}
+  point in the (skipped) Huber weight function.}
+
+  \item{skipped}{a logical indicating whether the Huber
+  weight function or the skipped Huber weight function was
+  used.}
 
   \item{weights}{a numeric vector containing the relative
   robustness weights for the observations.}
@@ -42,9 +46,22 @@
   iterations required to obtain the solution.}
 }
 \description{
-  Compute a Huber M-estimator of location and scatter,
-  which is reasonably robust for a small number of
+  Compute a (skipped) Huber M-estimator of location and
+  scatter, which is reasonably robust for a small number of
   variables.
+}
+\details{
+  An iterative reweighting algorithm is used to compute the
+  (skipped) Huber M-estimator.
+
+  The Huber weight function thereby corresponds to a convex
+  optimization problem, resulting in a unique solution.
+  The skipped Huber weight function, on the other hand,
+  yields a nonconvex optimization problem with multiple
+  local minima.  Therefore the starting value of the
+  iterative reweighting algorithm should be close to the
+  true minimum.  Here the Huber M-estimate is used as a
+  starting value for the skipped Huber M-estimator.
 }
 \author{
   Andreas Alfons
