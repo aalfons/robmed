@@ -1,9 +1,9 @@
-\name{covHuber.control}
-\alias{covHuber.control}
+\name{covControl}
+\alias{covControl}
 \title{Tuning parameters for (skipped) Huber M-estimation of location and scatter}
 \usage{
-  covHuber.control(prob, skipped = FALSE, tol = 1e-06,
-    maxIterations = 200)
+  covControl(prob, skipped = FALSE, maxIterations = 200,
+    tol = 1e-07)
 }
 \arguments{
   \item{prob}{numeric; probability for the quantile of the
@@ -16,12 +16,12 @@
   weight function or the skipped Huber weight function
   should be used.}
 
+  \item{maxIterations}{an integer giving the maximum number
+  of iterations in the iteratively reweighted algorithm.}
+
   \item{tol}{a small positive numeric value to be used to
   determine convergence of the iteratively reweighted
   algorithm.}
-
-  \item{maxIterations}{an integer giving the maximum number
-  of iterations in the iteratively reweighted algorithm.}
 }
 \value{
   A list with components corresponding to the arguments.
@@ -34,8 +34,8 @@
   Andreas Alfons
 }
 \references{
-  Huber, P. J. (1981) \emph{Robust statistics}. John Wiley
-  & Sons.
+  Huber, P.J. (1981) \emph{Robust statistics}. John Wiley &
+  Sons.
 }
 \seealso{
   \code{\link{covHuber}}

@@ -3,13 +3,13 @@
 \alias{print.covHuber}
 \title{(Skipped) Huber M-estimator of location and scatter}
 \usage{
-  covHuber(x, control = covHuber.control(...), ...)
+  covHuber(x, control = covControl(...), ...)
 }
 \arguments{
   \item{x}{a numeric matrix or data frame.}
 
   \item{control}{a list of tuning parameters as generated
-  by \code{\link{covHuber.control}}.}
+  by \code{\link{covControl}}.}
 
   \item{\dots}{additional arguments can be used to specify
   tuning parameters directly instead of via
@@ -67,16 +67,16 @@
   Andreas Alfons
 }
 \references{
-  Huber, P. J. (1981) \emph{Robust statistics}. John Wiley
-  & Sons.
+  Huber, P.J. (1981) \emph{Robust statistics}. John Wiley &
+  Sons.
 
   Zu, J. and Yuan, K.-H. (2010) Local influence and robust
   procedures for mediation analysis. \emph{Multivariate
   Behavioral Research}, \bold{45}(1), 1--44.
 }
 \seealso{
-  \code{\link{covHuber.control}},
-  \code{\link{testMediation}}, \code{\link{fitMediation}}
+  \code{\link{covControl}}, \code{\link{testMediation}},
+  \code{\link{fitMediation}}
 }
 \keyword{multivariate}
 
