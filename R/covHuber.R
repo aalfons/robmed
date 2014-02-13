@@ -3,20 +3,14 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-#' (Skipped) Huber M-estimator of location and scatter
+#' Huber M-estimator of location and scatter
 #' 
-#' Compute a (skipped) Huber M-estimator of location and scatter, which is 
-#' reasonably robust for a small number of variables.
+#' Compute a Huber M-estimator of location and scatter, which is reasonably 
+#' robust for a small number of variables.
 #' 
-#' An iterative reweighting algorithm is used to compute the (skipped) Huber 
-#' M-estimator.
-#' 
-#' The Huber weight function thereby corresponds to a convex optimization 
-#' problem, resulting in a unique solution.  The skipped Huber weight function, 
-#' on the other hand, yields a nonconvex optimization problem with multiple 
-#' local minima.  Therefore the starting value of the iterative reweighting 
-#' algorithm should be close to the true minimum.  Here the Huber M-estimate 
-#' is used as a starting value for the skipped Huber M-estimator.
+#' An iterative reweighting algorithm is used to compute the Huber 
+#' M-estimator.  The Huber weight function thereby corresponds to a 
+#' convex optimization problem, resulting in a unique solution.
 #' 
 #' @aliases print.covHuber
 #' 
@@ -30,10 +24,8 @@
 #' @returnItem center  a numeric vector containing the location vector estimate.
 #' @returnItem cov  a numeric matrix containing the scatter matrix estimate.
 #' @returnItem prob  numeric; probability for the quantile of the 
-#' \eqn{\chi^{2}}{chi-squared} distribution used as cutoff point in the 
-#' (skipped) Huber weight function.
-#' @returnItem skipped  a logical indicating whether the Huber weight function 
-#' or the skipped Huber weight function was used.
+#' \eqn{\chi^{2}}{chi-squared} distribution used as cutoff point in the Huber 
+#' weight function.
 #' @returnItem weights  a numeric vector containing the relative robustness 
 #' weights for the observations.
 #' @returnItem tau  numeric; correction for Fisher consistency under 
@@ -66,7 +58,6 @@ covHuber <- function(x, control = covControl(...), ...) {
   p <- ncol(x)
   ## check control arguments
   prob <- control$prob
-  skipped <- control$skipped
   maxIterations <- control$maxIterations
   tol <- control$tol
   ## compute starting values for location vector and scatter matrix
@@ -76,7 +67,6 @@ covHuber <- function(x, control = covControl(...), ...) {
   ## perform iterative reweighting
   i <- 0
   if(prob < 1) {
-    # in case of skipped Huber, the Huber M-estimator is used as starting value
     # define tuning parameters
     # tau is chosen such that E[chi_p^2 u^2(chi_p^2)] / tau = p
     # (i.e., such that Sigma is Fisher consistent)
@@ -98,31 +88,6 @@ covHuber <- function(x, control = covControl(...), ...) {
       i <- i + 1
       continue <- max(abs(mu-oldMu)) > tol || max(abs(Sigma-oldSigma)) > tol
     }
-    # compute skipped Huber M-estimator if requested
-    if(skipped) {
-      # check if initial Huber M-estimator converged
-      if(i == maxIterations && continue) {
-        warning(sprintf("no convergence in %d iterations for initial estimator", 
-                        maxIterations))
-      }
-      tau <- -2*r*dchisq(r, df=p)/p + prob
-      # perform iterative reweighting
-      i <- 0
-      continue <- TRUE
-      while(continue && i < maxIterations) {
-        oldMu <- mu
-        oldSigma <- Sigma
-        # compute weights based on mahalanobis distances
-        d <- mahalanobis(x, center=mu, cov=Sigma)# squared mahalanobis distances
-        u <- sqrt(ifelse(d > r, 0, 1))
-        # update location vector and scatter matrix
-        mu <- apply(x, 2, weighted.mean, w=u)
-        Sigma <- crossprod(u * sweep(x, 2, mu, check.margin=FALSE)) / (n*tau)
-        # check convergence
-        i <- i + 1
-        continue <- max(abs(mu-oldMu)) > tol || max(abs(Sigma-oldSigma)) > tol
-      }
-    }
     # check if algorithm converged
     if(i == maxIterations && continue) {
       warning(sprintf("no convergence in %d iterations", maxIterations))
@@ -134,8 +99,8 @@ covHuber <- function(x, control = covControl(...), ...) {
     tau <- 1
     u <- rep.int(1, n)
   }
-  result <- list(center=mu, cov=Sigma, prob=prob, skipped=skipped, weights=u, 
-                 tau=tau, converged=converged, iterations=i)
+  result <- list(center=mu, cov=Sigma, prob=prob, weights=u, tau=tau, 
+                 converged=converged, iterations=i)
   class(result) <- "covHuber"
   result
 }

@@ -74,16 +74,13 @@ regControl <- function(efficiency = 0.85, maxIterations = 200,
 }
 
 
-#' Tuning parameters for (skipped) Huber M-estimation of location and scatter
+#' Tuning parameters for Huber M-estimation of location and scatter
 #' 
 #' Obtain a list with tuning paramters for \code{\link{covHuber}}.
 #' 
 #' @param prob  numeric; probability for the quantile of the 
 #' \eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the 
-#' (skipped) Huber weight function (defaults to 0.95 for the Huber weight 
-#' function and 0.975 for the skipped Huber weight function).
-#' @param skipped  a logical indicating whether the Huber weight function or 
-#' the skipped Huber weight function should be used.
+#' Huber weight function (defaults to 0.95).
 #' @param maxIterations  an integer giving the maximum number of iterations in 
 #' the iteratively reweighted algorithm.
 #' @param tol  a small positive numeric value to be used to determine 
@@ -102,18 +99,12 @@ regControl <- function(efficiency = 0.85, maxIterations = 200,
 #' 
 #' @export
 
-covControl <- function(prob, skipped = FALSE, maxIterations = 200, 
-                       tol = 1e-07) {
+covControl <- function(prob = 0.95, maxIterations = 200, tol = 1e-07) {
   # check supplied values
-  skipped <- isTRUE(skipped)
-  defaultProb <- if(skipped) 0.975 else 0.95
-  if(missing(prob)) prob <- defaultProb
-  else {
-    prob <- rep(as.numeric(prob), length.out=1)
-    if(!is.finite(prob)) prob <- defaultProb
-    else if(prob < 0) prob <- 0
-    else if(prob > 1) prob <- 1
-  }
+  prob <- rep(as.numeric(prob), length.out=1)
+  if(!is.finite(prob)) prob <- formals$prob
+  else if(prob < 0) prob <- 0
+  else if(prob > 1) prob <- 1
   maxIterations <- rep(as.integer(maxIterations), length.out=1)
   if(!is.finite(maxIterations)) maxIterations <- formals()$maxIterations
   else if(maxIterations < 0) maxIterations <- 0
@@ -121,5 +112,5 @@ covControl <- function(prob, skipped = FALSE, maxIterations = 200,
   if(!is.finite(tol)) tol <- formals()$tol
   else if(tol < 0) tol <- 0
   # return list of control parameters
-  list(prob=prob, skipped=skipped, maxIterations=maxIterations, tol=tol)
+  list(prob=prob, maxIterations=maxIterations, tol=tol)
 }

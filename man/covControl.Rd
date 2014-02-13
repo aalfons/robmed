@@ -1,20 +1,14 @@
 \name{covControl}
 \alias{covControl}
-\title{Tuning parameters for (skipped) Huber M-estimation of location and scatter}
+\title{Tuning parameters for Huber M-estimation of location and scatter}
 \usage{
-  covControl(prob, skipped = FALSE, maxIterations = 200,
-    tol = 1e-07)
+  covControl(prob = 0.95, maxIterations = 200, tol = 1e-07)
 }
 \arguments{
   \item{prob}{numeric; probability for the quantile of the
   \eqn{\chi^{2}}{chi-squared} distribution to be used as
-  cutoff point in the (skipped) Huber weight function
-  (defaults to 0.95 for the Huber weight function and 0.975
-  for the skipped Huber weight function).}
-
-  \item{skipped}{a logical indicating whether the Huber
-  weight function or the skipped Huber weight function
-  should be used.}
+  cutoff point in the Huber weight function (defaults to
+  0.95).}
 
   \item{maxIterations}{an integer giving the maximum number
   of iterations in the iteratively reweighted algorithm.}
