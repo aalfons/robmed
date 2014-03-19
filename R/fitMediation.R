@@ -155,8 +155,8 @@ regFitMediation <- function(x, y, m, data, robust = TRUE,
   fYMX <- as.formula(paste(y, "~", m, "+", x))
   # compute regression models
   if(robust) {
-    fitMX <- lmrob(fMX, data=data, control=control, model=FALSE, x=FALSE)
     fitYX <- lmrob(fYX, data=data, control=control, model=FALSE, x=FALSE)
+    fitMX <- lmrob(fMX, data=data, control=control, model=FALSE, x=FALSE)
     fitYMX <- lmrob(fYMX, data=data, control=control, model=FALSE, x=FALSE)
   } else {
     fitYX <- lm(fYX, data=data, model=FALSE)
