@@ -27,11 +27,17 @@
 #' @param m  either a numeric vector containing the proposed mediator variable, 
 #' or (if \code{data} is supplied) a character string, an integer or a logical 
 #' vector specifying the corresponding column of \code{data}.
+#' @param covariates  optional; either a numeric vector or data frame 
+#' containing additional covariates to be used as control variables, or (if 
+#' \code{data} is supplied) a character, integer or logical vector specifying 
+#' the corresponding column of \code{data}.
 #' @param data  an optional \code{data.frame}.
 #' @param method  a character string specifying the method of 
 #' estimation.  Possible values are \code{"regression"} (the default) 
 #' to estimate the effects via regressions, or \code{"covariance"} to 
-#' estimate the effects via the covariance matrix.
+#' estimate the effects via the covariance matrix.  Note that the effects are 
+#' always estimated via regressions if control variables are specified via 
+#' \code{covariates}.
 #' @param robust  a logical indicating whether to robustly estimate the effects 
 #' (defaults to \code{TRUE}).
 #' @param control  if \code{robust} is \code{TRUE} and \code{method} is 

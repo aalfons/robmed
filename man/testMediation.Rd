@@ -28,6 +28,12 @@
   character string, an integer or a logical vector
   specifying the corresponding column of \code{data}.}
 
+  \item{covariates}{optional; either a numeric vector or
+  data frame containing additional covariates to be used as
+  control variables, or (if \code{data} is supplied) a
+  character, integer or logical vector specifying the
+  corresponding column of \code{data}.}
+
   \item{data}{an optional \code{data.frame}.}
 
   \item{test}{a character string specifying the test to be
@@ -58,7 +64,9 @@
   estimation for the mediation model.  Possible values are
   \code{"regression"} (the default) to estimate the effects
   via regressions, or \code{"covariance"} to estimate the
-  effects via the covariance matrix.}
+  effects via the covariance matrix.  Note that the effects
+  are always estimated via regressions if control variables
+  are specified via \code{covariates}.}
 
   \item{robust}{a logical indicating whether to perform a
   robust test (defaults to \code{TRUE}).}
