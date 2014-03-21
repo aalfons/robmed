@@ -5,7 +5,7 @@
 \alias{summary.regFitMediation}
 \title{(Robustly) fit a mediation model}
 \usage{
-  fitMediation(x, y, m, data,
+  fitMediation(x, y, m, covariates = NULL, data,
     method = c("regression", "covariance"), robust = TRUE,
     control, ...)
 }

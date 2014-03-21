@@ -5,7 +5,8 @@
 \alias{testMediation}
 \title{(Robust) mediation analysis}
 \usage{
-  testMediation(x, y, m, data, test = c("boot", "sobel"),
+  testMediation(x, y, m, covariates = NULL, data,
+    test = c("boot", "sobel"),
     alternative = c("twosided", "less", "greater"),
     R = 5000, level = 0.95, type = c("bca", "perc"),
     method = c("regression", "covariance"), robust = TRUE,

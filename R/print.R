@@ -82,15 +82,23 @@ print.sobelTestMediation <- function(x, digits = max(3, getOption("digits")-3),
 print.summaryFitMediation <- function(x, digits = max(3, getOption("digits")-3), 
                                       signif.stars = getOption("show.signif.stars"), 
                                       signif.legend = signif.stars, ...) {
+  # initializations
+  p <- length(x$variables)
+  haveCovariates <- p > 3
   # print information on data
   cat("\nIndependent, dependent and proposed mediator variables:\n")
   cat(sprintf("x = %s\n", x$variables[1]))
   cat(sprintf("y = %s\n", x$variables[2]))
   cat(sprintf("m = %s\n", x$variables[3]))
+  if(haveCovariates) {
+    cat("\nControl variables:\n")
+    print(x$variables[4:p], quote=FALSE)
+  }
   # print sample size
   cat(sprintf("\nSample size: %d\n", x$n))
   # print effects
-  cat("---\nEffect of x on m (a path):\n")
+  if(haveCovariates) cat("---\nPartial effect of x on m (a path):\n")
+  else cat("---\nEffect of x on m (a path):\n")
   printCoefmat(x$a, digits=digits, signif.stars=signif.stars, 
                signif.legend=FALSE, ...)
   cat("\nDirect effect of m on y (b path):\n")
@@ -102,8 +110,14 @@ print.summaryFitMediation <- function(x, digits = max(3, getOption("digits")-3),
   cat("\nTotal effect of x on y (c' path):\n")
   printCoefmat(x$cPrime, digits=digits, signif.stars=signif.stars, 
                signif.legend=FALSE, ...)
-  # print model summary for y ~ m + x
-  cat("---\nModel summary for y ~ m + x\n")
+  if(haveCovariates) {
+    cat("\nPartial effects of control variables on y:\n")
+    printCoefmat(x$covariates, digits=digits, signif.stars=signif.stars, 
+                 signif.legend=FALSE, ...)
+  }
+  # print model summary for y ~ m + x + covariates
+  postfix <- if(haveCovariates) " + control variables" else ""
+  cat(sprintf("---\nModel summary for y ~ m + x%s\n", postfix))
   if(x$robust) {
     cat("\nRobust residual standard error: ", format(signif(x$s$value, digits)), 
         "\n", sep="")

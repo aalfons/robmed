@@ -100,7 +100,8 @@
 #' @import robustbase
 #' @export
 
-fitMediation <- function(x, y, m, data, method = c("regression", "covariance"), 
+fitMediation <- function(x, y, m, covariates = NULL, data, 
+                         method = c("regression", "covariance"), 
                          robust = TRUE, control, ...) {
   ## initializations
   # FIXME: make sure dimensions are correct
@@ -109,24 +110,29 @@ fitMediation <- function(x, y, m, data, method = c("regression", "covariance"),
     x <- substitute(x)
     y <- substitute(y)
     m <- substitute(m)
-    data <- eval.parent(call("data.frame", x, y, m))
-    # convert names to character strings
-    x <- as.character(x)
-    y <- as.character(y)
-    m <- as.character(m)
+    if(is.null(covariates)) {
+      data <- eval.parent(call("data.frame", x, y, m))
+    } else if(is.data.frame(covariates)) {
+      data <- cbind(eval.parent(call("data.frame", x, y, m)), covariates)
+    } else {
+      covariates <- substitute(covariates)
+      data <- eval.parent(call("data.frame", x, y, m, covariates))
+    }
   } else {
     # prepare data set
     data <- as.data.frame(data)
     x <- data[, x, drop=FALSE]
     y <- data[, y, drop=FALSE]
     m <- data[, m, drop=FALSE]
-    data <- cbind(x, y, m)
-    # extract names
-    cn <- names(data)
-    x <- cn[1]
-    y <- cn[2]
-    m <- cn[3]
+    covariates <- data[, covariates, drop=FALSE]
+    data <- cbind(x, y, m, covariates)
   }
+  # extract names
+  cn <- names(data)
+  x <- cn[1]
+  y <- cn[2]
+  m <- cn[3]
+  covariates <- cn[-(1:3)]
   # make sure that variables are numeric
   convert <- !sapply(data, is.numeric)
   data[convert] <- lapply(data[convert], as.numeric)
@@ -135,6 +141,10 @@ fitMediation <- function(x, y, m, data, method = c("regression", "covariance"),
   if(n <= 3) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
+  if(length(covariates) > 0 && method == "covariance") {
+    method <- "regression"
+    warning("using regression method")
+  }
   robust <- isTRUE(robust)
   if(robust && missing(control)) {
     if(method == "regression") control <- regControl(...)
@@ -142,17 +152,19 @@ fitMediation <- function(x, y, m, data, method = c("regression", "covariance"),
   }
   ## estimate effects
   if(method == "regression") {
-    regFitMediation(x, y, m, data=data, robust=robust, control=control)
+    regFitMediation(x, y, m, covariates, data=data, 
+                    robust=robust, control=control)
   } else covFitMediation(x, y, m, data=data, robust=robust, control=control)
 }
 
 ## estimate the effects in a mediation model via regressions
-regFitMediation <- function(x, y, m, data, robust = TRUE, 
-                            control = regControl()) {
+regFitMediation <- function(x, y, m, covariates = character(), data, 
+                            robust = TRUE, control = regControl()) {
   # construct formulas for regression models
-  fYX <- as.formula(paste(y, "~", x))
-  fMX <- as.formula(paste(m, "~", x))
-  fYMX <- as.formula(paste(y, "~", m, "+", x))
+  covariates <- paste(c("", covariates), collapse="+")
+  fYX <- as.formula(paste(y, "~", x, covariates, sep=""))
+  fMX <- as.formula(paste(m, "~", x, covariates, sep=""))
+  fYMX <- as.formula(paste(y, "~", m, "+", x, covariates, sep=""))
   # compute regression models
   if(robust) {
     fitYX <- lmrob(fYX, data=data, control=control, model=FALSE, x=FALSE)

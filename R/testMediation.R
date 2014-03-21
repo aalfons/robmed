@@ -130,7 +130,8 @@
 #' @import robustbase
 #' @export
 
-testMediation <- function(x, y, m, data, test = c("boot", "sobel"), 
+testMediation <- function(x, y, m, covariates = NULL, data, 
+                          test = c("boot", "sobel"), 
                           alternative = c("twosided", "less", "greater"), 
                           R = 5000, level = 0.95, type = c("bca", "perc"), 
                           method = c("regression", "covariance"), 
@@ -142,24 +143,29 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
     x <- substitute(x)
     y <- substitute(y)
     m <- substitute(m)
-    data <- eval.parent(call("data.frame", x, y, m))
-    # convert names to character strings
-    x <- as.character(x)
-    y <- as.character(y)
-    m <- as.character(m)
+    if(is.null(covariates)) {
+      data <- eval.parent(call("data.frame", x, y, m))
+    } else if(is.data.frame(covariates)) {
+      data <- cbind(eval.parent(call("data.frame", x, y, m)), covariates)
+    } else {
+      covariates <- substitute(covariates)
+      data <- eval.parent(call("data.frame", x, y, m, covariates))
+    }
   } else {
     # prepare data set
     data <- as.data.frame(data)
     x <- data[, x, drop=FALSE]
     y <- data[, y, drop=FALSE]
     m <- data[, m, drop=FALSE]
-    data <- cbind(x, y, m)
-    # extract names
-    cn <- names(data)
-    x <- cn[1]
-    y <- cn[2]
-    m <- cn[3]
+    covariates <- data[, covariates, drop=FALSE]
+    data <- cbind(x, y, m, covariates)
   }
+  # extract names
+  cn <- names(data)
+  x <- cn[1]
+  y <- cn[2]
+  m <- cn[3]
+  covariates <- cn[-(1:3)]
   # make sure that variables are numeric
   convert <- !sapply(data, is.numeric)
   data[convert] <- lapply(data[convert], as.numeric)
@@ -170,6 +176,10 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
   test <- match.arg(test)
   alternative <- match.arg(alternative)
   method <- match.arg(method)
+  if(length(covariates) > 0 && method == "covariance") {
+    method <- "regression"
+    warning("using regression method")
+  }
   robust <- isTRUE(robust)
   if(robust && missing(control)) {
     if(method == "regression") control <- regControl()
@@ -177,7 +187,8 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
   }
   ## estimate effects
   if(method == "regression") {
-    fit <- regFitMediation(x, y, m, data=data, robust=robust, control=control)
+    fit <- regFitMediation(x, y, m, covariates, data=data, 
+                    robust=robust, control=control)
   } else {
     fit <- covFitMediation(x, y, m, data=data, robust=robust, control=control)
   }
@@ -188,6 +199,8 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
     type <- match.arg(type)
     ## bootstrap test
     if(method == "regression") {
+      # indices of covariates in data matrix to be used in bootstrap
+      j <- match(covariates, cn) + 1
       # check if fast and robust bootstrap should be applied
       if(robust) {
         # extract regression models
@@ -199,12 +212,12 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
         z <- cbind(rep.int(1, n), as.matrix(data), wM, wY)
         # compute matrices for linear corrections
         psiControl <- getPsiControl(fitMX)  # the same for both model fits
-        corrM <- correctionMatrix(z[, 1:2], weights=wM, 
+        corrM <- correctionMatrix(z[, c(1:2, j)], weights=wM, 
                                   residuals=residuals(fitMX), 
                                   scale=fitMX$scale, 
                                   control=psiControl)
         coefM <- coef(fitMX)
-        corrY <- correctionMatrix(z[, c(1, 4, 2)], weights=wY, 
+        corrY <- correctionMatrix(z[, c(1, 4, 2, j)], weights=wY, 
                                   residuals=residuals(fitYMX), 
                                   scale=fitYMX$scale, 
                                   control=psiControl)
@@ -217,12 +230,12 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
           wYi <- zi[, "wY"]
           # check whether there are enough observations with nonzero weights
           if(sum(wMi > 0) <= 2 || sum(wYi > 0) <= 3) return(NA)
-          # compute coefficients from weighted regression m ~ x
-          wxi <- wMi * zi[, 1:2]
+          # compute coefficients from weighted regression m ~ x + covariates
+          wxi <- wMi * zi[, c(1:2, j)]
           wmi <- wMi * zi[, 4]
           coefMi <- solve(crossprod(wxi)) %*% crossprod(wxi, wmi)
-          # compute coefficients from weighted regression y ~ m + x
-          wmxi <- wYi * zi[, c(1, 4, 2)]
+          # compute coefficients from weighted regression y ~ m + x + covariates
+          wmxi <- wYi * zi[, c(1, 4, 2, j)]
           wyi <- wYi * zi[, 3]
           coefYi <- solve(crossprod(wmxi)) %*% crossprod(wmxi, wyi)
           # compute corrected coefficients
@@ -239,12 +252,12 @@ testMediation <- function(x, y, m, data, test = c("boot", "sobel"),
         bootstrap <- localBoot(z, function(z, i) {
           # extract bootstrap sample from the data
           zi <- z[i, , drop=FALSE]
-          # compute coefficients from regression m ~ x
-          xi <- zi[, 1:2]
+          # compute coefficients from regression m ~ x + covariates
+          xi <- zi[, c(1:2, j)]
           mi <- zi[, 4]
           coefMi <- drop(solve(crossprod(xi)) %*% crossprod(xi, mi))
-          # compute coefficients from regression y ~ m + x
-          mxi <- zi[, c(1, 4, 2)]
+          # compute coefficients from regression y ~ m + x + covariates
+          mxi <- zi[, c(1, 4, 2, j)]
           yi <- zi[, 3]
           coefYi <- drop(solve(crossprod(mxi)) %*% crossprod(mxi, yi))
           # compute indirect effect

@@ -70,10 +70,14 @@ summary.regFitMediation <- function(object, ...) {
   tmp <- summary(object$fitYMX)
   b <- tmp$coefficients[2, , drop=FALSE]
   c <- tmp$coefficients[3, , drop=FALSE]
-  # extract residual standard error
-  s <- list(value=tmp$sigma, df=tmp$df[2])
   # construct return object
-  result <- list(a=a, b=b, c=c, cPrime=cPrime, robust=robust, s=s)
+  result <- list(a=a, b=b, c=c, cPrime=cPrime)
+  # add partial effects of control variables if they exist
+  p <- nrow(tmp$coefficients)
+  if(p > 3) result$covariates <- tmp$coefficients[4:p, , drop=FALSE]
+  # add residual standard error
+  result$robust <- robust
+  result$s <- list(value=tmp$sigma, df=tmp$df[2])
   # add R-squared and F-test for nonrobust fit
   if(robust) {
     # robust F-test not yet implemented, only robust R-squared
