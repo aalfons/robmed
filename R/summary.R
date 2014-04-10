@@ -42,8 +42,8 @@ summary.covFitMediation <- function(object, ...) {
   z <- coefficients / se
   pValue <- pValueZ(z)
   coefficients <- cbind(coefficients, se, z, pValue)
-  cn <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
-  dimnames(coefficients) <- list(c(x, m, x, x), cn)
+  tn <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+  dimnames(coefficients) <- list(c(x, m, x, x), tn)
   # compute residual standard error
   s <- S[y,y]-object$b^2*S[m,m]-object$c^2*S[x,x]-2*object$b*object$c*S[m,x]
   s <- list(value=s)
