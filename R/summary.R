@@ -5,14 +5,65 @@
 
 ## summary of a mediation model fit based on a scatter matrix
 #' @S3method summary covFitMediation
+# summary.covFitMediation <- function(object, ...) {
+#   # extract covariance matrix
+#   S <- object$cov$cov
+#   # extract variable names
+#   cn <- names(object$data)
+#   x <- cn[1]
+#   y <- cn[2]
+#   m <- cn[3]
+#   # extract number of observations
+#   n <- nobs(object$cov)
+#   # compute the inverse of the Fisher information matrix for the unique 
+#   # elements of the covariance matrix
+#   D <- duplicationMatrix(3)
+#   invS <- solve(S)
+#   W <- t(D) %*% kronecker(invS, invS) %*% D / 2
+#   OmegaSigma <- solve(W)
+#   # apply the delta method to obtain the inverse of the Fisher information 
+#   # matrix for the coefficients in the mediation model
+#   d <- S[x,x]*S[m,m] - S[m,x]^2
+#   dsq <- d^2
+#   hDot <- matrix(c(-S[m,x]/S[x,x]^2, 0, 1/S[x,x], 0, 0, 0,   # a
+#                    (S[m,x]^2*S[y,m]+S[m,x]*S[y,x]*S[m,m])/dsq, -S[m,x]/d, 
+#                    (-S[y,x]*S[x,x]*S[m,m]-S[m,x]^2*S[y,x]+2*S[x,x]*S[y,m]*S[m,x])/dsq,
+#                    (S[m,x]*S[y,x]*S[x,x]-S[x,x]^2*S[y,m])/dsq, S[x,x]/d, 0,  # b
+#                    (-S[m,m]^2*S[y,x]+S[m,x]*S[y,m]*S[m,m])/dsq, S[m,m]/d, 
+#                    (-S[y,m]*S[x,x]*S[m,m]-S[m,x]^2*S[y,m]+2*S[m,m]*S[y,x]*S[m,x])/dsq, 
+#                    (-S[m,x]^2*S[y,x]+S[m,x]*S[y,m]*S[x,x])/dsq, -S[m,x]/d, 0,  # c
+#                    -S[y,x]/S[x,x]^2, 1/S[x,x], 0, 0, 0, 0),  # c'
+#                  6, 4)
+#   OmegaTheta <- t(hDot) %*% OmegaSigma %*% hDot
+#   # compute standard errors
+#   se <- sqrt(diag(OmegaTheta) / n)
+#   # perform asymptotic tests
+#   coefficients <- c(object$a, object$b, object$c, object$cPrime)
+#   z <- coefficients / se
+#   pValue <- pValueZ(z)
+#   coefficients <- cbind(coefficients, se, z, pValue)
+#   tn <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+#   dimnames(coefficients) <- list(c(x, m, x, x), tn)
+#   # compute residual standard error
+#   s <- S[y,y]-object$b^2*S[m,m]-object$c^2*S[x,x]-2*object$b*object$c*S[m,x]
+#   s <- list(value=s)
+#   # return results
+#   result <- list(a=coefficients[1, , drop=FALSE], 
+#                  b=coefficients[2, , drop=FALSE], 
+#                  c=coefficients[3, , drop=FALSE], 
+#                  cPrime=coefficients[4, , drop=FALSE], 
+#                  robust=object$robust, s=s, n=n, variables=cn)
+#   class(result) <- "summaryFitMediation"
+#   result
+# }
 summary.covFitMediation <- function(object, ...) {
-  # extract covariance matrix
-  S <- object$cov$cov
   # extract variable names
   cn <- names(object$data)
   x <- cn[1]
   y <- cn[2]
   m <- cn[3]
+  # extract covariance matrix
+  S <- object$cov$cov[c(x, m, y), c(x, m, y)]
   # extract number of observations
   n <- nobs(object$cov)
   # compute the inverse of the Fisher information matrix for the unique 
@@ -21,32 +72,39 @@ summary.covFitMediation <- function(object, ...) {
   invS <- solve(S)
   W <- t(D) %*% kronecker(invS, invS) %*% D / 2
   OmegaSigma <- solve(W)
+  # parameters in mediation model
+  a <- object$a
+  b <- object$b
+  c <- object$c
+  sEpsilonMX <- S[m,m] - a^2 * S[x,x]
+  sEpsilonYMX <- S[y,y] - b^2*S[m,m] - c^2*S[x,x] - 2*b*c*S[m,x]
   # apply the delta method to obtain the inverse of the Fisher information 
-  # matrix for the coefficients in the mediation model
-  d <- S[x,x]*S[m,m] - S[m,x]^2
-  dsq <- d^2
-  hDot <- matrix(c(-S[m,x]/S[x,x]^2, 0, 1/S[x,x], 0, 0, 0,   # a
-                   (S[m,x]^2*S[y,m]+S[m,x]*S[y,x]*S[m,m])/dsq, -S[m,x]/d, 
-                   (-S[y,x]*S[x,x]*S[m,m]-S[m,x]^2*S[y,x]+2*S[x,x]*S[y,m]*S[m,x])/dsq,
-                   (S[m,x]*S[y,x]*S[x,x]-S[x,x]^2*S[y,m])/dsq, S[x,x]/d, 0,  # b
-                   (-S[m,m]^2*S[y,x]+S[m,x]*S[y,m]*S[m,m])/dsq, S[m,m]/d, 
-                   (-S[y,m]*S[x,x]*S[m,m]-S[m,x]^2*S[y,m]+2*S[m,m]*S[y,x]*S[m,x])/dsq, 
-                   (-S[m,x]^2*S[y,x]+S[m,x]*S[y,m]*S[x,x])/dsq, -S[m,x]/d, 0,  # c
-                   -S[y,x]/S[x,x]^2, 1/S[x,x], 0, 0, 0, 0),  # c'
-                 6, 4)
-  OmegaTheta <- t(hDot) %*% OmegaSigma %*% hDot
+  # matrix for the coefficients in the mediation model, see Zu & Yuan (2010)
+  hDot <- matrix(c(-a/S[x,x], a*c/S[x,x], -a^2*c/sEpsilonMX-c/S[x,x], 1, a^2, c^2, 
+                   1/S[x,x], (a*b-c)/sEpsilonMX, -b/S[x,x]-a*(a*b-c)/sEpsilonMX, 0, -2*a, 2*b*c, 
+                   0, -a/sEpsilonMX, a^2/sEpsilonMX+1/S[x,x], 0, 0, -2*c, 
+                   0, -b/sEpsilonMX, a*b/sEpsilonMX, 0, 1, b^2, 
+                   0, 1/sEpsilonMX, -a/sEpsilonMX, 0, 0, -2*b, 
+                   0, 0, 0, 0, 0, 1), 
+                 nrow=6, ncol=6)
+  OmegaTheta <- hDot %*% OmegaSigma %*% t(hDot)
+  # total effect
+  cPrime <- object$cPrime
+  OmegaSigmaYX <- OmegaSigma[c(1, 3, 6), c(1, 3, 6)]
+  hDotYX <- matrix(c(-cPrime/S[x,x], 1, 0, 1/S[x,x], 0, -1, 0, 0, 1), 
+                   nrow=3, ncol=3)
+  OmegaThetaYX <- hDotYX %*% OmegaSigmaYX %*% t(hDotYX)
   # compute standard errors
-  se <- sqrt(diag(OmegaTheta) / n)
+  se <- sqrt(c(diag(OmegaTheta)[1:3], OmegaThetaYX[1,1]) / n)
   # perform asymptotic tests
-  coefficients <- c(object$a, object$b, object$c, object$cPrime)
+  coefficients <- c(a, b, c, cPrime)
   z <- coefficients / se
   pValue <- pValueZ(z)
   coefficients <- cbind(coefficients, se, z, pValue)
   tn <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
   dimnames(coefficients) <- list(c(x, m, x, x), tn)
-  # compute residual standard error
-  s <- S[y,y]-object$b^2*S[m,m]-object$c^2*S[x,x]-2*object$b*object$c*S[m,x]
-  s <- list(value=s)
+  # residual standard error as list (for compatibility with regression method)
+  s <- list(value=sEpsilonYMX)
   # return results
   result <- list(a=coefficients[1, , drop=FALSE], 
                  b=coefficients[2, , drop=FALSE], 
