@@ -12,8 +12,8 @@ Perform mediation analysis via a (fast and robust) bootstrap test.
 \tabular{ll}{
 Package: \tab mediate\cr
 Type: \tab Package\cr
-Version: \tab 0.1.0\cr
-Date: \tab 2013-07-11\cr
+Version: \tab 0.1.1\cr
+Date: \tab 2015-03-25\cr
 Depends: \tab ggplot2 (>= 0.9.3), robustbase (>= 0.9-8)\cr
 Imports: \tab boot (>= 1.3-1)\cr
 License: \tab GPL (>= 2)\cr

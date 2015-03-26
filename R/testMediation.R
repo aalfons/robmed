@@ -320,9 +320,9 @@ testMediation <- function(x, y, m, covariates = NULL, data,
 }
 
 
-## wrapper function for boot() that ignores unused arguments, but allows 
-## arguments for parallel computing to be passed down
-localBoot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
+# ## wrapper function for boot() that ignores unused arguments, but allows 
+# ## arguments for parallel computing to be passed down
+# localBoot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
 ## get control arguments for psi function as used in a given model fit
 getPsiControl <- function(object) object$control[c("tuning.psi", "psi")]
