@@ -1,7 +1,11 @@
 # History files
 .Rhistory
+.RData
+# Compiled C++ code
+src/*.o
+src/*.so
+src/*.dll
 # Example code in package build process
 *-Ex.R
 .Rproj.user
 .Rbuildignore
-mediate.Rproj
