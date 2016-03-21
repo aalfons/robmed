@@ -15,7 +15,7 @@ summary.covFitMediation <- function(object, ...) {
   S <- object$cov$cov[c(x, m, y), c(x, m, y)]
   # extract number of observations
   n <- nobs(object$cov)
-  # compute the inverse of the Fisher information matrix for the unique 
+  # compute the inverse of the Fisher information matrix for the unique
   # elements of the covariance matrix
   D <- duplicationMatrix(3)
   invS <- solve(S)
@@ -27,20 +27,20 @@ summary.covFitMediation <- function(object, ...) {
   c <- object$c
   sEpsilonMX <- S[m,m] - a^2 * S[x,x]
   sEpsilonYMX <- S[y,y] - b^2*S[m,m] - c^2*S[x,x] - 2*b*c*S[m,x]
-  # apply the delta method to obtain the inverse of the Fisher information 
+  # apply the delta method to obtain the inverse of the Fisher information
   # matrix for the coefficients in the mediation model, see Zu & Yuan (2010)
-  hDot <- matrix(c(-a/S[x,x], a*c/S[x,x], -a^2*c/sEpsilonMX-c/S[x,x], 1, a^2, c^2, 
-                   1/S[x,x], (a*b-c)/sEpsilonMX, -b/S[x,x]-a*(a*b-c)/sEpsilonMX, 0, -2*a, 2*b*c, 
-                   0, -a/sEpsilonMX, a^2/sEpsilonMX+1/S[x,x], 0, 0, -2*c, 
-                   0, -b/sEpsilonMX, a*b/sEpsilonMX, 0, 1, b^2, 
-                   0, 1/sEpsilonMX, -a/sEpsilonMX, 0, 0, -2*b, 
-                   0, 0, 0, 0, 0, 1), 
+  hDot <- matrix(c(-a/S[x,x], a*c/S[x,x], -a^2*c/sEpsilonMX-c/S[x,x], 1, a^2, c^2,
+                   1/S[x,x], (a*b-c)/sEpsilonMX, -b/S[x,x]-a*(a*b-c)/sEpsilonMX, 0, -2*a, 2*b*c,
+                   0, -a/sEpsilonMX, a^2/sEpsilonMX+1/S[x,x], 0, 0, -2*c,
+                   0, -b/sEpsilonMX, a*b/sEpsilonMX, 0, 1, b^2,
+                   0, 1/sEpsilonMX, -a/sEpsilonMX, 0, 0, -2*b,
+                   0, 0, 0, 0, 0, 1),
                  nrow=6, ncol=6)
   OmegaTheta <- hDot %*% OmegaSigma %*% t(hDot)
   # total effect
   cPrime <- object$cPrime
   OmegaSigmaYX <- OmegaSigma[c(1, 3, 6), c(1, 3, 6)]
-  hDotYX <- matrix(c(-cPrime/S[x,x], 1, 0, 1/S[x,x], 0, -1, 0, 0, 1), 
+  hDotYX <- matrix(c(-cPrime/S[x,x], 1, 0, 1/S[x,x], 0, -1, 0, 0, 1),
                    nrow=3, ncol=3)
   OmegaThetaYX <- hDotYX %*% OmegaSigmaYX %*% t(hDotYX)
   # compute standard errors
@@ -55,10 +55,10 @@ summary.covFitMediation <- function(object, ...) {
   # residual standard error as list (for compatibility with regression method)
   s <- list(value=sEpsilonYMX)
   # return results
-  result <- list(a=coefficients[1, , drop=FALSE], 
-                 b=coefficients[2, , drop=FALSE], 
-                 c=coefficients[3, , drop=FALSE], 
-                 cPrime=coefficients[4, , drop=FALSE], 
+  result <- list(a=coefficients[1, , drop=FALSE],
+                 b=coefficients[2, , drop=FALSE],
+                 c=coefficients[3, , drop=FALSE],
+                 cPrime=coefficients[4, , drop=FALSE],
                  robust=object$robust, s=s, n=n, variables=cn)
   class(result) <- "summaryFitMediation"
   result
@@ -70,13 +70,19 @@ summary.regFitMediation <- function(object, ...) {
   # initializations
   robust <- object$robust
   # compute summaries of regression models and extract t-tests for coefficients
-  tmp <- summary(object$fitYX)
-  cPrime <- tmp$coefficients[2, , drop=FALSE]
+  if(!robust) {
+    tmp <- summary(object$fitYX)
+    cPrime <- tmp$coefficients[2, , drop=FALSE]
+  }
   tmp <- summary(object$fitMX)
   a <- tmp$coefficients[2, , drop=FALSE]
   tmp <- summary(object$fitYMX)
   b <- tmp$coefficients[2, , drop=FALSE]
   c <- tmp$coefficients[3, , drop=FALSE]
+  if(robust) {
+    cPrime <- matrix(c(object$cPrime, rep.int(NA, ncol(c)-1)), nrow=1)
+    dimnames(cPrime) <- dimnames(c)
+  }
   # construct return object
   result <- list(a=a, b=b, c=c, cPrime=cPrime)
   # add partial effects of control variables if they exist
@@ -93,7 +99,7 @@ summary.regFitMediation <- function(object, ...) {
     statistic <- unname(tmp$fstatistic[1])
     df <- unname(tmp$fstatistic[-1])
     pValue <- pf(statistic, df[1], df[2], lower.tail=FALSE)
-    result$FTest <- list(R2=tmp$r.squared, adjR2=tmp$adj.r.squared, 
+    result$FTest <- list(R2=tmp$r.squared, adjR2=tmp$adj.r.squared,
                          statistic=statistic, df=df, pValue=pValue)
   }
   # add number of observations and variable names
@@ -108,6 +114,18 @@ summary.regFitMediation <- function(object, ...) {
 #' @S3method summary testMediation
 summary.testMediation <- function(object, ...) {
   result <- list(object=object, summary=summary(object$fit))
+  if(object$fit$robust && inherits(object, "bootTestMediation")) {
+    # correct standard deviation of bootstrap estimates for estimation of
+    # parameters a, b and c, and perform two-sided t-test
+    cPrime <- result$summary$cPrime
+    n <- result$summary$n
+    cat("data = ", cPrime[1, 1], "\n")
+    cat("boot = ", mean(object$reps$t[, 2]), "\n")
+    cPrime[1, 2] <- sd(object$reps$t[, 2]) * (n-1)/(n-4)
+    cPrime[1, 3] <- cPrime[1, 1] / cPrime[1, 2]
+    cPrime[1, 4] <- 2*pt(abs(cPrime[1, 3]), df=n-4, lower.tail=FALSE)
+    result$summary$cPrime <- cPrime
+  }
   class(result) <- "summaryTestMediation"
   result
 }
