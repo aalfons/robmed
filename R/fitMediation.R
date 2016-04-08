@@ -8,7 +8,7 @@
 #' (Robustly) estimate the effects in a mediation model.
 #'
 #' If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
-#' (the defaults), the effects are estimated via robust regressions with
+#' (the default), the effects are estimated via robust regressions with
 #' \code{\link[robustbase]{lmrob}}.
 #'
 #' If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
@@ -90,9 +90,6 @@
 #'
 #' @seealso \code{\link{testMediation}}
 #'
-#' \code{\link[=coef.fitMediation]{coef}} and
-#' \code{\link[=confint.regFitMediation]{confint}} methods
-#'
 #' \code{\link[robustbase]{lmrob}}, \code{\link[stats]{lm}},
 #' \code{\link{covHuber}}, \code{\link{covML}}
 #'
@@ -167,20 +164,23 @@ fitMediation <- function(x, y, m, covariates = NULL, data,
 regFitMediation <- function(x, y, m, covariates = character(), data,
                             robust = TRUE, control = regControl()) {
   # construct formulas for regression models
-  covariates <- paste(c("", covariates), collapse="+")
-  fYX <- as.formula(paste(y, "~", x, covariates, sep=""))
-  fMX <- as.formula(paste(m, "~", x, covariates, sep=""))
-  fYMX <- as.formula(paste(y, "~", m, "+", x, covariates, sep=""))
+  covariateTerm <- paste(c("", covariates), collapse="+")
+  fMX <- as.formula(paste(m, "~", x, covariateTerm, sep=""))
+  fYMX <- as.formula(paste(y, "~", m, "+", x, covariateTerm, sep=""))
   # compute regression models
   if(robust) {
-    # fitYX <- lmrob(fYX, data=data, control=control, model=FALSE, x=FALSE)
-    fitYX <- NULL
+    # for the robust method, the total effect is estimated as c' = ab + c
+    # to satisfy this relationship
     fitMX <- lmrob(fMX, data=data, control=control, model=FALSE, x=FALSE)
     fitYMX <- lmrob(fYMX, data=data, control=control, model=FALSE, x=FALSE)
+    fitYX <- NULL
   } else {
-    fitYX <- lm(fYX, data=data, model=FALSE)
+    # for the standard method, there is not much additional cost in performing
+    # the regression for the total effect
     fitMX <- lm(fMX, data=data, model=FALSE)
     fitYMX <- lm(fYMX, data=data, model=FALSE)
+    fYX <- as.formula(paste(y, "~", x, covariateTerm, sep=""))
+    fitYX <- lm(fYX, data=data, model=FALSE)
   }
   # extract effects
   a <- unname(coef(fitMX)[2])
@@ -189,8 +189,9 @@ regFitMediation <- function(x, y, m, covariates = character(), data,
   if(robust) cPrime <- a*b + c
   else cPrime <- unname(coef(fitYX)[2])
   # return results
-  result <- list(a=a, b=b, c=c, cPrime=cPrime, robust=robust, fitYX=fitYX,
-                 fitMX=fitMX, fitYMX=fitYMX, data=data)
+  result <- list(a=a, b=b, c=c, cPrime=cPrime, fitMX=fitMX, fitYMX=fitYMX,
+                 fitYX=fitYX, x=x, y=y, m=m, covariates=covariates,
+                 data=data, robust=robust)
   class(result) <- c("regFitMediation", "fitMediation")
   result
 }
@@ -208,18 +209,8 @@ covFitMediation <- function(x, y, m, data, robust = TRUE,
   c <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
   cPrime <- S[y, x] / S[x, x]
   # return results
-  result <- list(a=a, b=b, c=c, cPrime=cPrime, robust=robust,
-                 cov=cov, data=data)
+  result <- list(a=a, b=b, c=c, cPrime=cPrime, cov=cov, x=x, y=y, m=m,
+                 data=data, robust=robust)
   class(result) <- c("covFitMediation", "fitMediation")
   result
-}
-
-
-## compute duplication matrix according to Magnus & Neudecker (1999, p.49)
-duplicationMatrix <- function(p){
-  D <- diag(p)
-  index <- seq(p*(p+1)/2)
-  D[lower.tri(D, diag=TRUE)] <- index
-  D[upper.tri(D)] <- D[lower.tri(D)]
-  outer(c(D), index, function(i, j) ifelse(i == j, 1, 0 ))
 }

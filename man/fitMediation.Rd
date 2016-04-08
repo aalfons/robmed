@@ -97,7 +97,7 @@ proposed mediator variables.}
 }
 \details{
 If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
-(the defaults), the effects are estimated via robust regressions with
+(the default), the effects are estimated via robust regressions with
 \code{\link[robustbase]{lmrob}}.
 
 If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
@@ -119,9 +119,6 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 }
 \seealso{
 \code{\link{testMediation}}
-
-\code{\link[=coef.fitMediation]{coef}} and
-\code{\link[=confint.regFitMediation]{confint}} methods
 
 \code{\link[robustbase]{lmrob}}, \code{\link[stats]{lm}},
 \code{\link{covHuber}}, \code{\link{covML}}

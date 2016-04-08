@@ -4,12 +4,20 @@
 \alias{print.sobelTestMediation}
 \alias{summary.testMediation}
 \alias{testMediation}
+\alias{testMediation.default}
+\alias{testMediation.fitMediation}
 \title{(Robust) mediation analysis}
 \usage{
-testMediation(x, y, m, covariates = NULL, data, test = c("boot", "sobel"),
+testMediation(x, ...)
+
+\method{testMediation}{default}(x, y, m, covariates = NULL, data,
+  test = c("boot", "sobel"), alternative = c("twosided", "less", "greater"),
+  R = 5000, level = 0.95, type = c("bca", "perc"),
+  method = c("regression", "covariance"), robust = TRUE, control, ...)
+
+\method{testMediation}{fitMediation}(x, test = c("boot", "sobel"),
   alternative = c("twosided", "less", "greater"), R = 5000, level = 0.95,
-  type = c("bca", "perc"), method = c("regression", "covariance"),
-  robust = TRUE, control, ...)
+  type = c("bca", "perc"), ...)
 }
 \arguments{
 \item{x}{either a numeric vector containing the independent variable, or
@@ -117,7 +125,7 @@ or Sobel's test.
 }
 \details{
 If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
-(the defaults), the tests are based on robust regressions with
+(the default), the tests are based on robust regressions with
 \code{\link[robustbase]{lmrob}}.  The bootstrap test is thereby performed
 via the fast and robust bootstrap.
 
