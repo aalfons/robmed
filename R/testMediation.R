@@ -4,143 +4,143 @@
 # --------------------------------------
 
 #' (Robust) mediation analysis
-#' 
-#' Perform (robust) mediation analysis via a (fast and robust) bootstrap test 
+#'
+#' Perform (robust) mediation analysis via a (fast and robust) bootstrap test
 #' or Sobel's test.
-#' 
-#' If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE} 
-#' (the defaults), the tests are based on robust regressions with 
-#' \code{\link[robustbase]{lmrob}}.  The bootstrap test is thereby performed 
+#'
+#' If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
+#' (the defaults), the tests are based on robust regressions with
+#' \code{\link[robustbase]{lmrob}}.  The bootstrap test is thereby performed
 #' via the fast and robust bootstrap.
-#' 
-#' If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE}, 
-#' the tests are based on a Huber M-estimator of location and scatter.  For the 
-#' bootstrap test, the M-estimates are used to first clean the data via a 
-#' transformation.  Then the standard bootstrap is performed with the cleaned 
-#' data.  Note that this covariance-based approach is less robust than the 
-#' regression-based one described above.  Furthermore, the bootstrap does not 
+#'
+#' If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
+#' the tests are based on a Huber M-estimator of location and scatter.  For the
+#' bootstrap test, the M-estimates are used to first clean the data via a
+#' transformation.  Then the standard bootstrap is performed with the cleaned
+#' data.  Note that this covariance-based approach is less robust than the
+#' regression-based one described above.  Furthermore, the bootstrap does not
 #' account for the variability from cleaning the data.
-#' 
-#' @aliases print.bootTestMediation print.sobelTestMediation 
+#'
+#' @aliases print.bootTestMediation print.sobelTestMediation
 #' summary.testMediation
-#' 
-#' @param x  either a numeric vector containing the independent variable, or 
-#' (if \code{data} is supplied) a character string, an integer or a logical 
+#'
+#' @param x  either a numeric vector containing the independent variable, or
+#' (if \code{data} is supplied) a character string, an integer or a logical
 #' vector specifying the corresponding column of \code{data}.
-#' @param y  either a numeric vector containing the dependent variable, or 
-#' (if \code{data} is supplied) a character string, an integer or a logical 
+#' @param y  either a numeric vector containing the dependent variable, or
+#' (if \code{data} is supplied) a character string, an integer or a logical
 #' vector specifying the corresponding column of \code{data}.
-#' @param m  either a numeric vector containing the proposed mediator variable, 
-#' or (if \code{data} is supplied) a character string, an integer or a logical 
+#' @param m  either a numeric vector containing the proposed mediator variable,
+#' or (if \code{data} is supplied) a character string, an integer or a logical
 #' vector specifying the corresponding column of \code{data}.
-#' @param covariates  optional; either a numeric vector or data frame 
-#' containing additional covariates to be used as control variables, or (if 
-#' \code{data} is supplied) a character, integer or logical vector specifying 
+#' @param covariates  optional; either a numeric vector or data frame
+#' containing additional covariates to be used as control variables, or (if
+#' \code{data} is supplied) a character, integer or logical vector specifying
 #' the corresponding column of \code{data}.
 #' @param data  an optional \code{data.frame}.
-#' @param test  a character string specifying the test to be performed for 
-#' the indirect effect.  Possible values are \code{"boot"} (the default) for 
+#' @param test  a character string specifying the test to be performed for
+#' the indirect effect.  Possible values are \code{"boot"} (the default) for
 #' the bootstrap, or \code{"sobel"} for Sobel's test.
-#' @param alternative  a character string specifying the alternative hypothesis 
-#' in the test for the indirect effect.  Possible values are \code{"twosided"} 
+#' @param alternative  a character string specifying the alternative hypothesis
+#' in the test for the indirect effect.  Possible values are \code{"twosided"}
 #' (the default), \code{"less"} or \code{"greater"}.
-#' @param R  an integer giving the number of bootstrap replicates.  The default 
+#' @param R  an integer giving the number of bootstrap replicates.  The default
 #' is to use 5000 bootstrap replicates.
-#' @param level  numeric; the confidence level of the confidence interval in 
+#' @param level  numeric; the confidence level of the confidence interval in
 #' the bootstrap test.  The default is to compute a 95\% confidence interval.
-#' @param type  a character string specifying the type of confidence interval 
-#' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the 
-#' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"} 
+#' @param type  a character string specifying the type of confidence interval
+#' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
+#' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 #' for the percentile bootstrap.
-#' @param method  a character string specifying the method of estimation for 
-#' the mediation model.  Possible values are \code{"regression"} (the default) 
-#' to estimate the effects via regressions, or \code{"covariance"} to estimate 
-#' the effects via the covariance matrix.  Note that the effects are always 
-#' estimated via regressions if control variables are specified via 
+#' @param method  a character string specifying the method of estimation for
+#' the mediation model.  Possible values are \code{"regression"} (the default)
+#' to estimate the effects via regressions, or \code{"covariance"} to estimate
+#' the effects via the covariance matrix.  Note that the effects are always
+#' estimated via regressions if control variables are specified via
 #' \code{covariates}.
-#' @param robust  a logical indicating whether to perform a robust test 
+#' @param robust  a logical indicating whether to perform a robust test
 #' (defaults to \code{TRUE}).
-#' @param control  if \code{robust} is \code{TRUE} and \code{method} is 
-#' \code{"regression"}, a list of tuning parameters for 
-#' \code{\link[robustbase]{lmrob}} as generated by 
-#' \code{\link{regControl}}.  If \code{robust} is \code{TRUE} 
-#' and \code{method} is \code{"covariance"}, a list of tuning parameters for 
+#' @param control  if \code{robust} is \code{TRUE} and \code{method} is
+#' \code{"regression"}, a list of tuning parameters for
+#' \code{\link[robustbase]{lmrob}} as generated by
+#' \code{\link{regControl}}.  If \code{robust} is \code{TRUE}
+#' and \code{method} is \code{"covariance"}, a list of tuning parameters for
 #' \code{\link{covHuber}} as generated by \code{\link{covControl}}.
-#' @param \dots  additional arguments to be passed to \code{\link[boot]{boot}} 
+#' @param \dots  additional arguments to be passed to \code{\link[boot]{boot}}
 #' in case of a bootstrap test.
-#' 
-#' @return An object inheriting from class \code{"testMediation"} (class 
-#' \code{"bootTestMediation"} if \code{test} is \code{"boot"} or 
-#' \code{"sobelTestMediation"} if \code{test} is \code{"sobel"}) with the 
+#'
+#' @return An object inheriting from class \code{"testMediation"} (class
+#' \code{"bootTestMediation"} if \code{test} is \code{"boot"} or
+#' \code{"sobelTestMediation"} if \code{test} is \code{"sobel"}) with the
 #' following components:
-#' @returnItem ab  numeric; the point estimate of the indirect effect.
-#' @returnItem ci  a numeric vector of length two containing the bootstrap 
-#' confidence interval for the indirect effect (only 
-#' \code{"bootTestMediation"}).
-#' @returnItem reps  an object of class \code{"\link[boot]{boot}"} containing 
-#' the bootstrap replicates of the indirect effect (only 
-#' \code{"bootTestMediation"}).
-#' @returnItem se  numeric; the standard error of the indirect effect according 
-#' to Sobel's formula (only \code{"sobelTestMediation"}).
-#' @returnItem statistic  numeric; the test statistic for Sobel's test (only 
-#' \code{"sobelTestMediation"}).
-#' @returnItem pValue  numeric; the p-Value from Sobel's test (only 
-#' \code{"sobelTestMediation"}).
-#' @returnItem alternative  a character string specifying the alternative 
-#' hypothesis in the test for the indirect effect.
-#' @returnItem R  an integer giving the number of bootstrap replicates (only 
-#' \code{"bootTestMediation"}).
-#' @returnItem level  numeric; the confidence level of the bootstrap confidence 
-#' interval (only \code{"bootTestMediation"}).
-#' @returnItem type  a character string specifying the type of bootstrap 
-#' confidence interval (only \code{"bootTestMediation"}).
-#' @returnItem fit  an object inheriting from class 
-#' \code{"\link{fitMediation}"} containing the estimation results for the 
-#' direct effect and the total effect in the mediation model.
-#' 
+#' \item{ab}{numeric; the point estimate of the indirect effect.}
+#' \item{ci}{a numeric vector of length two containing the bootstrap
+#' confidence interval for the indirect effect (only
+#' \code{"bootTestMediation"}).}
+#' \item{reps}{an object of class \code{"\link[boot]{boot}"} containing
+#' the bootstrap replicates of the indirect effect (only
+#' \code{"bootTestMediation"}).}
+#' \item{se}{numeric; the standard error of the indirect effect according
+#' to Sobel's formula (only \code{"sobelTestMediation"}).}
+#' \item{statistic}{numeric; the test statistic for Sobel's test (only
+#' \code{"sobelTestMediation"}).}
+#' \item{pValue}{numeric; the p-Value from Sobel's test (only
+#' \code{"sobelTestMediation"}).}
+#' \item{alternative}{a character string specifying the alternative
+#' hypothesis in the test for the indirect effect.}
+#' \item{R}{an integer giving the number of bootstrap replicates (only
+#' \code{"bootTestMediation"}).}
+#' \item{level}{numeric; the confidence level of the bootstrap confidence
+#' interval (only \code{"bootTestMediation"}).}
+#' \item{type}{a character string specifying the type of bootstrap
+#' confidence interval (only \code{"bootTestMediation"}).}
+#' \item{fit}{an object inheriting from class
+#' \code{"\link{fitMediation}"} containing the estimation results for the
+#' direct effect and the total effect in the mediation model.}
+#'
 #' @author Andreas Alfons
-#' 
+#'
 #' @references
-#' Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for estimating 
-#' indirect effects in simple mediation models. \emph{Behavior Research Methods, 
+#' Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for estimating
+#' indirect effects in simple mediation models. \emph{Behavior Research Methods,
 #' Instruments, & Computers}, \bold{36}(4), 717--731.
-#' 
-#' Salibian-Barrera, M. and Zamar, R. (2002) Bootstrapping robust estimates of 
+#'
+#' Salibian-Barrera, M. and Zamar, R. (2002) Bootstrapping robust estimates of
 #' regression. \emph{The Annals of Statistics}, \bold{30}(2), 556--582.
-#' 
-#' Sobel, M.E. (1982) Asymptotic confidence intervals for indirect effects in 
-#' structural equation models. \emph{Sociological Methodology}, \bold{13}, 
+#'
+#' Sobel, M.E. (1982) Asymptotic confidence intervals for indirect effects in
+#' structural equation models. \emph{Sociological Methodology}, \bold{13},
 #' 290--312.
-#' 
-#' Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for 
-#' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1), 
+#'
+#' Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
+#' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 #' 1--44.
-#' 
+#'
 #' @seealso \code{\link{fitMediation}}
-#' 
-#' \code{\link[=coef.testMediation]{coef}}, 
-#' \code{\link[=confint.testMediation]{confint}}, 
-#' \code{\link[=fortify.testMediation]{fortify}} and 
+#'
+#' \code{\link[=coef.testMediation]{coef}},
+#' \code{\link[=confint.testMediation]{confint}},
+#' \code{\link[=fortify.testMediation]{fortify}} and
 #' \code{\link[=plotMediation]{plot}} methods
-#' 
-#' \code{\link[boot]{boot}}, \code{\link[robustbase]{lmrob}}, 
+#'
+#' \code{\link[boot]{boot}}, \code{\link[robustbase]{lmrob}},
 #' \code{\link[stats]{lm}}, \code{\link{covHuber}}, \code{\link{covML}}
-#' 
+#'
 #' @examples
 #' data("superbowl")
 #' testMediation("frequency", "liking", "clutter", data=superbowl)
-#' 
+#'
 #' @keywords multivariate
-#' 
+#'
 #' @import boot
 #' @import robustbase
 #' @export
 
-testMediation <- function(x, y, m, covariates = NULL, data, 
-                          test = c("boot", "sobel"), 
-                          alternative = c("twosided", "less", "greater"), 
-                          R = 5000, level = 0.95, type = c("bca", "perc"), 
-                          method = c("regression", "covariance"), 
+testMediation <- function(x, y, m, covariates = NULL, data,
+                          test = c("boot", "sobel"),
+                          alternative = c("twosided", "less", "greater"),
+                          R = 5000, level = 0.95, type = c("bca", "perc"),
+                          method = c("regression", "covariance"),
                           robust = TRUE, control, ...) {
   ## initializations
   # FIXME: make sure dimensions are correct
@@ -193,7 +193,7 @@ testMediation <- function(x, y, m, covariates = NULL, data,
   }
   ## estimate effects
   if(method == "regression") {
-    fit <- regFitMediation(x, y, m, covariates, data=data, 
+    fit <- regFitMediation(x, y, m, covariates, data=data,
                     robust=robust, control=control)
   } else {
     fit <- covFitMediation(x, y, m, data=data, robust=robust, control=control)
@@ -218,14 +218,14 @@ testMediation <- function(x, y, m, covariates = NULL, data,
         z <- cbind(rep.int(1, n), as.matrix(data), wM, wY)
         # compute matrices for linear corrections
         psiControl <- getPsiControl(fitMX)  # the same for both model fits
-        corrM <- correctionMatrix(z[, c(1:2, j)], weights=wM, 
-                                  residuals=residuals(fitMX), 
-                                  scale=fitMX$scale, 
+        corrM <- correctionMatrix(z[, c(1:2, j)], weights=wM,
+                                  residuals=residuals(fitMX),
+                                  scale=fitMX$scale,
                                   control=psiControl)
         coefM <- coef(fitMX)
-        corrY <- correctionMatrix(z[, c(1, 4, 2, j)], weights=wY, 
-                                  residuals=residuals(fitYMX), 
-                                  scale=fitYMX$scale, 
+        corrY <- correctionMatrix(z[, c(1, 4, 2, j)], weights=wY,
+                                  residuals=residuals(fitYMX),
+                                  scale=fitYMX$scale,
                                   control=psiControl)
         coefY <- coef(fitYMX)
         # perform fast and robust bootstrap
@@ -292,8 +292,8 @@ testMediation <- function(x, y, m, covariates = NULL, data,
     # extract confidence interval for indirect effect
     ci <- confint(bootstrap, level=level, alternative=alternative, type=type)
     # construct return object
-    result <- list(ab=mean(bootstrap$t, na.rm=TRUE), ci=ci, reps=bootstrap, 
-                   alternative=alternative, R=R, level=level, type=type, 
+    result <- list(ab=mean(bootstrap$t, na.rm=TRUE), ci=ci, reps=bootstrap,
+                   alternative=alternative, R=R, level=level, type=type,
                    fit=fit)
     class(result) <- c("bootTestMediation", "testMediation")
   } else {
@@ -311,16 +311,16 @@ testMediation <- function(x, y, m, covariates = NULL, data,
     z <- ab / se
     pValue <- pValueZ(z, alternative=alternative)
     # construct return item
-    result <- list(ab=ab, se=se, statistic=z, pValue=pValue, 
+    result <- list(ab=ab, se=se, statistic=z, pValue=pValue,
                    alternative=alternative, fit=fit, data=data)
     class(result) <- c("sobelTestMediation", "testMediation")
-  }  
+  }
   ## return test results
   result
 }
 
 
-## wrapper function for boot() that ignores unused arguments, but allows 
+## wrapper function for boot() that ignores unused arguments, but allows
 ## arguments for parallel computing to be passed down
 localBoot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
@@ -338,6 +338,6 @@ pValueZ <- function(z, alternative = c("twosided", "less", "greater")) {
   # initializations
   alternative <- match.arg(alternative)
   # compute p-value
-  switch(alternative, twosided=2*pnorm(abs(z), lower.tail=FALSE), 
+  switch(alternative, twosided=2*pnorm(abs(z), lower.tail=FALSE),
          less=pnorm(z), greater=pnorm(z, lower.tail=FALSE))
 }
