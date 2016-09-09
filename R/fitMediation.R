@@ -53,33 +53,33 @@
 #' \code{"regFitMediation"} if \code{method} is \code{"regression"} or
 #' \code{"covFitMediation"} if \code{method} is \code{"covariance"}) with
 #' the following components:
-#' @returnItem a  numeric; the point estimate of the effect of the independent
-#' variable on the proposed mediator variable.
-#' @returnItem b  numeric; the point estimate of the direct effect of the
-#' proposed mediator variable on the dependent variable.
-#' @returnItem c  numeric; the point estimate of the direct effect of the
-#' independent variable on the dependent variable.
-#' @returnItem cPrime  numeric; the point estimate of the total effect of the
-#' independent variable on the dependent variable.
-#' @returnItem robust  a logical indicating whether the effects were estimated
-#' robustly.
-#' @returnItem fitYX  an object of class \code{"\link[robustbase]{lmrob}"} or
+#' \item{a}{numeric; the point estimate of the effect of the independent
+#' variable on the proposed mediator variable.}
+#' \item{b}{numeric; the point estimate of the direct effect of the
+#' proposed mediator variable on the dependent variable.}
+#' \item{c}{numeric; the point estimate of the direct effect of the
+#' independent variable on the dependent variable.}
+#' \item{cPrime}{numeric; the point estimate of the total effect of the
+#' independent variable on the dependent variable.}
+#' \item{robust}{a logical indicating whether the effects were estimated
+#' robustly.}
+#' \item{fitYX}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
 #' regression of the dependent variable on the independent variable (only
-#' \code{"regFitMediation"}).
-#' @returnItem fitMX  an object of class \code{"\link[robustbase]{lmrob}"} or
+#' \code{"regFitMediation"}).}
+#' \item{fitMX}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
 #' regression of the proposed mediator variable on the independent variable
-#' (only \code{"regFitMediation"}).
-#' @returnItem fitYMX  an object of class \code{"\link[robustbase]{lmrob}"} or
+#' (only \code{"regFitMediation"}).}
+#' \item{fitYMX}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
 #' regression of the dependent variable on the proposed mediator and
-#' independent variables (only \code{"regFitMediation"}).
-#' @returnItem cov  an object of class \code{"\link{covHuber}"} or
+#' independent variables (only \code{"regFitMediation"}).}
+#' \item{cov}{an object of class \code{"\link{covHuber}"} or
 #' \code{"\link{covML}"} containing the covariance matrix estimates (only
-#' \code{"covFitMediation"}).
-#' @returnItem data  a data frame containing the independent, dependent and
-#' proposed mediator variables.
+#' \code{"covFitMediation"}).}
+#' \item{data}{a data frame containing the independent, dependent and
+#' proposed mediator variables.}
 #'
 #' @author Andreas Alfons
 #'

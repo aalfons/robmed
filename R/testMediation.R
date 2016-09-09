@@ -73,30 +73,30 @@
 #' \code{"bootTestMediation"} if \code{test} is \code{"boot"} or
 #' \code{"sobelTestMediation"} if \code{test} is \code{"sobel"}) with the
 #' following components:
-#' @returnItem ab  numeric; the point estimate of the indirect effect.
-#' @returnItem ci  a numeric vector of length two containing the bootstrap
+#' \item{ab}{numeric; the point estimate of the indirect effect.}
+#' \item{ci}{a numeric vector of length two containing the bootstrap
 #' confidence interval for the indirect effect (only
-#' \code{"bootTestMediation"}).
-#' @returnItem reps  an object of class \code{"\link[boot]{boot}"} containing
+#' \code{"bootTestMediation"}).}
+#' \item{reps}{an object of class \code{"\link[boot]{boot}"} containing
 #' the bootstrap replicates of the indirect effect (only
-#' \code{"bootTestMediation"}).
-#' @returnItem se  numeric; the standard error of the indirect effect according
-#' to Sobel's formula (only \code{"sobelTestMediation"}).
-#' @returnItem statistic  numeric; the test statistic for Sobel's test (only
-#' \code{"sobelTestMediation"}).
-#' @returnItem pValue  numeric; the p-Value from Sobel's test (only
-#' \code{"sobelTestMediation"}).
-#' @returnItem alternative  a character string specifying the alternative
-#' hypothesis in the test for the indirect effect.
-#' @returnItem R  an integer giving the number of bootstrap replicates (only
-#' \code{"bootTestMediation"}).
-#' @returnItem level  numeric; the confidence level of the bootstrap confidence
-#' interval (only \code{"bootTestMediation"}).
-#' @returnItem type  a character string specifying the type of bootstrap
-#' confidence interval (only \code{"bootTestMediation"}).
-#' @returnItem fit  an object inheriting from class
+#' \code{"bootTestMediation"}).}
+#' \item{se}{numeric; the standard error of the indirect effect according
+#' to Sobel's formula (only \code{"sobelTestMediation"}).}
+#' \item{statistic}{numeric; the test statistic for Sobel's test (only
+#' \code{"sobelTestMediation"}).}
+#' \item{pValue}{numeric; the p-Value from Sobel's test (only
+#' \code{"sobelTestMediation"}).}
+#' \item{alternative}{a character string specifying the alternative
+#' hypothesis in the test for the indirect effect.}
+#' \item{R}{an integer giving the number of bootstrap replicates (only
+#' \code{"bootTestMediation"}).}
+#' \item{level}{numeric; the confidence level of the bootstrap confidence
+#' interval (only \code{"bootTestMediation"}).}
+#' \item{type}{a character string specifying the type of bootstrap
+#' confidence interval (only \code{"bootTestMediation"}).}
+#' \item{fit}{an object inheriting from class
 #' \code{"\link{fitMediation}"} containing the estimation results for the
-#' direct effect and the total effect in the mediation model.
+#' direct effect and the total effect in the mediation model.}
 #'
 #' @author Andreas Alfons
 #'

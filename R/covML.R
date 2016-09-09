@@ -4,31 +4,31 @@
 # --------------------------------------
 
 #' Maximum likelihood estimator of mean vector and covariance matrix
-#' 
-#' Compute the maximum likelihood estimator of the mean vector and the 
+#'
+#' Compute the maximum likelihood estimator of the mean vector and the
 #' covariance matrix.
-#' 
+#'
 #' @aliases print.covML
-#' 
+#'
 #' @param x  a numeric matrix or data frame.
 #' @param \dots  additional arguments are currently ignored.
-#' 
-#' @returnClass covML
-#' @returnItem center  a numeric vector containing the mean vector estimate.
-#' @returnItem cov  a numeric matrix containing the covariance matrix estimate.
-#' @returnItem n  an integer giving the number of observations.
-#' 
+#'
+#' @return An object of class \code{"covML"} with the following components:
+#' \item{center}{a numeric vector containing the mean vector estimate.}
+#' \item{cov}{a numeric matrix containing the covariance matrix estimate.}
+#' \item{n}{an integer giving the number of observations.}
+#'
 #' @author Andreas Alfons
-#' 
+#'
 #' @references
-#' Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for 
-#' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1), 
+#' Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
+#' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 #' 1--44.
-#' 
+#'
 #' @seealso \code{\link{testMediation}}, \code{\link{fitMediation}}
-#' 
+#'
 #' @keywords multivariate
-#' 
+#'
 #' @export
 
 covML <- function(x, ...) {
