@@ -118,7 +118,7 @@ getConfint.covFitMediation <- function(object, parm = NULL, level = 0.95,
                                        boot = NULL, ...) {
   # initializations
   alpha <- 1 - level
-  # extract point estimates and standard erroers
+  # extract point estimates and standard errors
   if(is.null(boot)) {
     # combine point estimates
     estimates <- c(object$a, object$b, object$c, object$cPrime)
@@ -126,7 +126,7 @@ getConfint.covFitMediation <- function(object, parm = NULL, level = 0.95,
     summary <- getSummary(object)
     se <- c(summary$a[1,2], summary$b[1,2], summary$c[1,2], summary$cPrime[1,2])
   } else {
-    # compute means and standard erroers from bootstrap replicates
+    # compute means and standard errors from bootstrap replicates
     estimates <- colMeans(boot$t[, -1], na.rm=TRUE)
     se <- apply(boot$t[, -1], 2, sd, na.rm=TRUE)
   }
@@ -146,7 +146,7 @@ getConfint.regFitMediation <- function(object, parm = NULL, level = 0.95,
                                        boot = NULL, sAB = NULL, ...) {
   # initializations
   alpha <- 1 - level
-  # extract point estimates and standard erroers
+  # extract point estimates and standard errors
   if(is.null(boot)) {
     # extract confidence intervals from regression models
     confintMX <- confint(object$fitMX, parm=2, level=level)
@@ -171,7 +171,7 @@ getConfint.regFitMediation <- function(object, parm = NULL, level = 0.95,
     ci <- rbind(confintMX, confintYMX, confintYX)
     rownames(ci) <- c("a", "b", "c", "c'")
   } else {
-    # compute means and standard erroers from bootstrap replicates
+    # compute means and standard errors from bootstrap replicates
     estimates <- colMeans(boot$t[, 2:5], na.rm=TRUE)
     se <- apply(boot$t[, 2:5], 2, sd, na.rm=TRUE)
     # compute confidence intervals and combine into one matrix

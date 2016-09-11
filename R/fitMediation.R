@@ -63,10 +63,6 @@
 #' independent variable on the dependent variable.}
 #' \item{robust}{a logical indicating whether the effects were estimated
 #' robustly.}
-#' \item{fitYX}{an object of class \code{"\link[robustbase]{lmrob}"} or
-#' \code{"\link[stats]{lm}"} containing the estimation results from the
-#' regression of the dependent variable on the independent variable (only
-#' \code{"regFitMediation"}).}
 #' \item{fitMX}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
 #' regression of the proposed mediator variable on the independent variable
@@ -75,6 +71,10 @@
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
 #' regression of the dependent variable on the proposed mediator and
 #' independent variables (only \code{"regFitMediation"}).}
+#' \item{fitYX}{an object of class \code{"\link[stats]{lm}"} containing the
+#' estimation results from the regression of the dependent variable on the
+#' independent variable (only \code{"regFitMediation"} when \code{robust}
+#' is \code{FALSE}).}
 #' \item{cov}{an object of class \code{"\link{covHuber}"} or
 #' \code{"\link{covML}"} containing the covariance matrix estimates (only
 #' \code{"covFitMediation"}).}
@@ -94,8 +94,23 @@
 #' \code{\link{covHuber}}, \code{\link{covML}}
 #'
 #' @examples
-#' data("superbowl")
-#' fitMediation("frequency", "liking", "clutter", data=superbowl)
+#' # control parameters
+#' n <- 250             # number of observations
+#' a <- b <- c <- 0.2   # true effects
+#' t <- 10              # number of observations to contaminate
+#'
+#' # draw clean observations
+#' set.seed(20160911)
+#' x <- rnorm(n)
+#' m <- a * x + rnorm(n)
+#' y <- b * m + c * x + rnorm(n)
+#'
+#' # contaminate the first t observations
+#' m[1:t] <- m[1:t] - 6
+#' y[1:t] <- y[1:t] + 6
+#'
+#' # fit mediation model
+#' fitMediation(x, y, m)
 #'
 #' @keywords multivariate
 #'

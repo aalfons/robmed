@@ -21,6 +21,10 @@
 #' regression-based one described above.  Furthermore, the bootstrap does not
 #' account for the variability from cleaning the data.
 #'
+#' \code{indirect} is a wrapper function for performing non-robust mediation
+#' analysis via regressions (inspired by Preacher & Hayes' \code{SPSS} macro
+#' \code{INDIRECT}).
+#'
 #' @aliases print.bootTestMediation print.sobelTestMediation
 #' summary.testMediation
 #'
@@ -127,8 +131,24 @@
 #' \code{\link[stats]{lm}}, \code{\link{covHuber}}, \code{\link{covML}}
 #'
 #' @examples
-#' data("superbowl")
-#' testMediation("frequency", "liking", "clutter", data=superbowl)
+#' # control parameters
+#' n <- 250             # number of observations
+#' a <- b <- c <- 0.2   # true effects
+#' t <- 10              # number of observations to contaminate
+#'
+#' # draw clean observations
+#' set.seed(20160911)
+#' x <- rnorm(n)
+#' m <- a * x + rnorm(n)
+#' y <- b * m + c * x + rnorm(n)
+#'
+#' # contaminate the first t observations
+#' m[1:t] <- m[1:t] - 6
+#' y[1:t] <- y[1:t] + 6
+#'
+#' # fit mediation model
+#' test <- testMediation(x, y, m)
+#' summary(test)
 #'
 #' @keywords multivariate
 #'
@@ -369,6 +389,15 @@ testMediation.fitMediation <- function(x, test = c("boot", "sobel"),
     # perform Sobel test
     sobelTestMediation(x, alternative=alternative)
   } else stop("test not implemented")
+}
+
+
+#' @rdname testMediation
+#' @export
+
+indirect <- function(..., test = c("boot", "sobel"), method = "regression",
+                     robust = FALSE) {
+  testMediation(..., test=test, method="regression", robust=FALSE)
 }
 
 

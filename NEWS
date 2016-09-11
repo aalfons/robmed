@@ -1,0 +1,4 @@
+Changes in robmed version 0.1.1
+
+    + Added method based on robust regressions and fast and robust bootstrap,
+      which is the new default method.
