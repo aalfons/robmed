@@ -4,40 +4,40 @@
 # --------------------------------------
 
 #' Convert (robust) mediation analysis results into a data frame for plotting
-#' 
-#' Supplement the estimated coefficients with other useful information for 
-#' informative visualization of the (robust) mediation analysis results.  It is 
-#' thereby possible to construct data frames for dot plots of selected 
+#'
+#' Supplement the estimated coefficients with other useful information for
+#' informative visualization of the (robust) mediation analysis results.  It is
+#' thereby possible to construct data frames for dot plots of selected
 #' coefficients, as well as density plots of the indirect effect.
-#' 
+#'
 #' @name fortify.testMediation
-#' 
-#' @param model  an object inheriting from class \code{"\link{testMediation}"} 
+#'
+#' @param model  an object inheriting from class \code{"\link{testMediation}"}
 #' containing results from (robust) mediation analysis.
-#' @param data  for the \code{"bootTestMediation"} method, this is currently 
-#' ignored.  For the \code{"sobelTestMediation"} method, this is an optional 
-#' numeric vector containing the \eqn{x}-values at which to evaluate the 
-#' assumed normal density from Sobel's test (only used in case of a density 
-#' plot).  The default is to take 100 equally spaced points between the 
-#' estimated indirect effect \eqn{\pm}{+/-} three times the standard error 
+#' @param data  for the \code{"bootTestMediation"} method, this is currently
+#' ignored.  For the \code{"sobelTestMediation"} method, this is an optional
+#' numeric vector containing the \eqn{x}-values at which to evaluate the
+#' assumed normal density from Sobel's test (only used in case of a density
+#' plot).  The default is to take 100 equally spaced points between the
+#' estimated indirect effect \eqn{\pm}{+/-} three times the standard error
 #' according to Sobel's formula.
-#' @param method  a character string specifying for which plot to construct the 
-#' data frame.  Possible values are \code{"dot"} for a dot plot of selected 
+#' @param method  a character string specifying for which plot to construct the
+#' data frame.  Possible values are \code{"dot"} for a dot plot of selected
 #' coefficients, or \code{"density"} for a density plot of the indirect effect.
-#' @param parm  a character string specifying the coefficients to be included 
+#' @param parm  a character string specifying the coefficients to be included
 #' in a dot plot.  The default is to include the direct and the indirect effect.
-#' @param level  numeric;  the confidence level of the confidence intervals 
-#' from Sobel's test to be included in a dot plot.  The default is to include 
+#' @param level  numeric;  the confidence level of the confidence intervals
+#' from Sobel's test to be included in a dot plot.  The default is to include
 #' 95\% confidence intervals.
 #' @param \dots  additional arguments are currently ignored.
-#' 
-#' @return A data frame containing the necessary data for the selected plot, as 
+#'
+#' @return A data frame containing the necessary data for the selected plot, as
 #' well as additional information stored in attributes.
-#' 
+#'
 #' @author Andreas Alfons
-#' 
+#'
 #' @seealso \code{\link{testMediation}}, \code{\link{plotMediation}}
-#' 
+#'
 #' @keywords utilities
 
 NULL
@@ -48,8 +48,8 @@ NULL
 #' @import ggplot2
 #' @export
 
-fortify.bootTestMediation <- function(model, data, 
-                                      method = c("dot", "density"), 
+fortify.bootTestMediation <- function(model, data,
+                                      method = c("dot", "density"),
                                       parm = c("c", "ab"), ...) {
   # initialization
   method <- match.arg(method)
@@ -62,16 +62,16 @@ fortify.bootTestMediation <- function(model, data,
     effect <- rownames(ci)
     dimnames(ci) <- list(NULL, c("Lower", "Upper"))
     # construct data frame
-    data <- data.frame(Effect=factor(effect, levels=effect), 
+    data <- data.frame(Effect=factor(effect, levels=effect),
                        Point=coef[effect], ci)
     rownames(data) <- NULL
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="Effect", y="Point", 
+    attr(data, "mapping") <- aes_string(x="Effect", y="Point",
                                         ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
     # construct data frame containing bootstrap density
-    pdf <- density(model$reps$t)
+    pdf <- density(model$reps$t[, 1])
     data <- data.frame(ab=pdf$x, Density=pdf$y)
     # extract point estimate and confidence interval
     ab <- model$ab
@@ -80,7 +80,7 @@ fortify.bootTestMediation <- function(model, data,
     attr(data, "mapping") <- aes_string(x="ab", y="Density")
     attr(data, "geom") <- function(..., stat) geom_density(..., stat="identity")
     attr(data, "main") <- "Bootstrap distribution"
-    attr(data, "ci") <- data.frame(ab, Density=NA_real_, 
+    attr(data, "ci") <- data.frame(ab, Density=NA_real_,
                                    Lower=ci[1], Upper=ci[2])
   }
   # return data frame
@@ -94,9 +94,9 @@ fortify.bootTestMediation <- function(model, data,
 #' @import ggplot2
 #' @export
 
-fortify.sobelTestMediation <- function(model, data, 
-                                       method = c("dot", "density"), 
-                                       parm = c("c", "ab"), 
+fortify.sobelTestMediation <- function(model, data,
+                                       method = c("dot", "density"),
+                                       parm = c("c", "ab"),
                                        level = 0.95, ...) {
   # initialization
   method <- match.arg(method)
@@ -111,11 +111,11 @@ fortify.sobelTestMediation <- function(model, data,
     effect <- rownames(ci)
     dimnames(ci) <- list(NULL, c("Lower", "Upper"))
     # construct data frame
-    data <- data.frame(Effect=factor(effect, levels=effect), 
+    data <- data.frame(Effect=factor(effect, levels=effect),
                        Point=coef[effect], ci)
     rownames(data) <- NULL
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="Effect", y="Point", 
+    attr(data, "mapping") <- aes_string(x="Effect", y="Point",
                                         ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
@@ -133,7 +133,7 @@ fortify.sobelTestMediation <- function(model, data,
     attr(data, "mapping") <- aes_string(x="ab", y="Density")
     attr(data, "geom") <- function(..., stat) geom_density(..., stat="identity")
     attr(data, "main") <- "Assumed normal distribution"
-    attr(data, "ci") <- data.frame(ab, Density=dnorm(ab, mean=ab, sd=se), 
+    attr(data, "ci") <- data.frame(ab, Density=dnorm(ab, mean=ab, sd=se),
                                    Lower=ci[1], Upper=ci[2])
   }
   # return data frame
@@ -180,7 +180,7 @@ fortify.list <- function(model, data, ...) {
     # additional information for dot plot
     if(nlevels(data$Effect) == 1) {
       # only one effect to be plotted, use method on x-axis
-      info$mapping <- aes_string(x="Method", y="Point", 
+      info$mapping <- aes_string(x="Method", y="Point",
                                  ymin="Lower", ymax="Upper")
     } else {
       # split plot into different panels
