@@ -23,14 +23,13 @@ A list with components corresponding to the arguments.
 \description{
 Obtain a list with tuning paramters for \code{\link{covHuber}}.
 }
-\author{
-Andreas Alfons
-}
 \references{
 Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 }
 \seealso{
 \code{\link{covHuber}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{multivariate}
-

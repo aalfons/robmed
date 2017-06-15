@@ -22,9 +22,6 @@ An object of class \code{"covML"} with the following components:
 Compute the maximum likelihood estimator of the mean vector and the
 covariance matrix.
 }
-\author{
-Andreas Alfons
-}
 \references{
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
 mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
@@ -33,5 +30,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \seealso{
 \code{\link{testMediation}}, \code{\link{fitMediation}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{multivariate}
-

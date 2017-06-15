@@ -41,9 +41,6 @@ An iterative reweighting algorithm is used to compute the Huber
 M-estimator.  The Huber weight function thereby corresponds to a
 convex optimization problem, resulting in a unique solution.
 }
-\author{
-Andreas Alfons
-}
 \references{
 Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 
@@ -55,5 +52,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \code{\link{covControl}}, \code{\link{testMediation}},
 \code{\link{fitMediation}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{multivariate}
-

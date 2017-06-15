@@ -3,8 +3,8 @@
 \name{fitMediation}
 \alias{fitMediation}
 \alias{print.fitMediation}
-\alias{summary.covFitMediation}
 \alias{summary.regFitMediation}
+\alias{summary.covFitMediation}
 \title{(Robustly) fit a mediation model}
 \usage{
 fitMediation(x, y, m, covariates = NULL, data, method = c("regression",
@@ -116,9 +116,6 @@ y[1:t] <- y[1:t] + 6
 fitMediation(x, y, m)
 
 }
-\author{
-Andreas Alfons
-}
 \references{
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
 mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
@@ -130,5 +127,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \code{\link[robustbase]{lmrob}}, \code{\link[stats]{lm}},
 \code{\link{covHuber}}, \code{\link{covML}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{multivariate}
-

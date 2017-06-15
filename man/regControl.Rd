@@ -35,9 +35,6 @@ knowledge of the MM-type regression algorithm.  Currently only 95\%, 90\%,
 please specify the corresponding tuning parameters in 
 \code{\link[robustbase]{lmrob.control}} directly.
 }
-\author{
-Andreas Alfons
-}
 \references{
 Salibian-Barrera, M. and Yohai, V.J. (1987) A fast algorithm for 
 S-regression estimates. \emph{Journal of Computational and Graphical 
@@ -50,5 +47,7 @@ regression. \emph{The Annals of Statistics}, \bold{15}(20), 642--656.
 \code{\link[robustbase]{lmrob}}, 
 \code{\link[robustbase]{lmrob.control}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{regression}
-
