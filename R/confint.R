@@ -11,9 +11,7 @@
 #' @name confint.testMediation
 #'
 #' @param object  an object inheriting from class \code{"\link{testMediation}"}
-#' containing results from (robust) mediation analysis, or an object inheriting
-#' from class \code{"\link{fitMediation}"} containing a (robust) mediation
-#' model fit.
+#' containing results from (robust) mediation analysis.
 #' @param parm  an integer, character or logical vector specifying the
 #' coefficients for which to extract or compute confidence intervals, or
 #' \code{NULL} to extract or compute confidence intervals for all coefficients.
@@ -22,14 +20,24 @@
 #' effect is used.  For the other methods, the confidence level of the
 #' confidence intervals to be computed.  The default is to compute 95\%
 #' confidence intervals.
+#' @param other  a character string specifying how to compute the confidence
+#' interval of the effects other than the indirect effect.  Possible values
+#' are \code{"boot"} (the default) to compute bootstrap confidence intervals
+#' using the normal approximation (i.e., to assume a normal distribution of the
+#' corresponding effect with the standard deviation computed from the bootstrap
+#' replicates), or \code{"theory"} to compute confidence intervals via
+#' statistical theory (e.g., based on a t-distribution the coefficients are
+#' estimated via regression).  Note that this is only relevant for mediation
+#' analysis via a bootstrap test, where the confidence interval of the indirect
+#' effect is always computed via a percentile-based method due to the asymmetry
+#' of its distribution.
 #' @param \dots  additional arguments are currently ignored.
 #'
 #' @return A numeric matrix containing the requested confidence intervals.
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{testMediation}}, \code{\link{fitMediation}},
-#' \code{\link[=coef.testMediation]{coef}}
+#' @seealso \code{\link{testMediation}}, \code{\link[=coef.testMediation]{coef}}
 #'
 #' @keywords utilities
 
@@ -41,10 +49,15 @@ NULL
 #' @export
 
 ## argument 'level' is ignored
-confint.bootTestMediation <- function(object, parm = NULL, level = NULL, ...) {
-  # combine confidence interval of indirect effect with those of other effects
-  ci <- rbind(getConfint(object$fit, level=object$level, boot=object$reps),
-              ab=object$ci)
+confint.bootTestMediation <- function(object, parm = NULL, level = NULL,
+                                      other = c("boot", "theory"), ...) {
+  # confidence interval of other effects
+  other <- match.arg(other)
+  if(other == "boot") {
+    ci <- getConfint(object$fit, level=object$level, boot=object$reps)
+  } else ci <- getConfint(object$fit, level=object$level)
+  # combine with confidence interval of indirect effect
+  ci <- rbind(ci, ab=object$ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]

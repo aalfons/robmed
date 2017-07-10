@@ -121,7 +121,7 @@ summary.covFitMediation <- function(object, ...) object
 summary.regFitMediation <- function(object, ...) object
 
 ## summary of mediation analysis objects
-#' @export
+
 # summary.testMediation <- function(object, ...) {
 #   result <- list(object=object, summary=getSummary(object$fit))
 #   if(object$fit$robust && inherits(object$fit, "regFitMediation") &&
@@ -138,11 +138,70 @@ summary.regFitMediation <- function(object, ...) object
 #   class(result) <- "summaryTestMediation"
 #   result
 # }
-summary.testMediation <- function(object, ...) {
+
+#' Summary of results from (robust) mediation analysis
+#'
+#' Summarize results from (robust) mediation analysis for proper interpretation.
+#'
+#' @name summary.testMediation
+#'
+#' @param object  an object inheriting from class \code{"\link{testMediation}"}
+#' containing results from (robust) mediation analysis.
+#' @param other  a character string specifying how to summarize the effects
+#' other than the indirect effect.  Possible values are \code{"boot"} (the
+#' default) to compute significance tests using the normal approximation of the
+#' bootstrap distribution (i.e., to assume a normal distribution of the
+#' corresponding effect with the standard deviation computed from the bootstrap
+#' replicates), or \code{"theory"} to compute significance tests via
+#' statistical theory (e.g., t-tests if the coefficients are estimated via
+#' regression).  Note that this is only relevant for mediation analysis via a
+#' bootstrap test, where significance of the indirect effect is always assessed
+#' via a percentile-based confidence interval due to the asymmetry of its
+#' distribution.
+#' @param \dots  additional arguments are currently ignored.
+#'
+#' @return An object of class \code{"summaryTestMediation"} with the following
+#' components:
+#' \item{object}{the \code{object} passed to the \code{summary} method, which
+#' contains the results from testing the indirect effect.}
+#' \item{summary}{an object containing all necessary information to summarize
+#' the effects other than the indirect effect.}
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso \code{\link{testMediation}}
+#'
+#' @keywords utilities
+
+NULL
+
+
+#' @rdname summary.testMediation
+#' @method summary bootTestMediation
+#' @export
+
+summary.bootTestMediation <- function(object, other = c("boot", "theory"),
+                                      ...) {
   # get significance of effects and summary of model fit
   # component 'boot' only exists for bootstrap test, otherwise NULL
+  other <- match.arg(other)
+  if(other == "boot") summary <- getSummary(object$fit, boot=object$reps)
+  else summary <- getSummary(object$fit)
+  # construct return object
+  result <- list(object=object, summary=summary)
+  class(result) <- "summaryTestMediation"
+  result
+}
+
+
+#' @rdname summary.testMediation
+#' @method summary sobelTestMediation
+#' @export
+
+summary.sobelTestMediation <- function(object, ...) {
+  # get significance of effects and summary of model fit
   # component 'se' only exists for Sobel test, otherwise NULL
-  summary <- getSummary(object$fit, boot=object$reps)
+  summary <- getSummary(object$fit)
   # construct return object
   result <- list(object=object, summary=summary)
   class(result) <- "summaryTestMediation"

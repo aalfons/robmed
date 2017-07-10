@@ -6,15 +6,14 @@
 \alias{confint.sobelTestMediation}
 \title{Confidence intervals for (robust) mediation analysis}
 \usage{
-\method{confint}{bootTestMediation}(object, parm = NULL, level = NULL, ...)
+\method{confint}{bootTestMediation}(object, parm = NULL, level = NULL,
+  other = c("boot", "theory"), ...)
 
 \method{confint}{sobelTestMediation}(object, parm = NULL, level = 0.95, ...)
 }
 \arguments{
 \item{object}{an object inheriting from class \code{"\link{testMediation}"}
-containing results from (robust) mediation analysis, or an object inheriting
-from class \code{"\link{fitMediation}"} containing a (robust) mediation
-model fit.}
+containing results from (robust) mediation analysis.}
 
 \item{parm}{an integer, character or logical vector specifying the
 coefficients for which to extract or compute confidence intervals, or
@@ -26,6 +25,18 @@ effect is used.  For the other methods, the confidence level of the
 confidence intervals to be computed.  The default is to compute 95\%
 confidence intervals.}
 
+\item{other}{a character string specifying how to compute the confidence
+interval of the effects other than the indirect effect.  Possible values
+are \code{"boot"} (the default) to compute bootstrap confidence intervals
+using the normal approximation (i.e., to assume a normal distribution of the
+corresponding effect with the standard deviation computed from the bootstrap
+replicates), or \code{"theory"} to compute confidence intervals via
+statistical theory (e.g., based on a t-distribution the coefficients are
+estimated via regression).  Note that this is only relevant for mediation
+analysis via a bootstrap test, where the confidence interval of the indirect
+effect is always computed via a percentile-based method due to the asymmetry
+of its distribution.}
+
 \item{\dots}{additional arguments are currently ignored.}
 }
 \value{
@@ -36,8 +47,7 @@ Extract or compute confidence intervals for coefficients from (robust)
 mediation analysis.
 }
 \seealso{
-\code{\link{testMediation}}, \code{\link{fitMediation}},
-\code{\link[=coef.testMediation]{coef}}
+\code{\link{testMediation}}, \code{\link[=coef.testMediation]{coef}}
 }
 \author{
 Andreas Alfons
