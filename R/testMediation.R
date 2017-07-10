@@ -9,7 +9,7 @@
 #' or Sobel's test.
 #'
 #' If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
-#' (the defaults), the tests are based on robust regressions with
+#' (the default), the tests are based on robust regressions with
 #' \code{\link[robustbase]{lmrob}}.  The bootstrap test is thereby performed
 #' via the fast and robust bootstrap.
 #'
@@ -20,6 +20,10 @@
 #' data.  Note that this covariance-based approach is less robust than the
 #' regression-based one described above.  Furthermore, the bootstrap does not
 #' account for the variability from cleaning the data.
+#'
+#' \code{indirect} is a wrapper function for performing non-robust mediation
+#' analysis via regressions (inspired by Preacher & Hayes' \code{SPSS} macro
+#' \code{INDIRECT}).
 #'
 #' @aliases print.bootTestMediation print.sobelTestMediation
 #' summary.testMediation
@@ -127,8 +131,24 @@
 #' \code{\link[stats]{lm}}, \code{\link{covHuber}}, \code{\link{covML}}
 #'
 #' @examples
-#' data("superbowl")
-#' testMediation("frequency", "liking", "clutter", data=superbowl)
+#' # control parameters
+#' n <- 250             # number of observations
+#' a <- b <- c <- 0.2   # true effects
+#' t <- 10              # number of observations to contaminate
+#'
+#' # draw clean observations
+#' set.seed(20160911)
+#' x <- rnorm(n)
+#' m <- a * x + rnorm(n)
+#' y <- b * m + c * x + rnorm(n)
+#'
+#' # contaminate the first t observations
+#' m[1:t] <- m[1:t] - 6
+#' y[1:t] <- y[1:t] + 6
+#'
+#' # fit mediation model
+#' test <- testMediation(x, y, m)
+#' summary(test)
 #'
 #' @keywords multivariate
 #'
@@ -136,189 +156,402 @@
 #' @import robustbase
 #' @export
 
-testMediation <- function(x, y, m, covariates = NULL, data,
-                          test = c("boot", "sobel"),
-                          alternative = c("twosided", "less", "greater"),
-                          R = 5000, level = 0.95, type = c("bca", "perc"),
-                          method = c("regression", "covariance"),
-                          robust = TRUE, control, ...) {
+# testMediation <- function(x, y, m, covariates = NULL, data,
+#                           test = c("boot", "sobel"),
+#                           alternative = c("twosided", "less", "greater"),
+#                           R = 5000, level = 0.95, type = c("bca", "perc"),
+#                           method = c("regression", "covariance"),
+#                           robust = TRUE, control, ...) {
+#   ## initializations
+#   # FIXME: make sure dimensions are correct
+#   if(missing(data)) {
+#     # prepare data frame containing all variables with original names
+#     x <- substitute(x)
+#     y <- substitute(y)
+#     m <- substitute(m)
+#     if(is.null(covariates)) {
+#       data <- eval.parent(call("data.frame", x, y, m))
+#     } else if(is.data.frame(covariates)) {
+#       data <- cbind(eval.parent(call("data.frame", x, y, m)), covariates)
+#     } else {
+#       covariates <- substitute(covariates)
+#       data <- eval.parent(call("data.frame", x, y, m, covariates))
+#     }
+#   } else {
+#     # prepare data set
+#     data <- as.data.frame(data)
+#     x <- data[, x, drop=FALSE]
+#     y <- data[, y, drop=FALSE]
+#     m <- data[, m, drop=FALSE]
+#     covariates <- data[, covariates, drop=FALSE]
+#     data <- cbind(x, y, m, covariates)
+#   }
+#   # extract names
+#   cn <- names(data)
+#   x <- cn[1]
+#   y <- cn[2]
+#   m <- cn[3]
+#   covariates <- cn[-(1:3)]
+#   # make sure that variables are numeric
+#   convert <- !sapply(data, is.numeric)
+#   data[convert] <- lapply(data[convert], as.numeric)
+#   # check if there are enough observations
+#   n <- nrow(data)
+#   if(n <= 3) stop("not enough observations")
+#   # check other arguments
+#   test <- match.arg(test)
+#   alternative <- match.arg(alternative)
+#   method <- match.arg(method)
+#   if(length(covariates) > 0 && method == "covariance") {
+#     method <- "regression"
+#     warning("using regression method")
+#   }
+#   robust <- isTRUE(robust)
+#   if(robust && missing(control)) {
+#     if(method == "regression") control <- regControl()
+#     else control <- covControl()
+#   }
+#   ## estimate effects
+#   if(method == "regression") {
+#     fit <- regFitMediation(x, y, m, covariates, data=data,
+#                     robust=robust, control=control)
+#   } else {
+#     fit <- covFitMediation(x, y, m, data=data, robust=robust, control=control)
+#   }
+#   ## perform mediation analysis
+#   if(test == "boot") {
+#     level <- rep(as.numeric(level), length.out=1)
+#     if(is.na(level) || level < 0 || level > 1) level <- formals()$level
+#     type <- match.arg(type)
+#     ## bootstrap test
+#     if(method == "regression") {
+#       # indices of covariates in data matrix to be used in bootstrap
+#       j <- match(covariates, cn) + 1
+#       # check if fast and robust bootstrap should be applied
+#       if(robust) {
+#         # extract regression models
+#         fitMX <- fit$fitMX
+#         fitYMX <- fit$fitYMX
+#         # extract (square root of) robustness weights and combine data
+#         wM <- sqrt(weights(fitMX, type="robustness"))
+#         wY <- sqrt(weights(fitYMX, type="robustness"))
+#         z <- cbind(rep.int(1, n), as.matrix(data), wM, wY)
+#         # compute matrices for linear corrections
+#         psiControl <- getPsiControl(fitMX)  # the same for both model fits
+#         corrM <- correctionMatrix(z[, c(1:2, j)], weights=wM,
+#                                   residuals=residuals(fitMX),
+#                                   scale=fitMX$scale,
+#                                   control=psiControl)
+#         coefM <- coef(fitMX)
+#         corrY <- correctionMatrix(z[, c(1, 4, 2, j)], weights=wY,
+#                                   residuals=residuals(fitYMX),
+#                                   scale=fitYMX$scale,
+#                                   control=psiControl)
+#         coefY <- coef(fitYMX)
+#         # perform fast and robust bootstrap
+#         bootstrap <- localBoot(z, function(z, i, corrM, coefM, corrY, coefY) {
+#           # extract bootstrap sample from the data
+#           zi <- z[i, , drop=FALSE]
+#           wMi <- zi[, "wM"]
+#           wYi <- zi[, "wY"]
+#           # check whether there are enough observations with nonzero weights
+#           if(sum(wMi > 0) <= 2 || sum(wYi > 0) <= 3) return(NA)
+#           # compute coefficients from weighted regression m ~ x + covariates
+#           wxi <- wMi * zi[, c(1:2, j)]
+#           wmi <- wMi * zi[, 4]
+#           coefMi <- solve(crossprod(wxi)) %*% crossprod(wxi, wmi)
+#           # compute coefficients from weighted regression y ~ m + x + covariates
+#           wmxi <- wYi * zi[, c(1, 4, 2, j)]
+#           wyi <- wYi * zi[, 3]
+#           coefYi <- solve(crossprod(wmxi)) %*% crossprod(wmxi, wyi)
+#           # compute corrected coefficients
+#           coefMi <- drop(coefM + corrM %*% (coefMi - coefM))
+#           coefYi <- drop(coefY + corrY %*% (coefYi - coefY))
+#           # compute indirect effect
+#           ab <- unname(coefMi[2]) * unname(coefYi[2])
+#           cPrime <- ab + unname(coefYi[3])
+#           c(ab, cPrime)
+#         }, R=R, corrM=corrM, coefM=coefM, corrY=corrY, coefY=coefY, ...)
+#         R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+#       } else {
+#         # combine data
+#         z <- cbind(rep.int(1, n), as.matrix(data))
+#         # perform bootstrap
+#         bootstrap <- localBoot(z, function(z, i) {
+#           # extract bootstrap sample from the data
+#           zi <- z[i, , drop=FALSE]
+#           # compute coefficients from regression m ~ x + covariates
+#           xi <- zi[, c(1:2, j)]
+#           mi <- zi[, 4]
+#           coefMi <- drop(solve(crossprod(xi)) %*% crossprod(xi, mi))
+#           # compute coefficients from regression y ~ m + x + covariates
+#           mxi <- zi[, c(1, 4, 2, j)]
+#           yi <- zi[, 3]
+#           coefYi <- drop(solve(crossprod(mxi)) %*% crossprod(mxi, yi))
+#           # compute indirect effect
+#           unname(coefMi[2]) * unname(coefYi[2])
+#         }, R=R, ...)
+#       }
+#     } else {
+#       # check if the robust transformation of Zu & Yuan (2010) should be applied
+#       if(robust) {
+#         cov <- fit$cov
+#         data[] <- mapply("-", data, cov$center, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+#         data <- weights(cov, type="consistent") * data
+#       }
+#       # perform bootstrap
+#       bootstrap <- localBoot(data, function(z, i) {
+#         # extract bootstrap sample from the data
+#         zi <- z[i, , drop=FALSE]
+#         # compute MLE of covariance matrix on bootstrap sample
+#         S <- covML(zi)$cov
+#         # compute indirect effect
+#         a <- S[m, x] / S[x, x]
+#         b <- (-S[m,x]*S[y,x] + S[x,x]*S[y,m]) / (S[x,x]*S[m,m] - S[m,x]^2)
+#         a * b
+#       }, R=R, ...)
+#     }
+#     # extract confidence interval for indirect effect
+#     ci <- confint(bootstrap, level=level, alternative=alternative, type=type)
+#     # construct return object
+#     result <- list(ab=mean(bootstrap$t, na.rm=TRUE), ci=ci, reps=bootstrap,
+#                    alternative=alternative, R=R[1], level=level, type=type,
+#                    fit=fit)
+#     class(result) <- c("bootTestMediation", "testMediation")
+#   } else {
+#     ## Sobel test
+#     # extract coefficients
+#     a <- fit$a
+#     b <- fit$b
+#     # compute standard errors
+#     summary <- summary(fit)
+#     sa <- summary$a[1, 2]
+#     sb <- summary$b[1, 2]
+#     # compute test statistic and p-Value
+#     ab <- a * b
+#     se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
+#     z <- ab / se
+#     pValue <- pValueZ(z, alternative=alternative)
+#     # construct return item
+#     result <- list(ab=ab, se=se, statistic=z, pValue=pValue,
+#                    alternative=alternative, fit=fit, data=data)
+#     class(result) <- c("sobelTestMediation", "testMediation")
+#   }
+#   ## return test results
+#   result
+# }
+
+testMediation <- function(x, ...) UseMethod("testMediation")
+
+
+#' @rdname testMediation
+#' @method testMediation default
+#' @export
+
+testMediation.default <- function(x, y, m, covariates = NULL, data,
+                                  test = c("boot", "sobel"),
+                                  alternative = c("twosided", "less", "greater"),
+                                  R = 5000, level = 0.95,
+                                  type = c("bca", "perc"),
+                                  method = c("regression", "covariance"),
+                                  robust = TRUE, control, ...) {
+  ## fit mediation model
+  fit <- fitMediation(x, y, m, covariates=covariates, data=data, method=method,
+                      robust=robust, control=control)
+  ## call method for fitted model
+  testMediation(fit, test=test, alternative=alternative,
+                R=R, level=level, type=type, ...)
+}
+
+
+#' @rdname testMediation
+#' @method testMediation fitMediation
+#' @export
+
+testMediation.fitMediation <- function(x, test = c("boot", "sobel"),
+                                       alternative = c("twosided", "less", "greater"),
+                                       R = 5000, level = 0.95,
+                                       type = c("bca", "perc"),
+                                       ...) {
   ## initializations
-  # FIXME: make sure dimensions are correct
-  if(missing(data)) {
-    # prepare data frame containing all variables with original names
-    x <- substitute(x)
-    y <- substitute(y)
-    m <- substitute(m)
-    if(is.null(covariates)) {
-      data <- eval.parent(call("data.frame", x, y, m))
-    } else if(is.data.frame(covariates)) {
-      data <- cbind(eval.parent(call("data.frame", x, y, m)), covariates)
-    } else {
-      covariates <- substitute(covariates)
-      data <- eval.parent(call("data.frame", x, y, m, covariates))
-    }
-  } else {
-    # prepare data set
-    data <- as.data.frame(data)
-    x <- data[, x, drop=FALSE]
-    y <- data[, y, drop=FALSE]
-    m <- data[, m, drop=FALSE]
-    covariates <- data[, covariates, drop=FALSE]
-    data <- cbind(x, y, m, covariates)
-  }
-  # extract names
-  cn <- names(data)
-  x <- cn[1]
-  y <- cn[2]
-  m <- cn[3]
-  covariates <- cn[-(1:3)]
-  # make sure that variables are numeric
-  convert <- !sapply(data, is.numeric)
-  data[convert] <- lapply(data[convert], as.numeric)
-  # check if there are enough observations
-  n <- nrow(data)
-  if(n <= 3) stop("not enough observations")
-  # check other arguments
   test <- match.arg(test)
   alternative <- match.arg(alternative)
-  method <- match.arg(method)
-  if(length(covariates) > 0 && method == "covariance") {
-    method <- "regression"
-    warning("using regression method")
-  }
-  robust <- isTRUE(robust)
-  if(robust && missing(control)) {
-    if(method == "regression") control <- regControl()
-    else control <- covControl()
-  }
-  ## estimate effects
-  if(method == "regression") {
-    fit <- regFitMediation(x, y, m, covariates, data=data,
-                    robust=robust, control=control)
-  } else {
-    fit <- covFitMediation(x, y, m, data=data, robust=robust, control=control)
-  }
   ## perform mediation analysis
   if(test == "boot") {
+    # further inizializations
     level <- rep(as.numeric(level), length.out=1)
     if(is.na(level) || level < 0 || level > 1) level <- formals()$level
     type <- match.arg(type)
-    ## bootstrap test
-    if(method == "regression") {
-      # indices of covariates in data matrix to be used in bootstrap
-      j <- match(covariates, cn) + 1
-      # check if fast and robust bootstrap should be applied
-      if(robust) {
-        # extract regression models
-        fitMX <- fit$fitMX
-        fitYMX <- fit$fitYMX
-        # extract (square root of) robustness weights and combine data
-        wM <- sqrt(weights(fitMX, type="robustness"))
-        wY <- sqrt(weights(fitYMX, type="robustness"))
-        z <- cbind(rep.int(1, n), as.matrix(data), wM, wY)
-        # compute matrices for linear corrections
-        psiControl <- getPsiControl(fitMX)  # the same for both model fits
-        corrM <- correctionMatrix(z[, c(1:2, j)], weights=wM,
-                                  residuals=residuals(fitMX),
-                                  scale=fitMX$scale,
-                                  control=psiControl)
-        coefM <- coef(fitMX)
-        corrY <- correctionMatrix(z[, c(1, 4, 2, j)], weights=wY,
-                                  residuals=residuals(fitYMX),
-                                  scale=fitYMX$scale,
-                                  control=psiControl)
-        coefY <- coef(fitYMX)
-        # perform fast and robust bootstrap
-        bootstrap <- localBoot(z, function(z, i, corrM, coefM, corrY, coefY) {
-          # extract bootstrap sample from the data
-          zi <- z[i, , drop=FALSE]
-          wMi <- zi[, "wM"]
-          wYi <- zi[, "wY"]
-          # check whether there are enough observations with nonzero weights
-          if(sum(wMi > 0) <= 2 || sum(wYi > 0) <= 3) return(NA)
-          # compute coefficients from weighted regression m ~ x + covariates
-          wxi <- wMi * zi[, c(1:2, j)]
-          wmi <- wMi * zi[, 4]
-          coefMi <- solve(crossprod(wxi)) %*% crossprod(wxi, wmi)
-          # compute coefficients from weighted regression y ~ m + x + covariates
-          wmxi <- wYi * zi[, c(1, 4, 2, j)]
-          wyi <- wYi * zi[, 3]
-          coefYi <- solve(crossprod(wmxi)) %*% crossprod(wmxi, wyi)
-          # compute corrected coefficients
-          coefMi <- drop(coefM + corrM %*% (coefMi - coefM))
-          coefYi <- drop(coefY + corrY %*% (coefYi - coefY))
-          # compute indirect effect
-          unname(coefMi[2]) * unname(coefYi[2])
-        }, R=R, corrM=corrM, coefM=coefM, corrY=corrY, coefY=coefY, ...)
-        R <- sum(!is.na(bootstrap$t))  # adjust number of replicates for NAs
-      } else {
-        # combine data
-        z <- cbind(rep.int(1, n), as.matrix(data))
-        # perform bootstrap
-        bootstrap <- localBoot(z, function(z, i) {
-          # extract bootstrap sample from the data
-          zi <- z[i, , drop=FALSE]
-          # compute coefficients from regression m ~ x + covariates
-          xi <- zi[, c(1:2, j)]
-          mi <- zi[, 4]
-          coefMi <- drop(solve(crossprod(xi)) %*% crossprod(xi, mi))
-          # compute coefficients from regression y ~ m + x + covariates
-          mxi <- zi[, c(1, 4, 2, j)]
-          yi <- zi[, 3]
-          coefYi <- drop(solve(crossprod(mxi)) %*% crossprod(mxi, yi))
-          # compute indirect effect
-          unname(coefMi[2]) * unname(coefYi[2])
-        }, R=R, ...)
-      }
-    } else {
-      # check if the robust transformation of Zu & Yuan (2010) should be applied
-      if(robust) {
-        cov <- fit$cov
-        data[] <- mapply("-", data, cov$center, SIMPLIFY=FALSE, USE.NAMES=FALSE)
-        data <- weights(cov, type="consistent") * data
-      }
-      # perform bootstrap
-      bootstrap <- localBoot(data, function(z, i) {
+    # perform bootstrap test
+    bootTestMediation(x, alternative=alternative, R=R,
+                      level=level, type=type, ...)
+  } else if(test == "sobel") {
+    # perform Sobel test
+    sobelTestMediation(x, alternative=alternative)
+  } else stop("test not implemented")
+}
+
+
+#' @rdname testMediation
+#' @export
+
+indirect <- function(..., test = c("boot", "sobel"), method = "regression",
+                     robust = FALSE) {
+  testMediation(..., test=test, method="regression", robust=FALSE)
+}
+
+
+## internal function for bootstrap test
+bootTestMediation <- function(fit,
+                              alternative = c("twosided", "less", "greater"),
+                              R = 5000, level = 0.95, type = c("bca", "perc"),
+                              ...) {
+  if(inherits(fit, "regFitMediation")) {
+    # indices of covariates in data matrix to be used in bootstrap
+    j <- match(fit$covariates, names(fit$data)) + 1
+    n <- nrow(fit$data)
+    # check if fast and robust bootstrap should be applied
+    if(fit$robust) {
+      # extract regression models
+      fitMX <- fit$fitMX
+      fitYMX <- fit$fitYMX
+      # extract (square root of) robustness weights and combine data
+      wM <- sqrt(weights(fitMX, type="robustness"))
+      wY <- sqrt(weights(fitYMX, type="robustness"))
+      z <- cbind(rep.int(1, n), as.matrix(fit$data), wM, wY)
+      # compute matrices for linear corrections
+      psiControl <- getPsiControl(fitMX)  # the same for both model fits
+      corrM <- correctionMatrix(z[, c(1:2, j)], weights=wM,
+                                residuals=residuals(fitMX),
+                                scale=fitMX$scale,
+                                control=psiControl)
+      coefM <- coef(fitMX)
+      corrY <- correctionMatrix(z[, c(1, 4, 2, j)], weights=wY,
+                                residuals=residuals(fitYMX),
+                                scale=fitYMX$scale,
+                                control=psiControl)
+      coefY <- coef(fitYMX)
+      # perform fast and robust bootstrap
+      bootstrap <- localBoot(z, function(z, i, corrM, coefM, corrY, coefY) {
         # extract bootstrap sample from the data
         zi <- z[i, , drop=FALSE]
-        # compute MLE of covariance matrix on bootstrap sample
-        S <- covML(zi)$cov
-        # compute indirect effect
-        a <- S[m, x] / S[x, x]
-        b <- (-S[m,x]*S[y,x] + S[x,x]*S[y,m]) / (S[x,x]*S[m,m] - S[m,x]^2)
-        a * b
+        wMi <- zi[, "wM"]
+        wYi <- zi[, "wY"]
+        # check whether there are enough observations with nonzero weights
+        if(sum(wMi > 0) <= 2 || sum(wYi > 0) <= 3) return(NA)
+        # compute coefficients from weighted regression m ~ x + covariates
+        wxi <- wMi * zi[, c(1:2, j)]
+        wmi <- wMi * zi[, 4]
+        coefMi <- solve(crossprod(wxi)) %*% crossprod(wxi, wmi)
+        # compute coefficients from weighted regression y ~ m + x + covariates
+        wmxi <- wYi * zi[, c(1, 4, 2, j)]
+        wyi <- wYi * zi[, 3]
+        coefYi <- solve(crossprod(wmxi)) %*% crossprod(wmxi, wyi)
+        # compute corrected coefficients
+        coefMi <- drop(coefM + corrM %*% (coefMi - coefM))
+        coefYi <- drop(coefY + corrY %*% (coefYi - coefY))
+        # compute effects
+        a <- unname(coefMi[2])
+        b <- unname(coefYi[2])
+        c <- unname(coefYi[3])
+        ab <- a * b
+        cPrime <- ab + c
+        # compute effects of control variables if they exist
+        covariates <- unname(coefYi[-(1:3)])
+        # return effects
+        c(ab, a, b, c, cPrime, covariates)
+      }, R=R, corrM=corrM, coefM=coefM, corrY=corrY, coefY=coefY, ...)
+      R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+    } else {
+      # combine data
+      z <- cbind(rep.int(1, n), as.matrix(fit$data))
+      # perform bootstrap
+      bootstrap <- localBoot(z, function(z, i) {
+        # extract bootstrap sample from the data
+        zi <- z[i, , drop=FALSE]
+        # compute coefficients from regression m ~ x + covariates
+        xi <- zi[, c(1:2, j)]
+        mi <- zi[, 4]
+        coefMi <- drop(solve(crossprod(xi)) %*% crossprod(xi, mi))
+        # compute coefficients from regression y ~ m + x + covariates
+        mxi <- zi[, c(1, 4, 2, j)]
+        yi <- zi[, 3]
+        coefYi <- drop(solve(crossprod(mxi)) %*% crossprod(mxi, yi))
+        # compute effects
+        unname(coefMi[2]) * unname(coefYi[2])
+        a <- unname(coefMi[2])
+        b <- unname(coefYi[2])
+        c <- unname(coefYi[3])
+        ab <- a * b
+        cPrime <- ab + c
+        # compute effects of control variables if they exist
+        covariates <- unname(coefYi[-(1:3)])
+        # return effects
+        c(ab, a, b, c, cPrime, covariates)
       }, R=R, ...)
+      R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
     }
-    # extract confidence interval for indirect effect
-    ci <- confint(bootstrap, level=level, alternative=alternative, type=type)
-    # construct return object
-    result <- list(ab=mean(bootstrap$t, na.rm=TRUE), ci=ci, reps=bootstrap,
-                   alternative=alternative, R=R, level=level, type=type,
-                   fit=fit)
-    class(result) <- c("bootTestMediation", "testMediation")
-  } else {
-    ## Sobel test
-    # extract coefficients
-    a <- fit$a
-    b <- fit$b
-    # compute standard errors
-    summary <- summary(fit)
-    sa <- summary$a[1, 2]
-    sb <- summary$b[1, 2]
-    # compute test statistic and p-Value
-    ab <- a * b
-    se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
-    z <- ab / se
-    pValue <- pValueZ(z, alternative=alternative)
-    # construct return item
-    result <- list(ab=ab, se=se, statistic=z, pValue=pValue,
-                   alternative=alternative, fit=fit, data=data)
-    class(result) <- c("sobelTestMediation", "testMediation")
-  }
-  ## return test results
+  } else if(inherits(fit, "covFitMediation")) {
+    # extract data and variable names
+    x <- fit$x
+    y <- fit$y
+    m <- fit$m
+    data <- fit$data
+    # check if the robust transformation of Zu & Yuan (2010) should be applied
+    if(fit$robust) {
+      cov <- fit$cov
+      data[] <- mapply("-", data, cov$center, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+      data <- weights(cov, type="consistent") * data
+    }
+    # perform bootstrap
+    bootstrap <- localBoot(data, function(z, i) {
+      # extract bootstrap sample from the data
+      zi <- z[i, , drop=FALSE]
+      # compute MLE of covariance matrix on bootstrap sample
+      S <- covML(zi)$cov
+      # compute effects
+      a <- S[m, x] / S[x, x]
+      det <- S[x, x] * S[m, m] - S[m, x]^2
+      b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
+      c <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+      cPrime <- S[y, x] / S[x, x]
+      c(a*b, a, b, c, cPrime)
+    }, R=R, ...)
+    R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+  } else stop("method not implemented")
+  # extract confidence interval for indirect effect
+  ci <- confint(bootstrap, parm=1, level=level, alternative=alternative,
+                type=type)
+  # construct return object
+  result <- list(ab=mean(bootstrap$t[, 1], na.rm=TRUE), ci=ci, reps=bootstrap,
+                 alternative=alternative, R=R[1], level=level, type=type,
+                 fit=fit)
+  class(result) <- c("bootTestMediation", "testMediation")
   result
 }
 
+## internal function for sobel test
+sobelTestMediation <- function(fit,
+                               alternative = c("twosided", "less", "greater"),
+                               ...) {
+  # extract coefficients
+  a <- fit$a
+  b <- fit$b
+  # compute standard errors
+  summary <- getSummary(fit)
+  sa <- summary$a[1, 2]
+  sb <- summary$b[1, 2]
+  # compute test statistic and p-Value
+  ab <- a * b
+  se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
+  z <- ab / se
+  pValue <- pValueZ(z, alternative=alternative)
+  # construct return item
+  result <- list(ab=ab, se=se, statistic=z, pValue=pValue,
+                 alternative=alternative, fit=fit)
+  class(result) <- c("sobelTestMediation", "testMediation")
+  result
+}
 
 ## wrapper function for boot() that ignores unused arguments, but allows
 ## arguments for parallel computing to be passed down

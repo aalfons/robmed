@@ -1,0 +1,11 @@
+Changes in robmed version 0.2.0
+
+    + Added method based on robust regressions and fast and robust bootstrap,
+      which is the new default method.
+
+
+
+Changes in robmed version 0.1.1
+
+    + Bugfix in density plot: bootstrap replicates for indirect effect are now
+      correctly extracted.

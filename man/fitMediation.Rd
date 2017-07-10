@@ -3,8 +3,8 @@
 \name{fitMediation}
 \alias{fitMediation}
 \alias{print.fitMediation}
-\alias{summary.covFitMediation}
 \alias{summary.regFitMediation}
+\alias{summary.covFitMediation}
 \title{(Robustly) fit a mediation model}
 \usage{
 fitMediation(x, y, m, covariates = NULL, data, method = c("regression",
@@ -65,10 +65,6 @@ independent variable on the dependent variable.}
 independent variable on the dependent variable.}
 \item{robust}{a logical indicating whether the effects were estimated
 robustly.}
-\item{fitYX}{an object of class \code{"\link[robustbase]{lmrob}"} or
-\code{"\link[stats]{lm}"} containing the estimation results from the
-regression of the dependent variable on the independent variable (only
-\code{"regFitMediation"}).}
 \item{fitMX}{an object of class \code{"\link[robustbase]{lmrob}"} or
 \code{"\link[stats]{lm}"} containing the estimation results from the
 regression of the proposed mediator variable on the independent variable
@@ -88,7 +84,7 @@ proposed mediator variables.}
 }
 \details{
 If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
-(the defaults), the effects are estimated via robust regressions with
+(the default), the effects are estimated via robust regressions with
 \code{\link[robustbase]{lmrob}}.
 
 If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
@@ -97,12 +93,24 @@ scatter.  Note that this covariance-based approach is less robust than the
 regression-based one described above.
 }
 \examples{
-data("superbowl")
-fitMediation("frequency", "liking", "clutter", data=superbowl)
+# control parameters
+n <- 250             # number of observations
+a <- b <- c <- 0.2   # true effects
+t <- 10              # number of observations to contaminate
 
-}
-\author{
-Andreas Alfons
+# draw clean observations
+set.seed(20160911)
+x <- rnorm(n)
+m <- a * x + rnorm(n)
+y <- b * m + c * x + rnorm(n)
+
+# contaminate the first t observations
+m[1:t] <- m[1:t] - 6
+y[1:t] <- y[1:t] + 6
+
+# fit mediation model
+fitMediation(x, y, m)
+
 }
 \references{
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
@@ -112,11 +120,10 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \seealso{
 \code{\link{testMediation}}
 
-\code{\link[=coef.fitMediation]{coef}} and
-\code{\link[=confint.regFitMediation]{confint}} methods
-
 \code{\link[robustbase]{lmrob}}, \code{\link[stats]{lm}},
 \code{\link{covHuber}}, \code{\link{covML}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{multivariate}
-

@@ -27,9 +27,6 @@ A numeric vetor containing the requested robustness weights.
 Extract (relative) robustness weights of a Huber M-estimate of location and 
 scatter.
 }
-\author{
-Andreas Alfons
-}
 \references{
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for 
 mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1), 
@@ -38,5 +35,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \seealso{
 \code{\link{covHuber}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{utilities}
-

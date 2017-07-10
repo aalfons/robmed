@@ -18,6 +18,8 @@ retest(object, ...)
 \item{object}{an object inheriting from class \code{"\link{testMediation}"} 
 containing results from (robust) mediation analysis.}
 
+\item{\dots}{additional arguments to be passed down to methods.}
+
 \item{alternative}{a character string specifying the alternative hypothesis 
 in the test for the indirect effect.  Possible values are \code{"twosided"} 
 (the default), \code{"less"} or \code{"greater"}.}
@@ -29,8 +31,6 @@ the bootstrap test.  The default is to compute a 95\% confidence interval.}
 to be computed in the bootstrap test.  Possible values are \code{"bca"} (the 
 default) for the bias-corrected and accelerated bootstrap, or \code{"perc"} 
 for the percentile bootstrap.}
-
-\item{\dots}{additional arguments to be passed down to methods.}
 }
 \value{
 An object of the same class as \code{object} with updated test 
@@ -40,11 +40,10 @@ results (see \code{\link{testMediation}}).
 Reperform a (fast and robust) bootstrap test or Sobel's test for the 
 indirect effect based on results from (robust) mediation analysis.
 }
-\author{
-Andreas Alfons
-}
 \seealso{
 \code{\link{testMediation}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{multivariate}
-
