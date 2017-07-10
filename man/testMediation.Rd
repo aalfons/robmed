@@ -4,7 +4,6 @@
 \alias{testMediation}
 \alias{print.bootTestMediation}
 \alias{print.sobelTestMediation}
-\alias{summary.testMediation}
 \alias{testMediation.default}
 \alias{testMediation.fitMediation}
 \alias{indirect}

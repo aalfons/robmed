@@ -26,7 +26,6 @@
 #' \code{INDIRECT}).
 #'
 #' @aliases print.bootTestMediation print.sobelTestMediation
-#' summary.testMediation
 #'
 #' @param x  either a numeric vector containing the independent variable, or
 #' (if \code{data} is supplied) a character string, an integer or a logical
