@@ -142,7 +142,7 @@ summary.testMediation <- function(object, ...) {
   # get significance of effects and summary of model fit
   # component 'boot' only exists for bootstrap test, otherwise NULL
   # component 'se' only exists for Sobel test, otherwise NULL
-  summary <- getSummary(object$fit, boot=object$reps, sAB=object$se)
+  summary <- getSummary(object$fit, boot=object$reps)
   # construct return object
   result <- list(object=object, summary=summary)
   class(result) <- "summaryTestMediation"
@@ -224,7 +224,7 @@ getSummary.covFitMediation <- function(object, boot = NULL, ...) {
   result
 }
 
-getSummary.regFitMediation <- function(object, boot = NULL, sAB = NULL, ...) {
+getSummary.regFitMediation <- function(object, boot = NULL, ...) {
   # initializations
   x <- object$x
   y <- object$y
@@ -261,23 +261,9 @@ getSummary.regFitMediation <- function(object, boot = NULL, sAB = NULL, ...) {
     b <- summaryYMX$coefficients[2, , drop=FALSE]
     c <- summaryYMX$coefficients[3, , drop=FALSE]
     if(robust) {
-      if(is.null(sAB)) cPrime <- NULL  # internal call from robust Sobel test
-      else {
-        # compute the variance estimate of c' = a*b + c assuming independence
-        sCPrime <- sqrt(sAB^2 + c[1, 2]^2)
-        # compute the t-statistic and the degrees of freedom
-        t <- object$cPrime / sCPrime
-        # compute the degrees of freedom
-        # m ~ x + covariates: 2 + # covariates
-        # y ~ m + x + covariates: 3 + # covariates
-        # y ~ x + covariates: 2 + # covariates
-        df <- max(1, n - 7 - 3*length(covariates))
-        # compute p-value
-        pValue <- 2*pt(abs(t), df=df, lower.tail=FALSE)
-        # combine results
-        cPrime <- matrix(c(object$cPrime, sCPrime, t, pValue), nrow=1)
-        dimnames(cPrime) <- dimnames(c)
-      }
+      # standard errors and t-test not available
+      cPrime <- matrix(c(object$cPrime, rep.int(NA_real_, 3)), nrow=1)
+      dimnames(cPrime) <- dimnames(c)
     } else {
       tmp <- summary(object$fitYX)
       cPrime <- tmp$coefficients[2, , drop=FALSE]

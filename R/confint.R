@@ -64,7 +64,7 @@ confint.sobelTestMediation <- function(object, parm = NULL, level = 0.95, ...) {
   ci <- confintZ(object$ab, object$se, level=level,
                  alternative=object$alternative)
   # combine with confidence intervalse of other effects
-  ci <- rbind(getConfint(object$fit, level=level, sAB=object$se), ab=ci)
+  ci <- rbind(getConfint(object$fit, level=level), ab=ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
@@ -143,7 +143,7 @@ getConfint.covFitMediation <- function(object, parm = NULL, level = 0.95,
 }
 
 getConfint.regFitMediation <- function(object, parm = NULL, level = 0.95,
-                                       boot = NULL, sAB = NULL, ...) {
+                                       boot = NULL, ...) {
   # initializations
   alpha <- 1 - level
   # extract point estimates and standard errors
@@ -153,17 +153,8 @@ getConfint.regFitMediation <- function(object, parm = NULL, level = 0.95,
     confintYMX <- confint(object$fitYMX, parm=2:3, level=level)
     # compute confidence interval for total effect
     if(object$robust) {
-      # compute the variance estimate of c' = a*b + c assuming independence
-      summaryYMX <- summary(object$fitYMX)
-      sCPrime <- sqrt(sAB^2 + summaryYMX$coefficients[3, 2]^2)
-      # compute the degrees of freedom
-      # m ~ x + covariates: 2 + # covariates
-      # y ~ m + x + covariates: 3 + # covariates
-      # y ~ x + covariates: 2 + # covariates
-      n <- nobs(object$fitYMX)
-      df <- max(1, n - 7 - 3*length(object$covariates))
-      # compute confidence interval
-      confintYX <- object$cPrime + qt(c(alpha/2, 1-alpha/2), df=df) * sCPrime
+      # confidence interval not available
+      confintYX <- rep.int(NA_real_, 2)
     } else {
       # extract confidence interval from regression model
       confintYX <- confint(object$fitYX, parm=2, level=level)
