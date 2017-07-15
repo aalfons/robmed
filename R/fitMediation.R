@@ -118,7 +118,8 @@ fitMediation <- function(x, y, m, covariates = NULL, data,
                          method = c("regression", "covariance"),
                          robust = TRUE, control, ...) {
   ## initializations
-  # FIXME: make sure dimensions are correct
+  # FIXME: make sure dimensions are correct and that incomplete observations
+  #        are removed
   if(missing(data)) {
     # prepare data frame containing all variables with original names
     x <- substitute(x)
@@ -203,6 +204,7 @@ regFitMediation <- function(x, y, m, covariates = character(), data,
   result <- list(a=a, b=b, c=c, cPrime=cPrime, fitMX=fitMX, fitYMX=fitYMX,
                  fitYX=fitYX, x=x, y=y, m=m, covariates=covariates,
                  data=data, robust=robust)
+  if(robust) result$control <- control
   class(result) <- c("regFitMediation", "fitMediation")
   result
 }
@@ -222,6 +224,7 @@ covFitMediation <- function(x, y, m, data, robust = TRUE,
   # return results
   result <- list(a=a, b=b, c=c, cPrime=cPrime, cov=cov, x=x, y=y, m=m,
                  data=data, robust=robust)
+  if(robust) result$control <- control
   class(result) <- c("covFitMediation", "fitMediation")
   result
 }

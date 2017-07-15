@@ -118,21 +118,23 @@ print.summaryFitMediation <- function(x, digits = max(3, getOption("digits")-3),
   # print model summary for y ~ m + x + covariates
   postfix <- if(haveCovariates) " + control variables" else ""
   cat(sprintf("---\nModel summary for y ~ m + x%s\n", postfix))
+  postfix <- sprintf(" on %d degrees of freedom", x$s$df)
   if(x$robust) {
     cat("\nRobust residual standard error: ", format(signif(x$s$value, digits)),
-        "\n", sep="")
+        postfix, "\n", sep="")
     if(!is.null(x$FTest)) {
-      cat("Robust R-squared:  ", formatC(x$FTest$R2, digits=digits),
-          ",\tAdjusted robust R-squared:  ", formatC(x$FTest$adjR2, digits=digits),
-          "\n", sep="")
+      cat("Robust R-squared:  ", formatC(x$R2$R2, digits=digits),
+          ",\tAdjusted robust R-squared:  ", formatC(x$R2$adjR2, digits=digits),
+          "\nRobust F-statistic: ", formatC(x$FTest$statistic, digits=digits),
+          " on ", x$FTest$df[1], " and ", x$FTest$df[2], " DF,  p-value: ",
+          format.pval(x$FTest$pValue, digits=digits), "\n", sep="")
     }
   } else {
-    postfix <- sprintf(" on %d degrees of freedom", x$s$df)
     cat("\nResidual standard error: ", format(signif(x$s$value, digits)),
         postfix, "\n", sep="")
     if(!is.null(x$FTest)) {
-      cat("Multiple R-squared:  ", formatC(x$FTest$R2, digits=digits),
-          ",\tAdjusted R-squared:  ", formatC(x$FTest$adjR2, digits=digits),
+      cat("Multiple R-squared:  ", formatC(x$R2$R2, digits=digits),
+          ",\tAdjusted R-squared:  ", formatC(x$R2$adjR2, digits=digits),
           "\nF-statistic: ", formatC(x$FTest$statistic, digits=digits), " on ",
           x$FTest$df[1], " and ", x$FTest$df[2], " DF,  p-value: ",
           format.pval(x$FTest$pValue, digits=digits), "\n", sep="")

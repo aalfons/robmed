@@ -217,17 +217,17 @@ getSummary.regFitMediation <- function(object, boot = NULL, ...) {
   result$s <- list(value=summaryYMX$sigma, df=summaryYMX$df[2])
   # add R-squared and F-test for nonrobust fit
   if(robust) {
-    # compute robust R-squared
-    result$FTest <- robR2(object$fitYMX)
-    # TODO: implement robust F-test
+    # compute robust R-squared and F-test for robust fit
+    result$R2 <- robR2(object$fitYMX)
+    result$FTest <- robFTest(object)
   } else {
-    # add R-squared and F-test for nonrobust fit
+    # add R-squared for nonrobust fit
+    result$R2 <- list(R2=summaryYMX$r.squared, adjR2=summaryYMX$adj.r.squared)
+    # add F-test for nonrobust fit
     statistic <- unname(summaryYMX$fstatistic[1])
     df <- unname(summaryYMX$fstatistic[-1])
     pValue <- pf(statistic, df[1], df[2], lower.tail=FALSE)
-    result$FTest <- list(R2=summaryYMX$r.squared,
-                         adjR2=summaryYMX$adj.r.squared,
-                         statistic=statistic, df=df,
+    result$FTest <- list(statistic=statistic, df=df,
                          pValue=pValue)
   }
   # add number of observations and variable names
