@@ -85,44 +85,6 @@ confint.sobelTestMediation <- function(object, parm = NULL, level = 0.95, ...) {
 }
 
 
-# ## @rdname confint.testMediation
-# ## @method confint regFitMediation
-# ## @export
-#
-# confint.regFitMediation <- function(object, parm = NULL, level = 0.95, ...) {
-#   # extract confidence intervals and combine into one matrix
-#   ci <- rbind(confint(object$fitMX, parm=2, level=level),
-#               confint(object$fitYMX, parm=2:3, level=level),
-#               confint(object$fitYX, parm=2, level=level))
-#   rownames(ci) <- c("a", "b", "c", "c'")
-#   # if requested, take subset of effects
-#   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
-#   ci
-# }
-#
-#
-# ## @rdname confint.testMediation
-# ## @method confint covFitMediation
-# ## @export
-#
-# confint.covFitMediation <- function(object, parm = NULL, level = 0.95, ...) {
-#   # initializations
-#   alpha <- 1 - level
-#   # compute standard errors
-#   summary <- summary(object)
-#   # compute confidence intervals and combine into one matrix
-#   ci <- rbind(confintZ(object$a, summary$a[1,2], level=level),
-#               confintZ(object$b, summary$b[1,2], level=level),
-#               confintZ(object$c, summary$c[1,2], level=level),
-#               confintZ(object$cPrime, summary$cPrime[1,2], level=level))
-#   cn <- paste(format(100 * c(alpha/2, 1-alpha/2), trim=TRUE), "%")
-#   dimnames(ci) <- list(c("a", "b", "c", "c'"), cn)
-#   # if requested, take subset of effects
-#   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
-#   ci
-# }
-
-
 ## internal function to compute confidence intervals for estimated effects
 
 getConfint <- function(object, parm, level = 0.95, ...) UseMethod("getConfint")
