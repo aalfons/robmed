@@ -7,14 +7,14 @@
 covControl(prob = 0.95, maxIterations = 200, tol = 1e-07)
 }
 \arguments{
-\item{prob}{numeric; probability for the quantile of the 
-\eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the 
+\item{prob}{numeric; probability for the quantile of the
+\eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the
 Huber weight function (defaults to 0.95).}
 
-\item{maxIterations}{an integer giving the maximum number of iterations in 
+\item{maxIterations}{an integer giving the maximum number of iterations in
 the iteratively reweighted algorithm.}
 
-\item{tol}{a small positive numeric value to be used to determine 
+\item{tol}{a small positive numeric value to be used to determine
 convergence of the iteratively reweighted algorithm.}
 }
 \value{
