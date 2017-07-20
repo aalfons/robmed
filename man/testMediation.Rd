@@ -6,6 +6,7 @@
 \alias{print.sobelTestMediation}
 \alias{testMediation.default}
 \alias{testMediation.fitMediation}
+\alias{robmed}
 \alias{indirect}
 \title{(Robust) mediation analysis}
 \usage{
@@ -19,6 +20,8 @@ testMediation(x, ...)
 \method{testMediation}{fitMediation}(x, test = c("boot", "sobel"),
   alternative = c("twosided", "less", "greater"), R = 5000, level = 0.95,
   type = c("bca", "perc"), ...)
+
+robmed(..., test = "boot", method = "regression", robust = TRUE)
 
 indirect(..., test = c("boot", "sobel"), method = "regression",
   robust = FALSE)
@@ -129,6 +132,10 @@ transformation.  Then the standard bootstrap is performed with the cleaned
 data.  Note that this covariance-based approach is less robust than the
 regression-based one described above.  Furthermore, the bootstrap does not
 account for the variability from cleaning the data.
+
+\code{robmed} is a wrapper function for performing robust mediation analysis
+via regressions and the fast and robust bootstrap (inspired by our
+\code{SPSS} macro \code{ROBMED}).
 
 \code{indirect} is a wrapper function for performing non-robust mediation
 analysis via regressions (inspired by Preacher & Hayes' \code{SPSS} macro

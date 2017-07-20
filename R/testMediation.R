@@ -21,6 +21,10 @@
 #' regression-based one described above.  Furthermore, the bootstrap does not
 #' account for the variability from cleaning the data.
 #'
+#' \code{robmed} is a wrapper function for performing robust mediation analysis
+#' via regressions and the fast and robust bootstrap (inspired by our
+#' \code{SPSS} macro \code{ROBMED}).
+#'
 #' \code{indirect} is a wrapper function for performing non-robust mediation
 #' analysis via regressions (inspired by Preacher & Hayes' \code{SPSS} macro
 #' \code{INDIRECT}).
@@ -388,6 +392,15 @@ testMediation.fitMediation <- function(x, test = c("boot", "sobel"),
     # perform Sobel test
     sobelTestMediation(x, alternative=alternative)
   } else stop("test not implemented")
+}
+
+
+#' @rdname testMediation
+#' @export
+
+robmed <- function(..., test = "boot", method = "regression",
+                   robust = TRUE) {
+  testMediation(..., test="boot", method="regression", robust=TRUE)
 }
 
 

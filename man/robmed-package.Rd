@@ -1,6 +1,5 @@
 \name{robmed-package}
 \alias{robmed-package}
-\alias{robmed}
 \docType{package}
 \title{
 \packageTitle{robmed}
