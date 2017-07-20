@@ -33,8 +33,9 @@ indirect(..., test = "boot", method = "regression", robust = FALSE)
 (if \code{data} is supplied) a character string, an integer or a logical
 vector specifying the corresponding column of \code{data}.}
 
-\item{\dots}{additional arguments to be passed to \code{\link[boot]{boot}}
-in case of a bootstrap test.}
+\item{\dots}{additional arguments to be passed down.  For the bootstrap
+tests, those can be used to specify arguments of \code{\link[boot]{boot}},
+for example for parallel computing.}
 
 \item{y}{either a numeric vector containing the dependent variable, or
 (if \code{data} is supplied) a character string, an integer or a logical
