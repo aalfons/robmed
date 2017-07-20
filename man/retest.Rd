@@ -2,46 +2,47 @@
 % Please edit documentation in R/retest.R
 \name{retest}
 \alias{retest}
-\alias{retest.bootTestMediation}
-\alias{retest.sobelTestMediation}
+\alias{retest.boot_test_mediation}
+\alias{retest.sobel_test_mediation}
 \title{Retest for mediation}
 \usage{
 retest(object, ...)
 
-\method{retest}{bootTestMediation}(object, alternative = c("twosided", "less",
-  "greater"), level = 0.95, type = c("bca", "perc"), ...)
+\method{retest}{boot_test_mediation}(object, alternative = c("twosided",
+  "less", "greater"), level = 0.95, type = c("bca", "perc"), ...)
 
-\method{retest}{sobelTestMediation}(object, alternative = c("twosided",
+\method{retest}{sobel_test_mediation}(object, alternative = c("twosided",
   "less", "greater"), ...)
 }
 \arguments{
-\item{object}{an object inheriting from class \code{"\link{testMediation}"} 
-containing results from (robust) mediation analysis.}
+\item{object}{an object inheriting from class
+\code{"\link{test_mediation}"} containing results from (robust) mediation
+analysis.}
 
 \item{\dots}{additional arguments to be passed down to methods.}
 
-\item{alternative}{a character string specifying the alternative hypothesis 
-in the test for the indirect effect.  Possible values are \code{"twosided"} 
+\item{alternative}{a character string specifying the alternative hypothesis
+in the test for the indirect effect.  Possible values are \code{"twosided"}
 (the default), \code{"less"} or \code{"greater"}.}
 
-\item{level}{numeric; the confidence level of the confidence interval in 
+\item{level}{numeric; the confidence level of the confidence interval in
 the bootstrap test.  The default is to compute a 95\% confidence interval.}
 
-\item{type}{a character string specifying the type of confidence interval 
-to be computed in the bootstrap test.  Possible values are \code{"bca"} (the 
-default) for the bias-corrected and accelerated bootstrap, or \code{"perc"} 
+\item{type}{a character string specifying the type of confidence interval
+to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
+default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 for the percentile bootstrap.}
 }
 \value{
-An object of the same class as \code{object} with updated test 
-results (see \code{\link{testMediation}}).
+An object of the same class as \code{object} with updated test
+results (see \code{\link{test_mediation}}).
 }
 \description{
-Reperform a (fast and robust) bootstrap test or Sobel's test for the 
+Reperform a (fast and robust) bootstrap test or Sobel's test for the
 indirect effect based on results from (robust) mediation analysis.
 }
 \seealso{
-\code{\link{testMediation}}
+\code{\link{test_mediation}}
 }
 \author{
 Andreas Alfons

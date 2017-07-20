@@ -9,8 +9,8 @@
 #' in (robust) mediation analysis, or density plots of the indirect effect.
 #'
 #' @param object,x  an object inheriting from class
-#' \code{"\link{testMediation}"} containing results from (robust) mediation
-#' analysis.  For \code{plotMediation}, a list of such objects may be supplied
+#' \code{"\link{test_mediation}"} containing results from (robust) mediation
+#' analysis.  For \code{plot_mediation}, a list of such objects may be supplied
 #' as well.
 #' @param data  an optional numeric vector containing the \eqn{x}-values at
 #' which to evaluate the assumed normal density from Sobel's test (only used in
@@ -38,89 +38,82 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{testMediation}},
-#' \code{\link[=fortify.testMediation]{fortify}}
+#' @seealso \code{\link{test_mediation}},
+#' \code{\link[=fortify.test_mediation]{fortify}}
 #'
 #' @keywords hplot
 #'
 #' @import ggplot2
 #' @export
 
-plotMediation <- function(object, ...) UseMethod("plotMediation")
+plot_mediation <- function(object, ...) UseMethod("plot_mediation")
 
 
-#' @rdname plotMediation
-#' @method plotMediation bootTestMediation
+#' @rdname plot_mediation
+#' @method plot_mediation boot_test_mediation
 #' @export
 
-plotMediation.bootTestMediation <- function(object,
-                                            method = c("dot", "density"),
-                                            parm = c("c", "ab"),
-                                            ...) {
+plot_mediation.boot_test_mediation <- function(object,
+                                               method = c("dot", "density"),
+                                               parm = c("c", "ab"), ...) {
   data <- fortify(object, method=method, parm=parm)
-  plotMediation(data, ...)
+  plot_mediation(data, ...)
 }
 
 
-#' @rdname plotMediation
-#' @method plotMediation sobelTestMediation
+#' @rdname plot_mediation
+#' @method plot_mediation sobel_test_mediation
 #' @export
 
-plotMediation.sobelTestMediation <- function(object, data,
-                                             method = c("dot", "density"),
-                                             parm = c("c", "ab"),
-                                             level = 0.95, ...) {
+plot_mediation.sobel_test_mediation <- function(object, data,
+                                                method = c("dot", "density"),
+                                                parm = c("c", "ab"),
+                                                level = 0.95, ...) {
   data <- fortify(object, data=data, method=method, parm=parm, level=level)
-  plotMediation(data, ...)
+  plot_mediation(data, ...)
 }
 
 
-#' @rdname plotMediation
-#' @method plotMediation list
+#' @rdname plot_mediation
+#' @method plot_mediation list
 #' @export
 
-plotMediation.list <- function(object, data, method = c("dot", "density"),
-                               parm = c("c", "ab"), level = 0.95, ...) {
+plot_mediation.list <- function(object, data, method = c("dot", "density"),
+                                parm = c("c", "ab"), level = 0.95, ...) {
   data <- fortify(object, data=data, method=method, parm=parm, level=level)
-  plotMediation(data, ...)
+  plot_mediation(data, ...)
 }
 
 
-#' @rdname plotMediation
-#' @method plotMediation default
+#' @rdname plot_mediation
+#' @method plot_mediation default
 #' @export
 
-plotMediation.default <- function(object, mapping = attr(object, "mapping"),
-                                  facets = attr(object, "facets"), ...) {
+plot_mediation.default <- function(object, mapping = attr(object, "mapping"),
+                                   facets = attr(object, "facets"), ...) {
   # create selected plot
-  if(attr(object, "method") == "dot") dotPlot(object, mapping, facets, ...)
-  else densityPlot(object, mapping, ...)
+  if(attr(object, "method") == "dot") dot_plot(object, mapping, facets, ...)
+  else density_plot(object, mapping, ...)
 }
 
 
-#' @rdname plotMediation
+#' @rdname plot_mediation
+#' @method autoplot test_mediation
 #' @export
 
-plot_mediation <- plotMediation
+autoplot.test_mediation <- function(object, ...) plot_mediation(object, ...)
 
 
-#' @rdname plotMediation
-#' @method autoplot testMediation
+#' @rdname plot_mediation
+#' @method plot test_mediation
 #' @export
 
-autoplot.testMediation <- function(object, ...) plotMediation(object, ...)
-
-
-#' @rdname plotMediation
-#' @method plot testMediation
-#' @export
-
-plot.testMediation <- function(x, ...) plotMediation(x, ...)
+plot.test_mediation <- function(x, ...) plot_mediation(x, ...)
 
 
 ## internal function for dot plot
-dotPlot <- function(data, mapping, facets, main = NULL,
-                    xlab = NULL, ylab = NULL, ...) {
+dot_plot <- function(data, mapping, facets, main = NULL,
+                     xlab = NULL, ylab = NULL, ...) {
   # generate plot
   geom <- attr(data, "geom")
   p <- ggplot(data, mapping) + geom(...) + labs(title=main, x=xlab, y=ylab)
@@ -134,8 +127,8 @@ dotPlot <- function(data, mapping, facets, main = NULL,
 
 
 ## internal function for density plot
-densityPlot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL,
-                        ...) {
+density_plot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL,
+                         ...) {
   # define default title and axis labels
   if(is.null(main)) main <- attr(data, "main")
   if(is.null(xlab)) xlab <- "Indirect effect"
@@ -143,16 +136,16 @@ densityPlot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL,
   # extract point estimate and confidence interval
   ci <- attr(data, "ci")
   if("Method" %in% names(data)) {
-    mappingLine <- aes_string(xintercept="ab", color="Method")
-    mappingRect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf,
-                              fill="Method")
+    mapping_line <- aes_string(xintercept="ab", color="Method")
+    mapping_rect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf,
+                               fill="Method")
   } else {
-    mappingLine <- aes_string(xintercept="ab")
-    mappingRect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf)
+    mapping_line <- aes_string(xintercept="ab")
+    mapping_rect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf)
   }
   # generate plot
   geom <- attr(data, "geom")
-  ggplot(data, mapping) + geom(...) + geom_vline(mappingLine, data=ci, ...) +
-    geom_rect(mappingRect, data=ci, color=NA, alpha=0.2, ...) +
+  ggplot(data, mapping) + geom(...) + geom_vline(mapping_line, data=ci, ...) +
+    geom_rect(mapping_rect, data=ci, color=NA, alpha=0.2, ...) +
     labs(title=main, x=xlab, y=ylab)
 }

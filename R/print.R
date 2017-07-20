@@ -4,8 +4,8 @@
 # --------------------------------------
 
 #' @export
-print.bootTestMediation <- function(x, digits = max(3, getOption("digits")-3),
-                                    ...) {
+print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
+                                      ...) {
   cat("Bootstrap results for indirect effect\n")
   # print indirect effect
   cat("\nIndirect effect (ab path):\n")
@@ -28,7 +28,7 @@ print.bootTestMediation <- function(x, digits = max(3, getOption("digits")-3),
 }
 
 #' @export
-print.covHuber <- function(x, ...) {
+print.cov_Huber <- function(x, ...) {
   # print estimates
   cat("Huber M-estimator\n")
   cat("\nLocation vector estimate:\n")
@@ -40,7 +40,7 @@ print.covHuber <- function(x, ...) {
 }
 
 #' @export
-print.covML <- function(x, ...) {
+print.cov_ML <- function(x, ...) {
   # print estimates
   cat("Maximum likelihood estimator\n")
   cat("\nMean vector estimate:\n")
@@ -52,7 +52,7 @@ print.covML <- function(x, ...) {
 }
 
 #' @export
-print.fitMediation <- function(x, ...) {
+print.fit_mediation <- function(x, ...) {
   # print estimated effects
   prefix <- if(x$robust) "Robust mediation" else "Mediation"
   cat(prefix, "model fit\n")
@@ -63,12 +63,12 @@ print.fitMediation <- function(x, ...) {
 }
 
 #' @export
-print.sobelTestMediation <- function(x, digits = max(3, getOption("digits")-3),
-                                     ...) {
+print.sobel_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
+                                       ...) {
   # print indirect effect
   cat("Normal theory test for indirect effect\n")
   cat("\nIndirect effect (ab path):\n")
-  ab <- cbind(x$ab, x$se, x$statistic, x$pValue)
+  ab <- cbind(x$ab, x$se, x$statistic, x$p_value)
   m <- x$fit$m
   cn <- switch(x$alternative, twosided="Pr(>|z|)",
                less="Pr(<z)", greater="Pr(>z)")
@@ -79,25 +79,25 @@ print.sobelTestMediation <- function(x, digits = max(3, getOption("digits")-3),
 }
 
 #' @export
-print.summaryFitMediation <- function(x, digits = max(3, getOption("digits")-3),
-                                      signif.stars = getOption("show.signif.stars"),
-                                      signif.legend = signif.stars, ...) {
+print.summary_fit_mediation <- function(x, digits = max(3, getOption("digits")-3),
+                                        signif.stars = getOption("show.signif.stars"),
+                                        signif.legend = signif.stars, ...) {
   # initializations
   p <- length(x$variables)
-  haveCovariates <- p > 3
+  have_covariates <- p > 3
   # print information on data
   cat("\nIndependent, dependent and proposed mediator variables:\n")
   cat(sprintf("x = %s\n", x$variables[1]))
   cat(sprintf("y = %s\n", x$variables[2]))
   cat(sprintf("m = %s\n", x$variables[3]))
-  if(haveCovariates) {
+  if(have_covariates) {
     cat("\nControl variables:\n")
     print(x$variables[4:p], quote=FALSE)
   }
   # print sample size
   cat(sprintf("\nSample size: %d\n", x$n))
   # print effects
-  if(haveCovariates) cat("---\nPartial effect of x on m (a path):\n")
+  if(have_covariates) cat("---\nPartial effect of x on m (a path):\n")
   else cat("---\nEffect of x on m (a path):\n")
   printCoefmat(x$a, digits=digits, signif.stars=signif.stars,
                signif.legend=FALSE, ...)
@@ -108,48 +108,50 @@ print.summaryFitMediation <- function(x, digits = max(3, getOption("digits")-3),
   printCoefmat(x$c, digits=digits, signif.stars=signif.stars,
                signif.legend=FALSE, ...)
   cat("\nTotal effect of x on y (c' path):\n")
-  printCoefmat(x$cPrime, digits=digits, signif.stars=signif.stars,
+  printCoefmat(x$c_prime, digits=digits, signif.stars=signif.stars,
                signif.legend=FALSE, ...)
-  if(haveCovariates) {
+  if(have_covariates) {
     cat("\nPartial effects of control variables on y:\n")
     printCoefmat(x$covariates, digits=digits, signif.stars=signif.stars,
                  signif.legend=FALSE, ...)
   }
   # print model summary for y ~ m + x + covariates
-  postfix <- if(haveCovariates) " + control variables" else ""
+  postfix <- if(have_covariates) " + control variables" else ""
   cat(sprintf("---\nModel summary for y ~ m + x%s\n", postfix))
   postfix <- sprintf(" on %d degrees of freedom", x$s$df)
   if(x$robust) {
     cat("\nRobust residual standard error: ", format(signif(x$s$value, digits)),
         postfix, "\n", sep="")
-    if(!is.null(x$FTest)) {
-      cat("Robust R-squared:  ", formatC(x$R2$R2, digits=digits),
-          ",\tAdjusted robust R-squared:  ", formatC(x$R2$adjR2, digits=digits),
-          "\nRobust F-statistic: ", formatC(x$FTest$statistic, digits=digits),
-          " on ", x$FTest$df[1], " and ", x$FTest$df[2], " DF,  p-value: ",
-          format.pval(x$FTest$pValue, digits=digits), "\n", sep="")
+    if(!is.null(x$F_test)) {
+      cat("Robust R-squared:  ",
+          formatC(x$R2$R2, digits=digits),
+          ",\tAdjusted robust R-squared:  ",
+          formatC(x$R2$adj_R2, digits=digits),
+          "\nRobust F-statistic: ", formatC(x$F_test$statistic, digits=digits),
+          " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
+          format.pval(x$F_test$p_value, digits=digits), "\n", sep="")
     }
   } else {
     cat("\nResidual standard error: ", format(signif(x$s$value, digits)),
         postfix, "\n", sep="")
-    if(!is.null(x$FTest)) {
+    if(!is.null(x$F_test)) {
       cat("Multiple R-squared:  ", formatC(x$R2$R2, digits=digits),
-          ",\tAdjusted R-squared:  ", formatC(x$R2$adjR2, digits=digits),
-          "\nF-statistic: ", formatC(x$FTest$statistic, digits=digits), " on ",
-          x$FTest$df[1], " and ", x$FTest$df[2], " DF,  p-value: ",
-          format.pval(x$FTest$pValue, digits=digits), "\n", sep="")
+          ",\tAdjusted R-squared:  ", formatC(x$R2$adj_R2, digits=digits),
+          "\nF-statistic: ", formatC(x$F_test$statistic, digits=digits),
+          " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
+          format.pval(x$F_test$p_value, digits=digits), "\n", sep="")
     }
   }
   # print legend for significance stars
-  if(isTRUE(signif.stars) && isTRUE(signif.legend)) printLegend()
+  if(isTRUE(signif.stars) && isTRUE(signif.legend)) print_legend()
   # return object invisibly
   invisible(x)
 }
 
 #' @export
-print.summaryTestMediation <- function(x, digits = max(3, getOption("digits")-3),
-                                       signif.stars = getOption("show.signif.stars"),
-                                       signif.legend = signif.stars, ...) {
+print.summary_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
+                                         signif.stars = getOption("show.signif.stars"),
+                                         signif.legend = signif.stars, ...) {
   # print summary of mediation model fit
   print(x$summary, digits=digits, signif.stars=signif.stars,
         signif.legend=FALSE, ...)
@@ -158,13 +160,13 @@ print.summaryTestMediation <- function(x, digits = max(3, getOption("digits")-3)
   print(x$object, digits=digits, signif.stars=signif.stars,
         signif.legend=FALSE, ...)
   # print legend for significance stars
-  if(isTRUE(signif.stars) && isTRUE(signif.legend)) printLegend()
+  if(isTRUE(signif.stars) && isTRUE(signif.legend)) print_legend()
   # return object invisibly
   invisible(x)
 }
 
 ## internal function to print legend for significance stars
-printLegend <- function() {
+print_legend <- function() {
   cat("---\nSignif. codes:  0", sQuote("***"), "0.001", sQuote("**"),
       "0.01", sQuote("*"), "0.05", sQuote("."), "0.1", sQuote(" "), "1\n")
 }

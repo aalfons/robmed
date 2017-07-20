@@ -7,11 +7,11 @@
 #'
 #' Extract coefficients from models computed in (robust) mediation analysis.
 #'
-#' @method coef testMediation
+#' @method coef test_mediation
 #'
-#' @param object  an object inheriting from class \code{"\link{testMediation}"}
+#' @param object  an object inheriting from class \code{"\link{test_mediation}"}
 #' containing results from (robust) mediation analysis, or an object inheriting
-#' from class \code{"\link{fitMediation}"} containing a (robust) mediation
+#' from class \code{"\link{fit_mediation}"} containing a (robust) mediation
 #' model fit.
 #' @param type  a character string specifying whether to extract the means
 #' of the bootstrap distribution (\code{"boot"}; the default), or the
@@ -24,14 +24,14 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{testMediation}}, \code{\link{fitMediation}},
-#' \code{\link[=confint.testMediation]{confint}}
+#' @seealso \code{\link{test_mediation}}, \code{\link{fit_mediation}},
+#' \code{\link[=confint.test_mediation]{confint}}
 #'
 #' @keywords utilities
 #'
 #' @export
 
-coef.testMediation <- function(object, parm = NULL, ...) {
+coef.test_mediation <- function(object, parm = NULL, ...) {
   # extract effects (including indirect effect)
   coef <- c(coef(object$fit), ab=object$ab)
   # if requested, take subset of effects
@@ -39,13 +39,13 @@ coef.testMediation <- function(object, parm = NULL, ...) {
   coef
 }
 
-#' @rdname coef.testMediation
-#' @method coef bootTestMediation
+#' @rdname coef.test_mediation
+#' @method coef boot_test_mediation
 #' @export
 
-coef.bootTestMediation <- function(object, parm = NULL,
-                                   type = c("boot", "data"),
-                                   ...) {
+coef.boot_test_mediation <- function(object, parm = NULL,
+                                     type = c("boot", "data"),
+                                     ...) {
   # initializations
   type <- match.arg(type)
   # extract effects (including indirect effect)
@@ -59,13 +59,13 @@ coef.bootTestMediation <- function(object, parm = NULL,
 }
 
 
-#' @rdname coef.testMediation
-#' @method coef fitMediation
+#' @rdname coef.test_mediation
+#' @method coef fit_mediation
 #' @export
 
-coef.fitMediation <- function(object, parm = NULL, ...) {
+coef.fit_mediation <- function(object, parm = NULL, ...) {
   # extract effects
-  coef <- c(object$a, object$b, object$c, object$cPrime)
+  coef <- c(object$a, object$b, object$c, object$c_prime)
   names(coef) <- c("a", "b", "c", "c'")
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]

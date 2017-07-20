@@ -8,12 +8,12 @@
 #' Compute the maximum likelihood estimator of the mean vector and the
 #' covariance matrix.
 #'
-#' @aliases print.covML
+#' @aliases print.cov_ML
 #'
 #' @param x  a numeric matrix or data frame.
 #' @param \dots  additional arguments are currently ignored.
 #'
-#' @return An object of class \code{"covML"} with the following components:
+#' @return An object of class \code{"cov_ML"} with the following components:
 #' \item{center}{a numeric vector containing the mean vector estimate.}
 #' \item{cov}{a numeric matrix containing the covariance matrix estimate.}
 #' \item{n}{an integer giving the number of observations.}
@@ -25,13 +25,13 @@
 #' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 #' 1--44.
 #'
-#' @seealso \code{\link{testMediation}}, \code{\link{fitMediation}}
+#' @seealso \code{\link{test_mediation}}, \code{\link{fit_mediation}}
 #'
 #' @keywords multivariate
 #'
 #' @export
 
-covML <- function(x, ...) {
+cov_ML <- function(x, ...) {
   # initializations
   x <- as.matrix(x)
   n <- nrow(x)
@@ -40,6 +40,6 @@ covML <- function(x, ...) {
   Sigma <- crossprod(sweep(x, 2, mu, check.margin=FALSE)) / n
   # return results
   result <- list(center=mu, cov=Sigma, n=n)
-  class(result) <- "covML"
+  class(result) <- "cov_ML"
   result
 }

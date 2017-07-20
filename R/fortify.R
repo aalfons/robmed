@@ -10,12 +10,12 @@
 #' thereby possible to construct data frames for dot plots of selected
 #' coefficients, as well as density plots of the indirect effect.
 #'
-#' @name fortify.testMediation
+#' @name fortify.test_mediation
 #'
-#' @param model  an object inheriting from class \code{"\link{testMediation}"}
+#' @param model  an object inheriting from class \code{"\link{test_mediation}"}
 #' containing results from (robust) mediation analysis.
-#' @param data  for the \code{"bootTestMediation"} method, this is currently
-#' ignored.  For the \code{"sobelTestMediation"} method, this is an optional
+#' @param data  for the \code{"boot_test_mediation"} method, this is currently
+#' ignored.  For the \code{"sobel_test_mediation"} method, this is an optional
 #' numeric vector containing the \eqn{x}-values at which to evaluate the
 #' assumed normal density from Sobel's test (only used in case of a density
 #' plot).  The default is to take 100 equally spaced points between the
@@ -36,21 +36,21 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{testMediation}}, \code{\link{plotMediation}}
+#' @seealso \code{\link{test_mediation}}, \code{\link{plot_mediation}}
 #'
 #' @keywords utilities
 
 NULL
 
 
-#' @rdname fortify.testMediation
-#' @method fortify bootTestMediation
+#' @rdname fortify.test_mediation
+#' @method fortify boot_test_mediation
 #' @import ggplot2
 #' @export
 
-fortify.bootTestMediation <- function(model, data,
-                                      method = c("dot", "density"),
-                                      parm = c("c", "ab"), ...) {
+fortify.boot_test_mediation <- function(model, data,
+                                        method = c("dot", "density"),
+                                        parm = c("c", "ab"), ...) {
   # initialization
   method <- match.arg(method)
   # construct data fram with relevant information
@@ -89,15 +89,15 @@ fortify.bootTestMediation <- function(model, data,
 }
 
 
-#' @rdname fortify.testMediation
-#' @method fortify sobelTestMediation
+#' @rdname fortify.test_mediation
+#' @method fortify sobel_test_mediation
 #' @import ggplot2
 #' @export
 
-fortify.sobelTestMediation <- function(model, data,
-                                       method = c("dot", "density"),
-                                       parm = c("c", "ab"),
-                                       level = 0.95, ...) {
+fortify.sobel_test_mediation <- function(model, data,
+                                         method = c("dot", "density"),
+                                         parm = c("c", "ab"),
+                                         level = 0.95, ...) {
   # initialization
   method <- match.arg(method)
   level <- rep(as.numeric(level), length.out=1)
@@ -123,7 +123,7 @@ fortify.sobelTestMediation <- function(model, data,
     ab <- model$ab
     se <- model$se
     # compute confidence interval
-    ci <- confintZ(ab, se, level=level, alternative=model$alternative)
+    ci <- confint_z(ab, se, level=level, alternative=model$alternative)
     # x- and y-values for the density
     if(missing(data)) x <- seq(ab - 3 * se, ab + 3 * se, length.out=100)
     else x <- as.numeric(data)
@@ -142,18 +142,18 @@ fortify.sobelTestMediation <- function(model, data,
 }
 
 
-#' @rdname fortify.testMediation
+#' @rdname fortify.test_mediation
 #' @method fortify list
 #' @import ggplot2
 #' @export
 
 fortify.list <- function(model, data, ...) {
   ## initializations
-  isBoot <- sapply(model, inherits, "bootTestMediation")
-  isSobel <- sapply(model, inherits, "sobelTestMediation")
-  model <- model[isBoot | isSobel]
+  is_boot <- sapply(model, inherits, "boot_test_mediation")
+  is_sobel <- sapply(model, inherits, "sobel_test_mediation")
+  model <- model[is_boot | is_sobel]
   if(length(model) == 0) {
-    stop('no objects inheriting from class "testMediation"')
+    stop('no objects inheriting from class "test_mediation"')
   }
   # check names of list elements
   methods <- names(model)
@@ -189,7 +189,7 @@ fortify.list <- function(model, data, ...) {
   } else {
     # additional information for density plot
     info$mapping <- aes_string(x="ab", y="Density", color="Method")
-    if(any(isBoot) && any(isSobel)) {
+    if(any(is_boot) && any(is_sobel)) {
       info$geom <- function(..., stat) geom_density(..., stat="identity")
       info$main <- NULL
     }

@@ -6,25 +6,25 @@
 ## compute robust R-squared from Renaud & Victoria-Feser (2010)
 
 # generic function
-robR2 <- function(object, ...) UseMethod("robR2")
+rob_R2 <- function(object, ...) UseMethod("rob_R2")
 
 # method for "lmrob" objects
-robR2.lmrob <- function(object, corrected = TRUE, ...) {
+rob_R2.lmrob <- function(object, corrected = TRUE, ...) {
   # initializations
   corrected <- isTRUE(corrected)
-  psiControl <- getPsiControl(object)
+  psi_control <- get_psi_control(object)
   # check correction
   if(corrected) {
-    # compute correction factor for given weight function and tuning 
+    # compute correction factor for given weight function and tuning
     # parameters via numerical integration
     integrand <- function(r, control) {
       Mwgt(r, cc=control$tuning.psi, psi=control$psi) * dnorm(r)
     }
-    E1 <- integrate(integrand, -Inf, Inf, control=psiControl)$value
+    E1 <- integrate(integrand, -Inf, Inf, control=psi_control)$value
     integrand <- function(r, control) {
       r * Mpsi(r, cc=control$tuning.psi, psi=control$psi) * dnorm(r)
     }
-    E2 <- integrate(integrand, -Inf, Inf, control=psiControl)$value
+    E2 <- integrate(integrand, -Inf, Inf, control=psi_control)$value
     a <- E1 / E2
   } else a <- 1
   # extract fitted values and residuals and compute response
@@ -38,8 +38,8 @@ robR2.lmrob <- function(object, corrected = TRUE, ...) {
   # compute robust R-squared
   if(corrected) {
     # compute total sum of weighted squares for fitted values
-    meanFitted <- weighted.mean(fitted, w)
-    SSF <- sum(w * (fitted - meanFitted)^2)
+    mean_fitted <- weighted.mean(fitted, w)
+    SSF <- sum(w * (fitted - mean_fitted)^2)
     # compute R-squared
     R2 <- SSF / (SSF + a*SSR)
   } else {
@@ -51,7 +51,7 @@ robR2.lmrob <- function(object, corrected = TRUE, ...) {
   }
   # compute adjusted R-squared
   n <- length(y)
-  adjR2 <- 1 - (1 - R2) * (n-1) / object$df.residual  # we always use intercept
+  adj_R2 <- 1 - (1 - R2) * (n-1) / object$df.residual  # we always use intercept
   # return robust R-squared and correction factor
-  list(R2=R2, adjR2=adjR2, a=a)
+  list(R2=R2, adj_R2=adj_R2, a=a)
 }

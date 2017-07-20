@@ -9,8 +9,8 @@
 #'
 #' @param efficiency  a numeric value giving the desired efficiency (defaults
 #' to 0.85 for 85\% efficiency).
-#' @param maxIterations,max_iterations  an integer giving the maximum number of
-#' iterations in various parts of the algorithm.
+#' @param max_iterations  an integer giving the maximum number of iterations in
+#' various parts of the algorithm.
 #' @param tol  a small positive numeric value to be used to determine
 #' convergence in various parts of the algorithm.
 #' @param seed  optional initial seed for the random number generator (see
@@ -43,12 +43,12 @@
 #'
 #' @export
 
-regControl <- function(efficiency = 0.85, maxIterations = 200,
-                       tol = 1e-07, seed = NULL) {
+reg_control <- function(efficiency = 0.85, max_iterations = 200,
+                        tol = 1e-07, seed = NULL) {
   # check supplied values
-  maxIterations <- rep(as.integer(maxIterations), length.out=1)
-  if(!is.finite(maxIterations)) maxIterations <- formals()$maxIterations
-  else if(maxIterations < 0) maxIterations <- 0
+  max_iterations <- rep(as.integer(max_iterations), length.out=1)
+  if(!is.finite(max_iterations)) max_iterations <- formals()$max_iterations
+  else if(max_iterations < 0) max_iterations <- 0
   tol <- rep(as.numeric(tol), length.out=1)
   if(!is.finite(tol)) tol <- formals()$tol
   else if(tol < 0) tol <- 0
@@ -72,32 +72,22 @@ regControl <- function(efficiency = 0.85, maxIterations = 200,
   else if(efficiency == 0.95) tuning <- 4.685061
   # call lmrob.control() to return list of control parameters
   tmp <- list(efficiency = efficiency)
-  out <- lmrob.control(seed=seed, tuning.psi=tuning, max.it=maxIterations,
-                       k.max=maxIterations, maxit.scale=maxIterations,
+  out <- lmrob.control(seed=seed, tuning.psi=tuning, max.it=max_iterations,
+                       k.max=max_iterations, maxit.scale=max_iterations,
                        refine.tol=tol, rel.tol=tol, solve.tol=tol)
   c(tmp, out)
 }
 
 
-#' @rdname regControl
-#' @export
-
-reg_control <- function(efficiency = 0.85, max_iterations = 200,
-                        tol = 1e-07, seed = NULL) {
-  regControl(efficiency = efficiency, maxIterations = max_iterations,
-             tol = tol, seed = seed)
-}
-
-
 #' Tuning parameters for Huber M-estimation of location and scatter
 #'
-#' Obtain a list with tuning paramters for \code{\link{covHuber}}.
+#' Obtain a list with tuning paramters for \code{\link{cov_Huber}}.
 #'
 #' @param prob  numeric; probability for the quantile of the
 #' \eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the
 #' Huber weight function (defaults to 0.95).
-#' @param maxIterations,max_iterations  an integer giving the maximum number of
-#' iterations in the iteratively reweighted algorithm.
+#' @param max_iterations  an integer giving the maximum number of iterations in
+#' the iteratively reweighted algorithm.
 #' @param tol  a small positive numeric value to be used to determine
 #' convergence of the iteratively reweighted algorithm.
 #'
@@ -108,32 +98,24 @@ reg_control <- function(efficiency = 0.85, max_iterations = 200,
 #' @references
 #' Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 #'
-#' @seealso \code{\link{covHuber}}
+#' @seealso \code{\link{cov_Huber}}
 #'
 #' @keywords multivariate
 #'
 #' @export
 
-covControl <- function(prob = 0.95, maxIterations = 200, tol = 1e-07) {
+cov_control <- function(prob = 0.95, max_iterations = 200, tol = 1e-07) {
   # check supplied values
   prob <- rep(as.numeric(prob), length.out=1)
   if(!is.finite(prob)) prob <- formals$prob
   else if(prob < 0) prob <- 0
   else if(prob > 1) prob <- 1
-  maxIterations <- rep(as.integer(maxIterations), length.out=1)
-  if(!is.finite(maxIterations)) maxIterations <- formals()$maxIterations
-  else if(maxIterations < 0) maxIterations <- 0
+  max_iterations <- rep(as.integer(max_iterations), length.out=1)
+  if(!is.finite(max_iterations)) max_iterations <- formals()$max_iterations
+  else if(max_iterations < 0) max_iterations <- 0
   tol <- rep(as.numeric(tol), length.out=1)
   if(!is.finite(tol)) tol <- formals()$tol
   else if(tol < 0) tol <- 0
   # return list of control parameters
-  list(prob=prob, maxIterations=maxIterations, tol=tol)
-}
-
-
-#' @rdname covControl
-#' @export
-
-cov_control <- function(prob = 0.95, max_iterations = 200, tol = 1e-07) {
-  covControl(prob = prob, maxIterations = max_iterations, tol = tol)
+  list(prob=prob, max_iterations=max_iterations, tol=tol)
 }

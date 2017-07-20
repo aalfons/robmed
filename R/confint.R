@@ -8,17 +8,17 @@
 #' Extract or compute confidence intervals for coefficients from (robust)
 #' mediation analysis.
 #'
-#' @name confint.testMediation
+#' @name confint.test_mediation
 #'
-#' @param object  an object inheriting from class \code{"\link{testMediation}"}
+#' @param object  an object inheriting from class \code{"\link{test_mediation}"}
 #' containing results from (robust) mediation analysis.
 #' @param parm  an integer, character or logical vector specifying the
 #' coefficients for which to extract or compute confidence intervals, or
 #' \code{NULL} to extract or compute confidence intervals for all coefficients.
-#' @param level  for the \code{"bootTestMediation"} method, this is ignored and
-#' the confidence level of the bootstrap confidence interval for the indirect
-#' effect is used.  For the other methods, the confidence level of the
-#' confidence intervals to be computed.  The default is to compute 95\%
+#' @param level  for the \code{"boot_test_mediation"} method, this is ignored
+#' and the confidence level of the bootstrap confidence interval for the
+#' indirect effect is used.  For the other methods, the confidence level of
+#' the confidence intervals to be computed.  The default is to compute 95\%
 #' confidence intervals.
 #' @param other  a character string specifying how to compute the confidence
 #' interval of the effects other than the indirect effect.  Possible values
@@ -37,25 +37,26 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{testMediation}}, \code{\link[=coef.testMediation]{coef}}
+#' @seealso
+#' \code{\link{test_mediation}}, \code{\link[=coef.test_mediation]{coef}}
 #'
 #' @keywords utilities
 
 NULL
 
 
-#' @rdname confint.testMediation
-#' @method confint bootTestMediation
+#' @rdname confint.test_mediation
+#' @method confint boot_test_mediation
 #' @export
 
 ## argument 'level' is ignored
-confint.bootTestMediation <- function(object, parm = NULL, level = NULL,
-                                      other = c("boot", "theory"), ...) {
+confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
+                                        other = c("boot", "theory"), ...) {
   # confidence interval of other effects
   other <- match.arg(other)
   if(other == "boot") {
-    ci <- getConfint(object$fit, level=object$level, boot=object$reps)
-  } else ci <- getConfint(object$fit, level=object$level)
+    ci <- get_confint(object$fit, level=object$level, boot=object$reps)
+  } else ci <- get_confint(object$fit, level=object$level)
   # combine with confidence interval of indirect effect
   ci <- rbind(ci, ab=object$ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
@@ -65,19 +66,20 @@ confint.bootTestMediation <- function(object, parm = NULL, level = NULL,
 }
 
 
-#' @rdname confint.testMediation
-#' @method confint sobelTestMediation
+#' @rdname confint.test_mediation
+#' @method confint sobel_test_mediation
 #' @export
 
-confint.sobelTestMediation <- function(object, parm = NULL, level = 0.95, ...) {
+confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
+                                         ...) {
   # initializations
   level <- rep(as.numeric(level), length.out=1)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # confidence interval of indirect effect
-  ci <- confintZ(object$ab, object$se, level=level,
+  ci <- confint_z(object$ab, object$se, level=level,
                  alternative=object$alternative)
   # combine with confidence intervalse of other effects
-  ci <- rbind(getConfint(object$fit, level=level), ab=ci)
+  ci <- rbind(get_confint(object$fit, level=level), ab=ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
@@ -87,29 +89,32 @@ confint.sobelTestMediation <- function(object, parm = NULL, level = 0.95, ...) {
 
 ## internal function to compute confidence intervals for estimated effects
 
-getConfint <- function(object, parm, level = 0.95, ...) UseMethod("getConfint")
+get_confint <- function(object, parm, level = 0.95, ...) {
+  UseMethod("get_confint")
+}
 
-getConfint.covFitMediation <- function(object, parm = NULL, level = 0.95,
-                                       boot = NULL, ...) {
+get_confint.cov_fit_mediation <- function(object, parm = NULL, level = 0.95,
+                                          boot = NULL, ...) {
   # initializations
   alpha <- 1 - level
   # extract point estimates and standard errors
   if(is.null(boot)) {
     # combine point estimates
-    estimates <- c(object$a, object$b, object$c, object$cPrime)
+    estimates <- c(object$a, object$b, object$c, object$c_prime)
     # compute standard errors
-    summary <- getSummary(object)
-    se <- c(summary$a[1,2], summary$b[1,2], summary$c[1,2], summary$cPrime[1,2])
+    summary <- get_summary(object)
+    se <- c(summary$a[1,2], summary$b[1,2], summary$c[1,2],
+            summary$c_prime[1,2])
   } else {
     # compute means and standard errors from bootstrap replicates
     estimates <- colMeans(boot$t[, -1], na.rm=TRUE)
     se <- apply(boot$t[, -1], 2, sd, na.rm=TRUE)
   }
   # compute confidence intervals and combine into one matrix
-  ci <- rbind(confintZ(estimates[1], se[1], level=level),
-              confintZ(estimates[2], se[2], level=level),
-              confintZ(estimates[3], se[3], level=level),
-              confintZ(estimates[4], se[4], level=level))
+  ci <- rbind(confint_z(estimates[1], se[1], level=level),
+              confint_z(estimates[2], se[2], level=level),
+              confint_z(estimates[3], se[3], level=level),
+              confint_z(estimates[4], se[4], level=level))
   cn <- paste(format(100 * c(alpha/2, 1-alpha/2), trim=TRUE), "%")
   dimnames(ci) <- list(c("a", "b", "c", "c'"), cn)
   # if requested, take subset of effects
@@ -117,34 +122,34 @@ getConfint.covFitMediation <- function(object, parm = NULL, level = 0.95,
   ci
 }
 
-getConfint.regFitMediation <- function(object, parm = NULL, level = 0.95,
-                                       boot = NULL, ...) {
+get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
+                                          boot = NULL, ...) {
   # initializations
   alpha <- 1 - level
   # extract point estimates and standard errors
   if(is.null(boot)) {
     # extract confidence intervals from regression models
-    confintMX <- confint(object$fitMX, parm=2, level=level)
-    confintYMX <- confint(object$fitYMX, parm=2:3, level=level)
+    confint_mx <- confint(object$fit_mx, parm=2, level=level)
+    confint_ymx <- confint(object$fit_ymx, parm=2:3, level=level)
     # compute confidence interval for total effect
     if(object$robust) {
       # confidence interval not available
-      confintYX <- rep.int(NA_real_, 2)
+      confint_yx <- rep.int(NA_real_, 2)
     } else {
       # extract confidence interval from regression model
-      confintYX <- confint(object$fitYX, parm=2, level=level)
+      confint_yx <- confint(object$fit_yx, parm=2, level=level)
     }
-    ci <- rbind(confintMX, confintYMX, confintYX)
+    ci <- rbind(confint_mx, confint_ymx, confint_yx)
     rownames(ci) <- c("a", "b", "c", "c'")
   } else {
     # compute means and standard errors from bootstrap replicates
     estimates <- colMeans(boot$t[, 2:5], na.rm=TRUE)
     se <- apply(boot$t[, 2:5], 2, sd, na.rm=TRUE)
     # compute confidence intervals and combine into one matrix
-    ci <- rbind(confintZ(estimates[1], se[1], level=level),
-                confintZ(estimates[2], se[2], level=level),
-                confintZ(estimates[3], se[3], level=level),
-                confintZ(estimates[4], se[4], level=level))
+    ci <- rbind(confint_z(estimates[1], se[1], level=level),
+                confint_z(estimates[2], se[2], level=level),
+                confint_z(estimates[3], se[3], level=level),
+                confint_z(estimates[4], se[4], level=level))
     # add row and column names
     cn <- paste(format(100 * c(alpha/2, 1-alpha/2), trim=TRUE), "%")
     dimnames(ci) <- list(c("a", "b", "c", "c'"), cn)
@@ -179,8 +184,8 @@ confint.boot <- function(object, parm = 1, level = 0.95,
 }
 
 ## internal function to compute confidence interval based on normal distribution
-confintZ <- function(mean = 0, sd = 1, level = 0.95,
-                     alternative = c("twosided", "less", "greater")) {
+confint_z <- function(mean = 0, sd = 1, level = 0.95,
+                      alternative = c("twosided", "less", "greater")) {
   # initializations
   alternative <- match.arg(alternative)
   # compute confidence interval
