@@ -6,6 +6,7 @@
 \alias{plotMediation.sobelTestMediation}
 \alias{plotMediation.list}
 \alias{plotMediation.default}
+\alias{plot_mediation}
 \alias{autoplot.testMediation}
 \alias{plot.testMediation}
 \title{Plot (robust) mediation analysis results}
@@ -23,6 +24,8 @@ plotMediation(object, ...)
 
 \method{plotMediation}{default}(object, mapping = attr(object, "mapping"),
   facets = attr(object, "facets"), ...)
+
+plot_mediation(object, ...)
 
 \method{autoplot}{testMediation}(object, ...)
 

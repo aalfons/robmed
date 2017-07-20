@@ -2,17 +2,20 @@
 % Please edit documentation in R/control.R
 \name{covControl}
 \alias{covControl}
+\alias{cov_control}
 \title{Tuning parameters for Huber M-estimation of location and scatter}
 \usage{
 covControl(prob = 0.95, maxIterations = 200, tol = 1e-07)
+
+cov_control(prob = 0.95, max_iterations = 200, tol = 1e-07)
 }
 \arguments{
 \item{prob}{numeric; probability for the quantile of the
 \eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the
 Huber weight function (defaults to 0.95).}
 
-\item{maxIterations}{an integer giving the maximum number of iterations in
-the iteratively reweighted algorithm.}
+\item{maxIterations, max_iterations}{an integer giving the maximum number of
+iterations in the iteratively reweighted algorithm.}
 
 \item{tol}{a small positive numeric value to be used to determine
 convergence of the iteratively reweighted algorithm.}

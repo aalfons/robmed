@@ -21,6 +21,9 @@
 #' regression-based one described above.  Furthermore, the bootstrap does not
 #' account for the variability from cleaning the data.
 #'
+#' \code{test_mediation} is a wrapper function for compatibility with the
+#' tidyverse, as its first argument is a data frame containing the variables.
+#'
 #' \code{robmed} is a wrapper function for performing robust mediation analysis
 #' via regressions and the fast and robust bootstrap (inspired by our
 #' \code{SPSS} macro \code{ROBMED}).
@@ -44,7 +47,8 @@
 #' containing additional covariates to be used as control variables, or (if
 #' \code{data} is supplied) a character, integer or logical vector specifying
 #' the corresponding column of \code{data}.
-#' @param data  an optional \code{data.frame}.
+#' @param data  a data frame containing the variables.  This is required for
+#' \code{test_mediation} but optional otherwise.
 #' @param test  a character string specifying the test to be performed for
 #' the indirect effect.  Possible values are \code{"boot"} (the default) for
 #' the bootstrap, or \code{"sobel"} for Sobel's test.
@@ -207,6 +211,16 @@ testMediation.fitMediation <- function(x, test = c("boot", "sobel"),
     # perform Sobel test
     sobelTestMediation(x, alternative=alternative)
   } else stop("test not implemented")
+}
+
+
+#' @rdname testMediation
+#' @export
+
+test_mediation <- function(data, x, y, m, covariates = NULL, ...) {
+  # TODO: check if data frame is supplied and if 'x', 'y', 'm' and 'covariates'
+  #       correctly refer to columns of the data frame
+  testMediation(x, y, m, covariates = covariates, data = data, ...)
 }
 
 

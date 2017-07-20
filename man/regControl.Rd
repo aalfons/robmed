@@ -2,17 +2,21 @@
 % Please edit documentation in R/control.R
 \name{regControl}
 \alias{regControl}
+\alias{reg_control}
 \title{Tuning parameters for MM-regression}
 \usage{
 regControl(efficiency = 0.85, maxIterations = 200, tol = 1e-07,
+  seed = NULL)
+
+reg_control(efficiency = 0.85, max_iterations = 200, tol = 1e-07,
   seed = NULL)
 }
 \arguments{
 \item{efficiency}{a numeric value giving the desired efficiency (defaults
 to 0.85 for 85\% efficiency).}
 
-\item{maxIterations}{an integer giving the maximum number of iterations in
-various parts of the algorithm.}
+\item{maxIterations, max_iterations}{an integer giving the maximum number of
+iterations in various parts of the algorithm.}
 
 \item{tol}{a small positive numeric value to be used to determine
 convergence in various parts of the algorithm.}

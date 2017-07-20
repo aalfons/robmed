@@ -99,6 +99,12 @@ plotMediation.default <- function(object, mapping = attr(object, "mapping"),
 
 
 #' @rdname plotMediation
+#' @export
+
+plot_mediation <- plotMediation
+
+
+#' @rdname plotMediation
 #' @method autoplot testMediation
 #' @export
 
