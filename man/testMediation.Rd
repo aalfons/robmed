@@ -23,8 +23,7 @@ testMediation(x, ...)
 
 robmed(..., test = "boot", method = "regression", robust = TRUE)
 
-indirect(..., test = c("boot", "sobel"), method = "regression",
-  robust = FALSE)
+indirect(..., test = "boot", method = "regression", robust = FALSE)
 }
 \arguments{
 \item{x}{either a numeric vector containing the independent variable, or
@@ -138,8 +137,8 @@ via regressions and the fast and robust bootstrap (inspired by our
 \code{SPSS} macro \code{ROBMED}).
 
 \code{indirect} is a wrapper function for performing non-robust mediation
-analysis via regressions (inspired by Preacher & Hayes' \code{SPSS} macro
-\code{INDIRECT}).
+analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
+\code{SPSS} macro \code{INDIRECT}).
 }
 \examples{
 # control parameters

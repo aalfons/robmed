@@ -3,6 +3,8 @@ Changes in robmed version 0.2.0
     + Added method based on robust regressions and fast and robust bootstrap,
       which is the new default method.
 
+    + Wrapper function indirect() now always uses the bootstrap test
+
 
 
 Changes in robmed version 0.1.1

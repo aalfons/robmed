@@ -26,8 +26,8 @@
 #' \code{SPSS} macro \code{ROBMED}).
 #'
 #' \code{indirect} is a wrapper function for performing non-robust mediation
-#' analysis via regressions (inspired by Preacher & Hayes' \code{SPSS} macro
-#' \code{INDIRECT}).
+#' analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
+#' \code{SPSS} macro \code{INDIRECT}).
 #'
 #' @aliases print.bootTestMediation print.sobelTestMediation
 #'
@@ -407,9 +407,9 @@ robmed <- function(..., test = "boot", method = "regression",
 #' @rdname testMediation
 #' @export
 
-indirect <- function(..., test = c("boot", "sobel"), method = "regression",
+indirect <- function(..., test = "boot", method = "regression",
                      robust = FALSE) {
-  testMediation(..., test=test, method="regression", robust=FALSE)
+  testMediation(..., test="boot", method="regression", robust=FALSE)
 }
 
 
