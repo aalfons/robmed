@@ -15,8 +15,9 @@ rob_F_test.reg_fit_mediation <- function(object, ...) {
   if (control$psi != "bisquare" || is.null(control$efficiency)) return()
   # extract the full model and fit the null model
   fit_full <- object$fit_ymx
-  f_y <- as.formula(paste(object$y, "~ 1"))
-  fit_null <- lmrob(f_y, data = object$fit$data, control = control)
+  y <- object$data[, object$y]
+  x_null <- matrix(1, nrow = length(y), ncol = 1)
+  fit_null <- lmrob.fit(x_null, y, control = control)
   # perform robust F-test
   s <- fit_full$scale
   df <- fit_full$rank - fit_null$rank
