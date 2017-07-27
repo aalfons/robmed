@@ -1,0 +1,36 @@
+# --------------------------------------
+# Author: Andreas Alfons
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
+
+## compute a robust F-test (which actually uses the chi-squared distribution)
+
+# generic function
+rob_F_test <- function(object, ...) UseMethod("rob_F_test")
+
+# method for mediation model fits via regression
+rob_F_test.reg_fit_mediation <- function(object, ...) {
+  # check if Tukey bisquare loss function is used, otherwise return NULL
+  control <- object$control
+  if (control$psi != "bisquare" || is.null(control$efficiency)) return()
+  # extract the full model and fit the null model
+  fit_full <- object$fit_ymx
+  y <- object$data[, object$y]
+  x_null <- matrix(1, nrow = length(y), ncol = 1)
+  fit_null <- lmrob.fit(x_null, y, control = control)
+  # perform robust F-test
+  s <- fit_full$scale
+  df <- fit_full$rank - fit_null$rank
+  chi_full <- Mchi(residuals(fit_full) / s, control$tuning.psi, control$psi)
+  chi_null <- Mchi(residuals(fit_null) / s, control$tuning.psi, control$psi)
+  tau <- (2 / df) * sum(chi_null - chi_full)
+  if(control$efficiency == 0.8)       const <- 0.4140647
+  else if(control$efficiency == 0.85) const <- 0.3572601  # default
+  else if(control$efficiency == 0.9)  const <- 0.2953806
+  else if(control$efficiency == 0.95) const <- 0.2180425
+  # Y = df1*X ~ chi-squared(df1) if X ~ F(df1, df2) and df2 goes to infinity
+  chi2 <- tau / const
+  p_value <- pchisq(chi2, df = df, lower.tail = FALSE)
+  # return results
+  list(statistic = chi2 / df, df = c(df, Inf), p_value = p_value)
+}

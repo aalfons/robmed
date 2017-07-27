@@ -1,8 +1,8 @@
 Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
-Version: 0.1.1
-Date: 2016-03-19
+Version: 0.2.0
+Date: 2016-09-14
 Depends:
     R (>= 3.2.0),
     ggplot2 (>= 0.9.3),
@@ -17,3 +17,4 @@ Authors@R: c(person("Andreas", "Alfons", email = "alfons@ese.eur.nl",
     role = c("aut", "cre")))
 Author: Andreas Alfons [aut, cre]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
+RoxygenNote: 6.0.1

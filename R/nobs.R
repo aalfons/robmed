@@ -4,14 +4,14 @@
 # --------------------------------------
 
 ## extract number of observations from Huber M-estimator of location and scatter
-#' @S3method nobs covHuber
+#' @export
 #' @import stats
-nobs.covHuber <- function(object, ...) {
+nobs.cov_Huber <- function(object, ...) {
   weights <- weights(object, type="relative")
   length(weights)
 }
 
 ## extract number of observations from MLE of mean vector and covariance matrix
-#' @S3method nobs covML
+#' @export
 #' @import stats
-nobs.covML <- function(object, ...) object$n
+nobs.cov_ML <- function(object, ...) object$n
