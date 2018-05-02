@@ -121,27 +121,33 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
   # prepare data set
   data <- as.data.frame(data)
   x <- data[, x, drop=FALSE]
+  p_x <- ncol(x)
+  if(p_x != 1) stop("exactly one independent variable required")
   y <- data[, y, drop=FALSE]
+  p_y <- ncol(y)
+  if(p_y != 1) stop("exactly one dependent variable required")
   m <- data[, m, drop=FALSE]
+  p_m <- ncol(m)
+  if(p_m == 0) stop("at least one hypothesized mediator variable required")
   covariates <- data[, covariates, drop=FALSE]
   data <- cbind(x, y, m, covariates)
   # extract names
   cn <- names(data)
   x <- cn[1]
   y <- cn[2]
-  m <- cn[3]
-  covariates <- cn[-(1:3)]
+  m <- cn[2 + seq_len(p_m)]
+  covariates <- cn[-(seq_len(p_x + p_y + p_m))]
   # make sure that variables are numeric
   convert <- !sapply(data, is.numeric)
   data[convert] <- lapply(data[convert], as.numeric)
   # remove incomplete observations
   data <- data[complete.cases(data), ]
   # check if there are enough observations
-  n <- nrow(data)
-  if(n <= 3) stop("not enough observations")
+  d <- dim(data)
+  if(d[1] <= d[2]) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
-  if(length(covariates) > 0 && method == "covariance") {
+  if((p_m > 1 || length(covariates) > 0) && method == "covariance") {
     method <- "regression"
     warning("using regression method")
   }
@@ -161,31 +167,57 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
 ## estimate the effects in a mediation model via regressions
 reg_fit_mediation <- function(x, y, m, covariates = character(), data,
                               robust = TRUE, control = reg_control()) {
+  # number of mediators
+  p_m <- length(m)
   # construct formulas for regression models
+  m_term <- paste(m, collapse="+")
   covariate_term <- paste(c("", covariates), collapse="+")
-  f_mx <- as.formula(paste(m, "~", x, covariate_term, sep=""))
-  f_ymx <- as.formula(paste(y, "~", m, "+", x, covariate_term, sep=""))
+  f_mx <- paste(m, "~", x, covariate_term, sep="")
+  f_ymx <- as.formula(paste(y, "~", m_term, "+", x, covariate_term, sep=""))
   # compute regression models
   if(robust) {
     # for the robust method, the total effect is estimated as c' = ab + c
     # to satisfy this relationship
-    fit_mx <- lmrob(f_mx, data=data, control=control, model=FALSE, x=FALSE)
+    if(p_m == 1) {
+      fit_mx <- as.formula(f_mx)
+      fit_mx <- lmrob(f_mx, data=data, control=control, model=FALSE, x=FALSE)
+    } else {
+      fit_mx <- lapply(f_mx, function(f) {
+        f_mx <- as.formula(f)
+        lmrob(f_mx, data=data, control=control, model=FALSE, x=FALSE)
+      })
+      names(fit_mx) <- m
+    }
     fit_ymx <- lmrob(f_ymx, data=data, control=control, model=FALSE, x=FALSE)
     fit_yx <- NULL
   } else {
     # for the standard method, there is not much additional cost in performing
     # the regression for the total effect
-    fit_mx <- lm(f_mx, data=data, model=FALSE)
+    if(p_m == 1) {
+      fit_mx <- as.formula(f_mx)
+      fit_mx <- lm(f_mx, data=data, model=FALSE)
+    } else {
+      fit_mx <- lapply(f_mx, function(f) {
+        f_mx <- as.formula(f)
+        lm(f_mx, data=data, model=FALSE)
+      })
+      names(fit_mx) <- m
+    }
     fit_ymx <- lm(f_ymx, data=data, model=FALSE)
     f_yx <- as.formula(paste(y, "~", x, covariate_term, sep=""))
     fit_yx <- lm(f_yx, data=data, model=FALSE)
   }
   # extract effects
-  a <- unname(coef(fit_mx)[2])
-  b <- unname(coef(fit_ymx)[2])
-  c <- unname(coef(fit_ymx)[3])
-  if(robust) c_prime <- a*b + c
-  else c_prime <- unname(coef(fit_yx)[2])
+  if(p_m == 1) {
+    a <- unname(coef(fit_mx)[2L])
+    b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
+  } else {
+    a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+    b <- coef(fit_ymx)[1L + seq_len(p_m)]
+  }
+  c <- unname(coef(fit_ymx)[2L + p_m])
+  if(robust) c_prime <- if(p_m == 1) a*b + c else sum(a*b) + c
+  else c_prime <- unname(coef(fit_yx)[2L])
   # return results
   result <- list(a=a, b=b, c=c, c_prime=c_prime, fit_mx=fit_mx, fit_ymx=fit_ymx,
                  fit_yx=fit_yx, x=x, y=y, m=m, covariates=covariates,
