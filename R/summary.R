@@ -216,15 +216,14 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   # add residual standard error
   result$robust <- robust
   result$s <- list(value=summary_ymx$sigma, df=summary_ymx$df[2])
-  # add R-squared and F-test for nonrobust fit
+  # add (robust) R-squared
+  result$R2 <- list(R2=summary_ymx$r.squared,
+                    adj_R2=summary_ymx$adj.r.squared)
+  # add (robust) F-test
   if(robust) {
-    # compute robust R-squared and F-test for robust fit
-    result$R2 <- rob_R2(object$fit_ymx)
+    # compute robust F-test for robust fit
     result$F_test <- rob_F_test(object)
   } else {
-    # add R-squared for nonrobust fit
-    result$R2 <- list(R2=summary_ymx$r.squared,
-                      adj_R2=summary_ymx$adj.r.squared)
     # add F-test for nonrobust fit
     statistic <- unname(summary_ymx$fstatistic[1])
     df <- unname(summary_ymx$fstatistic[-1])
