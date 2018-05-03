@@ -9,17 +9,25 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   cat("Bootstrap results for indirect effect\n")
   # print indirect effect
   cat("\nIndirect effect (ab path):\n")
+  m <- x$fit$m
+  p_m <- length(m)
   a <- x$fit$a
   b <- x$fit$b
-  ab <- cbind(a*b, x$ab)
-  m <- names(x$fit$data)[3]
-  dimnames(ab) <- list(m, c("Data", "Boot"))
+  ab <- a*b
+  if(p_m > 1L) ab <- c(Total = sum(ab), ab)
+  ab <- cbind(Data = ab, Boot = x$ab)
+  if(p_m == 1) rownames(ab) <- m
   print(ab, digits=digits, ...)
   # print confidence interval
   cat("\n")
   cat(format(100 * x$level), "percent confidence interval:\n")
-  ci <- t(x$ci)
-  dimnames(ci) <- list(m, c("Lower", "Upper"))
+  if(p_m == 1) {
+    ci <- t(x$ci)
+    dimnames(ci) <- list(m, c("Lower", "Upper"))
+  } else {
+    ci <- x$ci
+    colnames(ci) <- c("Lower", "Upper")
+  }
   print(ci, digits=digits, ...)
   # print additional information
   cat(sprintf("\nNumber of bootstrap replicates: %d\n", x$R))
@@ -83,16 +91,19 @@ print.summary_fit_mediation <- function(x, digits = max(3, getOption("digits")-3
                                         signif.stars = getOption("show.signif.stars"),
                                         signif.legend = signif.stars, ...) {
   # initializations
-  p <- length(x$variables)
-  have_covariates <- p > 3
+  p_m <- length(x$m)
+  have_covariates <- length(x$covariates) > 0L
   # print information on data
   cat("\nIndependent, dependent and proposed mediator variables:\n")
-  cat(sprintf("x = %s\n", x$variables[1]))
-  cat(sprintf("y = %s\n", x$variables[2]))
-  cat(sprintf("m = %s\n", x$variables[3]))
+  cat(sprintf("x = %s\n", x$x))
+  cat(sprintf("y = %s\n", x$y))
+  cat(sprintf("m = %s\n", x$m[1]))
+  if(p_m > 1) {
+    for(j in seq(2, p_m)) cat(sprintf("    %s\n", x$m[j]))
+  }
   if(have_covariates) {
     cat("\nControl variables:\n")
-    print(x$variables[4:p], quote=FALSE)
+    print(x$covariates, quote=FALSE)
   }
   # print sample size
   cat(sprintf("\nSample size: %d\n", x$n))
@@ -112,7 +123,7 @@ print.summary_fit_mediation <- function(x, digits = max(3, getOption("digits")-3
                signif.legend=FALSE, ...)
   if(have_covariates) {
     cat("\nPartial effects of control variables on y:\n")
-    printCoefmat(x$covariates, digits=digits, signif.stars=signif.stars,
+    printCoefmat(x$covariate_effects, digits=digits, signif.stars=signif.stars,
                  signif.legend=FALSE, ...)
   }
   # print model summary for y ~ m + x + covariates
