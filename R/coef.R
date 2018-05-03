@@ -34,7 +34,7 @@
 coef.test_mediation <- function(object, parm = NULL, ...) {
   # extract effects (including indirect effect)
   ab <- object$ab
-  names(ab) <- if(length(ab) == 1) "ab" else paste("ab", names(ab), sep = "_")
+  names(ab) <- if(length(ab) == 1L) "ab" else paste("ab", names(ab), sep = "_")
   coef <- c(coef(object$fit), ab)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
@@ -54,14 +54,14 @@ coef.boot_test_mediation <- function(object, parm = NULL,
   if(type == "boot") {
     ab <- object$ab
     coef <- colMeans(object$reps$t[, -seq_along(ab)], na.rm = TRUE)
-    names(coef) <- get_coef_names(object$fit$m)
+    names(coef) <- get_effect_names(object$fit$m)
   } else {
     coef <- coef(object$fit)
     ab <- object$fit$a * object$fit$b
-    if(length(ab) > 1) ab <- c(Total = sum(ab), ab)
+    if(length(ab) > 1L) ab <- c(Total = sum(ab), ab)
   }
   # set names and combine coefficients with indirect effect
-  names(ab) <- if(length(ab) == 1) "ab" else paste("ab", names(ab), sep = "_")
+  names(ab) <- if(length(ab) == 1L) "ab" else paste("ab", names(ab), sep = "_")
   coef <- c(coef, ab)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
@@ -76,7 +76,7 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 coef.fit_mediation <- function(object, parm = NULL, ...) {
   # extract effects
   coef <- c(object$a, object$b, object$c, object$c_prime)
-  names(coef) <- get_coef_names(object$m)
+  names(coef) <- get_effect_names(object$m)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
   coef
@@ -84,7 +84,7 @@ coef.fit_mediation <- function(object, parm = NULL, ...) {
 
 
 # utility function to get names of coefficients
-get_coef_names <- function(m, sep = "_") {
-  if(length(m) == 1) c("a", "b", "c", "c'")
+get_effect_names <- function(m, sep = "_") {
+  if(length(m) == 1L) c("a", "b", "c", "c'")
   else c(paste("a", m, sep = sep), paste("b", m, sep = sep), "c", "c'")
 }

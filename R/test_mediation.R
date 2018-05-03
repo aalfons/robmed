@@ -302,7 +302,7 @@ boot_test_mediation <- function(fit,
       # combine data
       z <- cbind(rep.int(1, n), as.matrix(fit$data))
       # define function for standard bootstrap mediation test
-      if(p_m == 1)  {
+      if(p_m == 1L)  {
         # only one mediator
         standard_bootstrap <- function(z, i) {
           # extract bootstrap sample from the data
@@ -389,7 +389,7 @@ boot_test_mediation <- function(fit,
     R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
   } else stop("method not implemented")
   # extract indirect effect and confidence interval
-  if(p_m == 1) {
+  if(p_m == 1L) {
     # only one mediator
     ab <- mean(bootstrap$t[, 1L], na.rm = TRUE)
     ci <- confint(bootstrap, parm = 1L, level = level,

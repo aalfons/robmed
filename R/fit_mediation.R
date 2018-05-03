@@ -178,7 +178,7 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
   if(robust) {
     # for the robust method, the total effect is estimated as c' = ab + c
     # to satisfy this relationship
-    if(p_m == 1) {
+    if(p_m == 1L) {
       fit_mx <- as.formula(f_mx)
       fit_mx <- lmrob(f_mx, data=data, control=control, model=FALSE, x=FALSE)
     } else {
@@ -193,7 +193,7 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
   } else {
     # for the standard method, there is not much additional cost in performing
     # the regression for the total effect
-    if(p_m == 1) {
+    if(p_m == 1L) {
       fit_mx <- as.formula(f_mx)
       fit_mx <- lm(f_mx, data=data, model=FALSE)
     } else {
@@ -208,7 +208,7 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
     fit_yx <- lm(f_yx, data=data, model=FALSE)
   }
   # extract effects
-  if(p_m == 1) {
+  if(p_m == 1L) {
     a <- unname(coef(fit_mx)[2L])
     b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
   } else {
@@ -216,7 +216,7 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
   }
   c <- unname(coef(fit_ymx)[2L + p_m])
-  if(robust) c_prime <- if(p_m == 1) a*b + c else sum(a*b) + c
+  if(robust) c_prime <- if(p_m == 1L) a*b + c else sum(a*b) + c
   else c_prime <- unname(coef(fit_yx)[2L])
   # return results
   result <- list(a=a, b=b, c=c, c_prime=c_prime, fit_mx=fit_mx, fit_ymx=fit_ymx,
