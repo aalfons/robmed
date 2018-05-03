@@ -234,9 +234,9 @@ boot_test_mediation <- function(fit,
                                 alternative = c("twosided", "less", "greater"),
                                 R = 5000, level = 0.95, type = c("bca", "perc"),
                                 ...) {
+  p_m <- length(fit$m)  # number of mediators
   if(inherits(fit, "reg_fit_mediation")) {
-    # number and indices of mediators in data matrix to be used in bootstrap
-    p_m <- length(fit$m)
+    # indices of mediators in data matrix to be used in bootstrap
     j_m <- match(fit$m, names(fit$data)) + 1L
     # indices of covariates in data matrix to be used in bootstrap
     j_covariates <- match(fit$covariates, names(fit$data)) + 1L
@@ -245,7 +245,7 @@ boot_test_mediation <- function(fit,
     if(fit$robust) {
       # extract regression models
       fit_mx <- fit$fit_mx
-      if(p_m > 1) stop("not implemented yet")
+      if(p_m > 1L) stop("not implemented yet")
       fit_ymx <- fit$fit_ymx
       # extract (square root of) robustness weights and combine data
       w_m <- sqrt(weights(fit_mx, type="robustness"))
