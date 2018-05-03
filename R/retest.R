@@ -46,12 +46,27 @@ retest.boot_test_mediation <- function(object,
                                        ...) {
   # initializations
   alternative <- match.arg(alternative)
-  level <- rep(as.numeric(level), length.out=1)
+  level <- rep(as.numeric(level), length.out = 1)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   type <- match.arg(type)
-  # recompute confidence interval and modify object
-  object$ci <- confint(object$reps, level=level, alternative=alternative,
-                       type=type)
+  # recompute confidence interval
+  m <- object$fit$m
+  p_m <- length(m)
+  if(p_m == 1L) {
+    # only one mediator
+    ci <- confint(object$reps, parm = 1L, level = level,
+                  alternative = alternative, type = type)
+  } else {
+    # multiple mediators
+    ci <- lapply(seq_len(1L + p_m), function(j) {
+      confint(object$reps, parm = j, level = level,
+              alternative = alternative, type = type)
+    })
+    ci <- do.call(rbind, ci)
+    rownames(ci) <- c("Total", m)
+  }
+  # modify object with updated confidence interval
+  object$ci <- ci
   object$level <- level
   object$alternative <- alternative
   object$type <- type

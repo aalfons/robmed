@@ -398,8 +398,8 @@ boot_test_mediation <- function(fit,
     # multiple mediators
     ab <- colMeans(bootstrap$t[, seq_len(1L + p_m)], na.rm = TRUE)
     ci <- lapply(seq_len(1L + p_m), function(j) {
-      confint(bootstrap, parm = j, level = level, alternative = alternative,
-                  type = type)
+      confint(bootstrap, parm = j, level = level,
+              alternative = alternative, type = type)
     })
     ci <- do.call(rbind, ci)
     names(ab) <- rownames(ci) <- c("Total", fit$m)
