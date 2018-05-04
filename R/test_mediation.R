@@ -195,6 +195,12 @@ test_mediation.fit_mediation <- function(data, test = c("boot", "sobel"),
   ## initializations
   test <- match.arg(test)
   alternative <- match.arg(alternative)
+  p_m <- length(data$m)
+  if(p_m > 1 && test == "sobel") {
+    test <- "boot"
+    warning("Sobel test not available with multiple mediators; ",
+            "using bootstrap test")
+  }
   ## perform mediation analysis
   if(test == "boot") {
     # further inizializations
@@ -420,16 +426,16 @@ sobel_test_mediation <- function(fit,
   b <- fit$b
   # compute standard errors
   summary <- get_summary(fit)
-  sa <- summary$a[1, 2]
-  sb <- summary$b[1, 2]
+  sa <- summary$a[, 2L]
+  sb <- summary$b[, 2L]
   # compute test statistic and p-Value
   ab <- a * b
   se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
   z <- ab / se
-  p_value <- p_value_z(z, alternative=alternative)
+  p_value <- p_value_z(z, alternative = alternative)
   # construct return item
-  result <- list(ab=ab, se=se, statistic=z, p_value=p_value,
-                 alternative=alternative, fit=fit)
+  result <- list(ab = ab, se = se, statistic = z, p_value = p_value,
+                 alternative = alternative, fit = fit)
   class(result) <- c("sobel_test_mediation", "test_mediation")
   result
 }
@@ -452,6 +458,6 @@ p_value_z <- function(z, alternative = c("twosided", "less", "greater")) {
   # initializations
   alternative <- match.arg(alternative)
   # compute p-value
-  switch(alternative, twosided=2*pnorm(abs(z), lower.tail=FALSE),
-         less=pnorm(z), greater=pnorm(z, lower.tail=FALSE))
+  switch(alternative, twosided = 2 * pnorm(abs(z), lower.tail = FALSE),
+         less = pnorm(z), greater = pnorm(z, lower.tail = FALSE))
 }

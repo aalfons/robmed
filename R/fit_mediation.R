@@ -149,7 +149,8 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
   method <- match.arg(method)
   if((p_m > 1 || length(covariates) > 0) && method == "covariance") {
     method <- "regression"
-    warning("using regression method")
+    warning("covariance method not available with multiple mediators ",
+            "or any covariates; using regression method")
   }
   robust <- isTRUE(robust)
   if(robust && missing(control)) {

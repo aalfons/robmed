@@ -197,17 +197,26 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
     c_prime <- coefficients[2L * p_m + 2L, , drop = FALSE]
   } else {
     # compute summaries of regression models and extract t-tests for coefficients
-    tmp <- summary(object$fit_mx)
-    a <- tmp$coefficients[2, , drop=FALSE]
-    b <- summary_ymx$coefficients[2, , drop=FALSE]
-    c <- summary_ymx$coefficients[3, , drop=FALSE]
+    if(p_m == 1L) {
+      summary_mx <- summary(object$fit_mx)
+      a <- summary_mx$coefficients[2L, , drop = FALSE]
+      b <- summary_ymx$coefficients[2L, , drop = FALSE]
+      c <- summary_ymx$coefficients[3L, , drop = FALSE]
+    } else {
+      summary_mx <- lapply(object$fit_mx, summary)
+      a <- lapply(summary_mx, function(s) s$coefficients[2L, , drop = FALSE])
+      a <- do.call(rbind, a)
+      rownames(a) <- paste(m, x, sep = "~")
+      b <- summary_ymx$coefficients[1L + seq_len(p_m), , drop = FALSE]
+      c <- summary_ymx$coefficients[p_m + 2L, , drop = FALSE]
+    }
     if(robust) {
       # standard errors and t-test not available
-      c_prime <- matrix(c(object$c_prime, rep.int(NA_real_, 3)), nrow=1)
+      c_prime <- matrix(c(object$c_prime, rep.int(NA_real_, 3L)), nrow = 1L)
       dimnames(c_prime) <- dimnames(c)
     } else {
-      tmp <- summary(object$fit_yx)
-      c_prime <- tmp$coefficients[2, , drop=FALSE]
+      summary_yx <- summary(object$fit_yx)
+      c_prime <- summary_yx$coefficients[2L, , drop = FALSE]
     }
   }
   # initialize return object
