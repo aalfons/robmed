@@ -246,67 +246,134 @@ boot_test_mediation <- function(fit,
     j_m <- match(fit$m, names(fit$data)) + 1L
     # indices of covariates in data matrix to be used in bootstrap
     j_covariates <- match(fit$covariates, names(fit$data)) + 1L
+    # combine data
     n <- nrow(fit$data)
+    z <- cbind(rep.int(1, n), as.matrix(fit$data))
     # check if fast and robust bootstrap should be applied
     if(fit$robust) {
       # extract regression models
       fit_mx <- fit$fit_mx
-      if(p_m > 1L) stop("not implemented yet")
       fit_ymx <- fit$fit_ymx
-      # extract (square root of) robustness weights and combine data
-      w_m <- sqrt(weights(fit_mx, type="robustness"))
-      w_y <- sqrt(weights(fit_ymx, type="robustness"))
-      z <- cbind(rep.int(1, n), as.matrix(fit$data), w_m, w_y)
-      # compute matrices for linear corrections
-      psi_control <- get_psi_control(fit_mx)  # the same for both model fits
-      corr_m <- correction_matrix(z[, c(1L, 2L, j_covariates)],
-                                  weights=w_m,
-                                  residuals=residuals(fit_mx),
-                                  scale=fit_mx$scale,
-                                  control=psi_control)
-      coef_m <- coef(fit_mx)
-      corr_y <- correction_matrix(z[, c(1L, 4L, 2L, j_covariates)],
-                                  weights=w_y,
-                                  residuals=residuals(fit_ymx),
-                                  scale=fit_ymx$scale,
-                                  control=psi_control)
-      coef_y <- coef(fit_ymx)
+      # extract control object from robust regressions
+      # (necessary to compute correction matrices)
+      psi_control <- get_psi_control(fit_ymx)  # the same for all model fits
+      if(p_m == 1L) {
+        # only one mediator
+        # extract (square root of) robustness weights and combine data
+        w_m <- sqrt(weights(fit_mx, type="robustness"))
+        w_y <- sqrt(weights(fit_ymx, type="robustness"))
+        # compute matrices for linear corrections
+        corr_m <- correction_matrix(z[, c(1L, 2L, j_covariates)],
+                                    weights=w_m,
+                                    residuals=residuals(fit_mx),
+                                    scale=fit_mx$scale,
+                                    control=psi_control)
+        coef_m <- coef(fit_mx)
+        corr_y <- correction_matrix(z[, c(1L, 4L, 2L, j_covariates)],
+                                    weights=w_y,
+                                    residuals=residuals(fit_ymx),
+                                    scale=fit_ymx$scale,
+                                    control=psi_control)
+        coef_y <- coef(fit_ymx)
+        # perform fast and robust bootstrap
+        robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
+                                     w_y, corr_y, coef_y) {
+          # extract bootstrap sample from the data
+          z_i <- z[i, , drop=FALSE]
+          w_m_i <- w_m[i]
+          w_y_i <- w_y[i]
+          # check whether there are enough observations with nonzero weights
+          if(sum(w_m_i > 0) <= 2 || sum(w_y_i > 0) <= 3) return(NA)
+          # compute coefficients from weighted regression m ~ x + covariates
+          weighted_x_i <- w_m_i * z_i[, c(1L, 2L, j_covariates)]
+          weighted_m_i <- w_m_i * z_i[, 4L]
+          coef_m_i <- solve(crossprod(weighted_x_i)) %*%
+            crossprod(weighted_x_i, weighted_m_i)
+          # compute coefficients from weighted regression y ~ m + x + covariates
+          weighted_mx_i <- w_y_i * z_i[, c(1L, 4L, 2L, j_covariates)]
+          weighted_y_i <- w_y_i * z_i[, 3L]
+          coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
+            crossprod(weighted_mx_i, weighted_y_i)
+          # compute corrected coefficients
+          coef_m_i <- drop(coef_m + corr_m %*% (coef_m_i - coef_m))
+          coef_y_i <- drop(coef_y + corr_y %*% (coef_y_i - coef_y))
+          # compute effects
+          a <- unname(coef_m_i[2L])
+          b <- unname(coef_y_i[2L])
+          c <- unname(coef_y_i[3L])
+          ab <- a * b
+          c_prime <- ab + c
+          # compute effects of control variables if they exist
+          covariates <- unname(coef_y_i[-(1L:3L)])
+          # return effects
+          c(ab, a, b, c, c_prime, covariates)
+        }
+      } else {
+        # multiple mediators
+        # extract (square root of) robustness weights and combine data
+        w_m <- sqrt(sapply(fit_mx, weights, type = "robustness"))
+        w_y <- sqrt(weights(fit_ymx, type = "robustness"))
+        z <- cbind(rep.int(1, n), as.matrix(fit$data))
+        # compute matrices for linear corrections
+        corr_m <- lapply(fit$m, function(m, z) {
+          correction_matrix(z, weights = w_m[, m],
+                            residuals = residuals(fit_mx[[m]]),
+                            scale = fit_mx[[m]]$scale,
+                            control = psi_control)
+        }, z = z[, c(1L, 2L, j_covariates)])
+        coef_m <- lapply(fit_mx, coef)
+        corr_y <- correction_matrix(z[, c(1L, j_m, 2L, j_covariates)],
+                                    weights = w_y,
+                                    residuals = residuals(fit_ymx),
+                                    scale = fit_ymx$scale,
+                                    control = psi_control)
+        coef_y <- coef(fit_ymx)
+        # perform fast and robust bootstrap
+        robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
+                                     w_y, corr_y, coef_y) {
+          # extract bootstrap sample from the data
+          z_i <- z[i, , drop = FALSE]
+          w_m_i <- w_m[i, , drop = FALSE]
+          w_y_i <- w_y[i]
+          # check whether there are enough observations with nonzero weights
+          if(any(colSums(w_m_i > 0) <= 2) || sum(w_y_i > 0) <= 3) return(NA)
+          # compute coefficients from weighted regression m ~ x + covariates
+          coef_m_i <- lapply(fit$m, function(m, x_i) {
+            w_i <- w_m_i[, m]
+            weighted_x_i <- w_i * x_i
+            weighted_m_i <- w_i * z_i[, m]
+            coef_m_i <- solve(crossprod(weighted_x_i)) %*%
+              crossprod(weighted_x_i, weighted_m_i)
+          }, x_i = z_i[, c(1L, 2L, j_covariates)])
+          # compute coefficients from weighted regression y ~ m + x + covariates
+          weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, 2L, j_covariates)]
+          weighted_y_i <- w_y_i * z_i[, 3L]
+          coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
+            crossprod(weighted_mx_i, weighted_y_i)
+          # compute corrected coefficients
+          coef_m_i <- mapply(function(coef_m, coef_m_i, corr_m) {
+            drop(coef_m + corr_m %*% (coef_m_i - coef_m))
+          }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m)
+          coef_y_i <- drop(coef_y + corr_y %*% (coef_y_i - coef_y))
+          # compute effects
+          a <- unname(coef_m_i[2L, ])
+          b <- unname(coef_y_i[1L + seq_len(p_m)])
+          c <- unname(coef_y_i[2L + p_m])
+          ab <- a * b
+          sum_ab <- sum(ab)
+          c_prime <- sum_ab + c
+          # compute effects of control variables if they exist
+          covariates <- unname(coef_y_i[-seq_len(2L + p_m)])
+          # return effects
+          c(sum_ab, ab, a, b, c, c_prime, covariates)
+        }
+      }
       # perform fast and robust bootstrap
-      bootstrap <- local_boot(z, function(z, i, corr_m, coef_m, corr_y, coef_y) {
-        # extract bootstrap sample from the data
-        z_i <- z[i, , drop=FALSE]
-        w_m_i <- z_i[, "w_m"]
-        w_y_i <- z_i[, "w_y"]
-        # check whether there are enough observations with nonzero weights
-        if(sum(w_m_i > 0) <= 2 || sum(w_y_i > 0) <= 3) return(NA)
-        # compute coefficients from weighted regression m ~ x + covariates
-        weighted_x_i <- w_m_i * z_i[, c(1L, 2L, j_covariates)]
-        weighted_m_i <- w_m_i * z_i[, 4L]
-        coef_m_i <- solve(crossprod(weighted_x_i)) %*%
-          crossprod(weighted_x_i, weighted_m_i)
-        # compute coefficients from weighted regression y ~ m + x + covariates
-        weighted_mx_i <- w_y_i * z_i[, c(1L, 4L, 2L, j_covariates)]
-        weighted_y_i <- w_y_i * z_i[, 3L]
-        coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
-          crossprod(weighted_mx_i, weighted_y_i)
-        # compute corrected coefficients
-        coef_m_i <- drop(coef_m + corr_m %*% (coef_m_i - coef_m))
-        coef_y_i <- drop(coef_y + corr_y %*% (coef_y_i - coef_y))
-        # compute effects
-        a <- unname(coef_m_i[2L])
-        b <- unname(coef_y_i[2L])
-        c <- unname(coef_y_i[3L])
-        ab <- a * b
-        c_prime <- ab + c
-        # compute effects of control variables if they exist
-        covariates <- unname(coef_y_i[-(1L:3L)])
-        # return effects
-        c(ab, a, b, c, c_prime, covariates)
-      }, R=R, corr_m=corr_m, coef_m=coef_m, corr_y=corr_y, coef_y=coef_y, ...)
+      bootstrap <- local_boot(z, robust_bootstrap, R = R, w_m = w_m,
+                              corr_m = corr_m, coef_m = coef_m, w_y = w_y,
+                              corr_y = corr_y, coef_y = coef_y, ...)
       R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
     } else {
-      # combine data
-      z <- cbind(rep.int(1, n), as.matrix(fit$data))
       # define function for standard bootstrap mediation test
       if(p_m == 1L)  {
         # only one mediator
