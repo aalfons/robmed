@@ -52,13 +52,20 @@ NULL
 ## argument 'level' is ignored
 confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
                                         other = c("boot", "theory"), ...) {
+  # initializations
+  p_m <- length(object$fit$m)
   # confidence interval of other effects
   other <- match.arg(other)
   if(other == "boot") {
     ci <- get_confint(object$fit, level = object$level, boot = object$reps)
   } else ci <- get_confint(object$fit, level = object$level)
   # combine with confidence interval of indirect effect
-  ci <- rbind(ci, ab = object$ci)
+  if(p_m == 1L) ci <- rbind(ci, ab = object$ci)
+  else {
+    tmp <- object$ci
+    rownames(tmp) <- paste("ab", rownames(tmp), sep = "_")
+    ci <- rbind(ci, tmp)
+  }
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
@@ -77,7 +84,7 @@ confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # confidence interval of indirect effect
   ci <- confint_z(object$ab, object$se, level=level,
-                 alternative=object$alternative)
+                  alternative=object$alternative)
   # combine with confidence intervalse of other effects
   ci <- rbind(get_confint(object$fit, level=level), ab=ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
