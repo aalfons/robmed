@@ -55,7 +55,7 @@ plot_mediation <- function(object, ...) UseMethod("plot_mediation")
 
 plot_mediation.boot_test_mediation <- function(object,
                                                method = c("dot", "density"),
-                                               parm = c("c", "ab"), ...) {
+                                               parm = NULL, ...) {
   data <- fortify(object, method=method, parm=parm)
   plot_mediation(data, ...)
 }
@@ -79,7 +79,7 @@ plot_mediation.sobel_test_mediation <- function(object, data,
 #' @export
 
 plot_mediation.list <- function(object, data, method = c("dot", "density"),
-                                parm = c("c", "ab"), level = 0.95, ...) {
+                                parm = NULL, level = 0.95, ...) {
   data <- fortify(object, data=data, method=method, parm=parm, level=level)
   plot_mediation(data, ...)
 }
@@ -93,7 +93,7 @@ plot_mediation.default <- function(object, mapping = attr(object, "mapping"),
                                    facets = attr(object, "facets"), ...) {
   # create selected plot
   if(attr(object, "method") == "dot") dot_plot(object, mapping, facets, ...)
-  else density_plot(object, mapping, ...)
+  else density_plot(object, mapping, facets, ...)
 }
 
 
@@ -127,8 +127,8 @@ dot_plot <- function(data, mapping, facets, main = NULL,
 
 
 ## internal function for density plot
-density_plot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL,
-                         ...) {
+density_plot <- function(data, mapping, facets, main = NULL,
+                         xlab = NULL, ylab = NULL, ...) {
   # define default title and axis labels
   if(is.null(main)) main <- attr(data, "main")
   if(is.null(xlab)) xlab <- "Indirect effect"
@@ -136,16 +136,25 @@ density_plot <- function(data, mapping, main = NULL, xlab = NULL, ylab = NULL,
   # extract point estimate and confidence interval
   ci <- attr(data, "ci")
   if("Method" %in% names(data)) {
-    mapping_line <- aes_string(xintercept="ab", color="Method")
-    mapping_rect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf,
-                               fill="Method")
+    mapping_line <- aes_string(xintercept = "ab", color = "Method")
+    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
+                               ymin = -Inf, ymax = Inf,
+                               fill = "Method")
   } else {
-    mapping_line <- aes_string(xintercept="ab")
-    mapping_rect <- aes_string(xmin="Lower", xmax="Upper", ymin=-Inf, ymax=Inf)
+    mapping_line <- aes_string(xintercept = "ab")
+    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
+                               ymin = -Inf, ymax = Inf)
   }
   # generate plot
   geom <- attr(data, "geom")
-  ggplot(data, mapping) + geom(...) + geom_vline(mapping_line, data=ci, ...) +
-    geom_rect(mapping_rect, data=ci, color=NA, alpha=0.2, ...) +
-    labs(title=main, x=xlab, y=ylab)
+  p <- ggplot(data, mapping) + geom(...) +
+    geom_vline(mapping_line, data = ci, ...) +
+    geom_rect(mapping_rect, data = ci, color = NA, alpha = 0.2, ...) +
+    labs(title = main, x = xlab, y = ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2L) p <- p + facet_wrap(facets, scales = "free")
+    else p <- p + facet_grid(facets, scales = "free")
+  }
+  p
 }

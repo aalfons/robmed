@@ -8,10 +8,10 @@
 \title{Convert (robust) mediation analysis results into a data frame for plotting}
 \usage{
 \method{fortify}{boot_test_mediation}(model, data, method = c("dot",
-  "density"), parm = c("c", "ab"), ...)
+  "density"), parm = NULL, ...)
 
 \method{fortify}{sobel_test_mediation}(model, data, method = c("dot",
-  "density"), parm = c("c", "ab"), level = 0.95, ...)
+  "density"), parm = NULL, level = 0.95, ...)
 
 \method{fortify}{list}(model, data, ...)
 }

@@ -43,6 +43,12 @@
 NULL
 
 
+# For multiple densities (indirect effects from different mediators), add a
+# column that identifies the effect and add a formula for facetting
+
+# For dotplots with multiple mediators, simply add more dots/errorbars in the
+# same plot
+
 #' @rdname fortify.test_mediation
 #' @method fortify boot_test_mediation
 #' @import ggplot2
@@ -50,11 +56,16 @@ NULL
 
 fortify.boot_test_mediation <- function(model, data,
                                         method = c("dot", "density"),
-                                        parm = c("c", "ab"), ...) {
+                                        parm = NULL, ...) {
   # initialization
   method <- match.arg(method)
+  p_m <- length(model$fit$m)
   # construct data fram with relevant information
   if(method == "dot") {
+    if(is.null(parm)) {
+      if(p_m == 1L) parm <- c("c", "ab")
+      else parm <- c("c", paste("ab", names(model$ab), sep = "_"))
+    }
     # extract point estimates
     coef <- coefficients(model, parm=parm)
     # extract confidence intervals
@@ -70,18 +81,37 @@ fortify.boot_test_mediation <- function(model, data,
                                         ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
-    # construct data frame containing bootstrap density
-    pdf <- density(model$reps$t[, 1])
-    data <- data.frame(ab=pdf$x, Density=pdf$y)
     # extract point estimate and confidence interval
     ab <- model$ab
     ci <- model$ci
+    # construct data frame containing bootstrap density
+    if(p_m == 1L) {
+      pdf <- density(model$reps$t[, 1L])
+      data <- data.frame(ab = pdf$x, Density = pdf$y)
+    } else {
+      pdf <- lapply(seq_len(1L + p_m), function(j) density(model$reps$t[, j]))
+      data <- mapply(function(density, effect) {
+        data.frame(ab = density$x, Density = density$y, Effect = effect)
+      }, density = pdf, effect = names(ab), SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      data <- do.call(rbind, data)
+    }
     # add additional information as attributes
-    attr(data, "mapping") <- aes_string(x="ab", y="Density")
-    attr(data, "geom") <- function(..., stat) geom_density(..., stat="identity")
+    attr(data, "mapping") <- aes_string(x = "ab", y = "Density")
+    attr(data, "geom") <- function(..., stat) {
+      geom_density(..., stat = "identity")
+    }
     attr(data, "main") <- "Bootstrap distribution"
-    attr(data, "ci") <- data.frame(ab, Density=NA_real_,
-                                   Lower=ci[1], Upper=ci[2])
+    if(p_m == 1) {
+      attr(data, "ci") <- data.frame(ab = ab, Density = NA_real_,
+                                     Lower = ci[1L], Upper = ci[2L])
+    } else {
+      attr(data, "ci") <- data.frame(ab = unname(ab),
+                                     Density = NA_real_,
+                                     Lower = unname(ci[, 1L]),
+                                     Upper = unname(ci[, 2L]),
+                                     Effect = names(ab))
+      attr(data, "facets") <- ~ Effect  # split plot into different panels
+    }
   }
   # return data frame
   attr(data, "method") <- method
@@ -96,7 +126,7 @@ fortify.boot_test_mediation <- function(model, data,
 
 fortify.sobel_test_mediation <- function(model, data,
                                          method = c("dot", "density"),
-                                         parm = c("c", "ab"),
+                                         parm = NULL,
                                          level = 0.95, ...) {
   # initialization
   method <- match.arg(method)
@@ -104,6 +134,7 @@ fortify.sobel_test_mediation <- function(model, data,
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # construct data fram with relevant information
   if(method == "dot") {
+    if(is.null(parm)) parm <- c("c", "ab")
     # extract point estimates
     coef <- coefficients(model, parm=parm)
     # extract confidence intervals
@@ -155,6 +186,11 @@ fortify.list <- function(model, data, ...) {
   if(length(model) == 0) {
     stop('no objects inheriting from class "test_mediation"')
   }
+  # check if all objects use the same number of mediators
+  p_m <- sapply(model, function(object) length(object$fit$m))
+  if(length(unique(p_m)) > 1) {
+    stop("all objects must use the same number of hypothesized mediators")
+  }
   # check names of list elements
   methods <- names(model)
   if(is.null(methods)) methods <- seq_along(model)
@@ -164,17 +200,17 @@ fortify.list <- function(model, data, ...) {
   }
   ## fortify each list element
   if(missing(data)) data <- lapply(model, fortify, ...)
-  else data <- lapply(model, fortify, data=data, ...)
+  else data <- lapply(model, fortify, data = data, ...) # is this actually used?
   ## extract additional information
-  info <- lapply(data, function(x) attributes(x)[-(1:3)])
+  info <- lapply(data, function(x) attributes(x)[-(1L:3L)])
   if(info[[1]]$method == "density") ci <- lapply(info, "[[", "ci")
   info <- info[[1]]
   ## combine information into one data frame
   data <- mapply(function(x, method) {
-    cbind(Method=rep.int(method, nrow(x)), x, stringsAsFactors=FALSE)
-  }, data, methods, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+    cbind(Method = rep.int(method, nrow(x)), x, stringsAsFactors = FALSE)
+  }, data, methods, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   data <- do.call(rbind, data)
-  data$Method <- factor(data$Method, levels=methods)
+  data$Method <- factor(data$Method, levels = methods)
   ## modify additional information
   if(info$method == "dot") {
     # additional information for dot plot
@@ -188,14 +224,14 @@ fortify.list <- function(model, data, ...) {
     }
   } else {
     # additional information for density plot
-    info$mapping <- aes_string(x="ab", y="Density", color="Method")
+    info$mapping <- aes_string(x = "ab", y = "Density", color = "Method")
     if(any(is_boot) && any(is_sobel)) {
-      info$geom <- function(..., stat) geom_density(..., stat="identity")
+      info$geom <- function(..., stat) geom_density(..., stat = "identity")
       info$main <- NULL
     }
     # combine confidence intervals for the methods
     ci <- do.call(rbind, ci)
-    ci <- cbind(Method=factor(methods, levels=methods), ci)
+    ci <- cbind(Method = factor(methods, levels = methods), ci)
     rownames(ci) <- NULL
     info$ci <- ci
   }
