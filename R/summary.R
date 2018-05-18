@@ -243,7 +243,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   } else {
     # add F-test for nonrobust fit
     statistic <- unname(summary_ymx$fstatistic[1L])
-    df <- unname(summary_ymx$fstatistic[-1L])
+    df <- as.integer(summary_ymx$fstatistic[-1L])
     p_value <- pf(statistic, df[1L], df[2L], lower.tail = FALSE)
     result$F_test <- list(statistic = statistic, df = df,
                           p_value = p_value)

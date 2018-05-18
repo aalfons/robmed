@@ -479,7 +479,7 @@ boot_test_mediation <- function(fit,
   }
   # construct return object
   result <- list(ab = ab, ci = ci, reps = bootstrap, alternative = alternative,
-                 R = R[1L], level = level, type = type, fit = fit)
+                 R = as.integer(R[1L]), level = level, type = type, fit = fit)
   class(result) <- c("boot_test_mediation", "test_mediation")
   result
 }
