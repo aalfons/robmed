@@ -3,6 +3,39 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
+#' Bootstrap p-values for (robust) mediation analysis
+#'
+#' Estimate p-values for indirect effects via the bootstrap in (robust)
+#' mediation analysis.
+#'
+#' The p-values are computed as the smallest significance level
+#' \eqn{\alpha}{alpha} for which the
+#' \eqn{(1 - \alpha) * 100\%}{(1 - alpha) * 100\%} confidence interval obtained
+#' from the bootstrapped distribution of the indirect effect does not contain
+#' 0.
+#'
+#' This is a simple implementation, where each digit after the comma is
+#' determined via a grid search.  Hence computation time can be long if
+#' confidence intervals are computed via the bias-corrected and accelerated
+#' method (\code{"bca"}).
+#'
+#' @param object  an object inheriting from class
+#' \code{"\link[=test_mediation]{boot_test_mediation}"} containing results from (robust)
+#' mediation analysis.
+#' @param digits  an integer determining the number of digits of the p-values
+#' to be computed.  The default is to compute 4 digits after the comma.
+#' @param \dots  additional arguments are currently ignored.
+#'
+#' @return A numeric vector containing the estimated p-values for the indirect
+#' effect(s).
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso
+#' \code{\link{test_mediation}}, \code{\link[boot]{boot.ci}}
+#'
+#' @keywords utilities
+#'
 #' @export
 
 p_value <- function(object, ...) UseMethod("p_value")
