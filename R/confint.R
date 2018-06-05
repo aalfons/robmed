@@ -180,7 +180,7 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
 # extract confidence interval from bootstrap results
 # (argument 'parm' can be used for completeness; we only need the confidence
 # interval for the indirect effect in the first column of the bootstrap results)
-confint.boot <- function(object, parm = 1, level = 0.95,
+confint.boot <- function(object, parm = 1L, level = 0.95,
                          alternative = c("twosided", "less", "greater"),
                          type = c("bca", "perc"), ...) {
   # initializations
@@ -188,7 +188,11 @@ confint.boot <- function(object, parm = 1, level = 0.95,
   type <- match.arg(type)
   component <- if(type == "perc") "percent" else type
   # extract confidence interval
-  if(alternative == "twosided") {
+  if(level == 0) {
+    ci <- rep.int(mean(object$t[, parm], na.rm=TRUE), 2L)
+  } else if(level == 1) {
+    ci <- c(-Inf, Inf)
+  } else if(alternative == "twosided") {
     ci <- boot.ci(object, conf=level, type=type, index=parm)[[component]][4:5]
   } else {
     alpha <- 1 - level
