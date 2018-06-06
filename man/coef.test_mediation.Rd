@@ -29,7 +29,7 @@ of the bootstrap distribution (\code{"boot"}; the default), or the
 coefficient estimates based on the full data set (\code{"data"}).}
 }
 \value{
-A numeric vetor containing the requested coefficients.
+A numeric vector containing the requested coefficients.
 }
 \description{
 Extract coefficients from models computed in (robust) mediation analysis.

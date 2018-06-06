@@ -22,8 +22,7 @@
 #' account for the variability from cleaning the data.
 #'
 #' \code{robmed} is a wrapper function for performing robust mediation analysis
-#' via regressions and the fast and robust bootstrap (inspired by our
-#' \code{SPSS} macro \code{ROBMED}).
+#' via regressions and the fast and robust bootstrap.
 #'
 #' \code{indirect} is a wrapper function for performing non-robust mediation
 #' analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
@@ -37,16 +36,17 @@
 #' column of \code{data} containing the independent variable.
 #' @param y  a character string, an integer or a logical vector specifying the
 #' column of \code{data} containing the dependent variable.
-#' @param m  a character string, an integer or a logical vector specifying the
-#' column of \code{data} containing the hypothesized mediator variable.
+#' @param m  a character, integer or logical vector specifying the columns of
+#' \code{data} containing the hypothesized mediator variables.
 #' @param covariates  optional; a character, integer or logical vector
 #' specifying the columns of \code{data} containing additional covariates to be
 #' used as control variables.
 #' @param test  a character string specifying the test to be performed for
 #' the indirect effect.  Possible values are \code{"boot"} (the default) for
-#' the bootstrap, or \code{"sobel"} for Sobel's test.
+#' the bootstrap, or \code{"sobel"} for Sobel's test.  Currently, Sobel's test
+#' is not implemented for more than one hypothesized mediator variable.
 #' @param alternative  a character string specifying the alternative hypothesis
-#' in the test for the indirect effect.  Possible values are \code{"twosided"}
+#' in the test for the indirect effects.  Possible values are \code{"twosided"}
 #' (the default), \code{"less"} or \code{"greater"}.
 #' @param R  an integer giving the number of bootstrap replicates.  The default
 #' is to use 5000 bootstrap replicates.
@@ -59,8 +59,9 @@
 #' @param method  a character string specifying the method of estimation for
 #' the mediation model.  Possible values are \code{"regression"} (the default)
 #' to estimate the effects via regressions, or \code{"covariance"} to estimate
-#' the effects via the covariance matrix.  Note that the effects are always
-#' estimated via regressions if control variables are specified via
+#' the effects via the covariance matrix.  Note that the effects are
+#' always estimated via regressions if more than one hypothesized mediator is
+#' supplied in \code{m}, or if control variables are specified via
 #' \code{covariates}.
 #' @param robust  a logical indicating whether to perform a robust test
 #' (defaults to \code{TRUE}).
@@ -78,21 +79,21 @@
 #' \code{"boot_test_mediation"} if \code{test} is \code{"boot"} or
 #' \code{"sobel_test_mediation"} if \code{test} is \code{"sobel"}) with the
 #' following components:
-#' \item{ab}{numeric; the point estimate of the indirect effect.}
-#' \item{ci}{a numeric vector of length two containing the bootstrap
-#' confidence interval for the indirect effect (only
-#' \code{"boot_test_mediation"}).}
+#' \item{ab}{a numeric vector containing the point estimates of the indirect
+#' effects.}
+#' \item{ci}{a numeric vector of length two or a matrix of two columns
+#' containing the bootstrap confidence intervals for the indirect effects
+#' (only \code{"boot_test_mediation"}).}
 #' \item{reps}{an object of class \code{"\link[boot]{boot}"} containing
-#' the bootstrap replicates of the indirect effect (only
-#' \code{"boot_test_mediation"}).}
+#' the bootstrap replicates of the effects (only \code{"boot_test_mediation"}).}
 #' \item{se}{numeric; the standard error of the indirect effect according
 #' to Sobel's formula (only \code{"sobel_test_mediation"}).}
 #' \item{statistic}{numeric; the test statistic for Sobel's test (only
 #' \code{"sobel_test_mediation"}).}
-#' \item{p_value}{numeric; the p-Value from Sobel's test (only
+#' \item{p_value}{numeric; the p-value from Sobel's test (only
 #' \code{"sobel_test_mediation"}).}
 #' \item{alternative}{a character string specifying the alternative
-#' hypothesis in the test for the indirect effect.}
+#' hypothesis in the test for the indirect effects.}
 #' \item{R}{an integer giving the number of bootstrap replicates (only
 #' \code{"boot_test_mediation"}).}
 #' \item{level}{numeric; the confidence level of the bootstrap confidence
@@ -196,7 +197,7 @@ test_mediation.fit_mediation <- function(data, test = c("boot", "sobel"),
   test <- match.arg(test)
   alternative <- match.arg(alternative)
   p_m <- length(data$m)
-  if(p_m > 1 && test == "sobel") {
+  if(p_m > 1L && test == "sobel") {
     test <- "boot"
     warning("Sobel test not available with multiple mediators; ",
             "using bootstrap test")

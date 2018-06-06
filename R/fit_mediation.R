@@ -24,8 +24,8 @@
 #' column of \code{data} containing the independent variable.
 #' @param y  a character string, an integer or a logical vector specifying the
 #' column of \code{data} containing the dependent variable.
-#' @param m  a character string, an integer or a logical vector specifying the
-#' column of \code{data} containing the hypothesized mediator variable.
+#' @param m  a character, integer or logical vector specifying the columns of
+#' \code{data} containing the hypothesized mediator variables.
 #' @param covariates  optional; a character, integer or logical vector
 #' specifying the columns of \code{data} containing additional covariates to be
 #' used as control variables.
@@ -33,7 +33,8 @@
 #' estimation.  Possible values are \code{"regression"} (the default)
 #' to estimate the effects via regressions, or \code{"covariance"} to
 #' estimate the effects via the covariance matrix.  Note that the effects are
-#' always estimated via regressions if control variables are specified via
+#' always estimated via regressions if more than one hypothesized mediator is
+#' supplied in \code{m}, or if control variables are specified via
 #' \code{covariates}.
 #' @param robust  a logical indicating whether to robustly estimate the effects
 #' (defaults to \code{TRUE}).
@@ -50,29 +51,38 @@
 #' \code{"reg_fit_mediation"} if \code{method} is \code{"regression"} or
 #' \code{"cov_fit_mediation"} if \code{method} is \code{"covariance"}) with
 #' the following components:
-#' \item{a}{numeric; the point estimate of the effect of the independent
-#' variable on the proposed mediator variable.}
-#' \item{b}{numeric; the point estimate of the direct effect of the
-#' proposed mediator variable on the dependent variable.}
+#' \item{a}{a numeric vector containing the point estimates of the effect of
+#' the independent variable on the proposed mediator variables.}
+#' \item{b}{a numeric vector containing the point estimates of the direct
+#' effect of the proposed mediator variables on the dependent variable.}
 #' \item{c}{numeric; the point estimate of the direct effect of the
 #' independent variable on the dependent variable.}
 #' \item{c_prime}{numeric; the point estimate of the total effect of the
 #' independent variable on the dependent variable.}
-#' \item{robust}{a logical indicating whether the effects were estimated
-#' robustly.}
 #' \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
-#' regression of the proposed mediator variable on the independent variable
+#' regression of the proposed mediator variable on the independent variable, or
+#' a list of such objects in case of more than one hypothesized mediator
 #' (only \code{"reg_fit_mediation"}).}
 #' \item{fit_ymx}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
 #' regression of the dependent variable on the proposed mediator and
 #' independent variables (only \code{"reg_fit_mediation"}).}
+#' \item{fit_yx}{an object of class \code{"\link[stats]{lm}"} containing the
+#' estimation results from the regression of the dependent variable on the
+#' independent variable (only \code{"reg_fit_mediation"} and if \code{robust}
+#' is \code{FALSE}).}
 #' \item{cov}{an object of class \code{"\link{cov_Huber}"} or
 #' \code{"\link{cov_ML}"} containing the covariance matrix estimates
 #' (only \code{"cov_fit_mediation"}).}
+#' \item{x, y, m, covariates}{character vectors specifying the respective
+#' variables used.}
 #' \item{data}{a data frame containing the independent, dependent and
-#' proposed mediator variables.}
+#' proposed mediator variables, as well as covariates.}
+#' \item{robust}{a logical indicating whether the effects were estimated
+#' robustly.}
+#' \item{control}{a list of tuning parameters used (only if \code{robust} is
+#' \code{TRUE}).}
 #'
 #' @author Andreas Alfons
 #'
@@ -122,21 +132,21 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
   data <- as.data.frame(data)
   x <- data[, x, drop=FALSE]
   p_x <- ncol(x)
-  if(p_x != 1) stop("exactly one independent variable required")
+  if(p_x != 1L) stop("exactly one independent variable required")
   y <- data[, y, drop=FALSE]
   p_y <- ncol(y)
-  if(p_y != 1) stop("exactly one dependent variable required")
+  if(p_y != 1L) stop("exactly one dependent variable required")
   m <- data[, m, drop=FALSE]
   p_m <- ncol(m)
-  if(p_m == 0) stop("at least one hypothesized mediator variable required")
+  if(p_m == 0L) stop("at least one hypothesized mediator variable required")
   covariates <- data[, covariates, drop=FALSE]
   data <- cbind(x, y, m, covariates)
   # extract names
   cn <- names(data)
-  x <- cn[1]
-  y <- cn[2]
-  m <- cn[2 + seq_len(p_m)]
-  covariates <- cn[-(seq_len(p_x + p_y + p_m))]
+  x <- cn[1L]
+  y <- cn[2L]
+  m <- cn[2L + seq_len(p_m)]
+  covariates <- cn[-(seq_len(2L + p_m))]
   # make sure that variables are numeric
   convert <- !sapply(data, is.numeric)
   data[convert] <- lapply(data[convert], as.numeric)
@@ -144,10 +154,10 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
   data <- data[complete.cases(data), ]
   # check if there are enough observations
   d <- dim(data)
-  if(d[1] <= d[2]) stop("not enough observations")
+  if(d[1L] <= d[2L]) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
-  if((p_m > 1 || length(covariates) > 0) && method == "covariance") {
+  if((p_m > 1L || length(covariates) > 0L) && method == "covariance") {
     method <- "regression"
     warning("covariance method not available with multiple mediators ",
             "or any covariates; using regression method")

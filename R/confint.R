@@ -21,7 +21,7 @@
 #' the confidence intervals to be computed.  The default is to compute 95\%
 #' confidence intervals.
 #' @param other  a character string specifying how to compute the confidence
-#' interval of the effects other than the indirect effect.  Possible values
+#' interval of the effects other than the indirect effect(s).  Possible values
 #' are \code{"boot"} (the default) to compute bootstrap confidence intervals
 #' using the normal approximation (i.e., to assume a normal distribution of the
 #' corresponding effect with the standard deviation computed from the bootstrap

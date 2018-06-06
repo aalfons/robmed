@@ -17,7 +17,7 @@
 analysis.}
 
 \item{other}{a character string specifying how to summarize the effects
-other than the indirect effect.  Possible values are \code{"boot"} (the
+other than the indirect effect(s).  Possible values are \code{"boot"} (the
 default) to compute significance tests using the normal approximation of the
 bootstrap distribution (i.e., to assume a normal distribution of the
 corresponding effect with the standard deviation computed from the bootstrap

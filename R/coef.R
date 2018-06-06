@@ -20,7 +20,7 @@
 #' coefficients to be extracted, or \code{NULL} to extract all coefficients.
 #' @param \dots  additional arguments are currently ignored.
 #'
-#' @return A numeric vetor containing the requested coefficients.
+#' @return A numeric vector containing the requested coefficients.
 #'
 #' @author Andreas Alfons
 #'

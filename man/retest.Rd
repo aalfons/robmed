@@ -39,7 +39,7 @@ results (see \code{\link{test_mediation}}).
 }
 \description{
 Reperform a (fast and robust) bootstrap test or Sobel's test for the
-indirect effect based on results from (robust) mediation analysis.
+indirect effect(s) based on results from (robust) mediation analysis.
 }
 \seealso{
 \code{\link{test_mediation}}

@@ -29,10 +29,12 @@ according to Sobel's formula.}
 
 \item{method}{a character string specifying for which plot to construct the
 data frame.  Possible values are \code{"dot"} for a dot plot of selected
-coefficients, or \code{"density"} for a density plot of the indirect effect.}
+coefficients, or \code{"density"} for a density plot of the indirect
+effect(s).}
 
 \item{parm}{a character string specifying the coefficients to be included
-in a dot plot.  The default is to include the direct and the indirect effect.}
+in a dot plot.  The default is to include the direct and the indirect
+effect(s).}
 
 \item{\dots}{additional arguments are currently ignored.}
 

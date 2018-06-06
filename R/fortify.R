@@ -23,9 +23,11 @@
 #' according to Sobel's formula.
 #' @param method  a character string specifying for which plot to construct the
 #' data frame.  Possible values are \code{"dot"} for a dot plot of selected
-#' coefficients, or \code{"density"} for a density plot of the indirect effect.
+#' coefficients, or \code{"density"} for a density plot of the indirect
+#' effect(s).
 #' @param parm  a character string specifying the coefficients to be included
-#' in a dot plot.  The default is to include the direct and the indirect effect.
+#' in a dot plot.  The default is to include the direct and the indirect
+#' effect(s).
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test to be included in a dot plot.  The default is to include
 #' 95\% confidence intervals.

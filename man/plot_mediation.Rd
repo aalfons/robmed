@@ -38,10 +38,11 @@ as well.}
 
 \item{method}{a character string specifying which plot to produce.
 Possible values are \code{"dot"} for a dot plot of selected coefficients, or
-\code{"density"} for a density plot of the indirect effect.}
+\code{"density"} for a density plot of the indirect effect(s).}
 
 \item{parm}{a character string specifying the coefficients to be included
-in a dot plot.  The default is to include the direct and the indirect effect.}
+in a dot plot.  The default is to include the direct and the indirect
+effect(s).}
 
 \item{data}{an optional numeric vector containing the \eqn{x}-values at
 which to evaluate the assumed normal density from Sobel's test (only used in

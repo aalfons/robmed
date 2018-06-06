@@ -6,7 +6,7 @@
 #' Retest for mediation
 #'
 #' Reperform a (fast and robust) bootstrap test or Sobel's test for the
-#' indirect effect based on results from (robust) mediation analysis.
+#' indirect effect(s) based on results from (robust) mediation analysis.
 #'
 #' @param object  an object inheriting from class
 #' \code{"\link{test_mediation}"} containing results from (robust) mediation

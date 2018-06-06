@@ -16,13 +16,13 @@
 #' @param y  either a numeric vector containing the dependent variable, or
 #' (if \code{data} is supplied) a character string, an integer or a logical
 #' vector specifying the corresponding column of \code{data}.
-#' @param m  either a numeric vector containing the proposed mediator variable,
-#' or (if \code{data} is supplied) a character string, an integer or a logical
-#' vector specifying the corresponding column of \code{data}.
+#' @param m  either a numeric vector or data frame containing the proposed
+#' mediator variables, or (if \code{data} is supplied) a character, integer or
+#' logical vector specifying the corresponding columns of \code{data}.
 #' @param covariates  optional; either a numeric vector or data frame
 #' containing additional covariates to be used as control variables, or (if
 #' \code{data} is supplied) a character, integer or logical vector specifying
-#' the corresponding column of \code{data}.
+#' the corresponding columns of \code{data}.
 #' @param data  an optional \code{data.frame} containing the variables.
 #' @param efficiency  a numeric value giving the desired efficiency (defaults
 #' to 0.85 for 85\% efficiency).
@@ -63,6 +63,8 @@ fitMediation <- function(x, y, m, covariates = NULL, data, ...) {
     # prepare data frame containing all variables with original names
     x <- substitute(x)
     y <- substitute(y)
+    p_m <- ncol(m)
+    if(is.null(p_m)) p_m <- 1
     m <- substitute(m)
     if(is.null(covariates)) {
       data <- eval.parent(call("data.frame", x, y, m))
@@ -78,6 +80,7 @@ fitMediation <- function(x, y, m, covariates = NULL, data, ...) {
     x <- data[, x, drop=FALSE]
     y <- data[, y, drop=FALSE]
     m <- data[, m, drop=FALSE]
+    p_m <- ncol(m)
     covariates <- data[, covariates, drop=FALSE]
     data <- cbind(x, y, m, covariates)
   }
@@ -85,8 +88,8 @@ fitMediation <- function(x, y, m, covariates = NULL, data, ...) {
   cn <- names(data)
   x <- cn[1]
   y <- cn[2]
-  m <- cn[3]
-  covariates <- cn[-(1:3)]
+  m <- cn[2L + seq_len(p_m)]
+  covariates <- cn[-(seq_len(2L + p_m))]
   # call new function
   fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
 }
@@ -149,6 +152,8 @@ testMediation.default <- function(x, y, m, covariates = NULL, data, ...) {
     # prepare data frame containing all variables with original names
     x <- substitute(x)
     y <- substitute(y)
+    p_m <- ncol(m)
+    if(is.null(p_m)) p_m <- 1
     m <- substitute(m)
     if(is.null(covariates)) {
       data <- eval.parent(call("data.frame", x, y, m))
@@ -164,6 +169,7 @@ testMediation.default <- function(x, y, m, covariates = NULL, data, ...) {
     x <- data[, x, drop=FALSE]
     y <- data[, y, drop=FALSE]
     m <- data[, m, drop=FALSE]
+    p_m <- ncol(m)
     covariates <- data[, covariates, drop=FALSE]
     data <- cbind(x, y, m, covariates)
   }
@@ -171,8 +177,8 @@ testMediation.default <- function(x, y, m, covariates = NULL, data, ...) {
   cn <- names(data)
   x <- cn[1]
   y <- cn[2]
-  m <- cn[3]
-  covariates <- cn[-(1:3)]
+  m <- cn[2L + seq_len(p_m)]
+  covariates <- cn[-(seq_len(2L + p_m))]
   # call new function
   test_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
 }
