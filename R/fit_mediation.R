@@ -97,26 +97,13 @@
 #' \code{\link{cov_Huber}}, \code{\link{cov_ML}}
 #'
 #' @examples
-#' # control parameters
-#' n <- 250             # number of observations
-#' a <- b <- c <- 0.2   # true effects
-#' t <- 10              # number of observations to contaminate
-#'
-#' # draw clean observations
-#' set.seed(20160911)
-#' x <- rnorm(n)
-#' m <- a * x + rnorm(n)
-#' y <- b * m + c * x + rnorm(n)
-#'
-#' # contaminate the first t observations
-#' m[1:t] <- m[1:t] - 6
-#' y[1:t] <- y[1:t] + 6
-#'
-#' # construct data frame
-#' data <- data.frame(x, y, m)
-#'
-#' # fit mediation model
-#' fit_mediation(data, "x", "y", "m")
+#' data("BSG2014")
+#' fit <- fit_mediation(BSG2014,
+#'                      x = "ValueDiversity",
+#'                      y = "TeamCommitment",
+#'                      m = "TaskConflict")
+#' test <- test_mediation(fit)
+#' summary(test)
 #'
 #' @keywords multivariate
 #'

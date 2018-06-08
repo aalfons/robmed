@@ -41,6 +41,18 @@ An iterative reweighting algorithm is used to compute the Huber
 M-estimator.  The Huber weight function thereby corresponds to a
 convex optimization problem, resulting in a unique solution.
 }
+\examples{
+data("BSG2014")
+
+# define variables
+x <- "ValueDiversity"
+y <- "TeamCommitment"
+m <- "TaskConflict"
+
+# compute Huber M-estimator
+cov_Huber(BSG2014[, c(x, y, m)])
+
+}
 \references{
 Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 

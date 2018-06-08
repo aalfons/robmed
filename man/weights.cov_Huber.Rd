@@ -27,6 +27,19 @@ A numeric vetor containing the requested robustness weights.
 Extract (relative) robustness weights of a Huber M-estimate of location and
 scatter.
 }
+\examples{
+data("BSG2014")
+
+# define variables
+x <- "ValueDiversity"
+y <- "TeamCommitment"
+m <- "TaskConflict"
+
+# compute Huber M-estimator
+S <- cov_Huber(BSG2014[, c(x, y, m)])
+weights(S)
+
+}
 \references{
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
 mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),

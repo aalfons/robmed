@@ -55,7 +55,7 @@ from Sobel's test to be included in a dot plot.  The default is to include
 95\% confidence intervals.}
 
 \item{mapping}{an aesthetic mapping to override the default behavior (see
-\code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_string}}).}
+\code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_}}).}
 
 \item{facets}{a faceting formula to override the default behavior (only
 used in case of a dot plot).  If supplied, \code{\link[ggplot2]{facet_wrap}}
@@ -69,6 +69,33 @@ An object of class \code{"ggplot"} (see
 \description{
 Produce dot plots of selected coefficients from regression models computed
 in (robust) mediation analysis, or density plots of the indirect effect.
+}
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+robust_boot <- test_mediation(BSG2014,
+                              x = "ValueDiversity",
+                              y = "TeamCommitment",
+                              m = "TaskConflict",
+                              robust = TRUE)
+
+# create plots for robust bootstrap test
+plot(robust_boot, method = "dot")
+plot(robust_boot, method = "density")
+
+# run Preacher & Hayes (2004, 2008) standard bootstrap test
+standard_boot <- test_mediation(BSG2014,
+                                x = "ValueDiversity",
+                                y = "TeamCommitment",
+                                m = "TaskConflict",
+                                robust = FALSE)
+
+# compare robust and standard tests
+tests <- list(Robust = robust_boot, Standard = standard_boot)
+plot_mediation(tests, method = "dot")
+plot_mediation(tests, method = "density")
+
 }
 \seealso{
 \code{\link{test_mediation}},

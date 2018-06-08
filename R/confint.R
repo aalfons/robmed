@@ -40,6 +40,25 @@
 #' @seealso
 #' \code{\link{test_mediation}}, \code{\link[=coef.test_mediation]{coef}}
 #'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' robust_boot <- test_mediation(BSG2014,
+#'                               x = "ValueDiversity",
+#'                               y = "TeamCommitment",
+#'                               m = "TaskConflict",
+#'                               robust = TRUE)
+#' confint(robust_boot, other = "boot")
+#'
+#' # follow Preacher & Hayes (2004, 2008)
+#' standard_boot <- test_mediation(BSG2014,
+#'                                 x = "ValueDiversity",
+#'                                 y = "TeamCommitment",
+#'                                 m = "TaskConflict",
+#'                                 robust = FALSE)
+#' confint(standard_boot, other = "theory")
+#'
 #' @keywords utilities
 
 NULL

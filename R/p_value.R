@@ -34,6 +34,19 @@
 #' @seealso
 #' \code{\link{test_mediation}}, \code{\link[boot]{boot.ci}}
 #'
+#' @examples
+#' data("BSG2014")
+#'
+#' \dontrun{
+#' # BCa intervals are recommended, but take a while to run
+#' test_bca <- test_mediation(BSG2014,
+#'                            x = "ValueDiversity",
+#'                            y = "TeamCommitment",
+#'                            m = "TaskConflict",
+#'                            type = "bca")
+#' p_value(test_bca)
+#' }
+#'
 #' @keywords utilities
 #'
 #' @export

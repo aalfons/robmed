@@ -49,6 +49,14 @@ summary.reg_fit_mediation <- function(object, ...) object
 #'
 #' @seealso \code{\link{test_mediation}}
 #'
+#' @examples
+#' data("BSG2014")
+#' test <- test_mediation(BSG2014,
+#'                        x = "ValueDiversity",
+#'                        y = "TeamCommitment",
+#'                        m = "TaskConflict")
+#' summary(test)
+#'
 #' @keywords utilities
 
 NULL

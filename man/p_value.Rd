@@ -39,6 +39,20 @@ determined via a grid search.  Hence computation time can be long if
 confidence intervals are computed via the bias-corrected and accelerated
 method (\code{"bca"}).
 }
+\examples{
+data("BSG2014")
+
+\dontrun{
+# BCa intervals are recommended, but take a while to run
+test_bca <- test_mediation(BSG2014,
+                           x = "ValueDiversity",
+                           y = "TeamCommitment",
+                           m = "TaskConflict",
+                           type = "bca")
+p_value(test_bca)
+}
+
+}
 \seealso{
 \code{\link{test_mediation}}, \code{\link[boot]{boot.ci}}
 }

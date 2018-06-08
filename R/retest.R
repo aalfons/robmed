@@ -29,6 +29,19 @@
 #'
 #' @seealso \code{\link{test_mediation}}
 #'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' test <- test_mediation(BSG2014,
+#'                        x = "ValueDiversity",
+#'                        y = "TeamCommitment",
+#'                        m = "TaskConflict")
+#' summary(test)
+#'
+#' # now compute 97.5% confidence interval
+#' retest(test, level = 0.975)
+#'
 #' @keywords multivariate
 #'
 #' @export

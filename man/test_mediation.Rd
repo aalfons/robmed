@@ -140,26 +140,11 @@ analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
 \code{SPSS} macro \code{INDIRECT}).
 }
 \examples{
-# control parameters
-n <- 250             # number of observations
-a <- b <- c <- 0.2   # true effects
-t <- 10              # number of observations to contaminate
-
-# draw clean observations
-set.seed(20160911)
-x <- rnorm(n)
-m <- a * x + rnorm(n)
-y <- b * m + c * x + rnorm(n)
-
-# contaminate the first t observations
-m[1:t] <- m[1:t] - 6
-y[1:t] <- y[1:t] + 6
-
-# construct data frame
-data <- data.frame(x, y, m)
-
-# perform mediation analysis
-test <- test_mediation(data, "x", "y", "m")
+data("BSG2014")
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict")
 summary(test)
 
 }
@@ -185,7 +170,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \code{\link[=coef.test_mediation]{coef}},
 \code{\link[=confint.test_mediation]{confint}},
 \code{\link[=fortify.test_mediation]{fortify}} and
-\code{\link[=plot_mediation]{plot}} methods
+\code{\link[=plot_mediation]{plot}} methods, \code{\link{p_value}}
 
 \code{\link[boot]{boot}}, \code{\link[robustbase]{lmrob}},
 \code{\link[stats]{lm}}, \code{\link{cov_Huber}}, \code{\link{cov_ML}}

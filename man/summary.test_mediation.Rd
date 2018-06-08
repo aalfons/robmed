@@ -41,6 +41,15 @@ the effects other than the indirect effect.}
 \description{
 Summarize results from (robust) mediation analysis for proper interpretation.
 }
+\examples{
+data("BSG2014")
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict")
+summary(test)
+
+}
 \seealso{
 \code{\link{test_mediation}}
 }

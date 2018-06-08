@@ -22,6 +22,18 @@ An object of class \code{"cov_ML"} with the following components:
 Compute the maximum likelihood estimator of the mean vector and the
 covariance matrix.
 }
+\examples{
+data("BSG2014")
+
+# define variables
+x <- "ValueDiversity"
+y <- "TeamCommitment"
+m <- "TaskConflict"
+
+# compute Huber M-estimator
+cov_ML(BSG2014[, c(x, y, m)])
+
+}
 \references{
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
 mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),

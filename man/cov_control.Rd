@@ -23,6 +23,20 @@ A list with components corresponding to the arguments.
 \description{
 Obtain a list with tuning paramters for \code{\link{cov_Huber}}.
 }
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+ctrl <- cov_control(prob = 0.95)
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict",
+                       method = "covariance",
+                       control = ctrl)
+summary(test)
+
+}
 \references{
 Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 }
