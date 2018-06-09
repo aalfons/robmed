@@ -37,7 +37,7 @@ m <- "TaskConflict"
 
 # compute Huber M-estimator
 S <- cov_Huber(BSG2014[, c(x, y, m)])
-weights(S)
+weights(S, type = "relative")
 
 }
 \references{
