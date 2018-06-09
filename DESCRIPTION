@@ -10,6 +10,9 @@ Depends:
 Imports:
     boot (>= 1.3-1)
 Suggests:
+    MASS,
+    dplyr,
+    tidyr,
     testthat
 Description: Perform mediation analysis via a (fast and robust) bootstrap test.
 License: GPL (>= 2)
