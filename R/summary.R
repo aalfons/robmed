@@ -235,7 +235,8 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
       remove <- seq_len(2L * p_m + 2L)
       result$covariate_effects <- coefficients[-remove, , drop = FALSE]
     } else {
-      result$covariate_effects <- summary_ymx$coefficients[-(1:3), , drop=FALSE]
+      remove <- seq_len(p_m + 2L)
+      result$covariate_effects <- summary_ymx$coefficients[-remove, , drop=FALSE]
     }
   }
   # add residual standard error

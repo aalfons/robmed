@@ -67,9 +67,11 @@ coef.boot_test_mediation <- function(object, parm = NULL,
   type <- match.arg(type)
   # extract effects (including indirect effect)
   if(type == "boot") {
-    ab <- object$ab
-    coef <- colMeans(object$reps$t[, -seq_along(ab)], na.rm = TRUE)
+    p_m <- length(object$fit$m)
+    keep <- if(p_m == 1L) 2L:5L else 1L + p_m + seq_len(2L * p_m + 2L)
+    coef <- colMeans(object$reps$t[, keep], na.rm = TRUE)
     names(coef) <- get_effect_names(object$fit$m)
+    ab <- object$ab
   } else {
     coef <- coef(object$fit)
     ab <- object$fit$a * object$fit$b
