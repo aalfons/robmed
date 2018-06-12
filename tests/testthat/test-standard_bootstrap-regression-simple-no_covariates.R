@@ -24,8 +24,6 @@ test_data <- data.frame(X, Y, M)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M", test = "boot",
                        R = R, level = 0.9, type = "bca", method = "regression",
                        robust = FALSE)
-summary_boot <- summary(boot, other = "boot")
-summary_theory <- summary(boot, other = "theory")
 
 ## compute summary
 summary_boot <- summary(boot, other = "boot")

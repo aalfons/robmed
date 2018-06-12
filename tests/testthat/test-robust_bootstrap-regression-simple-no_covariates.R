@@ -23,8 +23,8 @@ test_data <- data.frame(X, Y, M)
 ## run bootstrap test
 ctrl <- reg_control(efficiency = 0.95)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M", test = "boot",
-                      R = R, level = 0.9, type = "bca", method = "regression",
-                      robust = TRUE, control = ctrl)
+                       R = R, level = 0.9, type = "bca", method = "regression",
+                       robust = TRUE, control = ctrl)
 
 ## compute summary
 summary_boot <- summary(boot, other = "boot")
