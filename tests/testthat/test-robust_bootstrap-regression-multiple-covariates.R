@@ -61,6 +61,8 @@ test_that("output has correct structure", {
 
 test_that("arguments are correctly passed", {
 
+  # alternative hypothesis
+  expect_identical(boot$alternative, "twosided")
   # number of bootstrap replicates
   expect_identical(boot$R, as.integer(R))  # doesn't hold for too many outliers
   # confidence level
