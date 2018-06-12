@@ -1,4 +1,4 @@
-context("robust bootstrap test: covariance")
+context("standard bootstrap test: covariance")
 
 
 ## load package
@@ -24,10 +24,9 @@ C2 <- rnorm(n)
 test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## run bootstrap test and compute summary
-ctrl <- cov_control(prob = 0.9)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "boot",
                        R = R, level = 0.9, type = "bca", method = "covariance",
-                       robust = TRUE, control = ctrl)
+                       robust = FALSE)
 
 ## compute summary
 summary_boot <- summary(boot, other = "boot")
@@ -59,7 +58,7 @@ test_that("output has correct structure", {
 test_that("arguments are correctly passed", {
 
   # number of bootstrap replicates
-  expect_identical(boot$R, as.integer(R))  # doesn't hold for too many outliers
+  expect_identical(boot$R, as.integer(R))
   # confidence level
   expect_identical(boot$level, 0.9)
   # type of confidence intervals
@@ -69,9 +68,9 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$y, "Y")
   expect_identical(boot$fit$m, "M1")
   expect_null(boot$fit$covariates)
-  # robust fit and test
-  expect_true(boot$fit$robust)
-  expect_equal(boot$fit$control, ctrl)
+  # nonrobust fit and test
+  expect_false(boot$fit$robust)
+  expect_null(boot$fit$control)
 
 })
 
@@ -176,8 +175,8 @@ test_that("summary has correct structure", {
 test_that("attributes are correctly passed through summary", {
 
   # robustness
-  expect_true(summary_boot$summary$robust)
-  expect_true(summary_theory$summary$robust)
+  expect_false(summary_boot$summary$robust)
+  expect_false(summary_theory$summary$robust)
   # number of observations
   expect_identical(summary_boot$summary$n, as.integer(n))
   expect_identical(summary_theory$summary$n, as.integer(n))
@@ -318,12 +317,10 @@ test_that("covariates not implemented", {
 
   # run test with regression method
   set.seed(seed)
-  suppressWarnings(
-    test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
-                               covariates = c("C1", "C2"), test = "boot",
-                               R = 500, level = 0.9, type = "perc",
-                               method = "regression", robust = TRUE)
-  )
+  test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
+                             covariates = c("C1", "C2"), test = "boot",
+                             R = 500, level = 0.9, type = "perc",
+                             method = "regression", robust = FALSE)
 
   # try to run test with covariates (should give warning)
   set.seed(seed)
@@ -331,7 +328,7 @@ test_that("covariates not implemented", {
     test_cov <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
                                covariates = c("C1", "C2"), test = "boot",
                                R = 500, level = 0.9, type = "perc",
-                               method = "covariance", robust = TRUE)
+                               method = "covariance", robust = FALSE)
   )
 
   # these should be the same
@@ -344,12 +341,10 @@ test_that("multiple mediators not implemented", {
 
   # run test with regression method
   set.seed(seed)
-  suppressWarnings(
-    test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-                               test = "boot", R = 500, level = 0.9,
-                               type = "perc", method = "regression",
-                               robust = TRUE)
-  )
+  test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
+                             test = "boot", R = 500, level = 0.9,
+                             type = "perc", method = "regression",
+                             robust = FALSE)
 
   # try to run test with multiple mediators (should give warning)
   set.seed(seed)
@@ -357,7 +352,7 @@ test_that("multiple mediators not implemented", {
     test_cov <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
                                test = "boot", R = 500, level = 0.9,
                                type = "perc", method = "covariance",
-                               robust = TRUE)
+                               robust = FALSE)
   )
 
   # these should be the same

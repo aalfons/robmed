@@ -104,7 +104,7 @@ test_that("covariates not implemented", {
                            covariates = c("C1", "C2"), method = "regression",
                            robust = FALSE)
 
-  # try to run test with covariates (should give warning)
+  # try to run with covariates (should give warning)
   set.seed(seed)
   expect_warning(
     cov_fit <- fit_mediation(test_data, x = "X", y = "Y", m = "M1",
@@ -120,12 +120,12 @@ test_that("covariates not implemented", {
 
 test_that("multiple mediators not implemented", {
 
-  # run test with regression method
+  # run regression fit
   set.seed(seed)
   reg_fit <- fit_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
                            method = "regression", robust = FALSE)
 
-  # try to run test with covariates (should give warning)
+  # try to run with multiple mediators (should give warning)
   set.seed(seed)
   expect_warning(
     cov_fit <- fit_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
