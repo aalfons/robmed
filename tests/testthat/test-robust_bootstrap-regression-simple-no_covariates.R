@@ -20,13 +20,19 @@ M <- a * X + rnorm(n)
 Y <- b * M + c * X + rnorm(n)
 test_data <- data.frame(X, Y, M)
 
-## run bootstrap test and compute summary
+## run bootstrap test
 ctrl <- reg_control(efficiency = 0.95)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M", test = "boot",
                       R = R, level = 0.9, type = "bca", method = "regression",
                       robust = TRUE, control = ctrl)
+
+## compute summary
 summary_boot <- summary(boot, other = "boot")
 summary_theory <- summary(boot, other = "theory")
+
+## create data for plotting
+dot <- fortify(boot, method = "dot")
+density <- fortify(boot, method = "density")
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "c", "c'", "ab")
@@ -244,5 +250,65 @@ test_that("effect summaries contain correct coefficient values", {
   expect_identical(summary_boot$summary$b["M", "Boot"], mean(boot$reps$t[, 3]))
   expect_identical(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
   expect_identical(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
+
+})
+
+test_that("data returned by fortify() has correct structure", {
+
+  ## dot plot
+  # check dimensions
+  expect_s3_class(dot, "data.frame")
+  expect_identical(dim(dot), c(2L, 4L))
+  # check column names
+  column_names <- c("Effect", "Point", "Lower", "Upper")
+  expect_named(dot, column_names)
+  # check that direct effect and indirect effect are plotted by default
+  effect_names <- c("c", "ab")
+  expect_identical(dot$Effect, factor(effect_names, levels = effect_names))
+
+  ## density plot
+  # check dimensions
+  expect_s3_class(density, "data.frame")
+  expect_identical(ncol(density), 2L)
+  expect_gt(nrow(density), 0L)
+  # check column names
+  column_names <- c("ab", "Density")
+  expect_named(density, column_names)
+
+})
+
+test_that("data returned by fortify() has correct attributes", {
+
+  ## dot plot
+  # check aesthetic mapping
+  mapping <- aes_string(x = "Effect", y = "Point",
+                        ymin = "Lower", ymax = "Upper")
+  expect_identical(attr(dot, "mapping"), mapping)
+  # check default geom()
+  expect_identical(attr(dot, "geom"), geom_pointrange)
+  # check facets
+  expect_null(attr(dot, "facets"))
+  # check that method is stored correctly
+  expect_identical(attr(dot, "method"), "dot")
+
+  ## density plot
+  # check aesthetic mapping
+  mapping <- aes_string(x = "ab", y = "Density")
+  expect_identical(attr(density, "mapping"), mapping)
+  # check default geom()
+  expect_equal(attr(density, "geom"), function(..., stat) {
+    geom_density(..., stat = "identity")
+  })
+  # check facets
+  expect_null(attr(density, "facets"))
+  # check title
+  expect_identical(attr(density, "main"), "Bootstrap distribution")
+  # check confidence interval
+  ci <- attr(density, "ci")
+  expect_s3_class(ci, "data.frame")
+  expect_identical(dim(ci), c(1L, 4L))
+  expect_named(ci, c("ab", "Density", "Lower", "Upper"))
+  # check that method is stored correctly
+  expect_identical(attr(density, "method"), "density")
 
 })
