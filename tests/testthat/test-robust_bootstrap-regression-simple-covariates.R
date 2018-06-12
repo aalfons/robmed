@@ -1,4 +1,4 @@
-context("robust bootstrap test: regression, single mediator, no covariates")
+context("robust bootstrap test: regression, single mediator, covariates")
 
 
 ## load package
@@ -18,12 +18,15 @@ set.seed(seed)
 X <- rnorm(n)
 M <- a * X + rnorm(n)
 Y <- b * M + c * X + rnorm(n)
-test_data <- data.frame(X, Y, M)
+C1 <- rnorm(n)
+C2 <- rnorm(n)
+test_data <- data.frame(X, Y, M, C1, C2)
 
 ## run bootstrap test
-ctrl <- reg_control(efficiency = 0.95)
-boot <- test_mediation(test_data, x = "X", y = "Y", m = "M", test = "boot",
-                       R = R, level = 0.9, type = "bca", method = "regression",
+ctrl <- reg_control(max_iterations = 500)
+boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
+                       covariates = c("C1", "C2"), test = "boot", R = R,
+                       level = 0.9, type = "bca", method = "regression",
                        robust = TRUE, control = ctrl)
 
 ## compute summary
@@ -65,7 +68,7 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$x, "X")
   expect_identical(boot$fit$y, "Y")
   expect_identical(boot$fit$m, "M")
-  expect_identical(boot$fit$covariates, character())
+  expect_identical(boot$fit$covariates, c("C1", "C2"))
   # robust fit and test
   expect_true(boot$fit$robust)
   expect_equal(boot$fit$control, ctrl)
@@ -80,7 +83,7 @@ test_that("dimensions are correct", {
   expect_length(boot$ci, 2L)
   # dimensions of bootstrap replicates
   d_boot <- dim(boot$reps$t)
-  expect_identical(d_boot, c(as.integer(R), 5L))
+  expect_identical(d_boot, c(as.integer(R), 7L))
 
 })
 
@@ -170,12 +173,12 @@ test_that("summary has correct structure", {
   expect_type(summary_boot$summary$F_test, "list")
   expect_named(summary_boot$summary$F_test, c("statistic", "df", "p_value"))
   df_test_boot <- summary_boot$summary$F_test$df
-  expect_identical(df_test_boot[1], 2)
+  expect_identical(df_test_boot[1], 4)
   expect_identical(df_test_boot[2], Inf)
   expect_type(summary_theory$summary$F_test, "list")
   expect_named(summary_theory$summary$F_test, c("statistic", "df", "p_value"))
   df_test_theory <- summary_theory$summary$F_test$df
-  expect_identical(df_test_theory[1], 2)
+  expect_identical(df_test_theory[1], 4)
   expect_identical(df_test_theory[2], Inf)
 
 })
@@ -192,11 +195,11 @@ test_that("attributes are correctly passed through summary", {
   expect_identical(summary_boot$summary$x, "X")
   expect_identical(summary_boot$summary$y, "Y")
   expect_identical(summary_boot$summary$m, "M")
-  expect_identical(summary_boot$summary$covariates, character())
+  expect_identical(summary_boot$summary$covariates, c("C1", "C2"))
   expect_identical(summary_theory$summary$x, "X")
   expect_identical(summary_theory$summary$y, "Y")
   expect_identical(summary_theory$summary$m, "M")
-  expect_identical(summary_theory$summary$covariates, character())
+  expect_identical(summary_theory$summary$covariates, c("C1", "C2"))
 
 })
 
@@ -231,8 +234,12 @@ test_that("effect summaries have correct names", {
   expect_identical(rownames(summary_theory$summary$c_prime), "X")
   expect_identical(colnames(summary_theory$summary$c_prime)[1], c("Estimate"))
   # covariates
-  expect_null(summary_boot$summary$covariate_effects)
-  expect_null(summary_theory$summary$covariate_effects)
+  expect_identical(dim(summary_boot$summary$covariate_effects), c(2L, 5L))
+  expect_identical(rownames(summary_boot$summary$covariate_effects), c("C1", "C2"))
+  expect_identical(colnames(summary_boot$summary$covariate_effects)[1:2], c("Data", "Boot"))
+  expect_identical(dim(summary_theory$summary$covariate_effects), c(2L, 4L))
+  expect_identical(rownames(summary_theory$summary$covariate_effects), c("C1", "C2"))
+  expect_identical(colnames(summary_theory$summary$covariate_effects)[1], c("Estimate"))
 
 })
 
@@ -243,16 +250,22 @@ test_that("effect summaries contain correct coefficient values", {
   expect_identical(summary_boot$summary$b["M", "Data"], boot$fit$b)
   expect_identical(summary_boot$summary$c["X", "Data"], boot$fit$c)
   expect_identical(summary_boot$summary$c_prime["X", "Data"], boot$fit$c_prime)
+  expect_identical(summary_boot$summary$covariate_effects[, "Data"],
+                    coef(boot$fit$fit_ymx)[c("C1", "C2")])
   expect_identical(summary_theory$summary$a["X", "Estimate"], boot$fit$a)
   expect_identical(summary_theory$summary$b["M", "Estimate"], boot$fit$b)
   expect_identical(summary_theory$summary$c["X", "Estimate"], boot$fit$c)
   expect_identical(summary_theory$summary$c_prime["X", "Estimate"], boot$fit$c_prime)
+  expect_identical(summary_theory$summary$covariate_effects[, "Estimate"],
+                    coef(boot$fit$fit_ymx)[c("C1", "C2")])
 
   # bootstrapped effects
-  expect_identical(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 2]))
-  expect_identical(summary_boot$summary$b["M", "Boot"], mean(boot$reps$t[, 3]))
-  expect_identical(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
-  expect_identical(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
+  expect_equal(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 2]))
+  expect_equal(summary_boot$summary$b["M", "Boot"], mean(boot$reps$t[, 3]))
+  expect_equal(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
+  expect_equal(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
+  expect_equivalent(summary_boot$summary$covariate_effects[, "Boot"],
+                    colMeans(boot$reps$t[, 6:7]))
 
 })
 
@@ -315,3 +328,4 @@ test_that("data returned by fortify() has correct attributes", {
   expect_identical(attr(density, "method"), "density")
 
 })
+

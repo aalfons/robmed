@@ -1,4 +1,4 @@
-context("robust bootstrap test: regression, single mediator, no covariates")
+context("robust bootstrap test: regression, multiple mediators, no covariates")
 
 
 ## load package
@@ -16,15 +16,16 @@ set.seed(seed)
 
 ## generate data
 X <- rnorm(n)
-M <- a * X + rnorm(n)
-Y <- b * M + c * X + rnorm(n)
-test_data <- data.frame(X, Y, M)
+M1 <- a * X + rnorm(n)
+M2 <- rnorm(n)
+Y <- b * M1 + c * X + rnorm(n)
+test_data <- data.frame(X, Y, M1, M2)
 
 ## run bootstrap test
 ctrl <- reg_control(efficiency = 0.95)
-boot <- test_mediation(test_data, x = "X", y = "Y", m = "M", test = "boot",
-                       R = R, level = 0.9, type = "bca", method = "regression",
-                       robust = TRUE, control = ctrl)
+boot <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
+                       test = "boot", R = R, level = 0.9, type = "bca",
+                       method = "regression", robust = TRUE, control = ctrl)
 
 ## compute summary
 summary_boot <- summary(boot, other = "boot")
@@ -35,7 +36,9 @@ dot <- fortify(boot, method = "dot")
 density <- fortify(boot, method = "density")
 
 ## stuff needed to check correctness
-coef_names <- c("a", "b", "c", "c'", "ab")
+indirect_names <- c("Total", "M1", "M2")
+ab_names <- paste("ab", indirect_names, sep = "_")
+coef_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "c", "c'", ab_names)
 
 
 ## run tests
@@ -64,7 +67,7 @@ test_that("arguments are correctly passed", {
   # variable names
   expect_identical(boot$fit$x, "X")
   expect_identical(boot$fit$y, "Y")
-  expect_identical(boot$fit$m, "M")
+  expect_identical(boot$fit$m, c("M1", "M2"))
   expect_identical(boot$fit$covariates, character())
   # robust fit and test
   expect_true(boot$fit$robust)
@@ -75,18 +78,20 @@ test_that("arguments are correctly passed", {
 test_that("dimensions are correct", {
 
   # effects are scalars
-  expect_length(boot$ab, 1L)
-  # only one indirect effect, so only one confidence interval
-  expect_length(boot$ci, 2L)
+  expect_length(boot$ab, 3L)
+  expect_named(boot$ab, indirect_names)
+  # multiple indirect effects and confidence intervals
+  expect_identical(dim(boot$ci), c(3L, 2L))
+  expect_identical(rownames(boot$ci), indirect_names)
   # dimensions of bootstrap replicates
   d_boot <- dim(boot$reps$t)
-  expect_identical(d_boot, c(as.integer(R), 5L))
+  expect_identical(d_boot, c(as.integer(R), 9L))
 
 })
 
 test_that("values of coefficients are correct", {
 
-  expect_equivalent(boot$ab, mean(boot$reps$t[, 1]))
+  expect_equivalent(boot$ab, colMeans(boot$reps$t[, 1:3]))
 
 })
 
@@ -95,10 +100,10 @@ test_that("output of coef() method has correct attributes", {
   coef_boot <- coef(boot, type = "boot")
   coef_data <- coef(boot, type = "data")
   # bootstrapped effects
-  expect_length(coef_boot, 5L)
+  expect_length(coef_boot, 9L)
   expect_named(coef_boot, coef_names)
   # effects computed on original sample
-  expect_length(coef_data, 5L)
+  expect_length(coef_data, 9L)
   expect_named(coef_data, coef_names)
 
 })
@@ -106,18 +111,22 @@ test_that("output of coef() method has correct attributes", {
 test_that("coef() method returns correct values of coefficients", {
 
   # bootstrapped effects
-  expect_equivalent(coef(boot, parm = "a", type = "boot"), mean(boot$reps$t[, 2]))
-  expect_equivalent(coef(boot, parm = "b", type = "boot"), mean(boot$reps$t[, 3]))
-  expect_equivalent(coef(boot, parm = "c", type = "boot"), mean(boot$reps$t[, 4]))
-  expect_equivalent(coef(boot, parm = "c'", type = "boot"), mean(boot$reps$t[, 5]))
-  expect_equivalent(coef(boot, parm = "ab", type = "boot"), boot$ab)
+  expect_equivalent(coef(boot, parm = c("a_M1", "a_M2"), type = "boot"),
+                    colMeans(boot$reps$t[, 4:5]))
+  expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "boot"),
+                    colMeans(boot$reps$t[, 6:7]))
+  expect_equivalent(coef(boot, parm = "c", type = "boot"), mean(boot$reps$t[, 8]))
+  expect_equivalent(coef(boot, parm = "c'", type = "boot"), mean(boot$reps$t[, 9]))
+  expect_equivalent(coef(boot, parm = ab_names, type = "boot"), boot$ab)
 
   # effects computed on original sample
-  expect_equivalent(coef(boot, parm = "a", type = "data"), boot$fit$a)
-  expect_equivalent(coef(boot, parm = "b", type = "data"), boot$fit$b)
+  expect_equivalent(coef(boot, parm = c("a_M1", "a_M2"), type = "data"), boot$fit$a)
+  expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "data"), boot$fit$b)
   expect_equivalent(coef(boot, parm = "c", type = "data"), boot$fit$c)
   expect_equivalent(coef(boot, parm = "c'", type = "data"), boot$fit$c_prime)
-  expect_equivalent(coef(boot, parm = "ab", type = "data"), boot$fit$a * boot$fit$b)
+  ab_data <- boot$fit$a * boot$fit$b
+  expect_equivalent(coef(boot, parm = ab_names, type = "data"),
+                    c(sum(ab_data), ab_data))
 
 })
 
@@ -126,11 +135,11 @@ test_that("output of confint() method has correct attributes", {
   ci_boot <- confint(boot, other = "boot")
   ci_theory <- confint(boot, other = "theory")
   # bootstrapped confidence intervals
-  expect_equal(dim(ci_boot), c(5L, 2L))
+  expect_equal(dim(ci_boot), c(9L, 2L))
   expect_equal(rownames(ci_boot), coef_names)
   expect_equal(colnames(ci_boot), c("5 %", "95 %"))
   # confidence intervals based on theory (except for indirect effect)
-  expect_equal(dim(ci_theory), c(5L, 2L))
+  expect_equal(dim(ci_theory), c(9L, 2L))
   expect_equal(rownames(ci_theory), coef_names)
   expect_equal(colnames(ci_theory), c("5 %", "95 %"))
 
@@ -139,9 +148,9 @@ test_that("output of confint() method has correct attributes", {
 test_that("confint() method returns correct values of confidence intervals", {
 
   # bootstrapped confidence intervals
-  expect_equivalent(confint(boot, parm = "ab", other = "boot"), boot$ci)
+  expect_equivalent(confint(boot, parm = ab_names, other = "boot"), boot$ci)
   # confidence intervals based on theory (except for indirect effect)
-  expect_equivalent(confint(boot, parm = "ab", other = "theory"), boot$ci)
+  expect_equivalent(confint(boot, parm = ab_names, other = "theory"), boot$ci)
 
 })
 
@@ -170,12 +179,12 @@ test_that("summary has correct structure", {
   expect_type(summary_boot$summary$F_test, "list")
   expect_named(summary_boot$summary$F_test, c("statistic", "df", "p_value"))
   df_test_boot <- summary_boot$summary$F_test$df
-  expect_identical(df_test_boot[1], 2)
+  expect_identical(df_test_boot[1], 3)
   expect_identical(df_test_boot[2], Inf)
   expect_type(summary_theory$summary$F_test, "list")
   expect_named(summary_theory$summary$F_test, c("statistic", "df", "p_value"))
   df_test_theory <- summary_theory$summary$F_test$df
-  expect_identical(df_test_theory[1], 2)
+  expect_identical(df_test_theory[1], 3)
   expect_identical(df_test_theory[2], Inf)
 
 })
@@ -191,11 +200,11 @@ test_that("attributes are correctly passed through summary", {
   # variable names
   expect_identical(summary_boot$summary$x, "X")
   expect_identical(summary_boot$summary$y, "Y")
-  expect_identical(summary_boot$summary$m, "M")
+  expect_identical(summary_boot$summary$m, c("M1", "M2"))
   expect_identical(summary_boot$summary$covariates, character())
   expect_identical(summary_theory$summary$x, "X")
   expect_identical(summary_theory$summary$y, "Y")
-  expect_identical(summary_theory$summary$m, "M")
+  expect_identical(summary_theory$summary$m, c("M1", "M2"))
   expect_identical(summary_theory$summary$covariates, character())
 
 })
@@ -203,18 +212,18 @@ test_that("attributes are correctly passed through summary", {
 test_that("effect summaries have correct names", {
 
   # a path
-  expect_identical(dim(summary_boot$summary$a), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$a), "X")
+  expect_identical(dim(summary_boot$summary$a), c(2L, 5L))
+  expect_identical(rownames(summary_boot$summary$a), c("M1~X", "M2~X"))
   expect_identical(colnames(summary_boot$summary$a)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$a), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$a), "X")
+  expect_identical(dim(summary_theory$summary$a), c(2L, 4L))
+  expect_identical(rownames(summary_theory$summary$a), c("M1~X", "M2~X"))
   expect_identical(colnames(summary_theory$summary$a)[1], c("Estimate"))
   # b path
-  expect_identical(dim(summary_boot$summary$b), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$b), "M")
+  expect_identical(dim(summary_boot$summary$b), c(2L, 5L))
+  expect_identical(rownames(summary_boot$summary$b), c("M1", "M2"))
   expect_identical(colnames(summary_boot$summary$b)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$b), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$b), "M")
+  expect_identical(dim(summary_theory$summary$b), c(2L, 4L))
+  expect_identical(rownames(summary_theory$summary$b), c("M1", "M2"))
   expect_identical(colnames(summary_theory$summary$b)[1], c("Estimate"))
   # c path
   expect_identical(dim(summary_boot$summary$c), c(1L, 5L))
@@ -239,20 +248,20 @@ test_that("effect summaries have correct names", {
 test_that("effect summaries contain correct coefficient values", {
 
   # effects computed on original sample
-  expect_identical(summary_boot$summary$a["X", "Data"], boot$fit$a)
-  expect_identical(summary_boot$summary$b["M", "Data"], boot$fit$b)
+  expect_equivalent(summary_boot$summary$a[, "Data"], boot$fit$a)
+  expect_identical(summary_boot$summary$b[, "Data"], boot$fit$b)
   expect_identical(summary_boot$summary$c["X", "Data"], boot$fit$c)
   expect_identical(summary_boot$summary$c_prime["X", "Data"], boot$fit$c_prime)
-  expect_identical(summary_theory$summary$a["X", "Estimate"], boot$fit$a)
-  expect_identical(summary_theory$summary$b["M", "Estimate"], boot$fit$b)
+  expect_equivalent(summary_theory$summary$a[, "Estimate"], boot$fit$a)
+  expect_identical(summary_theory$summary$b[, "Estimate"], boot$fit$b)
   expect_identical(summary_theory$summary$c["X", "Estimate"], boot$fit$c)
   expect_identical(summary_theory$summary$c_prime["X", "Estimate"], boot$fit$c_prime)
 
   # bootstrapped effects
-  expect_identical(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 2]))
-  expect_identical(summary_boot$summary$b["M", "Boot"], mean(boot$reps$t[, 3]))
-  expect_identical(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
-  expect_identical(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
+  expect_equivalent(summary_boot$summary$a[, "Boot"], colMeans(boot$reps$t[, 4:5]))
+  expect_equivalent(summary_boot$summary$b[, "Boot"], colMeans(boot$reps$t[, 6:7]))
+  expect_identical(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 8]))
+  expect_identical(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 9]))
 
 })
 
@@ -261,21 +270,21 @@ test_that("data returned by fortify() has correct structure", {
   ## dot plot
   # check dimensions
   expect_s3_class(dot, "data.frame")
-  expect_identical(dim(dot), c(2L, 4L))
+  expect_identical(dim(dot), c(4L, 4L))
   # check column names
   column_names <- c("Effect", "Point", "Lower", "Upper")
   expect_named(dot, column_names)
   # check that direct effect and indirect effect are plotted by default
-  effect_names <- c("c", "ab")
+  effect_names <- c("c", ab_names)
   expect_identical(dot$Effect, factor(effect_names, levels = effect_names))
 
   ## density plot
   # check dimensions
   expect_s3_class(density, "data.frame")
-  expect_identical(ncol(density), 2L)
+  expect_identical(ncol(density), 3L)
   expect_gt(nrow(density), 0L)
   # check column names
-  column_names <- c("ab", "Density")
+  column_names <- c("ab", "Density", "Effect")
   expect_named(density, column_names)
 
 })
@@ -303,14 +312,14 @@ test_that("data returned by fortify() has correct attributes", {
     geom_density(..., stat = "identity")
   })
   # check facets
-  expect_null(attr(density, "facets"))
+  expect_equal(attr(density, "facets"), ~Effect)
   # check title
   expect_identical(attr(density, "main"), "Bootstrap distribution")
   # check confidence interval
   ci <- attr(density, "ci")
   expect_s3_class(ci, "data.frame")
-  expect_identical(dim(ci), c(1L, 4L))
-  expect_named(ci, c("ab", "Density", "Lower", "Upper"))
+  expect_identical(dim(ci), c(3L, 5L))
+  expect_named(ci, c("ab", "Density", "Lower", "Upper", "Effect"))
   # check that method is stored correctly
   expect_identical(attr(density, "method"), "density")
 

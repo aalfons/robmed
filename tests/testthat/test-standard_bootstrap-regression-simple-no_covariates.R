@@ -9,7 +9,7 @@ n <- 250          # number of observations
 a <- c <- 0.2     # true effects
 b <- 0            # true effect
 R <- 1000         # number of bootstrap samples
-seed <- 20180517  # seed for the random number generator
+seed <- 20150601  # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
@@ -229,6 +229,9 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_theory$summary$c_prime), c(1L, 4L))
   expect_identical(rownames(summary_theory$summary$c_prime), "X")
   expect_identical(colnames(summary_theory$summary$c_prime)[1], c("Estimate"))
+  # covariates
+  expect_null(summary_boot$summary$covariate_effects)
+  expect_null(summary_theory$summary$covariate_effects)
 
 })
 
