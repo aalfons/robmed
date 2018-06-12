@@ -259,8 +259,8 @@ test_that("effect summaries contain correct coefficient values", {
   # bootstrapped effects
   expect_equivalent(summary_boot$summary$a[, "Boot"], colMeans(boot$reps$t[, 4:5]))
   expect_equivalent(summary_boot$summary$b[, "Boot"], colMeans(boot$reps$t[, 6:7]))
-  expect_identical(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 8]))
-  expect_identical(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 9]))
+  expect_equal(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 8]))
+  expect_equal(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 9]))
 
 })
 

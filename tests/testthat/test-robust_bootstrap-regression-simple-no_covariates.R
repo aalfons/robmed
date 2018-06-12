@@ -249,10 +249,10 @@ test_that("effect summaries contain correct coefficient values", {
   expect_identical(summary_theory$summary$c_prime["X", "Estimate"], boot$fit$c_prime)
 
   # bootstrapped effects
-  expect_identical(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 2]))
-  expect_identical(summary_boot$summary$b["M", "Boot"], mean(boot$reps$t[, 3]))
-  expect_identical(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
-  expect_identical(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
+  expect_equal(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 2]))
+  expect_equal(summary_boot$summary$b["M", "Boot"], mean(boot$reps$t[, 3]))
+  expect_equal(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
+  expect_equal(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
 
 })
 
