@@ -203,28 +203,28 @@ test_that("effect summaries have correct names", {
   expect_identical(colnames(summary_boot$summary$a)[1:2], c("Data", "Boot"))
   expect_identical(dim(summary_theory$summary$a), c(1L, 4L))
   expect_identical(rownames(summary_theory$summary$a), "X")
-  expect_identical(colnames(summary_theory$summary$a)[1], c("Estimate"))
+  expect_identical(colnames(summary_theory$summary$a)[1], "Estimate")
   # b path
   expect_identical(dim(summary_boot$summary$b), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$b), "M1")
   expect_identical(colnames(summary_boot$summary$b)[1:2], c("Data", "Boot"))
   expect_identical(dim(summary_theory$summary$b), c(1L, 4L))
   expect_identical(rownames(summary_theory$summary$b), "M1")
-  expect_identical(colnames(summary_theory$summary$b)[1], c("Estimate"))
+  expect_identical(colnames(summary_theory$summary$b)[1], "Estimate")
   # c path
   expect_identical(dim(summary_boot$summary$c), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$c), "X")
   expect_identical(colnames(summary_boot$summary$c)[1:2], c("Data", "Boot"))
   expect_identical(dim(summary_theory$summary$c), c(1L, 4L))
   expect_identical(rownames(summary_theory$summary$c), "X")
-  expect_identical(colnames(summary_theory$summary$c)[1], c("Estimate"))
+  expect_identical(colnames(summary_theory$summary$c)[1], "Estimate")
   # c' path
   expect_identical(dim(summary_boot$summary$c_prime), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$c_prime), "X")
   expect_identical(colnames(summary_boot$summary$c_prime)[1:2], c("Data", "Boot"))
   expect_identical(dim(summary_theory$summary$c_prime), c(1L, 4L))
   expect_identical(rownames(summary_theory$summary$c_prime), "X")
-  expect_identical(colnames(summary_theory$summary$c_prime)[1], c("Estimate"))
+  expect_identical(colnames(summary_theory$summary$c_prime)[1], "Estimate")
   # covariates
   expect_null(summary_boot$summary$covariate_effects)
   expect_null(summary_theory$summary$covariate_effects)
@@ -314,53 +314,53 @@ test_that("data returned by fortify() has correct attributes", {
 
 ## only implemented for simple mediation without covariates
 
-test_that("covariates not implemented", {
-
-  # run test with regression method
-  set.seed(seed)
-  suppressWarnings(
-    test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
-                               covariates = c("C1", "C2"), test = "boot",
-                               R = 500, level = 0.9, type = "perc",
-                               method = "regression", robust = TRUE)
-  )
-
-  # try to run test with covariates (should give warning)
-  set.seed(seed)
-  expect_warning(
-    test_cov <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
-                               covariates = c("C1", "C2"), test = "boot",
-                               R = 500, level = 0.9, type = "perc",
-                               method = "covariance", robust = TRUE)
-  )
-
-  # these should be the same
-  expect_equal(test_cov, test_reg)
-
-})
-
-
-test_that("multiple mediators not implemented", {
-
-  # run test with regression method
-  set.seed(seed)
-  suppressWarnings(
-    test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-                               test = "boot", R = 500, level = 0.9,
-                               type = "perc", method = "regression",
-                               robust = TRUE)
-  )
-
-  # try to run test with multiple mediators (should give warning)
-  set.seed(seed)
-  expect_warning(
-    test_cov <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-                               test = "boot", R = 500, level = 0.9,
-                               type = "perc", method = "covariance",
-                               robust = TRUE)
-  )
-
-  # these should be the same
-  expect_equal(test_cov, test_reg)
-
-})
+# test_that("covariates not implemented", {
+#
+#   # run test with regression method
+#   set.seed(seed)
+#   suppressWarnings(
+#     test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
+#                                covariates = c("C1", "C2"), test = "boot",
+#                                R = 500, level = 0.9, type = "perc",
+#                                method = "regression", robust = TRUE)
+#   )
+#
+#   # try to run test with covariates (should give warning)
+#   set.seed(seed)
+#   expect_warning(
+#     test_cov <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
+#                                covariates = c("C1", "C2"), test = "boot",
+#                                R = 500, level = 0.9, type = "perc",
+#                                method = "covariance", robust = TRUE)
+#   )
+#
+#   # these should be the same
+#   expect_equal(test_cov, test_reg)
+#
+# })
+#
+#
+# test_that("multiple mediators not implemented", {
+#
+#   # run test with regression method
+#   set.seed(seed)
+#   suppressWarnings(
+#     test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
+#                                test = "boot", R = 500, level = 0.9,
+#                                type = "perc", method = "regression",
+#                                robust = TRUE)
+#   )
+#
+#   # try to run test with multiple mediators (should give warning)
+#   set.seed(seed)
+#   expect_warning(
+#     test_cov <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
+#                                test = "boot", R = 500, level = 0.9,
+#                                type = "perc", method = "covariance",
+#                                robust = TRUE)
+#   )
+#
+#   # these should be the same
+#   expect_equal(test_cov, test_reg)
+#
+# })
