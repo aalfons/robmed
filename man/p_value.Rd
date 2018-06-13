@@ -3,16 +3,18 @@
 \name{p_value}
 \alias{p_value}
 \alias{p_value.boot_test_mediation}
-\title{Bootstrap p-values for (robust) mediation analysis}
+\alias{p_value.sobel_test_mediation}
+\title{p-Values for (robust) mediation analysis}
 \usage{
 p_value(object, ...)
 
 \method{p_value}{boot_test_mediation}(object, digits = 4L, ...)
+
+\method{p_value}{sobel_test_mediation}(object, ...)
 }
 \arguments{
-\item{object}{an object inheriting from class
-\code{"\link[=test_mediation]{boot_test_mediation}"} containing results from (robust)
-mediation analysis.}
+\item{object}{an object inheriting from class \code{test_mediation}
+containing results from (robust) mediation analysis.}
 
 \item{\dots}{additional arguments are currently ignored.}
 
@@ -20,16 +22,16 @@ mediation analysis.}
 to be computed.  The default is to compute 4 digits after the comma.}
 }
 \value{
-A numeric vector containing the estimated p-values for the indirect
+A numeric vector containing the p-values for the indirect
 effect(s).
 }
 \description{
-Estimate p-values for indirect effects via the bootstrap in (robust)
-mediation analysis.
+Estimate or extract the p-values for indirect effects in (robust) mediation
+analysis.
 }
 \details{
-The p-values are computed as the smallest significance level
-\eqn{\alpha}{alpha} for which the
+For bootstrap tests, the p-value is estimated as the smallest significance
+level \eqn{\alpha}{alpha} for which the
 \eqn{(1 - \alpha) * 100\%}{(1 - alpha) * 100\%} confidence interval obtained
 from the bootstrapped distribution of the indirect effect does not contain
 0.
@@ -38,6 +40,9 @@ This is a simple implementation, where each digit after the comma is
 determined via a grid search.  Hence computation time can be long if
 confidence intervals are computed via the bias-corrected and accelerated
 method (\code{"bca"}).
+
+For Sobel tests, the p-value is already stored in the object returned by
+\code{\link{test_mediation}} and simply extracted.
 }
 \examples{
 data("BSG2014")

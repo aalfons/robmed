@@ -3,13 +3,13 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-#' Bootstrap p-values for (robust) mediation analysis
+#' p-Values for (robust) mediation analysis
 #'
-#' Estimate p-values for indirect effects via the bootstrap in (robust)
-#' mediation analysis.
+#' Estimate or extract the p-values for indirect effects in (robust) mediation
+#' analysis.
 #'
-#' The p-values are computed as the smallest significance level
-#' \eqn{\alpha}{alpha} for which the
+#' For bootstrap tests, the p-value is estimated as the smallest significance
+#' level \eqn{\alpha}{alpha} for which the
 #' \eqn{(1 - \alpha) * 100\%}{(1 - alpha) * 100\%} confidence interval obtained
 #' from the bootstrapped distribution of the indirect effect does not contain
 #' 0.
@@ -19,14 +19,16 @@
 #' confidence intervals are computed via the bias-corrected and accelerated
 #' method (\code{"bca"}).
 #'
-#' @param object  an object inheriting from class
-#' \code{"\link[=test_mediation]{boot_test_mediation}"} containing results from (robust)
-#' mediation analysis.
+#' For Sobel tests, the p-value is already stored in the object returned by
+#' \code{\link{test_mediation}} and simply extracted.
+#'
+#' @param object  an object inheriting from class \code{test_mediation}
+#' containing results from (robust) mediation analysis.
 #' @param digits  an integer determining the number of digits of the p-values
 #' to be computed.  The default is to compute 4 digits after the comma.
 #' @param \dots  additional arguments are currently ignored.
 #'
-#' @return A numeric vector containing the estimated p-values for the indirect
+#' @return A numeric vector containing the p-values for the indirect
 #' effect(s).
 #'
 #' @author Andreas Alfons
@@ -125,3 +127,10 @@ p_value.boot_test_mediation <- function(object, digits = 4L, ...) {
   # return smallest significance level where 0 is not in the confidence interval
   alpha
 }
+
+
+#' @rdname p_value
+#' @method p_value sobel_test_mediation
+#' @export
+
+p_value.sobel_test_mediation <- function(object, ...) object$p_value
