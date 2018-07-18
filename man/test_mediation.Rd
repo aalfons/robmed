@@ -124,6 +124,16 @@ If \code{method} is \code{"regression"} and \code{robust} is \code{TRUE}
 \code{\link[robustbase]{lmrob}}.  The bootstrap test is thereby performed
 via the fast and robust bootstrap.
 
+Note that the regression estimator implemented in
+\code{\link[robustbase]{lmrob}} can be seen as weighted least squares
+estimator, where the weights are dependent on how much an observation is
+deviating from the rest.  The trick for the fast and robust bootstrap is
+that on each bootstrap sample, first a weighted least squares estimator
+is computed using those robustness weights from the original sample followed
+by a linear correction of the coefficients.  The purpose of this correction
+is to account for the additional uncertainty of obtaining the robustness
+weights.
+
 If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
 the tests are based on a Huber M-estimator of location and scatter.  For the
 bootstrap test, the M-estimates are used to first clean the data via a
@@ -139,6 +149,11 @@ via regressions and the fast and robust bootstrap.
 analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
 \code{SPSS} macro \code{INDIRECT}).
 }
+\note{
+For the fast and robust bootstrap, the simpler correction of
+Salibian-Barrera & Van Aelst (2008) is used rather than the originally
+proposed correction of Salibian-Barrera & Zamar (2002).
+}
 \examples{
 data("BSG2014")
 test <- test_mediation(BSG2014,
@@ -152,6 +167,10 @@ summary(test)
 Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for estimating
 indirect effects in simple mediation models. \emph{Behavior Research Methods,
 Instruments, & Computers}, \bold{36}(4), 717--731.
+
+Salibian-Barrera, M. and Van Aelst, S. (2008) Robust model selection using
+fast and robust bootstrap. \emph{Computational Statistics \& Data Analysis},
+\bold{52}(12), 5121--5135
 
 Salibian-Barrera, M. and Zamar, R. (2002) Bootstrapping robust estimates of
 regression. \emph{The Annals of Statistics}, \bold{30}(2), 556--582.

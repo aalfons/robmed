@@ -13,6 +13,16 @@
 #' \code{\link[robustbase]{lmrob}}.  The bootstrap test is thereby performed
 #' via the fast and robust bootstrap.
 #'
+#' Note that the regression estimator implemented in
+#' \code{\link[robustbase]{lmrob}} can be seen as weighted least squares
+#' estimator, where the weights are dependent on how much an observation is
+#' deviating from the rest.  The trick for the fast and robust bootstrap is
+#' that on each bootstrap sample, first a weighted least squares estimator
+#' is computed using those robustness weights from the original sample followed
+#' by a linear correction of the coefficients.  The purpose of this correction
+#' is to account for the additional uncertainty of obtaining the robustness
+#' weights.
+#'
 #' If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
 #' the tests are based on a Huber M-estimator of location and scatter.  For the
 #' bootstrap test, the M-estimates are used to first clean the data via a
@@ -104,12 +114,20 @@
 #' \code{"\link{fit_mediation}"} containing the estimation results for the
 #' direct effect and the total effect in the mediation model.}
 #'
+#' @note For the fast and robust bootstrap, the simpler correction of
+#' Salibian-Barrera & Van Aelst (2008) is used rather than the originally
+#' proposed correction of Salibian-Barrera & Zamar (2002).
+#'
 #' @author Andreas Alfons
 #'
 #' @references
 #' Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for estimating
 #' indirect effects in simple mediation models. \emph{Behavior Research Methods,
 #' Instruments, & Computers}, \bold{36}(4), 717--731.
+#'
+#' Salibian-Barrera, M. and Van Aelst, S. (2008) Robust model selection using
+#' fast and robust bootstrap. \emph{Computational Statistics \& Data Analysis},
+#' \bold{52}(12), 5121--5135
 #'
 #' Salibian-Barrera, M. and Zamar, R. (2002) Bootstrapping robust estimates of
 #' regression. \emph{The Annals of Statistics}, \bold{30}(2), 556--582.
@@ -237,6 +255,12 @@ boot_test_mediation <- function(fit,
     z <- cbind(rep.int(1, n), as.matrix(fit$data))
     # check if fast and robust bootstrap should be applied
     if(fit$robust) {
+
+      # This implementation uses the simpler approximation of
+      # Salibian-Barrera & Van Aelst (2008) rather than that of
+      # Salibian-Barrera & Zamar (2002).  The difference is that
+      # the latter also requires a correction of the residual scale.
+
       # extract regression models
       fit_mx <- fit$fit_mx
       fit_ymx <- fit$fit_ymx
@@ -359,7 +383,9 @@ boot_test_mediation <- function(fit,
                               corr_m = corr_m, coef_m = coef_m, w_y = w_y,
                               corr_y = corr_y, coef_y = coef_y, ...)
       R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+
     } else {
+
       # define function for standard bootstrap mediation test
       if(p_m == 1L)  {
         # only one mediator
@@ -419,6 +445,7 @@ boot_test_mediation <- function(fit,
       bootstrap <- local_boot(z, standard_bootstrap, R=R, ...)
       R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
     }
+
   } else if(inherits(fit, "cov_fit_mediation")) {
     # extract data and variable names
     x <- fit$x
@@ -501,6 +528,11 @@ local_boot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 get_psi_control <- function(object) object$control[c("tuning.psi", "psi")]
 
 ## compute matrix for linear correction
+# (see Salibian-Barrera & Van Aelst, 2008)
+# The definition of the weigths in Salibian-Barrera & Van Aelst (2008) does not
+# include the residual scale, whereas the robustness weights in lmrob() do.
+# Hence the residual scale shows up in Equation (16) of Salibian-Barrera & Van
+# Aelst (2008), but here the residual scale is already included in the weights.
 correction_matrix <- function(X, weights, residuals, scale, control) {
   tmp <- Mpsi(residuals/scale, cc=control$tuning.psi, psi=control$psi, deriv=1)
   solve(crossprod(X, tmp * X)) %*% crossprod(weights * X)
