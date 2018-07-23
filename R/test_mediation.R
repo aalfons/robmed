@@ -18,10 +18,10 @@
 #' estimator, where the weights are dependent on how much an observation is
 #' deviating from the rest.  The trick for the fast and robust bootstrap is
 #' that on each bootstrap sample, first a weighted least squares estimator
-#' is computed using those robustness weights from the original sample followed
-#' by a linear correction of the coefficients.  The purpose of this correction
-#' is to account for the additional uncertainty of obtaining the robustness
-#' weights.
+#' is computed (using those robustness weights from the original sample)
+#' followed by a linear correction of the coefficients.  The purpose of this
+#' correction is to account for the additional uncertainty of obtaining the
+#' robustness weights.
 #'
 #' If \code{method} is \code{"covariance"} and \code{robust} is \code{TRUE},
 #' the tests are based on a Huber M-estimator of location and scatter.  For the
