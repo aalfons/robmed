@@ -125,6 +125,10 @@
 #' indirect effects in simple mediation models. \emph{Behavior Research Methods,
 #' Instruments, & Computers}, \bold{36}(4), 717--731.
 #'
+#' Preacher, K.J. and Hayes, A.F. (2008) Asymptotic and resampling strategies
+#' for assessing and comparing indirect effects in multiple mediator models.
+#' \emph{Behavior Research Methods}, \bold{40}(3), 879--891.
+#'
 #' Salibian-Barrera, M. and Van Aelst, S. (2008) Robust model selection using
 #' fast and robust bootstrap. \emph{Computational Statistics \& Data Analysis},
 #' \bold{52}(12), 5121--5135

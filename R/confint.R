@@ -51,7 +51,7 @@
 #'                               robust = TRUE)
 #' confint(robust_boot, other = "boot")
 #'
-#' # follow Preacher & Hayes (2004, 2008)
+#' # run standard bootstrap test
 #' standard_boot <- test_mediation(BSG2014,
 #'                                 x = "ValueDiversity",
 #'                                 y = "TeamCommitment",

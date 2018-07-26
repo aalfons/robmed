@@ -84,7 +84,7 @@ robust_boot <- test_mediation(BSG2014,
 plot(robust_boot, method = "dot")
 plot(robust_boot, method = "density")
 
-# run Preacher & Hayes (2004, 2008) standard bootstrap test
+# run standard bootstrap test
 standard_boot <- test_mediation(BSG2014,
                                 x = "ValueDiversity",
                                 y = "TeamCommitment",
