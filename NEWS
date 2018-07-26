@@ -1,5 +1,8 @@
 Changes in robmed version 0.2.0
 
+    + Added shiny app for comparing bootstrap methods on simulated data with
+      outliers.
+
     + Added support for multiple mediators for standard and robust bootstrap
       tests based on regressions.
 
