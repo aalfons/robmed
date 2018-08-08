@@ -64,11 +64,13 @@ shinyUI(fluidPage(
          distribution of the indirect effect is shown together with a shaded
          area representing the 95% confidence interval."),
       h3("References"),
-      HTML("<p>
-              Alfons, A., Ates, N. and Groenen, P.J.F. (2018) A robust
+      HTML('<p>
+              Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2018) A robust
               bootstrap test for mediation analysis.
-              <em>ERIM Research Report</em>.
-            </p>"),
+              <em>ERIM Report Series in Management</em>, Erasmus Research
+              Institute of Management.  URL
+              <a href="https://hdl.handle.net/1765/109594">https://hdl.handle.net/1765/109594</a>.
+            </p>'),
       HTML("<p>
               Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for
               estimating indirect effects in simple mediation models.

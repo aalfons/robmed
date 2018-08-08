@@ -121,6 +121,11 @@
 #' @author Andreas Alfons
 #'
 #' @references
+#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2018) A robust bootstrap test
+#' for mediation analysis.  \emph{ERIM Report Series in Management}, Erasmus
+#' Research Institute of Management.  URL
+#' \url{https://hdl.handle.net/1765/109594}.
+#'
 #' Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for estimating
 #' indirect effects in simple mediation models. \emph{Behavior Research Methods,
 #' Instruments, & Computers}, \bold{36}(4), 717--731.

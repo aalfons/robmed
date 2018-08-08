@@ -109,6 +109,11 @@ summary(test)
 
 }
 \references{
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2018) A robust bootstrap test
+for mediation analysis.  \emph{ERIM Report Series in Management}, Erasmus
+Research Institute of Management.  URL
+\url{https://hdl.handle.net/1765/109594}.
+
 Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
 mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 1--44.
