@@ -56,11 +56,10 @@ shinyUI(fluidPage(
                          \\end{align} $$"),
         "with standard normal error terms.  You can adjust the total number of
          observations, the values of the coefficients, the number of outliers,
-         as well as the expected distance of the outliers from the main point
-         cloud."),
+         and the expected distance of the outliers from the main point cloud."),
 
       p("As this simulation is just for illustration, the bootstrap procedures
-         use only 1000 replicates.  For each selected methods, the bootstrap
+         use only 1000 replicates.  For each selected method, the bootstrap
          distribution of the indirect effect is shown together with a shaded
          area representing the 95% confidence interval."),
       h3("References"),
