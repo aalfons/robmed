@@ -1,3 +1,8 @@
+Changes in robmed version 0.3.0
+
+    + Added method based on median regressions (Yuan & MacKinnon, 2014).
+
+
 Changes in robmed version 0.2.0
 
     + Added shiny app for comparing bootstrap methods on simulated data with

@@ -60,9 +60,21 @@ print.cov_ML <- function(x, ...) {
 }
 
 #' @export
+print.reg_fit_mediation <- function(x, ...) {
+  # print estimated effects
+  prefix <- if (x$robust && !x$median) "Robust mediation " else "Mediation "
+  postfix <- if (x$median) " via median regression" else ""
+  cat(prefix, "model fit", postfix, "\n", sep = "")
+  cat("\nEffects:\n")
+  print(coefficients(x), ...)
+  # return object invisibly
+  invisible(x)
+}
+
+#' @export
 print.fit_mediation <- function(x, ...) {
   # print estimated effects
-  prefix <- if(x$robust) "Robust mediation" else "Mediation"
+  prefix <- if (x$robust) "Robust mediation" else "Mediation"
   cat(prefix, "model fit\n")
   cat("\nEffects:\n")
   print(coefficients(x), ...)
@@ -98,63 +110,69 @@ print.summary_fit_mediation <- function(x, digits = max(3, getOption("digits")-3
   cat(sprintf("x = %s\n", x$x))
   cat(sprintf("y = %s\n", x$y))
   cat(sprintf("m = %s\n", x$m[1]))
-  if(p_m > 1) {
+  if (p_m > 1) {
     for(j in seq(2, p_m)) cat(sprintf("    %s\n", x$m[j]))
   }
-  if(have_covariates) {
+  if (have_covariates) {
     cat("\nControl variables:\n")
-    print(x$covariates, quote=FALSE)
+    print(x$covariates, quote = FALSE)
   }
   # print sample size
   cat(sprintf("\nSample size: %d\n", x$n))
   # print effects
-  if(have_covariates) cat("---\nPartial effect of x on m (a path):\n")
+  if (have_covariates) cat("---\nPartial effect of x on m (a path):\n")
   else cat("---\nEffect of x on m (a path):\n")
-  printCoefmat(x$a, digits=digits, signif.stars=signif.stars,
-               signif.legend=FALSE, ...)
+  printCoefmat(x$a, digits = digits, signif.stars = signif.stars,
+               signif.legend = FALSE, ...)
   cat("\nDirect effect of m on y (b path):\n")
-  printCoefmat(x$b, digits=digits, signif.stars=signif.stars,
-               signif.legend=FALSE, ...)
+  printCoefmat(x$b, digits = digits, signif.stars = signif.stars,
+               signif.legend = FALSE, ...)
   cat("\nDirect effect of x on y (c path):\n")
-  printCoefmat(x$c, digits=digits, signif.stars=signif.stars,
-               signif.legend=FALSE, ...)
+  printCoefmat(x$c, digits = digits, signif.stars = signif.stars,
+               signif.legend = FALSE, ...)
   cat("\nTotal effect of x on y (c' path):\n")
-  printCoefmat(x$c_prime, digits=digits, signif.stars=signif.stars,
-               signif.legend=FALSE, ...)
+  printCoefmat(x$c_prime, digits = digits, signif.stars = signif.stars,
+               signif.legend = FALSE, ...)
   if(have_covariates) {
     cat("\nPartial effects of control variables on y:\n")
-    printCoefmat(x$covariate_effects, digits=digits, signif.stars=signif.stars,
-                 signif.legend=FALSE, ...)
+    printCoefmat(x$covariate_effects, digits = digits,
+                 signif.stars = signif.stars,
+                 signif.legend = FALSE, ...)
   }
   # print model summary for y ~ m + x + covariates
-  postfix <- if(have_covariates) " + control variables" else ""
-  cat(sprintf("---\nModel summary for y ~ m + x%s\n", postfix))
-  postfix <- sprintf(" on %d degrees of freedom", x$s$df)
-  if(x$robust) {
-    cat("\nRobust residual standard error: ", format(signif(x$s$value, digits)),
-        postfix, "\n", sep="")
-    if(!is.null(x$F_test)) {
-      cat("Robust R-squared:  ",
-          formatC(x$R2$R2, digits=digits),
-          ",\tAdjusted robust R-squared:  ",
-          formatC(x$R2$adj_R2, digits=digits),
-          "\nRobust F-statistic: ", formatC(x$F_test$statistic, digits=digits),
-          " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
-          format.pval(x$F_test$p_value, digits=digits), "\n", sep="")
-    }
-  } else {
-    cat("\nResidual standard error: ", format(signif(x$s$value, digits)),
-        postfix, "\n", sep="")
-    if(!is.null(x$F_test)) {
-      cat("Multiple R-squared:  ", formatC(x$R2$R2, digits=digits),
-          ",\tAdjusted R-squared:  ", formatC(x$R2$adj_R2, digits=digits),
-          "\nF-statistic: ", formatC(x$F_test$statistic, digits=digits),
-          " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
-          format.pval(x$F_test$p_value, digits=digits), "\n", sep="")
+  if (!is.null(x$median) && !x$median) {
+    postfix <- if (have_covariates) " + control variables" else ""
+    cat(sprintf("---\nModel summary for y ~ m + x%s\n", postfix))
+    postfix <- sprintf(" on %d degrees of freedom", x$s$df)
+    if (x$robust) {
+      cat("\nRobust residual standard error: ",
+          format(signif(x$s$value, digits)),
+          postfix, "\n", sep = "")
+      if(!is.null(x$F_test)) {
+        cat("Robust R-squared:  ",
+            formatC(x$R2$R2, digits = digits),
+            ",\tAdjusted robust R-squared:  ",
+            formatC(x$R2$adj_R2, digits = digits),
+            "\nRobust F-statistic: ",
+            formatC(x$F_test$statistic, digits = digits),
+            " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
+            format.pval(x$F_test$p_value, digits = digits), "\n", sep = "")
+      }
+    } else {
+      cat("\nResidual standard error: ",
+          format(signif(x$s$value, digits)),
+          postfix, "\n", sep = "")
+      if (!is.null(x$F_test)) {
+        cat("Multiple R-squared:  ", formatC(x$R2$R2, digits = digits),
+            ",\tAdjusted R-squared:  ", formatC(x$R2$adj_R2, digits = digits),
+            "\nF-statistic: ", formatC(x$F_test$statistic, digits = digits),
+            " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
+            format.pval(x$F_test$p_value, digits = digits), "\n", sep = "")
+      }
     }
   }
   # print legend for significance stars
-  if(isTRUE(signif.stars) && isTRUE(signif.legend)) print_legend()
+  if (isTRUE(signif.stars) && isTRUE(signif.legend)) print_legend()
   # return object invisibly
   invisible(x)
 }
