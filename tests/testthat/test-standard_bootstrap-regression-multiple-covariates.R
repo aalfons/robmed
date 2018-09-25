@@ -309,7 +309,7 @@ test_that("data returned by fortify() has correct attributes", {
   # check aesthetic mapping
   mapping <- aes_string(x = "Effect", y = "Point",
                         ymin = "Lower", ymax = "Upper")
-  expect_identical(attr(dot, "mapping"), mapping)
+  expect_equal(attr(dot, "mapping"), mapping)
   # check default geom()
   expect_identical(attr(dot, "geom"), geom_pointrange)
   # check facets
@@ -320,7 +320,7 @@ test_that("data returned by fortify() has correct attributes", {
   ## density plot
   # check aesthetic mapping
   mapping <- aes_string(x = "ab", y = "Density")
-  expect_identical(attr(density, "mapping"), mapping)
+  expect_equal(attr(density, "mapping"), mapping)
   # check default geom()
   expect_equal(attr(density, "geom"), function(..., stat) {
     geom_density(..., stat = "identity")
