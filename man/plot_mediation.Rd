@@ -13,13 +13,13 @@
 plot_mediation(object, ...)
 
 \method{plot_mediation}{boot_test_mediation}(object, method = c("dot",
-  "density"), parm = c("c", "ab"), ...)
+  "density"), parm = NULL, ...)
 
 \method{plot_mediation}{sobel_test_mediation}(object, data, method = c("dot",
   "density"), parm = c("c", "ab"), level = 0.95, ...)
 
 \method{plot_mediation}{list}(object, data, method = c("dot", "density"),
-  parm = c("c", "ab"), level = 0.95, ...)
+  parm = NULL, level = 0.95, ...)
 
 \method{plot_mediation}{default}(object, mapping = attr(object, "mapping"),
   facets = attr(object, "facets"), ...)
@@ -38,10 +38,11 @@ as well.}
 
 \item{method}{a character string specifying which plot to produce.
 Possible values are \code{"dot"} for a dot plot of selected coefficients, or
-\code{"density"} for a density plot of the indirect effect.}
+\code{"density"} for a density plot of the indirect effect(s).}
 
 \item{parm}{a character string specifying the coefficients to be included
-in a dot plot.  The default is to include the direct and the indirect effect.}
+in a dot plot.  The default is to include the direct and the indirect
+effect(s).}
 
 \item{data}{an optional numeric vector containing the \eqn{x}-values at
 which to evaluate the assumed normal density from Sobel's test (only used in
@@ -54,7 +55,7 @@ from Sobel's test to be included in a dot plot.  The default is to include
 95\% confidence intervals.}
 
 \item{mapping}{an aesthetic mapping to override the default behavior (see
-\code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_string}}).}
+\code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_}}).}
 
 \item{facets}{a faceting formula to override the default behavior (only
 used in case of a dot plot).  If supplied, \code{\link[ggplot2]{facet_wrap}}
@@ -68,6 +69,33 @@ An object of class \code{"ggplot"} (see
 \description{
 Produce dot plots of selected coefficients from regression models computed
 in (robust) mediation analysis, or density plots of the indirect effect.
+}
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+robust_boot <- test_mediation(BSG2014,
+                              x = "ValueDiversity",
+                              y = "TeamCommitment",
+                              m = "TaskConflict",
+                              robust = TRUE)
+
+# create plots for robust bootstrap test
+plot(robust_boot, method = "dot")
+plot(robust_boot, method = "density")
+
+# run standard bootstrap test
+standard_boot <- test_mediation(BSG2014,
+                                x = "ValueDiversity",
+                                y = "TeamCommitment",
+                                m = "TaskConflict",
+                                robust = FALSE)
+
+# compare robust and standard tests
+tests <- list(Robust = robust_boot, Standard = standard_boot)
+plot_mediation(tests, method = "dot")
+plot_mediation(tests, method = "density")
+
 }
 \seealso{
 \code{\link{test_mediation}},

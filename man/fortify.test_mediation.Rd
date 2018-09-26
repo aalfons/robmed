@@ -8,10 +8,10 @@
 \title{Convert (robust) mediation analysis results into a data frame for plotting}
 \usage{
 \method{fortify}{boot_test_mediation}(model, data, method = c("dot",
-  "density"), parm = c("c", "ab"), ...)
+  "density"), parm = NULL, ...)
 
 \method{fortify}{sobel_test_mediation}(model, data, method = c("dot",
-  "density"), parm = c("c", "ab"), level = 0.95, ...)
+  "density"), parm = NULL, level = 0.95, ...)
 
 \method{fortify}{list}(model, data, ...)
 }
@@ -29,10 +29,12 @@ according to Sobel's formula.}
 
 \item{method}{a character string specifying for which plot to construct the
 data frame.  Possible values are \code{"dot"} for a dot plot of selected
-coefficients, or \code{"density"} for a density plot of the indirect effect.}
+coefficients, or \code{"density"} for a density plot of the indirect
+effect(s).}
 
 \item{parm}{a character string specifying the coefficients to be included
-in a dot plot.  The default is to include the direct and the indirect effect.}
+in a dot plot.  The default is to include the direct and the indirect
+effect(s).}
 
 \item{\dots}{additional arguments are currently ignored.}
 
@@ -49,6 +51,24 @@ Supplement the estimated coefficients with other useful information for
 informative visualization of the (robust) mediation analysis results.  It is
 thereby possible to construct data frames for dot plots of selected
 coefficients, as well as density plots of the indirect effect.
+}
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict")
+
+# data for dot plot
+dot <- fortify(test, method = "dot")
+plot_mediation(dot)
+
+# data for density plot
+density <- fortify(test, method = "density")
+plot_mediation(density)
+
 }
 \seealso{
 \code{\link{test_mediation}}, \code{\link{plot_mediation}}

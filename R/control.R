@@ -39,6 +39,18 @@
 #' @seealso \code{\link[robustbase]{lmrob}},
 #' \code{\link[robustbase]{lmrob.control}}
 #'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' ctrl <- reg_control(efficiency = 0.95)
+#' test <- test_mediation(BSG2014,
+#'                        x = "ValueDiversity",
+#'                        y = "TeamCommitment",
+#'                        m = "TaskConflict",
+#'                        control = ctrl)
+#' summary(test)
+#'
 #' @keywords regression
 #'
 #' @export
@@ -99,6 +111,19 @@ reg_control <- function(efficiency = 0.85, max_iterations = 200,
 #' Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 #'
 #' @seealso \code{\link{cov_Huber}}
+#'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' ctrl <- cov_control(prob = 0.95)
+#' test <- test_mediation(BSG2014,
+#'                        x = "ValueDiversity",
+#'                        y = "TeamCommitment",
+#'                        m = "TaskConflict",
+#'                        method = "covariance",
+#'                        control = ctrl)
+#' summary(test)
 #'
 #' @keywords multivariate
 #'

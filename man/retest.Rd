@@ -39,7 +39,21 @@ results (see \code{\link{test_mediation}}).
 }
 \description{
 Reperform a (fast and robust) bootstrap test or Sobel's test for the
-indirect effect based on results from (robust) mediation analysis.
+indirect effect(s) based on results from (robust) mediation analysis.
+}
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict")
+summary(test)
+
+# now compute 97.5\% confidence interval
+retest(test, level = 0.975)
+
 }
 \seealso{
 \code{\link{test_mediation}}

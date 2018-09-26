@@ -35,6 +35,19 @@ knowledge of the MM-type regression algorithm.  Currently only 95\%, 90\%,
 please specify the corresponding tuning parameters in
 \code{\link[robustbase]{lmrob.control}} directly.
 }
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+ctrl <- reg_control(efficiency = 0.95)
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict",
+                       control = ctrl)
+summary(test)
+
+}
 \references{
 Salibian-Barrera, M. and Yohai, V.J. (1987) A fast algorithm for
 S-regression estimates. \emph{Journal of Computational and Graphical

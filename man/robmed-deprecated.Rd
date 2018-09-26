@@ -41,14 +41,14 @@ vector specifying the corresponding column of \code{data}.}
 (if \code{data} is supplied) a character string, an integer or a logical
 vector specifying the corresponding column of \code{data}.}
 
-\item{m}{either a numeric vector containing the proposed mediator variable,
-or (if \code{data} is supplied) a character string, an integer or a logical
-vector specifying the corresponding column of \code{data}.}
+\item{m}{either a numeric vector or data frame containing the proposed
+mediator variables, or (if \code{data} is supplied) a character, integer or
+logical vector specifying the corresponding columns of \code{data}.}
 
 \item{covariates}{optional; either a numeric vector or data frame
 containing additional covariates to be used as control variables, or (if
 \code{data} is supplied) a character, integer or logical vector specifying
-the corresponding column of \code{data}.}
+the corresponding columns of \code{data}.}
 
 \item{data}{an optional \code{data.frame} containing the variables.}
 

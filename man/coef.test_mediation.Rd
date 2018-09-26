@@ -29,10 +29,26 @@ of the bootstrap distribution (\code{"boot"}; the default), or the
 coefficient estimates based on the full data set (\code{"data"}).}
 }
 \value{
-A numeric vetor containing the requested coefficients.
+A numeric vector containing the requested coefficients.
 }
 \description{
 Extract coefficients from models computed in (robust) mediation analysis.
+}
+\examples{
+data("BSG2014")
+
+# fit robust mediation model and extract coefficients
+fit <- fit_mediation(BSG2014,
+                     x = "ValueDiversity",
+                     y = "TeamCommitment",
+                     m = "TaskConflict")
+coef(fit)
+
+# run fast and robust bootstrap test and extract coefficients
+test <- test_mediation(fit)
+coef(test, type = "data")  # from orignal sample
+coef(test, type = "boot")  # means of bootstrap replicates
+
 }
 \seealso{
 \code{\link{test_mediation}}, \code{\link{fit_mediation}},

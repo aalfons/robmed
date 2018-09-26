@@ -6,7 +6,7 @@
 #' Retest for mediation
 #'
 #' Reperform a (fast and robust) bootstrap test or Sobel's test for the
-#' indirect effect based on results from (robust) mediation analysis.
+#' indirect effect(s) based on results from (robust) mediation analysis.
 #'
 #' @param object  an object inheriting from class
 #' \code{"\link{test_mediation}"} containing results from (robust) mediation
@@ -29,6 +29,19 @@
 #'
 #' @seealso \code{\link{test_mediation}}
 #'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' test <- test_mediation(BSG2014,
+#'                        x = "ValueDiversity",
+#'                        y = "TeamCommitment",
+#'                        m = "TaskConflict")
+#' summary(test)
+#'
+#' # now compute 97.5% confidence interval
+#' retest(test, level = 0.975)
+#'
 #' @keywords multivariate
 #'
 #' @export
@@ -46,12 +59,27 @@ retest.boot_test_mediation <- function(object,
                                        ...) {
   # initializations
   alternative <- match.arg(alternative)
-  level <- rep(as.numeric(level), length.out=1)
+  level <- rep(as.numeric(level), length.out = 1)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   type <- match.arg(type)
-  # recompute confidence interval and modify object
-  object$ci <- confint(object$reps, level=level, alternative=alternative,
-                       type=type)
+  # recompute confidence interval
+  m <- object$fit$m
+  p_m <- length(m)
+  if(p_m == 1L) {
+    # only one mediator
+    ci <- confint(object$reps, parm = 1L, level = level,
+                  alternative = alternative, type = type)
+  } else {
+    # multiple mediators
+    ci <- lapply(seq_len(1L + p_m), function(j) {
+      confint(object$reps, parm = j, level = level,
+              alternative = alternative, type = type)
+    })
+    ci <- do.call(rbind, ci)
+    rownames(ci) <- c("Total", m)
+  }
+  # modify object with updated confidence interval
+  object$ci <- ci
   object$level <- level
   object$alternative <- alternative
   object$type <- type

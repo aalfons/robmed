@@ -27,6 +27,17 @@
 #'
 #' @seealso \code{\link{test_mediation}}, \code{\link{fit_mediation}}
 #'
+#' @examples
+#' data("BSG2014")
+#'
+#' # define variables
+#' x <- "ValueDiversity"
+#' y <- "TeamCommitment"
+#' m <- "TaskConflict"
+#'
+#' # compute Huber M-estimator
+#' cov_ML(BSG2014[, c(x, y, m)])
+#'
 #' @keywords multivariate
 #'
 #' @export

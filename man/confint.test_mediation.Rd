@@ -27,7 +27,7 @@ the confidence intervals to be computed.  The default is to compute 95\%
 confidence intervals.}
 
 \item{other}{a character string specifying how to compute the confidence
-interval of the effects other than the indirect effect.  Possible values
+interval of the effects other than the indirect effect(s).  Possible values
 are \code{"boot"} (the default) to compute bootstrap confidence intervals
 using the normal approximation (i.e., to assume a normal distribution of the
 corresponding effect with the standard deviation computed from the bootstrap
@@ -46,6 +46,26 @@ A numeric matrix containing the requested confidence intervals.
 \description{
 Extract or compute confidence intervals for coefficients from (robust)
 mediation analysis.
+}
+\examples{
+data("BSG2014")
+
+# run fast and robust bootstrap test
+robust_boot <- test_mediation(BSG2014,
+                              x = "ValueDiversity",
+                              y = "TeamCommitment",
+                              m = "TaskConflict",
+                              robust = TRUE)
+confint(robust_boot, other = "boot")
+
+# run standard bootstrap test
+standard_boot <- test_mediation(BSG2014,
+                                x = "ValueDiversity",
+                                y = "TeamCommitment",
+                                m = "TaskConflict",
+                                robust = FALSE)
+confint(standard_boot, other = "theory")
+
 }
 \seealso{
 \code{\link{test_mediation}}, \code{\link[=coef.test_mediation]{coef}}

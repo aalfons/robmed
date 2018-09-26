@@ -3,6 +3,14 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
+## extract number of observations from median regression
+#' @export
+#' @import stats
+nobs.rq <- function(object, ...) {
+  residuals <- residuals(object)
+  length(residuals)
+}
+
 ## extract number of observations from Huber M-estimator of location and scatter
 #' @export
 #' @import stats
