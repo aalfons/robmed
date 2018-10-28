@@ -40,6 +40,6 @@ local_boot <- function(data, statistic, R, indices = NULL, ...) {
 
 boot.array <- function(boot.out, indices = FALSE) {
   out <- boot.out$indices
-  if(!indices) out <- boot:::freq.array(out)
+  if(!indices) out <- freq.array(out)
   out
 }
