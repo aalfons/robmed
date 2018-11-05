@@ -7,8 +7,9 @@
 \alias{summary.cov_fit_mediation}
 \title{(Robustly) fit a mediation model}
 \usage{
-fit_mediation(data, x, y, m, covariates = NULL, method = c("regression",
-  "covariance"), robust = TRUE, median = FALSE, control, ...)
+fit_mediation(data, x, y, m, covariates = NULL,
+  method = c("regression", "covariance"), robust = TRUE,
+  median = FALSE, control, ...)
 }
 \arguments{
 \item{data}{a data frame containing the variables.}

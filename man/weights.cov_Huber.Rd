@@ -4,7 +4,8 @@
 \alias{weights.cov_Huber}
 \title{Robustness weights of Huber M-estimation of location and scatter}
 \usage{
-\method{weights}{cov_Huber}(object, type = c("consistent", "relative"), ...)
+\method{weights}{cov_Huber}(object, type = c("consistent", "relative"),
+  ...)
 }
 \arguments{
 \item{object}{an object inheriting from class \code{"\link{cov_Huber}"}

@@ -8,8 +8,8 @@
 \usage{
 \method{coef}{test_mediation}(object, parm = NULL, ...)
 
-\method{coef}{boot_test_mediation}(object, parm = NULL, type = c("boot",
-  "data"), ...)
+\method{coef}{boot_test_mediation}(object, parm = NULL,
+  type = c("boot", "data"), ...)
 
 \method{coef}{fit_mediation}(object, parm = NULL, ...)
 }
