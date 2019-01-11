@@ -13,14 +13,14 @@
 test_mediation(data, ...)
 
 \method{test_mediation}{default}(data, x, y, m, covariates = NULL,
-  test = c("boot", "sobel"), alternative = c("twosided", "less", "greater"),
-  R = 5000, level = 0.95, type = c("bca", "perc"),
-  method = c("regression", "covariance"), robust = TRUE, median = FALSE,
-  control, ...)
+  test = c("boot", "sobel"), alternative = c("twosided", "less",
+  "greater"), R = 5000, level = 0.95, type = c("bca", "perc"),
+  method = c("regression", "covariance"), robust = TRUE,
+  median = FALSE, control, ...)
 
 \method{test_mediation}{fit_mediation}(data, test = c("boot", "sobel"),
-  alternative = c("twosided", "less", "greater"), R = 5000, level = 0.95,
-  type = c("bca", "perc"), ...)
+  alternative = c("twosided", "less", "greater"), R = 5000,
+  level = 0.95, type = c("bca", "perc"), ...)
 
 robmed(..., test = "boot", method = "regression", robust = TRUE,
   median = FALSE)

@@ -6,11 +6,11 @@
 \alias{confint.sobel_test_mediation}
 \title{Confidence intervals for (robust) mediation analysis}
 \usage{
-\method{confint}{boot_test_mediation}(object, parm = NULL, level = NULL,
-  other = c("boot", "theory"), ...)
+\method{confint}{boot_test_mediation}(object, parm = NULL,
+  level = NULL, other = c("boot", "theory"), ...)
 
-\method{confint}{sobel_test_mediation}(object, parm = NULL, level = 0.95,
-  ...)
+\method{confint}{sobel_test_mediation}(object, parm = NULL,
+  level = 0.95, ...)
 }
 \arguments{
 \item{object}{an object inheriting from class \code{"\link{test_mediation}"}

@@ -25,7 +25,7 @@ variables are included here.
   \describe{
 
     \item{\code{ProcessConflict}}{Process conflict was measured with the three
-    item scale of Jehn (199? - CITATION missing) and responses were aggregated.}
+    item scale of Jehn (1995) and responses were aggregated.}
 
     \item{\code{SharedExperience}}{Teams were randomly formed, no prior shared
     group experience is expected and shared group experience and training is
