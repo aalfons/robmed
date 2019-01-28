@@ -187,8 +187,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   # perform tests for significance of effects
   if (have_boot) {
     # extract coefficients and add coefficients of covariates
-    coefficients <- c(coefficients(object),
-                      coef(object$fit_ymx)[-seq_len(p_m + 2L)])
+    coefficients <- c(coef(object), coef(object$fit_ymx)[-seq_len(p_m + 2L)])
     # compute standard errors and z-statistics from bootstrap replicates
     remove <- if(p_m == 1L) 1L else seq_len(1L + p_m)
     means <- colMeans(boot$t[, -remove], na.rm = TRUE)

@@ -66,7 +66,7 @@ print.reg_fit_mediation <- function(x, ...) {
   postfix <- if (x$median) " via median regression" else ""
   cat(prefix, "model fit", postfix, "\n", sep = "")
   cat("\nEffects:\n")
-  print(coefficients(x), ...)
+  print(coef(x), ...)
   # return object invisibly
   invisible(x)
 }
@@ -77,7 +77,7 @@ print.fit_mediation <- function(x, ...) {
   prefix <- if (x$robust) "Robust mediation" else "Mediation"
   cat(prefix, "model fit\n")
   cat("\nEffects:\n")
-  print(coefficients(x), ...)
+  print(coef(x), ...)
   # return object invisibly
   invisible(x)
 }

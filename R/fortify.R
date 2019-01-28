@@ -86,7 +86,7 @@ fortify.boot_test_mediation <- function(model, data,
       else parm <- c("c", paste("ab", names(model$ab), sep = "_"))
     }
     # extract point estimates
-    coef <- coefficients(model, parm=parm)
+    coef <- coef(model, parm=parm)
     # extract confidence intervals
     ci <- confint(model, parm=parm)
     effect <- rownames(ci)
@@ -155,7 +155,7 @@ fortify.sobel_test_mediation <- function(model, data,
   if(method == "dot") {
     if(is.null(parm)) parm <- c("c", "ab")
     # extract point estimates
-    coef <- coefficients(model, parm=parm)
+    coef <- coef(model, parm=parm)
     # extract confidence intervals
     ci <- confint(model, parm=parm, level=level)
     effect <- rownames(ci)
