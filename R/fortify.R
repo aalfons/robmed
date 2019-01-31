@@ -120,7 +120,7 @@ fortify.boot_test_mediation <- function(model, data,
       geom_density(..., stat = "identity")
     }
     attr(data, "main") <- "Bootstrap distribution"
-    if(p_m == 1) {
+    if(p_m == 1L) {
       attr(data, "ci") <- data.frame(ab = ab, Density = NA_real_,
                                      Lower = ci[1L], Upper = ci[2L])
     } else {

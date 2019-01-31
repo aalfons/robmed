@@ -152,6 +152,7 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
   p_m <- ncol(m)
   if (p_m == 0L) stop("at least one hypothesized mediator variable required")
   covariates <- data[, covariates, drop = FALSE]
+  p_covariates <- ncol(covariates)
   data <- cbind(x, y, m, covariates)
   # extract names
   cn <- names(data)
@@ -169,7 +170,7 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
   if (d[1L] <= d[2L]) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
-  if ((p_m > 1L || length(covariates) > 0L) && method == "covariance") {
+  if ((p_m > 1L || p_covariates > 0L) && method == "covariance") {
     method <- "regression"
     warning("covariance method not available with multiple mediators ",
             "or any covariates; using regression method")

@@ -10,6 +10,7 @@
 \alias{testMediation}
 \alias{testMediation.default}
 \alias{testMediation.fit_mediation}
+\alias{indirect}
 \alias{plotMediation}
 \title{Deprecated functions in package \pkg{robmed}}
 \usage{
@@ -29,6 +30,9 @@ testMediation(x, ...)
 \method{testMediation}{default}(x, y, m, covariates = NULL, data, ...)
 
 \method{testMediation}{fit_mediation}(x, ...)
+
+indirect(..., test = "boot", method = "regression", robust = FALSE,
+  median = FALSE)
 
 plotMediation(...)
 }
@@ -69,6 +73,21 @@ convergence in various parts of the algorithm.}
 \item{prob}{numeric; probability for the quantile of the
 \eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the
 Huber weight function (defaults to 0.95).}
+
+\item{test}{a character string specifying the test to be performed for
+the indirect effect.  For \code{indirect}, the only possible value is
+\code{"boot"} for a bootstrap test.}
+
+\item{method}{a character string specifying the method of estimation for
+the mediation model.  For \code{indirect}, the only possible value is
+\code{"regression"} to estimate the effects via regressions.}
+
+\item{robust}{a logical indicating whether to perform a robust test.  For
+\code{indirect}, the only possible value is \code{FALSE}.}
+
+\item{median}{a logical indicating if the effects should be estimated via
+median regression.  For \code{indirect}, the only possible value is
+\code{FALSE}.}
 }
 \description{
 These functions are provided for compatibility with older versions only, and

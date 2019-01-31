@@ -7,7 +7,6 @@
 \alias{test_mediation.default}
 \alias{test_mediation.fit_mediation}
 \alias{robmed}
-\alias{indirect}
 \title{(Robust) mediation analysis}
 \usage{
 test_mediation(data, ...)
@@ -23,9 +22,6 @@ test_mediation(data, ...)
   level = 0.95, type = c("bca", "perc"), ...)
 
 robmed(..., test = "boot", method = "regression", robust = TRUE,
-  median = FALSE)
-
-indirect(..., test = "boot", method = "regression", robust = FALSE,
   median = FALSE)
 }
 \arguments{

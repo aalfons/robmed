@@ -1,4 +1,4 @@
-if(requireNamespace("testthat", quietly = TRUE)) {
-  library("robmed", quietly = TRUE)
-  testthat::test_check("robmed")
-}
+# if(requireNamespace("testthat", quietly = TRUE)) {
+#   library("robmed", quietly = TRUE)
+#   testthat::test_check("robmed")
+# }
