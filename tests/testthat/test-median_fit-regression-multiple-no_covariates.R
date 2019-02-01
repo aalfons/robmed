@@ -1,4 +1,4 @@
-context("standard regression fit: multiple mediators, covariates")
+context("median regression fit: multiple mediators, no covariates")
 
 
 ## load package
@@ -8,7 +8,7 @@ library("robmed", quietly = TRUE)
 n <- 250            # number of observations
 a <- c <- 0.2       # true effects
 b <- 0              # true effect
-seed <- 20150601    # seed for the random number generator
+seed <- 20190201    # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
@@ -18,14 +18,12 @@ X <- rnorm(n)
 M1 <- a * X + rnorm(n)
 M2 <- rnorm(n)
 Y <- b * M1 + c * X + rnorm(n)
-C1 <- rnorm(n)
-C2 <- rnorm(n)
-test_data <- data.frame(X, Y, M1, M2, C1, C2)
+test_data <- data.frame(X, Y, M1, M2)
 
 ## fit mediation model and compute summary
 foo <- fit_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-                     covariates = c("C1", "C2"), method = "regression",
-                     robust = FALSE)
+                     method = "regression", robust = TRUE,
+                     median = TRUE)
 bar <- summary(foo)
 
 
@@ -40,10 +38,10 @@ test_that("output has correct structure", {
   expect_type(foo$fit_mx, "list")
   expect_length(foo$fit_mx, 2L)
   expect_named(foo$fit_mx, c("M1", "M2"))
-  expect_s3_class(foo$fit_mx$M1, "lm")
-  expect_s3_class(foo$fit_mx$M2, "lm")
-  expect_s3_class(foo$fit_ymx, "lm")
-  expect_s3_class(foo$fit_yx, "lm")
+  expect_s3_class(foo$fit_mx$M1, "rq")
+  expect_s3_class(foo$fit_mx$M2, "rq")
+  expect_s3_class(foo$fit_ymx, "rq")
+  expect_null(foo$fit$fit_yx)
 
 })
 
@@ -53,10 +51,10 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$x, "X")
   expect_identical(foo$y, "Y")
   expect_identical(foo$m, c("M1", "M2"))
-  expect_identical(foo$covariates, c("C1", "C2"))
+  expect_identical(foo$covariates, character())
   # robust fit
-  expect_false(foo$robust)
-  expect_false(foo$median)
+  expect_true(foo$robust)
+  expect_true(foo$median)
   expect_null(foo$control)
 
 })
@@ -69,12 +67,11 @@ test_that("dimensions are correct", {
   expect_length(foo$c, 1L)
   expect_length(foo$c_prime, 1L)
   # individual regressions
-  expect_length(coef(foo$fit_mx$M1), 4L)
-  expect_length(coef(foo$fit_mx$M2), 4L)
-  expect_length(coef(foo$fit_ymx), 6L)
-  expect_length(coef(foo$fit_yx), 4L)
+  expect_length(coef(foo$fit_mx$M1), 2L)
+  expect_length(coef(foo$fit_mx$M2), 2L)
+  expect_length(coef(foo$fit_ymx), 4L)
   # dimensions of data
-  expect_identical(dim(foo$data), c(as.integer(n), 6L))
+  expect_identical(dim(foo$data), c(as.integer(n), 4L))
 
 })
 
@@ -85,7 +82,6 @@ test_that("values of coefficients are correct", {
   expect_named(foo$a, c("M1", "M2"))
   expect_equal(foo$b, coef(foo$fit_ymx)[c("M1", "M2")])  # also checks names
   expect_equivalent(foo$c, coef(foo$fit_ymx)["X"])
-  expect_equivalent(foo$c_prime, coef(foo$fit_yx)["X"])
   expect_equivalent(foo$c_prime, sum(foo$a * foo$b) + foo$c)
 
 })

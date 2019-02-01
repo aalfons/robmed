@@ -1,4 +1,4 @@
-context("standard Sobel test: regression")
+context("Sobel test: median regression")
 
 
 ## load package
@@ -9,7 +9,7 @@ n <- 250          # number of observations
 a <- c <- 0.2     # true effects
 b <- 0            # true effect
 R <- 1000         # number of bootstrap samples
-seed <- 20150601  # seed for the random number generator
+seed <- 20190201  # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
@@ -25,7 +25,7 @@ test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## run bootstrap test
 sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "sobel",
-                        method = "regression", robust = FALSE)
+                        method = "regression", robust = TRUE, median = TRUE)
 
 ## compute summary
 summary_sobel <- summary(sobel)
@@ -71,8 +71,8 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$m, "M1")
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
-  expect_false(sobel$fit$robust)
-  expect_false(sobel$fit$median)
+  expect_true(sobel$fit$robust)
+  expect_true(sobel$fit$median)
   expect_null(sobel$fit$control)
 
 })
@@ -139,29 +139,23 @@ test_that("summary has correct structure", {
   expect_s3_class(summary_sobel$summary, "summary_reg_fit_mediation")
   expect_s3_class(summary_sobel$summary, "summary_fit_mediation")
   # summary for model m ~ x
-  expect_s3_class(summary_sobel$summary$fit_mx, "summary_lm")
+  expect_s3_class(summary_sobel$summary$fit_mx, "summary_rq")
   # summary for model y ~ m + x
-  expect_s3_class(summary_sobel$summary$fit_ymx, "summary_lm")
+  expect_s3_class(summary_sobel$summary$fit_ymx, "summary_rq")
   # regression standard error for model y ~ m + x
-  expect_type(summary_sobel$summary$fit_ymx$s, "list")
-  expect_named(summary_sobel$summary$fit_ymx$s, c("value", "df"))
+  expect_null(summary_sobel$summary$fit_ymx$s)
   # R-squared for model y ~ m + x
-  expect_type(summary_sobel$summary$fit_ymx$R2, "list")
-  expect_named(summary_sobel$summary$fit_ymx$R2, c("R2", "adj_R2"))
+  expect_null(summary_sobel$summary$fit_ymx$R2)
   # F-test for model y ~ m + x
-  expect_type(summary_sobel$summary$fit_ymx$F_test, "list")
-  expect_named(summary_sobel$summary$fit_ymx$F_test, c("statistic", "df", "p_value"))
-  df_test <- summary_sobel$summary$fit_ymx$F_test$df
-  expect_identical(df_test[1], 2L)
-  expect_identical(df_test[2], summary_sobel$summary$fit_ymx$s$df)
+  expect_null(summary_sobel$summary$fit_ymx$F_test)
 
 })
 
 test_that("attributes are correctly passed through summary", {
 
   # robustness
-  expect_false(summary_sobel$summary$robust)
-  expect_false(summary_sobel$summary$median)
+  expect_true(summary_sobel$summary$robust)
+  expect_true(summary_sobel$summary$median)
   # number of observations
   expect_identical(summary_sobel$summary$n, as.integer(n))
   # variable names

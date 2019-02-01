@@ -26,7 +26,8 @@ test_data <- data.frame(X, Y, M1, M2, C1, C2)
 ## run bootstrap test
 ctrl <- reg_control(efficiency = 0.95)
 sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "sobel",
-                        method = "regression", robust = TRUE, control = ctrl)
+                        method = "regression", robust = TRUE, median = FALSE,
+                        control = ctrl)
 
 ## compute summary
 summary_sobel <- summary(sobel)
@@ -37,6 +38,8 @@ density <- fortify(sobel, method = "density")
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "c", "c'", "ab")
+mx_names <- c("(Intercept)", "X")
+ymx_names <- c("(Intercept)", "M1", "X")
 
 
 ## run tests
@@ -71,6 +74,7 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
   expect_true(sobel$fit$robust)
+  expect_false(sobel$fit$median)
   expect_equal(sobel$fit$control, ctrl)
 
 })
@@ -134,17 +138,22 @@ test_that("summary has correct structure", {
   # original output of test for indirect effect
   expect_identical(summary_sobel$object, sobel)
   # summary of the model fit
+  expect_s3_class(summary_sobel$summary, "summary_reg_fit_mediation")
   expect_s3_class(summary_sobel$summary, "summary_fit_mediation")
+  # summary for model m ~ x
+  expect_s3_class(summary_sobel$summary$fit_mx, "summary_lmrob")
+  # summary for model y ~ m + x
+  expect_s3_class(summary_sobel$summary$fit_ymx, "summary_lmrob")
   # regression standard error for model y ~ m + x
-  expect_type(summary_sobel$summary$s, "list")
-  expect_named(summary_sobel$summary$s, c("value", "df"))
+  expect_type(summary_sobel$summary$fit_ymx$s, "list")
+  expect_named(summary_sobel$summary$fit_ymx$s, c("value", "df"))
   # R-squared for model y ~ m + x
-  expect_type(summary_sobel$summary$R2, "list")
-  expect_named(summary_sobel$summary$R2, c("R2", "adj_R2"))
+  expect_type(summary_sobel$summary$fit_ymx$R2, "list")
+  expect_named(summary_sobel$summary$fit_ymx$R2, c("R2", "adj_R2"))
   # F-test for model y ~ m + x
-  expect_type(summary_sobel$summary$F_test, "list")
-  expect_named(summary_sobel$summary$F_test, c("statistic", "df", "p_value"))
-  df_test <- summary_sobel$summary$F_test$df
+  expect_type(summary_sobel$summary$fit_ymx$F_test, "list")
+  expect_named(summary_sobel$summary$fit_ymx$F_test, c("statistic", "df", "p_value"))
+  df_test <- summary_sobel$summary$fit_ymx$F_test$df
   expect_identical(df_test[1], 2)
   expect_identical(df_test[2], Inf)
 
@@ -154,6 +163,7 @@ test_that("attributes are correctly passed through summary", {
 
   # robustness
   expect_true(summary_sobel$summary$robust)
+  expect_false(summary_sobel$summary$median)
   # number of observations
   expect_identical(summary_sobel$summary$n, as.integer(n))
   # variable names
@@ -167,13 +177,13 @@ test_that("attributes are correctly passed through summary", {
 test_that("effect summaries have correct names", {
 
   # a path
-  expect_identical(dim(summary_sobel$summary$a), c(1L, 4L))
-  expect_identical(rownames(summary_sobel$summary$a), "X")
-  expect_identical(colnames(summary_sobel$summary$a)[1], "Estimate")
+  expect_identical(dim(summary_sobel$summary$fit_mx$coefficients), c(2L, 4L))
+  expect_identical(rownames(summary_sobel$summary$fit_mx$coefficients), mx_names)
+  expect_identical(colnames(summary_sobel$summary$fit_mx$coefficients)[1], "Estimate")
   # b path
-  expect_identical(dim(summary_sobel$summary$b), c(1L, 4L))
-  expect_identical(rownames(summary_sobel$summary$b), "M1")
-  expect_identical(colnames(summary_sobel$summary$b)[1], "Estimate")
+  expect_identical(dim(summary_sobel$summary$fit_ymx$coefficients), c(3L, 4L))
+  expect_identical(rownames(summary_sobel$summary$fit_ymx$coefficient), ymx_names)
+  expect_identical(colnames(summary_sobel$summary$fit_ymx$coefficient)[1], "Estimate")
   # c path
   expect_identical(dim(summary_sobel$summary$c), c(1L, 4L))
   expect_identical(rownames(summary_sobel$summary$c), "X")
@@ -182,15 +192,13 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_sobel$summary$c_prime), c(1L, 4L))
   expect_identical(rownames(summary_sobel$summary$c_prime), "X")
   expect_identical(colnames(summary_sobel$summary$c_prime)[1], "Estimate")
-  # covariates
-  expect_null(summary_sobel$summary$covariate_effects)
 
 })
 
 test_that("effect summaries contain correct coefficient values", {
 
-  expect_identical(summary_sobel$summary$a["X", "Estimate"], sobel$fit$a)
-  expect_identical(summary_sobel$summary$b["M1", "Estimate"], sobel$fit$b)
+  expect_identical(summary_sobel$summary$fit_mx$coefficients["X", "Estimate"], sobel$fit$a)
+  expect_identical(summary_sobel$summary$fit_ymx$coefficients["M1", "Estimate"], sobel$fit$b)
   expect_identical(summary_sobel$summary$c["X", "Estimate"], sobel$fit$c)
   expect_identical(summary_sobel$summary$c_prime["X", "Estimate"], sobel$fit$c_prime)
 
