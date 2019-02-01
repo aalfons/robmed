@@ -159,6 +159,7 @@ get_summary.rq <- function(object, ...) {
   # compute the usual summary and extract coefficient matrix
   summary <- summary(object, se = "iid")
   coefficients <- coef(summary)
+  colnames(coefficients)[1] <- "Estimate"  # be consistent with other models
   # return results
   result <- list(coefficients = coefficients)
   class(result) <- "summary_rq"
@@ -323,9 +324,9 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
   p_value <- p_value_z(z)
   coefficients <- cbind(coefficients, means, se, z, p_value)
   dimnames(coefficients) <- list(c(x, m, x, x), tn)
-  # residual standard error as list (for compatibility with regression method)
-  s_epsilon_ymx <- S[y,y] - b^2*S[m,m] - c^2*S[x,x] - 2*b*c*S[m,x]
-  s <- list(value=s_epsilon_ymx)
+  # # residual standard error as list (for compatibility with regression method)
+  # s_epsilon_ymx <- S[y,y] - b^2*S[m,m] - c^2*S[x,x] - 2*b*c*S[m,x]
+  # s <- list(value=s_epsilon_ymx)
   # return results
   result <- list(a = coefficients[1, , drop = FALSE],
                  b = coefficients[2, , drop = FALSE],
@@ -335,108 +336,6 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
   class(result) <- c("summary_cov_fit_mediation", "summary_fit_mediation")
   result
 }
-
-# get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
-#   # initializations
-#   x <- object$x
-#   y <- object$y
-#   m <- object$m
-#   p_m <- length(m)
-#   covariates <- object$covariates
-#   robust <- object$robust
-#   median <- object$median
-#   have_boot <- !is.null(boot)
-#   # compute summary of y ~ m + x + covariates
-#   if (median) summary_ymx <- summary(object$fit_ymx, se = "iid")
-#   else summary_ymx <- summary(object$fit_ymx)
-#   # extract number of observations
-#   n <- nobs(object$fit_ymx)
-#   # perform tests for significance of effects
-#   if (have_boot) {
-#     # extract coefficients and add coefficients of covariates
-#     coefficients <- c(coef(object), coef(object$fit_ymx)[-seq_len(p_m + 2L)])
-#     # compute standard errors and z-statistics from bootstrap replicates
-#     remove <- if(p_m == 1L) 1L else seq_len(1L + p_m)
-#     means <- colMeans(boot$t[, -remove], na.rm = TRUE)
-#     se <- apply(boot$t[, -remove], 2, sd, na.rm = TRUE)
-#     z <- means / se
-#     # perform z-tests and combine results
-#     p_value <- p_value_z(z)
-#     coefficients <- cbind(coefficients, means, se, z, p_value)
-#     rn <- c(if(p_m == 1L) x else paste(m, x, sep = "~"), m, x, x, covariates)
-#     tn <- c("Data", "Boot", "Std. Error", "z value", "Pr(>|z|)")
-#     dimnames(coefficients) <- list(rn, tn)
-#     # split up effect summaries
-#     a <- coefficients[seq_len(p_m), , drop = FALSE]
-#     b <- coefficients[p_m + seq_len(p_m), , drop = FALSE]
-#     c <- coefficients[2L * p_m + 1L, , drop = FALSE]
-#     c_prime <- coefficients[2L * p_m + 2L, , drop = FALSE]
-#   } else {
-#     # compute summaries of regression models and extract t-tests for coefficients
-#     if (p_m == 1L) {
-#       if (median) summary_mx <- summary(object$fit_mx, se = "iid")
-#       else summary_mx <- summary(object$fit_mx)
-#       a <- summary_mx$coefficients[2L, , drop = FALSE]
-#       b <- summary_ymx$coefficients[2L, , drop = FALSE]
-#       c <- summary_ymx$coefficients[3L, , drop = FALSE]
-#     } else {
-#       if (median) summary_mx <- lapply(object$fit_mx, summary, se = "iid")
-#       else summary_mx <- lapply(object$fit_mx, summary)
-#       a <- lapply(summary_mx, function(s) s$coefficients[2L, , drop = FALSE])
-#       a <- do.call(rbind, a)
-#       rownames(a) <- paste(m, x, sep = "~")
-#       b <- summary_ymx$coefficients[1L + seq_len(p_m), , drop = FALSE]
-#       c <- summary_ymx$coefficients[p_m + 2L, , drop = FALSE]
-#     }
-#     if (robust) {
-#       # standard errors and t-test not available
-#       c_prime <- matrix(c(object$c_prime, rep.int(NA_real_, 3L)), nrow = 1L)
-#       dimnames(c_prime) <- dimnames(c)
-#     } else {
-#       summary_yx <- summary(object$fit_yx)
-#       c_prime <- summary_yx$coefficients[2L, , drop = FALSE]
-#     }
-#   }
-#   # initialize return object
-#   result <- list(a = a, b = b, c = c, c_prime = c_prime)
-#   # add partial effects of control variables if they exist
-#   if (length(covariates) > 0L) {
-#     if (have_boot) {
-#       remove <- seq_len(2L * p_m + 2L)
-#       result$covariate_effects <- coefficients[-remove, , drop = FALSE]
-#     } else {
-#       remove <- seq_len(p_m + 2L)
-#       result$covariate_effects <- summary_ymx$coefficients[-remove, , drop=FALSE]
-#     }
-#   }
-#   # add robustness information
-#   result$robust <- robust
-#   result$median <- median
-#   if (!median) {
-#     # add residual standard error
-#     result$s <- list(value = summary_ymx$sigma, df = summary_ymx$df[2L])
-#     # add (robust) R-squared
-#     result$R2 <- list(R2 = summary_ymx$r.squared,
-#                       adj_R2 = summary_ymx$adj.r.squared)
-#     # add (robust) F-test
-#     if (robust) {
-#       # compute robust F-test for robust fit
-#       result$F_test <- rob_F_test(object)
-#     } else {
-#       # add F-test for nonrobust fit
-#       statistic <- unname(summary_ymx$fstatistic[1L])
-#       df <- as.integer(summary_ymx$fstatistic[-1L])
-#       p_value <- pf(statistic, df[1L], df[2L], lower.tail = FALSE)
-#       result$F_test <- list(statistic = statistic, df = df,
-#                             p_value = p_value)
-#     }
-#   }
-#   # add number of observations and variable names
-#   result <- c(result, list(n = n, x = x, y = y, m = m, covariates = covariates))
-#   ## add class and return results
-#   class(result) <- "summary_fit_mediation"
-#   result
-# }
 
 
 ## compute duplication matrix according to Magnus & Neudecker (1999, p.49)
