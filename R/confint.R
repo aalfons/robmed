@@ -113,6 +113,33 @@ confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
 }
 
 
+# there is no confint() method for median regression results
+#' @export
+confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
+
+  # compute the usual summary and extract coefficient matrix
+  summary <- summary(object, se = "iid")
+  coef_mat <- coef(summary)
+  coef_names <- rownames(coef_mat)
+  # extract point estimates and standard errors
+  coef <- coef_mat[, 1L]
+  se <- coef_mat[, 2L]
+  # check parameters to extract
+  if (missing(parm)) parm <- coef_names
+  else if (is.numeric(parm)) parm <- coef_names[parm]
+  # significance level and quantile of the t distribution
+  a <- (1 - level) / 2
+  a <- c(a, 1 - a)
+  q <- qt(a, df = summary$rdf)
+  # column names for output should contain percentages
+  cn <- paste(format(100 * a, trim=TRUE), "%")
+  # construct confidence interval
+  ci <- array(NA_real_, dim = c(length(parm), 2L), dimnames = list(parm, cn))
+  ci[] <- coef[parm] + se[parm] %o% q
+  ci
+}
+
+
 ## internal function to compute confidence intervals for estimated effects
 
 get_confint <- function(object, parm, level = 0.95, ...) {
