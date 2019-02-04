@@ -145,7 +145,7 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   # combine and print
   print(cbind(ab, ci), digits = digits, ...)
   # print additional information
-  cat("---\nLevel of confidence: ", format(100 * x$level), "%\n", sep = "")
+  cat("---\nLevel of confidence: ", format(100 * x$level), " %\n", sep = "")
   cat(sprintf("\nNumber of bootstrap replicates: %d\n", x$R))
   ## return object invisibly
   invisible(x)
