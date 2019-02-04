@@ -15,6 +15,8 @@ shinyUI(fluidPage(
         strong("Methods to compare:"),
         checkboxInput("standard", "Standard bootstrap", value = TRUE),
         checkboxInput("huberized", "Huberized bootstrap", value = FALSE),
+        checkboxInput("median", "Bootstrap based on median regression",
+                      value = FALSE),
         checkboxInput("robust", "ROBMED", value = TRUE),
         sliderInput("n_obs", "Number of observations:",
                     min = 50, max = 1000, value = 250, step = 1),
@@ -44,9 +46,11 @@ shinyUI(fluidPage(
     column(12,
       h3("Description"),
       p("You can compare various bootstrap methods for mediation analysis on
-         simulated data: the standard bootstrap of Preacher & Hayes (2004,
-         2008), the Huberized bootstrap of Zu & Yuan (2010), and the fast and
-         robust boostrap (ROBMED) of Alfons, Ates & Groenen (2018)."),
+         simulated data: the standard bootstrap test of Preacher & Hayes (2004,
+         2008), the Huberized bootstrap test of Zu & Yuan (2010), the bootstrap
+         test based on median regression of Yuan & MacKinnon (2014), and the
+         fast and robust boostrap test (ROBMED) of Alfons, Ates & Groenen
+         (2018)."),
 
       p("The default settings follow the simulation design of Zu & Yuan (2010).
          The good data points are generated via the mediation model",
@@ -82,6 +86,12 @@ shinyUI(fluidPage(
               mediator models.
               <em>Behavior Research Methods</em>,
               <strong>40</strong>(3), 879-891.
+            </p>"),
+      HTML("<p>
+              Yuan, Y. and MacKinnon, D.P. (2014) Robust mediation analysis
+              based on median regression.
+              <em>Psychological Methods</em>,
+              <strong>19</strong>(1), 1-20.
             </p>"),
       HTML("<p>
               Zu, J. and Yuan, K.-H. (2010) Local influence and robust
