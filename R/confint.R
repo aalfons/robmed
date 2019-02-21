@@ -113,6 +113,33 @@ confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
 }
 
 
+# there is no confint() method for median regression results
+#' @export
+confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
+
+  # compute the usual summary and extract coefficient matrix
+  summary <- summary(object, se = "iid")
+  coef_mat <- coef(summary)
+  coef_names <- rownames(coef_mat)
+  # extract point estimates and standard errors
+  coef <- coef_mat[, 1L]
+  se <- coef_mat[, 2L]
+  # check parameters to extract
+  if (missing(parm)) parm <- coef_names
+  else if (is.numeric(parm)) parm <- coef_names[parm]
+  # significance level and quantile of the t distribution
+  a <- (1 - level) / 2
+  a <- c(a, 1 - a)
+  q <- qt(a, df = summary$rdf)
+  # column names for output should contain percentages
+  cn <- paste(format(100 * a, trim=TRUE), "%")
+  # construct confidence interval
+  ci <- array(NA_real_, dim = c(length(parm), 2L), dimnames = list(parm, cn))
+  ci[] <- coef[parm] + se[parm] %o% q
+  ci
+}
+
+
 ## internal function to compute confidence intervals for estimated effects
 
 get_confint <- function(object, parm, level = 0.95, ...) {
@@ -133,8 +160,9 @@ get_confint.cov_fit_mediation <- function(object, parm = NULL, level = 0.95,
             summary$c_prime[1,2])
   } else {
     # compute means and standard errors from bootstrap replicates
-    estimates <- colMeans(boot$t[, -1], na.rm=TRUE)
-    se <- apply(boot$t[, -1], 2, sd, na.rm=TRUE)
+    keep <- c(3L, 5L:7L)
+    estimates <- colMeans(boot$t[, keep], na.rm=TRUE)
+    se <- apply(boot$t[, keep], 2, sd, na.rm=TRUE)
   }
   # compute confidence intervals and combine into one matrix
   ci <- rbind(confint_z(estimates[1], se[1], level=level),
@@ -156,15 +184,13 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
   # extract point estimates and standard errors
   if(is.null(boot)) {
     # extract confidence intervals from regression models
-    if(p_m == 1L) {
-      confint_mx <- confint(object$fit_mx, parm = 2L, level = level)
-      confint_ymx <- confint(object$fit_ymx, parm = 2L:3L, level = level)
-    } else {
+    if(p_m == 1L) confint_mx <- confint(object$fit_mx, parm = 2L, level = level)
+    else {
       confint_mx <- lapply(object$fit_mx, confint, parm = 2L, level = level)
       confint_mx <- do.call(rbind, confint_mx)
-      confint_ymx <- confint(object$fit_ymx, parm = 1L + seq_len(p_m + 1L),
-                             level = level)
     }
+    confint_ymx <- confint(object$fit_ymx, parm = 1L + seq_len(p_m + 1L),
+                           level = level)
     # compute confidence interval for total effect
     if(object$robust) {
       # confidence interval not available
@@ -177,8 +203,18 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     ci <- rbind(confint_mx, confint_ymx, confint_yx)
     rownames(ci) <- get_effect_names(object$m)
   } else {
+    # get indices of columns of bootstrap replicates that that correspond to
+    # the respective models
+    p_covariates <- length(object$fit$covariates)
+    index_list <- get_index_list(p_m, p_covariates)
+    # the a path is the second coefficient in the model m ~ x + covariates
+    if (p_m == 1) keep_mx <- index_list$fit_mx[2L]
+    else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
+    # keep b and c coefficients of model y ~ m + x + covariates
+    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1)]
+    # index of c' is stored separately in this list
+    keep <- c(keep_mx, keep_ymx, index_list$c_prime)
     # compute means and standard errors from bootstrap replicates
-    keep <- if(p_m == 1L) 2L:5L else 1L + p_m + seq_len(2L * p_m + 2L)
     estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
     se <- apply(boot$t[, keep], 2L, sd, na.rm = TRUE)
     # compute confidence intervals and combine into one matrix

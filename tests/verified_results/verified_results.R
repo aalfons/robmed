@@ -87,4 +87,4 @@ save(seed, robust_boot_reg_simple, standard_boot_reg_simple,
      robust_sobel_reg_simple, standard_sobel_reg_simple,
      robust_sobel_cov_simple, standard_sobel_cov_simple,
      robust_boot_reg_multi, standard_boot_reg_multi,
-     file = "tests/verified_results.RData")
+     file = "tests/verified_results/verified_results.RData")

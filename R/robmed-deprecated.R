@@ -24,6 +24,17 @@
 #' \code{data} is supplied) a character, integer or logical vector specifying
 #' the corresponding columns of \code{data}.
 #' @param data  an optional \code{data.frame} containing the variables.
+#' @param test  a character string specifying the test to be performed for
+#' the indirect effect.  For \code{indirect}, the only possible value is
+#' \code{"boot"} for a bootstrap test.
+#' @param method  a character string specifying the method of estimation for
+#' the mediation model.  For \code{indirect}, the only possible value is
+#' \code{"regression"} to estimate the effects via regressions.
+#' @param robust  a logical indicating whether to perform a robust test.  For
+#' \code{indirect}, the only possible value is \code{FALSE}.
+#' @param median  a logical indicating if the effects should be estimated via
+#' median regression.  For \code{indirect}, the only possible value is
+#' \code{FALSE}.
 #' @param efficiency  a numeric value giving the desired efficiency (defaults
 #' to 0.85 for 85\% efficiency).
 #' @param maxIterations  an integer giving the maximum number of iterations in
@@ -189,6 +200,17 @@ testMediation.default <- function(x, y, m, covariates = NULL, data, ...) {
 #' @export
 
 testMediation.fit_mediation <- function(x, ...) test_mediation(x, ...)
+
+
+#' @rdname robmed-deprecated
+#' @export
+
+indirect <- function(..., test = "boot", method = "regression",
+                     robust = FALSE, median = FALSE) {
+  .Deprecated("test_mediation")
+  test_mediation(..., test = "boot", method = "regression",
+                 robust = FALSE, median = FALSE)
+}
 
 
 #' @rdname robmed-deprecated

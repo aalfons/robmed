@@ -39,7 +39,7 @@
 #'
 #' # run fast and robust bootstrap test and extract coefficients
 #' test <- test_mediation(fit)
-#' coef(test, type = "data")  # from orignal sample
+#' coef(test, type = "data")  # from original sample
 #' coef(test, type = "boot")  # means of bootstrap replicates
 #'
 #' @keywords utilities
@@ -67,8 +67,20 @@ coef.boot_test_mediation <- function(object, parm = NULL,
   type <- match.arg(type)
   # extract effects (including indirect effect)
   if(type == "boot") {
+    # number of mediators and covariates
     p_m <- length(object$fit$m)
-    keep <- if(p_m == 1L) 2L:5L else 1L + p_m + seq_len(2L * p_m + 2L)
+    p_covariates <- length(object$fit$covariates)
+    # get indices of columns of bootstrap replicates that that correspond to
+    # the respective models
+    index_list <- get_index_list(p_m, p_covariates)
+    # the a path is the second coefficient in the model m ~ x + covariates
+    if (p_m == 1L) keep_mx <- index_list$fit_mx[2L]
+    else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
+    # keep b and c coefficients of model y ~ m + x + covariates
+    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1)]
+    # index of c' is stored separately in this list
+    keep <- c(keep_mx, keep_ymx, index_list$c_prime)
+    # compute means of bootstrap replicates
     coef <- colMeans(object$reps$t[, keep], na.rm = TRUE)
     names(coef) <- get_effect_names(object$fit$m)
     ab <- object$ab

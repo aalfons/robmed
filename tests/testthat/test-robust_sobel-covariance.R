@@ -134,10 +134,10 @@ test_that("summary has correct structure", {
   # original output of test for indirect effect
   expect_identical(summary_sobel$object, sobel)
   # summary of the model fit
+  expect_s3_class(summary_sobel$summary, "summary_cov_fit_mediation")
   expect_s3_class(summary_sobel$summary, "summary_fit_mediation")
   # regression standard error for model y ~ m + x
-  expect_type(summary_sobel$summary$s, "list")
-  expect_named(summary_sobel$summary$s, "value")
+  expect_null(summary_sobel$summary$s)
   # R-squared for model y ~ m + x
   expect_null(summary_sobel$summary$R2)
   # F-test for model y ~ m + x
@@ -152,10 +152,9 @@ test_that("attributes are correctly passed through summary", {
   # number of observations
   expect_identical(summary_sobel$summary$n, as.integer(n))
   # variable names
-  expect_identical(summary_sobel$summary$variables, c("X", "Y", "M1"))
-  expect_null(summary_sobel$summary$X)
-  expect_null(summary_sobel$summary$Y)
-  expect_null(summary_sobel$summary$M)
+  expect_identical(summary_sobel$summary$x, "X")
+  expect_identical(summary_sobel$summary$y, "Y")
+  expect_identical(summary_sobel$summary$m, "M1")
   expect_null(summary_sobel$summary$covariates)
 
 })
@@ -178,8 +177,9 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_sobel$summary$c_prime), c(1L, 4L))
   expect_identical(rownames(summary_sobel$summary$c_prime), "X")
   expect_identical(colnames(summary_sobel$summary$c_prime)[1], "Estimate")
-  # covariates
-  expect_null(summary_sobel$summary$covariate_effects)
+  # no model fits
+  expect_null(summary_sobel$summary$fit_mx)
+  expect_null(summary_sobel$summary$fit_ymx)
 
 })
 

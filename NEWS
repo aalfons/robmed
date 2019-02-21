@@ -1,4 +1,9 @@
-Changes in robmed version 0.3.1
+Changes in robmed version 0.4.0
+
+    + Output of summaries restructured to be similar to PROCESS macro of Andrew
+      Hayes.
+
+    + Wrapper function indirect() is now deprecated.
 
     + Added missing reference in help file of example data.
 

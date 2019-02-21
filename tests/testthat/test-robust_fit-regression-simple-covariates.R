@@ -24,7 +24,7 @@ test_data <- data.frame(X, Y, M, C1, C2)
 ## fit mediation model and compute summary
 foo <- fit_mediation(test_data, x = "X", y = "Y", m = "M",
                      covariates = c("C1", "C2"), method = "regression",
-                     robust = TRUE, max_iterations = 500)
+                     robust = TRUE, median = FALSE, max_iterations = 500)
 bar <- summary(foo)
 
 
@@ -51,6 +51,7 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$covariates, c("C1", "C2"))
   # robust fit
   expect_true(foo$robust)
+  expect_false(foo$median)
   expect_equal(foo$control, reg_control(max_iterations = 500))
 
 })
