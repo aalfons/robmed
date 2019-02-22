@@ -3,6 +3,24 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
+## draw bootstrap samples
+#' @export
+boot_samples <- function(n, R) {
+  # retrieve current seed of the random number generator
+  seed <- .Random.seed
+  # draw bootstrap samples the same way as package 'boot'
+  indices <- sample.int(n, n*R, replace = TRUE)
+  dim(indices) <- c(R, n)
+  # transpose to have bootstrap samples in columns
+  indices <- t(indices)
+  # add seed as attribute (dirty hack to ensure correct functionality)
+  # and return matrix of indices for bootstrap samples
+  # FIXME: a better way to do this is to define a class for bootstrap samples
+  # (one component for indices and one component for seed)
+  attr(indices, "seed") <- seed
+  indices
+}
+
 # simple bootstrap with prespecified bootstrap samples
 # (implemented for use in simulation studies)
 local_boot <- function(data, statistic, R, indices = NULL, ...) {
@@ -16,6 +34,7 @@ local_boot <- function(data, statistic, R, indices = NULL, ...) {
     R <- round(rep(R, length.out = 1))
     if(!isTRUE(R > 0)) stop("invalid number of replications in bootstrap")
     # cat("generating bootstrap samples...\n")
+    # TODO: use function boot_samples() here
     seed <- .Random.seed
     indices <- replicate(R, sample(n, replace = TRUE))
   } else {
