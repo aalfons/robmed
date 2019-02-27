@@ -62,7 +62,6 @@ boot_samples <- function(n, R) {
   # draw bootstrap samples the same way as package 'boot'
   indices <- sample.int(n, n*R, replace = TRUE)
   dim(indices) <- c(R, n)
-  indices <- t(indices)
   # transpose to have bootstrap samples in columns and return indices and seed
   # as object of class "boot_samples"
   out <- list(indices = t(indices), seed = seed)
