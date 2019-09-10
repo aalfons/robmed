@@ -19,7 +19,7 @@ plot(BSG2014[, c(x, y, m)], labels = gsub(" ", "\n", labs),
      pch = 21, bg = "black")
 
 # seed of random number generator
-RNGversion("3.5.2")
+RNGversion("3.5.3")
 today <- 20150601
 
 # perform standard method and proposed robust method
