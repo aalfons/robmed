@@ -8,6 +8,7 @@ Changes in robmed version 0.4.0
     + Added missing reference in help file of example data.
 
 
+
 Changes in robmed version 0.3.0
 
     + Added method based on median regressions (Yuan & MacKinnon, 2014).
