@@ -299,3 +299,77 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result
 }
+
+
+## experimental stuff for formula interface
+
+m <- function(...) {
+  out <- cbind(...)
+  class(out) <- c("parallel_mediators", class(out))
+  out
+}
+
+covariates <- function(...) {
+  out <- cbind(...)
+  class(out) <- c("covariates", class(out))
+  out
+}
+
+fit_mediation_formula <- function(formula, data, ...) {
+  ## prepare model frame
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0)
+  mf <- mf[c(1, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  ## make sure that there are no interaction terms
+  ord <- attr(mt, "order")
+  if (length(ord) > 0 && any(ord > 1)) {
+    stop("interaction terms are not implemented for mediation models")
+  }
+  # make sure that dependent variable is specified
+  if (attr(mt, "response") == 0) {
+    stop("no dependent variable specified in formula")
+  }
+  d <- dim(mf[[1]])
+  if (!is.null(d) && d[2] > 1) {
+    stop("only one dependent variable allowed in formula")
+  }
+  index_y <- 1
+  y <- names(mf)[index_y]
+  # make sure that mediators are specified
+  index_m <- which(sapply(mf, inherits, "parallel_mediators"))
+  if (length(index_m) == 0) {
+    stop("mediators must be specified using m() in the formula")
+  } else if (length(index_m) > 1) {
+    stop("use m() only once in the formula to specify all mediators")
+  }
+  m <- colnames(mf[[index_m]])
+  # check if covariates are specified
+  index_covariates <- which(sapply(mf, inherits, "covariates"))
+  if (length(index_covariates) > 1) {
+    stop("use covariates() only once in the formula to specify all covariates")
+  }
+  have_covariates <- length(index_covariates) > 0
+  covariates <- if (have_covariates) colnames(mf[[index_covariates]])
+  # make sure that independent variable is specified
+  if (length(mf) == (2 + have_covariates)) {
+    stop("no independent variable specified in formula")
+  } else {
+    if (length(mf) == (3 + have_covariates)) {
+      d <- dim(mf[[3 + have_covariates]])
+      ok <- is.null(d) || d[2] == 1
+    } else ok <- FALSE
+    if (!ok) stop("only one independent variable allowed in formula")
+  }
+  index_x <- setdiff(seq(2, 3 + have_covariates), c(index_m, index_covariates))
+  x <- names(mf)[index_x]
+  # rebuild data frame
+  names(mf)[c(index_m, index_covariates)] <- ""  # ensure the correct names
+  mf <- c(mf, list(check.names = FALSE))
+  data <- do.call(data.frame, mf)
+  # call default method
+  fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
+}
