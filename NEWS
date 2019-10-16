@@ -1,3 +1,9 @@
+Changes in robmed version 0.6.0
+
+    + Added formula interface.
+
+
+
 Changes in robmed version 0.5.0
 
     + Changed components 'c' and 'c_prime' to 'direct' and 'total',
