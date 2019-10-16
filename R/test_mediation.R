@@ -41,10 +41,6 @@
 #' \code{robmed} is a wrapper function for performing robust mediation analysis
 #' via regressions and the fast and robust bootstrap.
 #'
-#' \code{indirect} is a wrapper function for performing non-robust mediation
-#' analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
-#' \code{SPSS} macro \code{INDIRECT}).
-#'
 #' @aliases print.boot_test_mediation print.sobel_test_mediation
 #'
 #' @param data  a data frame containing the variables.  Alternatively, this can

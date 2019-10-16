@@ -158,10 +158,6 @@ bootstrap does not account for the variability from cleaning the data.
 
 \code{robmed} is a wrapper function for performing robust mediation analysis
 via regressions and the fast and robust bootstrap.
-
-\code{indirect} is a wrapper function for performing non-robust mediation
-analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
-\code{SPSS} macro \code{INDIRECT}).
 }
 \note{
 For the fast and robust bootstrap, the simpler correction of
