@@ -94,7 +94,7 @@ plot_mediation.boot_test_mediation <- function(object,
 
 plot_mediation.sobel_test_mediation <- function(object, data,
                                                 method = c("dot", "density"),
-                                                parm = c("c", "ab"),
+                                                parm = c("Direct", "ab"),
                                                 level = 0.95, ...) {
   data <- fortify(object, data=data, method=method, parm=parm, level=level)
   plot_mediation(data, ...)

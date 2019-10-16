@@ -35,7 +35,7 @@ dot <- fortify(sobel, method = "dot")
 density <- fortify(sobel, method = "density")
 
 ## stuff needed to check correctness
-coef_names <- c("a", "b", "c", "c'", "ab")
+coef_names <- c("a", "b", "Direct", "Total", "ab")
 
 
 ## run tests
@@ -168,14 +168,14 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_sobel$summary$b), c(1L, 4L))
   expect_identical(rownames(summary_sobel$summary$b), "M1")
   expect_identical(colnames(summary_sobel$summary$b)[1], "Estimate")
-  # c path
-  expect_identical(dim(summary_sobel$summary$c), c(1L, 4L))
-  expect_identical(rownames(summary_sobel$summary$c), "X")
-  expect_identical(colnames(summary_sobel$summary$c)[1], "Estimate")
-  # c' path
-  expect_identical(dim(summary_sobel$summary$c_prime), c(1L, 4L))
-  expect_identical(rownames(summary_sobel$summary$c_prime), "X")
-  expect_identical(colnames(summary_sobel$summary$c_prime)[1], "Estimate")
+  # direct effect
+  expect_identical(dim(summary_sobel$summary$direct), c(1L, 4L))
+  expect_identical(rownames(summary_sobel$summary$direct), "X")
+  expect_identical(colnames(summary_sobel$summary$direct)[1], "Estimate")
+  # total effect
+  expect_identical(dim(summary_sobel$summary$total), c(1L, 4L))
+  expect_identical(rownames(summary_sobel$summary$total), "X")
+  expect_identical(colnames(summary_sobel$summary$total)[1], "Estimate")
   # no model fits
   expect_null(summary_sobel$summary$fit_mx)
   expect_null(summary_sobel$summary$fit_ymx)
@@ -186,8 +186,8 @@ test_that("effect summaries contain correct coefficient values", {
 
   expect_identical(summary_sobel$summary$a["X", "Estimate"], sobel$fit$a)
   expect_identical(summary_sobel$summary$b["M1", "Estimate"], sobel$fit$b)
-  expect_identical(summary_sobel$summary$c["X", "Estimate"], sobel$fit$c)
-  expect_identical(summary_sobel$summary$c_prime["X", "Estimate"], sobel$fit$c_prime)
+  expect_identical(summary_sobel$summary$direct["X", "Estimate"], sobel$fit$direct)
+  expect_identical(summary_sobel$summary$total["X", "Estimate"], sobel$fit$total)
 
 })
 
@@ -201,7 +201,7 @@ test_that("data returned by fortify() has correct structure", {
   column_names <- c("Effect", "Point", "Lower", "Upper")
   expect_named(dot, column_names)
   # check that direct effect and indirect effect are plotted by default
-  effect_names <- c("c", "ab")
+  effect_names <- c("Direct", "ab")
   expect_identical(dot$Effect, factor(effect_names, levels = effect_names))
 
   ## density plot

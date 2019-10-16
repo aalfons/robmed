@@ -250,10 +250,10 @@ print.summary_reg_fit_mediation <- function(x, digits = max(3, getOption("digits
         signif.legend = FALSE, ...)
   # print summary of total and direct effects of x on y
   cat("---\nTotal effect of x on y:\n")
-  printCoefmat(x$c_prime, digits = digits, signif.stars = signif.stars,
+  printCoefmat(x$total, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   cat("\nDirect effect of x on y:\n")
-  printCoefmat(x$c, digits = digits, signif.stars = signif.stars,
+  printCoefmat(x$direct, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   # return object invisibly
   invisible(x)
@@ -275,10 +275,10 @@ print.summary_cov_fit_mediation <- function(x, digits = max(3, getOption("digits
                signif.legend = FALSE, ...)
   # print summary of total and direct effects of x on y
   cat("\nTotal effect of x on y:\n")
-  printCoefmat(x$c_prime, digits = digits, signif.stars = signif.stars,
+  printCoefmat(x$total, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   cat("\nDirect effect of x on y:\n")
-  printCoefmat(x$c, digits = digits, signif.stars = signif.stars,
+  printCoefmat(x$direct, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   # return object invisibly
   invisible(x)

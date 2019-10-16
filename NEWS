@@ -1,3 +1,11 @@
+Changes in robmed version 0.5.0
+
+    + Changed components 'c' and 'c_prime' to 'direct' and 'total',
+      respectively, to avoid confusion with different notation in different
+      papers.
+
+
+
 Changes in robmed version 0.4.0
 
     + Output of summaries restructured to be similar to PROCESS macro of Andrew

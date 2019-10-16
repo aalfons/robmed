@@ -66,8 +66,8 @@ test_that("dimensions are correct", {
   # effects are scalars
   expect_length(foo$a, 2L)
   expect_length(foo$b, 2L)
-  expect_length(foo$c, 1L)
-  expect_length(foo$c_prime, 1L)
+  expect_length(foo$direct, 1L)
+  expect_length(foo$total, 1L)
   # individual regressions
   expect_length(coef(foo$fit_mx$M1), 4L)
   expect_length(coef(foo$fit_mx$M2), 4L)
@@ -83,8 +83,8 @@ test_that("values of coefficients are correct", {
   expect_equivalent(foo$a, a)
   expect_named(foo$a, c("M1", "M2"))
   expect_equal(foo$b, coef(foo$fit_ymx)[c("M1", "M2")])  # also checks names
-  expect_equivalent(foo$c, coef(foo$fit_ymx)["X"])
-  expect_equivalent(foo$c_prime, sum(foo$a * foo$b) + foo$c)
+  expect_equivalent(foo$direct, coef(foo$fit_ymx)["X"])
+  expect_equivalent(foo$total, sum(foo$a * foo$b) + foo$direct)
 
 })
 
@@ -92,7 +92,7 @@ test_that("output of coef() method has correct attributes", {
 
   coefficients <- coef(foo)
   expect_length(coefficients, 6L)
-  expect_named(coefficients, c("a_M1", "a_M2", "b_M1", "b_M2", "c", "c'"))
+  expect_named(coefficients, c("a_M1", "a_M2", "b_M1", "b_M2", "Direct", "Total"))
 
 })
 
@@ -102,8 +102,8 @@ test_that("coef() method returns correct values of coefficients", {
   expect_equivalent(coef(foo, parm = "a_M2"), foo$a["M2"])
   expect_equivalent(coef(foo, parm = "b_M1"), foo$b["M1"])
   expect_equivalent(coef(foo, parm = "b_M2"), foo$b["M2"])
-  expect_equivalent(coef(foo, parm = "c"), foo$c)
-  expect_equivalent(coef(foo, parm = "c'"), foo$c_prime)
+  expect_equivalent(coef(foo, parm = "Direct"), foo$direct)
+  expect_equivalent(coef(foo, parm = "Total"), foo$total)
 
 })
 

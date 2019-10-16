@@ -82,12 +82,14 @@ fortify.boot_test_mediation <- function(model, data,
   # construct data fram with relevant information
   if(method == "dot") {
     if(is.null(parm)) {
-      if(p_m == 1L) parm <- c("c", "ab")
-      else parm <- c("c", paste("ab", names(model$ab), sep = "_"))
+      if(p_m == 1L) parm <- c("Direct", "ab")
+      else parm <- c("Direct", paste("ab", names(model$ab), sep = "_"))
     }
     # extract point estimates
     coef <- coef(model, parm=parm)
     # extract confidence intervals
+    print(parm)
+    print(confint(model))
     ci <- confint(model, parm=parm)
     effect <- rownames(ci)
     dimnames(ci) <- list(NULL, c("Lower", "Upper"))
@@ -153,7 +155,7 @@ fortify.sobel_test_mediation <- function(model, data,
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # construct data fram with relevant information
   if(method == "dot") {
-    if(is.null(parm)) parm <- c("c", "ab")
+    if(is.null(parm)) parm <- c("Direct", "ab")
     # extract point estimates
     coef <- coef(model, parm=parm)
     # extract confidence intervals

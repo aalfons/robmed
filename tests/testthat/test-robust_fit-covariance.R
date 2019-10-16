@@ -59,8 +59,8 @@ test_that("dimensions are correct", {
   # effects are scalars
   expect_length(foo$a, 1L)
   expect_length(foo$b, 1L)
-  expect_length(foo$c, 1L)
-  expect_length(foo$c_prime, 1L)
+  expect_length(foo$direct, 1L)
+  expect_length(foo$total, 1L)
   # dimensions of data
   expect_identical(dim(foo$data), c(as.integer(n), 3L))
 
@@ -68,7 +68,7 @@ test_that("dimensions are correct", {
 
 test_that("values of coefficients are correct", {
 
-  expect_equivalent(foo$c_prime, foo$a * foo$b + foo$c)
+  expect_equivalent(foo$total, foo$a * foo$b + foo$direct)
 
 })
 
@@ -76,7 +76,7 @@ test_that("output of coef() method has correct attributes", {
 
   coefficients <- coef(foo)
   expect_length(coefficients, 4L)
-  expect_named(coefficients, c("a", "b", "c", "c'"))
+  expect_named(coefficients, c("a", "b", "Direct", "Total"))
 
 })
 
@@ -84,8 +84,8 @@ test_that("coef() method returns correct values of coefficients", {
 
   expect_equivalent(coef(foo, parm = "a"), foo$a)
   expect_equivalent(coef(foo, parm = "b"), foo$b)
-  expect_equivalent(coef(foo, parm = "c"), foo$c)
-  expect_equivalent(coef(foo, parm = "c'"), foo$c_prime)
+  expect_equivalent(coef(foo, parm = "Direct"), foo$direct)
+  expect_equivalent(coef(foo, parm = "Total"), foo$total)
 
 })
 

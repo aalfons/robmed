@@ -65,9 +65,9 @@ the following components:
 the independent variable on the proposed mediator variables.}
 \item{b}{a numeric vector containing the point estimates of the direct
 effect of the proposed mediator variables on the dependent variable.}
-\item{c}{numeric; the point estimate of the direct effect of the
+\item{direct}{numeric; the point estimate of the direct effect of the
 independent variable on the dependent variable.}
-\item{c_prime}{numeric; the point estimate of the total effect of the
+\item{total}{numeric; the point estimate of the total effect of the
 independent variable on the dependent variable.}
 \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"} or
 \code{"\link[stats]{lm}"} containing the estimation results from the

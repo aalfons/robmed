@@ -40,7 +40,7 @@ density <- fortify(boot, method = "density")
 ## stuff needed to check correctness
 indirect_names <- c("Total", "M1", "M2")
 ab_names <- paste("ab", indirect_names, sep = "_")
-coef_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "c", "c'", ab_names)
+coef_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "Direct", "Total", ab_names)
 mx_names <- c("(Intercept)", "X", "C1", "C2")
 ymx_names <- c("(Intercept)", "M1", "M2", "X", "C1", "C2")
 
@@ -121,15 +121,15 @@ test_that("coef() method returns correct values of coefficients", {
                     colMeans(boot$reps$t[, c(5, 9)]))
   expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "boot"),
                     colMeans(boot$reps$t[, 13:14]))
-  expect_equivalent(coef(boot, parm = "c", type = "boot"), mean(boot$reps$t[, 15]))
-  expect_equivalent(coef(boot, parm = "c'", type = "boot"), mean(boot$reps$t[, 18]))
+  expect_equivalent(coef(boot, parm = "Direct", type = "boot"), mean(boot$reps$t[, 15]))
+  expect_equivalent(coef(boot, parm = "Total", type = "boot"), mean(boot$reps$t[, 18]))
   expect_equivalent(coef(boot, parm = ab_names, type = "boot"), boot$ab)
 
   # effects computed on original sample
   expect_equivalent(coef(boot, parm = c("a_M1", "a_M2"), type = "data"), boot$fit$a)
   expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "data"), boot$fit$b)
-  expect_equivalent(coef(boot, parm = "c", type = "data"), boot$fit$c)
-  expect_equivalent(coef(boot, parm = "c'", type = "data"), boot$fit$c_prime)
+  expect_equivalent(coef(boot, parm = "Direct", type = "data"), boot$fit$direct)
+  expect_equivalent(coef(boot, parm = "Total", type = "data"), boot$fit$total)
   ab_data <- boot$fit$a * boot$fit$b
   expect_equivalent(coef(boot, parm = ab_names, type = "data"),
                     c(sum(ab_data), ab_data))
@@ -248,20 +248,20 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_theory$summary$fit_ymx$coefficient), c(6L, 4L))
   expect_identical(rownames(summary_theory$summary$fit_ymx$coefficient), ymx_names)
   expect_identical(colnames(summary_theory$summary$fit_ymx$coefficient)[1], "Estimate")
-  # c path
-  expect_identical(dim(summary_boot$summary$c), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$c), "X")
-  expect_identical(colnames(summary_boot$summary$c)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$c), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$c), "X")
-  expect_identical(colnames(summary_theory$summary$c)[1], "Estimate")
-  # c' path
-  expect_identical(dim(summary_boot$summary$c_prime), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$c_prime), "X")
-  expect_identical(colnames(summary_boot$summary$c_prime)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$c_prime), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$c_prime), "X")
-  expect_identical(colnames(summary_theory$summary$c_prime)[1], "Estimate")
+  # direct effect
+  expect_identical(dim(summary_boot$summary$direct), c(1L, 5L))
+  expect_identical(rownames(summary_boot$summary$direct), "X")
+  expect_identical(colnames(summary_boot$summary$direct)[1:2], c("Data", "Boot"))
+  expect_identical(dim(summary_theory$summary$direct), c(1L, 4L))
+  expect_identical(rownames(summary_theory$summary$direct), "X")
+  expect_identical(colnames(summary_theory$summary$direct)[1], "Estimate")
+  # total effect
+  expect_identical(dim(summary_boot$summary$total), c(1L, 5L))
+  expect_identical(rownames(summary_boot$summary$total), "X")
+  expect_identical(colnames(summary_boot$summary$total)[1:2], c("Data", "Boot"))
+  expect_identical(dim(summary_theory$summary$total), c(1L, 4L))
+  expect_identical(rownames(summary_theory$summary$total), "X")
+  expect_identical(colnames(summary_theory$summary$total)[1], "Estimate")
 
 })
 
@@ -271,20 +271,20 @@ test_that("effect summaries contain correct coefficient values", {
   expect_equivalent(summary_boot$summary$fit_mx[[1]]$coefficients[2, "Data"], boot$fit$a[1])
   expect_equivalent(summary_boot$summary$fit_mx[[2]]$coefficients[2, "Data"], boot$fit$a[2])
   expect_identical(summary_boot$summary$fit_ymx$coefficients[2:3, "Data"], boot$fit$b)
-  expect_identical(summary_boot$summary$c["X", "Data"], boot$fit$c)
-  expect_identical(summary_boot$summary$c_prime["X", "Data"], boot$fit$c_prime)
+  expect_identical(summary_boot$summary$direct["X", "Data"], boot$fit$direct)
+  expect_identical(summary_boot$summary$total["X", "Data"], boot$fit$total)
   expect_equivalent(summary_theory$summary$fit_mx[[1]]$coefficients[2, "Estimate"], boot$fit$a[1])
   expect_equivalent(summary_theory$summary$fit_mx[[2]]$coefficients[2, "Estimate"], boot$fit$a[2])
   expect_identical(summary_theory$summary$fit_ymx$coefficients[2:3, "Estimate"], boot$fit$b)
-  expect_identical(summary_theory$summary$c["X", "Estimate"], boot$fit$c)
-  expect_identical(summary_theory$summary$c_prime["X", "Estimate"], boot$fit$c_prime)
+  expect_identical(summary_theory$summary$direct["X", "Estimate"], boot$fit$direct)
+  expect_identical(summary_theory$summary$total["X", "Estimate"], boot$fit$total)
 
   # bootstrapped effects
   expect_equivalent(summary_boot$summary$fit_mx[[1]]$coefficients[2, "Boot"], mean(boot$reps$t[, 5]))
   expect_equivalent(summary_boot$summary$fit_mx[[2]]$coefficients[2, "Boot"], mean(boot$reps$t[, 9]))
   expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2:3, "Boot"], colMeans(boot$reps$t[, 13:14]))
-  expect_equal(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 15]))
-  expect_equal(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 18]))
+  expect_equal(summary_boot$summary$direct["X", "Boot"], mean(boot$reps$t[, 15]))
+  expect_equal(summary_boot$summary$total["X", "Boot"], mean(boot$reps$t[, 18]))
 
 })
 
@@ -298,7 +298,7 @@ test_that("data returned by fortify() has correct structure", {
   column_names <- c("Effect", "Point", "Lower", "Upper")
   expect_named(dot, column_names)
   # check that direct effect and indirect effect are plotted by default
-  effect_names <- c("c", ab_names)
+  effect_names <- c("Direct", ab_names)
   expect_identical(dot$Effect, factor(effect_names, levels = effect_names))
 
   ## density plot

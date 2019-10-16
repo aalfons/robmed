@@ -68,9 +68,9 @@
 #' the independent variable on the proposed mediator variables.}
 #' \item{b}{a numeric vector containing the point estimates of the direct
 #' effect of the proposed mediator variables on the dependent variable.}
-#' \item{c}{numeric; the point estimate of the direct effect of the
+#' \item{direct}{numeric; the point estimate of the direct effect of the
 #' independent variable on the dependent variable.}
-#' \item{c_prime}{numeric; the point estimate of the total effect of the
+#' \item{total}{numeric; the point estimate of the total effect of the
 #' independent variable on the dependent variable.}
 #' \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"} or
 #' \code{"\link[stats]{lm}"} containing the estimation results from the
@@ -266,11 +266,11 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
     a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
   }
-  c <- unname(coef(fit_ymx)[2L + p_m])
-  if (robust) c_prime <- if(p_m == 1L) a*b + c else sum(a*b) + c
-  else c_prime <- unname(coef(fit_yx)[2L])
+  direct <- unname(coef(fit_ymx)[2L + p_m])
+  if (robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+  else total <- unname(coef(fit_yx)[2L])
   # return results
-  result <- list(a = a, b = b, c = c, c_prime = c_prime, fit_mx = fit_mx,
+  result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
                  covariates = covariates, data = data, robust = robust,
                  median = median)
@@ -290,10 +290,10 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
   a <- S[m, x] / S[x, x]
   det <- S[x, x] * S[m, m] - S[m, x]^2
   b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
-  c <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
-  c_prime <- S[y, x] / S[x, x]
+  direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+  total <- S[y, x] / S[x, x]
   # return results
-  result <- list(a=a, b=b, c=c, c_prime=c_prime, cov=cov, x=x, y=y, m=m,
+  result <- list(a=a, b=b, direct=direct, total=total, cov=cov, x=x, y=y, m=m,
                  data=data, robust=robust)
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")

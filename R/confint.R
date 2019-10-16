@@ -153,11 +153,11 @@ get_confint.cov_fit_mediation <- function(object, parm = NULL, level = 0.95,
   # extract point estimates and standard errors
   if(is.null(boot)) {
     # combine point estimates
-    estimates <- c(object$a, object$b, object$c, object$c_prime)
+    estimates <- c(object$a, object$b, object$direct, object$total)
     # compute standard errors
     summary <- get_summary(object)
-    se <- c(summary$a[1,2], summary$b[1,2], summary$c[1,2],
-            summary$c_prime[1,2])
+    se <- c(summary$a[1,2], summary$b[1,2], summary$direct[1,2],
+            summary$total[1,2])
   } else {
     # compute means and standard errors from bootstrap replicates
     keep <- c(3L, 5L:7L)
@@ -170,7 +170,7 @@ get_confint.cov_fit_mediation <- function(object, parm = NULL, level = 0.95,
               confint_z(estimates[3], se[3], level=level),
               confint_z(estimates[4], se[4], level=level))
   cn <- paste(format(100 * c(alpha/2, 1-alpha/2), trim=TRUE), "%")
-  dimnames(ci) <- list(c("a", "b", "c", "c'"), cn)
+  dimnames(ci) <- list(c("a", "b", "Direct", "Total"), cn)
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
   ci
@@ -212,8 +212,8 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
     # keep b and c coefficients of model y ~ m + x + covariates
     keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1)]
-    # index of c' is stored separately in this list
-    keep <- c(keep_mx, keep_ymx, index_list$c_prime)
+    # index of total effect is stored separately in this list
+    keep <- c(keep_mx, keep_ymx, index_list$total)
     # compute means and standard errors from bootstrap replicates
     estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
     se <- apply(boot$t[, keep], 2L, sd, na.rm = TRUE)

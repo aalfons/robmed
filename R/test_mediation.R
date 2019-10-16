@@ -299,11 +299,11 @@ boot_test_mediation <- function(fit,
             # compute effects
             a <- coef_m_i[2L]
             b <- coef_y_i[2L]
-            c <- coef_y_i[3L]
+            direct <- coef_y_i[3L]
             ab <- a * b
-            c_prime <- ab + c
+            total <- ab + direct
             # return effects
-            c(ab, coef_m_i, coef_y_i, c_prime)
+            c(ab, coef_m_i, coef_y_i, total)
           }
         } else{
           # multiple mediators
@@ -324,12 +324,12 @@ boot_test_mediation <- function(fit,
             # compute effects
             a <- unname(coef_m_i[2L, ])
             b <- unname(coef_y_i[1L + seq_len(p_m)])
-            c <- unname(coef_y_i[2L + p_m])
+            direct <- unname(coef_y_i[2L + p_m])
             ab <- a * b
             sum_ab <- sum(ab)
-            c_prime <- sum_ab + c
+            total <- sum_ab + direct
             # return effects
-            c(sum_ab, ab, coef_m_i, coef_y_i, c_prime)
+            c(sum_ab, ab, coef_m_i, coef_y_i, total)
           }
         }
         # perform standard bootstrap
@@ -392,11 +392,11 @@ boot_test_mediation <- function(fit,
             # compute effects
             a <- coef_m_i[2L]
             b <- coef_y_i[2L]
-            c <- coef_y_i[3L]
+            direct <- coef_y_i[3L]
             ab <- a * b
-            c_prime <- ab + c
+            total <- ab + direct
             # return effects
-            c(ab, coef_m_i, coef_y_i, c_prime)
+            c(ab, coef_m_i, coef_y_i, total)
           }
         } else {
           # multiple mediators
@@ -448,12 +448,12 @@ boot_test_mediation <- function(fit,
             # compute effects
             a <- unname(coef_m_i[2L, ])
             b <- unname(coef_y_i[1L + seq_len(p_m)])
-            c <- unname(coef_y_i[2L + p_m])
+            direct <- unname(coef_y_i[2L + p_m])
             ab <- a * b
             sum_ab <- sum(ab)
-            c_prime <- sum_ab + c
+            total <- sum_ab + direct
             # return effects
-            c(sum_ab, ab, coef_m_i, coef_y_i, c_prime)
+            c(sum_ab, ab, coef_m_i, coef_y_i, total)
           }
         }
         # perform fast and robust bootstrap
@@ -483,11 +483,11 @@ boot_test_mediation <- function(fit,
           # compute effects
           a <- coef_m_i[2L]
           b <- coef_y_i[2L]
-          c <- coef_y_i[3L]
+          direct <- coef_y_i[3L]
           ab <- a * b
-          c_prime <- ab + c
+          total <- ab + direct
           # return effects
-          c(ab, coef_m_i, coef_y_i, c_prime)
+          c(ab, coef_m_i, coef_y_i, total)
         }
       } else{
         # multiple mediators
@@ -509,12 +509,12 @@ boot_test_mediation <- function(fit,
           # compute effects
           a <- unname(coef_m_i[2L, ])
           b <- unname(coef_y_i[1L + seq_len(p_m)])
-          c <- unname(coef_y_i[2L + p_m])
+          direct <- unname(coef_y_i[2L + p_m])
           ab <- a * b
           sum_ab <- sum(ab)
-          c_prime <- sum_ab + c
+          total <- sum_ab + direct
           # return effects
-          c(sum_ab, ab, coef_m_i, coef_y_i, c_prime)
+          c(sum_ab, ab, coef_m_i, coef_y_i, total)
         }
       }
       # perform standard bootstrap
@@ -544,9 +544,9 @@ boot_test_mediation <- function(fit,
       a <- S[m, x] / S[x, x]
       det <- S[x, x] * S[m, m] - S[m, x]^2
       b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
-      c <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
-      c_prime <- S[y, x] / S[x, x]
-      c(a*b, NA_real_, a, NA_real_, b, c, c_prime)
+      direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+      total <- S[y, x] / S[x, x]
+      c(a*b, NA_real_, a, NA_real_, b, direct, total)
     }, R=R, ...)
     R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
   } else stop("method not implemented")
@@ -642,9 +642,9 @@ get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
   else p_ab <- 0L
   p_mx <- rep.int(2L + p_covariates, p_m)
   p_ymx <- 2L + p_m + p_covariates
-  p_c_prime <- 1
-  p_total <- sum(p_ab, p_mx, p_ymx, p_c_prime)
-  indices <- seq_len(p_total)
+  p_total <- 1
+  p_all <- sum(p_ab, p_mx, p_ymx, p_total)
+  indices <- seq_len(p_all)
   # the first columns correspond to indirect effect(s) of x on y
   first <- 1L
   indices_ab <- if (indirect) seq.int(first, length.out = p_ab) else integer()
@@ -661,8 +661,8 @@ get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
   first <- first + sum(p_mx)
   indices_ymx <- seq.int(from = first, length.out = p_ymx)
   # the last column corresponds to the total effect of x on y
-  index_c_prime <- first + p_ymx
+  index_total <- first + p_ymx
   # return list of indices
   list(ab = indices_ab, fit_mx = indices_mx, fit_ymx = indices_ymx,
-       c_prime = index_c_prime)
+       total = index_total)
 }

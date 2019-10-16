@@ -16,8 +16,8 @@ plot_mediation(object, ...)
   "density"), parm = NULL, ...)
 
 \method{plot_mediation}{sobel_test_mediation}(object, data,
-  method = c("dot", "density"), parm = c("c", "ab"), level = 0.95,
-  ...)
+  method = c("dot", "density"), parm = c("Direct", "ab"),
+  level = 0.95, ...)
 
 \method{plot_mediation}{list}(object, data, method = c("dot", "density"),
   parm = NULL, level = 0.95, ...)
