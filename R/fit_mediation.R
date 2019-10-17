@@ -193,16 +193,100 @@ fit_mediation <- function(data, x, y, m, covariates = NULL,
 
 
 ## estimate the effects in a mediation model via regressions
+# reg_fit_mediation <- function(x, y, m, covariates = character(), data,
+#                               robust = TRUE, median = FALSE,
+#                               control = reg_control()) {
+#   # number of mediators
+#   p_m <- length(m)
+#   # construct formulas for regression models
+#   m_term <- paste(m, collapse = "+")
+#   covariate_term <- paste(c("", covariates), collapse = "+")
+#   f_mx <- paste(m, "~", x, covariate_term, sep = "")
+#   f_ymx <- as.formula(paste(y, "~", m_term, "+", x, covariate_term, sep = ""))
+#   # compute regression models
+#   if (robust) {
+#     # for the robust methods, the total effect is estimated as c' = ab + c
+#     # to satisfy this relationship
+#     # TODO: check if this makes sense for median regression
+#     # (what if, e.g., the conditional distribution is asymmetric)
+#     if (median) {
+#       # LAD-estimator for median regression
+#       if (p_m == 1L) {
+#         f_mx <- as.formula(f_mx)
+#         fit_mx <- rq(f_mx, data = data, tau = 0.5, model = FALSE)
+#       } else {
+#         fit_mx <- lapply(f_mx, function(f) {
+#           f_mx <- as.formula(f)
+#           rq(f_mx, data = data, tau = 0.5, model = FALSE)
+#         })
+#         names(fit_mx) <- m
+#       }
+#       fit_ymx <- rq(f_ymx, data = data, tau = 0.5, model = FALSE)
+#     } else {
+#       # MM-estimator for robust regression
+#       if (p_m == 1L) {
+#         f_mx <- as.formula(f_mx)
+#         fit_mx <- lmrob(f_mx, data = data, control = control,
+#                         model = FALSE, x = FALSE)
+#       } else {
+#         fit_mx <- lapply(f_mx, function(f) {
+#           f_mx <- as.formula(f)
+#           lmrob(f_mx, data = data, control = control,
+#                 model = FALSE, x = FALSE)
+#         })
+#         names(fit_mx) <- m
+#       }
+#       fit_ymx <- lmrob(f_ymx, data = data, control = control,
+#                        model = FALSE, x = FALSE)
+#     }
+#     # neither method fits the direct path
+#     fit_yx <- NULL
+#   } else {
+#     # for the standard method, there is not much additional cost in performing
+#     # the regression for the total effect
+#     if (p_m == 1L) {
+#       f_mx <- as.formula(f_mx)
+#       fit_mx <- lm(f_mx, data = data, model = FALSE)
+#     } else {
+#       fit_mx <- lapply(f_mx, function(f) {
+#         f_mx <- as.formula(f)
+#         lm(f_mx, data = data, model = FALSE)
+#       })
+#       names(fit_mx) <- m
+#     }
+#     fit_ymx <- lm(f_ymx, data = data, model = FALSE)
+#     f_yx <- as.formula(paste(y, "~", x, covariate_term, sep = ""))
+#     fit_yx <- lm(f_yx, data = data, model = FALSE)
+#   }
+#   # extract effects
+#   if (p_m == 1L) {
+#     a <- unname(coef(fit_mx)[2L])
+#     b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
+#   } else {
+#     a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+#     b <- coef(fit_ymx)[1L + seq_len(p_m)]
+#   }
+#   direct <- unname(coef(fit_ymx)[2L + p_m])
+#   if (robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+#   else total <- unname(coef(fit_yx)[2L])
+#   # return results
+#   result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
+#                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
+#                  covariates = covariates, data = data, robust = robust,
+#                  median = median)
+#   if(robust && !median) result$control <- control
+#   class(result) <- c("reg_fit_mediation", "fit_mediation")
+#   result
+# }
 reg_fit_mediation <- function(x, y, m, covariates = character(), data,
                               robust = TRUE, median = FALSE,
                               control = reg_control()) {
   # number of mediators
   p_m <- length(m)
-  # construct formulas for regression models
-  m_term <- paste(m, collapse = "+")
-  covariate_term <- paste(c("", covariates), collapse = "+")
-  f_mx <- paste(m, "~", x, covariate_term, sep = "")
-  f_ymx <- as.formula(paste(y, "~", m_term, "+", x, covariate_term, sep = ""))
+  # construct predictor matrices for regression models
+  n <- nrow(data)
+  predictors_mx <- as.matrix(data[, c(x, covariates), drop = FALSE])
+  predictors_ymx <- as.matrix(data[, c(m, x, covariates), drop = FALSE])
   # compute regression models
   if (robust) {
     # for the robust methods, the total effect is estimated as c' = ab + c
@@ -211,52 +295,38 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
     # (what if, e.g., the conditional distribution is asymmetric)
     if (median) {
       # LAD-estimator for median regression
-      if (p_m == 1L) {
-        f_mx <- as.formula(f_mx)
-        fit_mx <- rq(f_mx, data = data, tau = 0.5, model = FALSE)
-      } else {
-        fit_mx <- lapply(f_mx, function(f) {
-          f_mx <- as.formula(f)
-          rq(f_mx, data = data, tau = 0.5, model = FALSE)
+      if (p_m == 1L) fit_mx <- rq_fit(predictors_mx, data[, m], tau = 0.5)
+      else {
+        fit_mx <- lapply(m, function(m_j) {
+          rq_fit(predictors_mx, data[, m_j], tau = 0.5)
         })
         names(fit_mx) <- m
       }
-      fit_ymx <- rq(f_ymx, data = data, tau = 0.5, model = FALSE)
+      fit_ymx <- rq_fit(predictors_ymx, data[, y], tau = 0.5)
     } else {
       # MM-estimator for robust regression
       if (p_m == 1L) {
-        f_mx <- as.formula(f_mx)
-        fit_mx <- lmrob(f_mx, data = data, control = control,
-                        model = FALSE, x = FALSE)
+        fit_mx <- lmrob_fit(predictors_mx, data[, m], control = control)
       } else {
-        fit_mx <- lapply(f_mx, function(f) {
-          f_mx <- as.formula(f)
-          lmrob(f_mx, data = data, control = control,
-                model = FALSE, x = FALSE)
+        fit_mx <- lapply(m, function(m_j) {
+          lmrob_fit(predictors_mx, data[, m_j], control = control)
         })
         names(fit_mx) <- m
       }
-      fit_ymx <- lmrob(f_ymx, data = data, control = control,
-                       model = FALSE, x = FALSE)
+      fit_ymx <- lmrob_fit(predictors_ymx, data[, y], control = control)
     }
     # neither method fits the direct path
     fit_yx <- NULL
   } else {
     # for the standard method, there is not much additional cost in performing
     # the regression for the total effect
-    if (p_m == 1L) {
-      f_mx <- as.formula(f_mx)
-      fit_mx <- lm(f_mx, data = data, model = FALSE)
-    } else {
-      fit_mx <- lapply(f_mx, function(f) {
-        f_mx <- as.formula(f)
-        lm(f_mx, data = data, model = FALSE)
-      })
+    if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
+    else {
+      fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
       names(fit_mx) <- m
     }
-    fit_ymx <- lm(f_ymx, data = data, model = FALSE)
-    f_yx <- as.formula(paste(y, "~", x, covariate_term, sep = ""))
-    fit_yx <- lm(f_yx, data = data, model = FALSE)
+    fit_ymx <- lm_fit(predictors_ymx, data[, y])
+    fit_yx <- lm_fit(predictors_mx, data[, y])
   }
   # extract effects
   if (p_m == 1L) {
@@ -451,6 +521,5 @@ fit_mediation_formula <- function(formula, data, ...) {
   mf <- c(mf, list(check.names = FALSE))
   data <- do.call(data.frame, mf)
   # call default method
-  # FIXME: this doesn't work when the formula contains log() etc.
   fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
 }
