@@ -301,7 +301,51 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
 }
 
 
-## experimental stuff for formula interface
+## functions for model fits that make summary() work
+# This will allow fit_mediation() to fit the regression models without a
+# formula, which is necessary to make the formula interface work.  Otherwise
+# formulas that contain log(.) or similar terms would cause errors when fitting
+# the models in fit_mediation().
+
+lm_fit <- function(x, y, intercept = TRUE) {
+  # if requested, add constant for intercept
+  if (intercept) {
+    n <- nrow(x)
+    x <- cbind("(Intercept)" = rep.int(1, n), x)
+  }
+  # fit the linear model
+  fit <- lm.fit(x, y)
+  # Add a dummy formula as a 'terms' component to make summary() method work.
+  # This 'terms' component needs to have an attribute that specifies whether
+  # the model has an intercept, that's all.  It's not used in any other way.
+  f <- as.formula(NULL)
+  attr(f, "intercept") <- as.integer(intercept)
+  fit$terms <- f
+  # add the class and return the model fit
+  class(fit) <- "lm"
+  fit
+}
+
+lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
+  # if requested, add constant for intercept
+  if (intercept) {
+    n <- nrow(x)
+    x <- cbind("(Intercept)" = rep.int(1, n), x)
+  }
+  # fit the linear model
+  fit <- lmrob.fit(x, y, control = control)
+  # Add a dummy formula as a 'terms' component to make summary() method work.
+  # This 'terms' component needs to have an attribute that specifies whether
+  # the model has an intercept, that's all.  It's not used in any other way.
+  f <- as.formula(NULL)
+  attr(f, "intercept") <- as.integer(intercept)
+  fit$terms <- f
+  # class is already added in lmrob.fit(), so just return the model fit
+  fit
+}
+
+
+## functions to specify parallel mediators and covariates in formula interface
 
 m <- function(...) {
   out <- cbind(...)
@@ -314,6 +358,11 @@ covariates <- function(...) {
   class(out) <- c("covariates", class(out))
   out
 }
+
+
+## experimental formula interface
+# Hence it is a different function for now, but eventually fit_mediation()
+# should be a generic function with formula and default methods.
 
 fit_mediation_formula <- function(formula, data, ...) {
   ## prepare model frame
@@ -371,5 +420,6 @@ fit_mediation_formula <- function(formula, data, ...) {
   mf <- c(mf, list(check.names = FALSE))
   data <- do.call(data.frame, mf)
   # call default method
+  # FIXME: this doesn't work when the formula contains log() etc.
   fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
 }
