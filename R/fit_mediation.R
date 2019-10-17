@@ -344,6 +344,37 @@ lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
   fit
 }
 
+rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
+  # summary() method requires data frame and formula to extract response and
+  # predictor matrix
+  data <- data.frame(y, x, check.names = FALSE)
+  formula <- if (intercept) y ~ . else y ~ 0 + .
+  # if requested, add constant for intercept
+  if (intercept) {
+    n <- nrow(x)
+    x <- cbind("(Intercept)" = rep.int(1, n), x)
+  }
+  # fit the linear model
+  fit <- rq.fit(x, y, tau = tau, method = "br")
+  fit$method <- "br"
+  # construct terms object from formula that specifies whether there is a
+  # response and an intercept
+  terms <- formula
+  attr(terms, "response") <- 1L
+  attr(terms, "intercept") <- as.integer(intercept)
+  # summary() method requires that the terms object is also an attribute of the
+  # data frame
+  attr(data, "terms") <- terms
+  # add information to model fit
+  fit$formula <- formula
+  fit$terms <- terms
+  fit$model <- data
+  fit$tau <- tau
+  # add the class and return the model fit
+  class(fit) <- "rq"
+  fit
+}
+
 
 ## functions to specify parallel mediators and covariates in formula interface
 
