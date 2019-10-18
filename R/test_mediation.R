@@ -43,17 +43,26 @@
 #'
 #' @aliases print.boot_test_mediation print.sobel_test_mediation
 #'
-#' @param data  a data frame containing the variables.  Alternatively, this can
-#' be a mediation model fit as returned by \code{\link{fit_mediation}}.
+#' @param object  the first argument will determine the method of the generic
+#' function to be dispatched.  For the default method, this should be a data
+#' frame containing the variables.  There is also a method for a mediation
+#' model fit as returned by \code{\link{fit_mediation}}.
+#' @param formula  	an object of class "formula" (or one that can be coerced to
+#' that class): a symbolic description of the model to be fitted.  Hypothesized
+#' mediator variables should be wrapped in a call to \code{\link{m}} (see
+#' examples), and any optional control variables should be wrapped in a call to
+#' \code{\link{covariates}}.
+#' @param data  for the \code{formula} method, a data frame containing the
+#' variables.
 #' @param x  a character string, an integer or a logical vector specifying the
-#' column of \code{data} containing the independent variable.
+#' column of \code{object} containing the independent variable.
 #' @param y  a character string, an integer or a logical vector specifying the
-#' column of \code{data} containing the dependent variable.
+#' column of \code{object} containing the dependent variable.
 #' @param m  a character, integer or logical vector specifying the columns of
-#' \code{data} containing the hypothesized mediator variables.
+#' \code{object} containing the hypothesized mediator variables.
 #' @param covariates  optional; a character, integer or logical vector
-#' specifying the columns of \code{data} containing additional covariates to be
-#' used as control variables.
+#' specifying the columns of \code{object} containing additional covariates to
+#' be used as control variables.
 #' @param test  a character string specifying the test to be performed for
 #' the indirect effect.  Possible values are \code{"boot"} (the default) for
 #' the bootstrap, or \code{"sobel"} for Sobel's test.  Currently, Sobel's test
@@ -175,11 +184,24 @@
 #'
 #' @examples
 #' data("BSG2014")
-#' test <- test_mediation(BSG2014,
-#'                        x = "ValueDiversity",
-#'                        y = "TeamCommitment",
-#'                        m = "TaskConflict")
-#' summary(test)
+#'
+#' # to reproduce results in paper
+#' RNGversion("3.5.3")
+#' seed <- 20150601
+#'
+#' # formula interface
+#' set.seed(seed)
+#' test1 <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+#'                         data = BSG2014)
+#' summary(test1)
+#'
+#' # default method
+#' set.seed(seed)
+#' test2 <- test_mediation(BSG2014,
+#'                         x = "ValueDiversity",
+#'                         y = "TeamCommitment",
+#'                         m = "TaskConflict")
+#' summary(test2)
 #'
 #' @keywords multivariate
 #'
@@ -188,14 +210,39 @@
 #' @importFrom quantreg rq.fit
 #' @export
 
-test_mediation <- function(data, ...) UseMethod("test_mediation")
+test_mediation <- function(object, ...) UseMethod("test_mediation")
+
+
+#' @rdname test_mediation
+#' @method test_mediation formula
+#' @export
+
+test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
+                                   alternative = c("twosided", "less", "greater"),
+                                   R = 5000, level = 0.95,
+                                   type = c("bca", "perc"),
+                                   method = c("regression", "covariance"),
+                                   robust = TRUE, median = FALSE, control,
+                                   ...) {
+  ## fit mediation model
+  if (missing(data)) {
+    fit <- fit_mediation(formula, method = method, robust = robust,
+                         median = median, control = control)
+  } else {
+    fit <- fit_mediation(formula, data = data, method = method, robust = robust,
+                         median = median, control = control)
+  }
+  ## call method for fitted model
+  test_mediation(fit, test = test, alternative = alternative,
+                 R = R, level = level, type = type, ...)
+}
 
 
 #' @rdname test_mediation
 #' @method test_mediation default
 #' @export
 
-test_mediation.default <- function(data, x, y, m, covariates = NULL,
+test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    test = c("boot", "sobel"),
                                    alternative = c("twosided", "less", "greater"),
                                    R = 5000, level = 0.95,
@@ -204,7 +251,7 @@ test_mediation.default <- function(data, x, y, m, covariates = NULL,
                                    robust = TRUE, median = FALSE, control,
                                    ...) {
   ## fit mediation model
-  fit <- fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
+  fit <- fit_mediation(object, x = x, y = y, m = m, covariates = covariates,
                        method = method, robust = robust, median = median,
                        control = control)
   ## call method for fitted model
@@ -217,7 +264,7 @@ test_mediation.default <- function(data, x, y, m, covariates = NULL,
 #' @method test_mediation fit_mediation
 #' @export
 
-test_mediation.fit_mediation <- function(data, test = c("boot", "sobel"),
+test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
                                          alternative = c("twosided", "less", "greater"),
                                          R = 5000, level = 0.95,
                                          type = c("bca", "perc"),
@@ -225,7 +272,7 @@ test_mediation.fit_mediation <- function(data, test = c("boot", "sobel"),
   ## initializations
   test <- match.arg(test)
   alternative <- match.arg(alternative)
-  p_m <- length(data$m)
+  p_m <- length(object$m)
   if (p_m > 1L && test == "sobel") {
     test <- "boot"
     warning("Sobel test not available with multiple mediators; ",
@@ -238,11 +285,11 @@ test_mediation.fit_mediation <- function(data, test = c("boot", "sobel"),
     if (is.na(level) || level < 0 || level > 1) level <- formals()$level
     type <- match.arg(type)
     # perform bootstrap test
-    boot_test_mediation(data, alternative = alternative, R = R,
+    boot_test_mediation(object, alternative = alternative, R = R,
                         level = level, type = type, ...)
   } else if (test == "sobel") {
     # perform Sobel test
-    sobel_test_mediation(data, alternative = alternative)
+    sobel_test_mediation(object, alternative = alternative)
   } else stop("test not implemented")
 }
 
