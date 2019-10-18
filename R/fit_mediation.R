@@ -209,14 +209,14 @@ fit_mediation.formula <- function(formula, data, ...) {
   # make sure that independent variable is specified
   if (length(mf) == (2 + have_covariates)) {
     stop("no independent variable specified in formula")
-  } else {
-    if (length(mf) == (3 + have_covariates)) {
-      d <- dim(mf[[3 + have_covariates]])
-      ok <- is.null(d) || d[2] == 1
-    } else ok <- FALSE
-    if (!ok) stop("only one independent variable allowed in formula")
+  } else if (length(mf) > (3 + have_covariates)) {
+    stop("only one independent variable allowed in formula")
   }
   index_x <- setdiff(seq(2, 3 + have_covariates), c(index_m, index_covariates))
+  d <- dim(mf[[index_x]])
+  if (!is.null(d) && d[2] > 1) {
+    stop("only one independent variable allowed in formula")
+  }
   x <- names(mf)[index_x]
   # rebuild data frame
   names(mf)[c(index_m, index_covariates)] <- ""  # ensure the correct names
