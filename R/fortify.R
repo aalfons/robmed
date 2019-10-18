@@ -88,8 +88,6 @@ fortify.boot_test_mediation <- function(model, data,
     # extract point estimates
     coef <- coef(model, parm=parm)
     # extract confidence intervals
-    print(parm)
-    print(confint(model))
     ci <- confint(model, parm=parm)
     effect <- rownames(ci)
     dimnames(ci) <- list(NULL, c("Lower", "Upper"))
