@@ -23,6 +23,7 @@ C2 <- rnorm(n)
 test_data <- data.frame(X, Y, M, C1, C2)
 
 ## run bootstrap test
+set.seed(seed)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
                        covariates = c("C1", "C2"), test = "boot", R = R,
                        level = 0.9, type = "bca", method = "regression",
@@ -325,5 +326,35 @@ test_that("data returned by fortify() has correct attributes", {
   expect_named(ci, c("ab", "Density", "Lower", "Upper"))
   # check that method is stored correctly
   expect_identical(attr(density, "method"), "density")
+
+})
+
+
+# run mediation analysis through formula interface with data argument
+set.seed(seed)
+boot_f1 <- test_mediation(Y ~ m(M) + X + covariates(C1, C2),
+                          data = test_data, test = "boot", R = R,
+                          level = 0.9, type = "bca", method = "regression",
+                          robust = FALSE)
+# run mediation analysis through formula interface without data argument
+set.seed(seed)
+boot_f2 <- test_mediation(Y ~ m(M) + X + covariates(C1, C2),
+                          test = "boot", R = R, level = 0.9, type = "bca",
+                          method = "regression", robust = FALSE)
+# define mediator and covariates outside formula
+med <- m(M)
+cov <- covariates(C1, C2)
+set.seed(seed)
+boot_f3 <- test_mediation(Y ~ med + X + cov, data = test_data,
+                          test = "boot", R = R, level = 0.9, type = "bca",
+                          method = "regression", robust = FALSE)
+
+
+test_that("formula interface works correctly", {
+
+  # check that results are the same as with default method
+  expect_equal(boot_f1, boot)
+  expect_equal(boot_f2, boot)
+  expect_equal(boot_f3, boot)
 
 })

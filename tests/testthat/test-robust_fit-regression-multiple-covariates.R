@@ -23,6 +23,7 @@ C2 <- rnorm(n)
 test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## fit mediation model and compute summary
+set.seed(seed)
 foo <- fit_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
                      covariates = c("C1", "C2"), method = "regression",
                      robust = TRUE, median = FALSE, max_iterations = 500)
@@ -109,4 +110,33 @@ test_that("coef() method returns correct values of coefficients", {
 
 test_that("summary returns original object", {
   expect_identical(foo, bar)
+})
+
+
+# fit mediation model through formula interface with data argument
+set.seed(seed)
+fit_f1 <- fit_mediation(Y ~ m(M1, M2) + X + covariates(C1, C2),
+                        data = test_data, method = "regression",
+                        robust = TRUE, median = FALSE, max_iterations = 500)
+# fit mediation model through formula interface without data argument
+set.seed(seed)
+fit_f2 <- fit_mediation(Y ~ m(M1, M2) + X + covariates(C1, C2),
+                        method = "regression", robust = TRUE,
+                        median = FALSE, max_iterations = 500)
+# define mediators and covariates outside formula
+med <- m(M1, M2)
+cov <- covariates(C1, C2)
+set.seed(seed)
+fit_f3 <- fit_mediation(Y ~ med + X + cov, data = test_data,
+                        method = "regression", robust = TRUE,
+                        median = FALSE, max_iterations = 500)
+
+
+test_that("formula interface works correctly", {
+
+  # check that results are the same as with default method
+  expect_equal(fit_f1, foo)
+  expect_equal(fit_f2, foo)
+  expect_equal(fit_f3, foo)
+
 })

@@ -24,6 +24,7 @@ C2 <- rnorm(n)
 test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## run bootstrap test and compute summary
+set.seed(seed)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "boot",
                        R = R, level = 0.9, type = "bca", method = "covariance",
                        robust = FALSE)
@@ -365,3 +366,31 @@ test_that("data returned by fortify() has correct attributes", {
 #   expect_equal(test_cov, test_reg)
 #
 # })
+
+
+# run mediation analysis through formula interface with data argument
+set.seed(seed)
+boot_f1 <- test_mediation(Y ~ m(M1) + X, data = test_data,
+                          test = "boot", R = R, level = 0.9, type = "bca",
+                          method = "covariance", robust = FALSE)
+# run mediation analysis through formula interface without data argument
+set.seed(seed)
+boot_f2 <- test_mediation(Y ~ m(M1) + X,
+                          test = "boot", R = R, level = 0.9, type = "bca",
+                          method = "covariance", robust = FALSE)
+# define mediator outside formula
+med <- m(M1)
+set.seed(seed)
+boot_f3 <- test_mediation(Y ~ med + X, data = test_data,
+                          test = "boot", R = R, level = 0.9, type = "bca",
+                          method = "covariance", robust = FALSE)
+
+
+test_that("formula interface works correctly", {
+
+  # check that results are the same as with default method
+  expect_equal(boot_f1, boot)
+  expect_equal(boot_f2, boot)
+  expect_equal(boot_f3, boot)
+
+})

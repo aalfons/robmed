@@ -25,6 +25,7 @@ test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## run bootstrap test
 ctrl <- reg_control(efficiency = 0.95)
+set.seed(seed)
 sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "sobel",
                         method = "regression", robust = TRUE, median = FALSE,
                         control = ctrl)
@@ -261,5 +262,33 @@ test_that("data returned by fortify() has correct attributes", {
   expect_named(ci, c("ab", "Density", "Lower", "Upper"))
   # check that method is stored correctly
   expect_identical(attr(density, "method"), "density")
+
+})
+
+
+# run mediation analysis through formula interface with data argument
+set.seed(seed)
+sobel_f1 <- test_mediation(Y ~ m(M1) + X, data = test_data, test = "sobel",
+                           method = "regression", robust = TRUE,
+                           median = FALSE, control = ctrl)
+# run mediation analysis through formula interface without data argument
+set.seed(seed)
+sobel_f2 <- test_mediation(Y ~ m(M1) + X, test = "sobel",
+                           method = "regression", robust = TRUE,
+                           median = FALSE, control = ctrl)
+# define mediator outside formula
+med <- m(M1)
+set.seed(seed)
+sobel_f3 <- test_mediation(Y ~ med + X, data = test_data, test = "sobel",
+                           method = "regression", robust = TRUE,
+                           median = FALSE, control = ctrl)
+
+
+test_that("formula interface works correctly", {
+
+  # check that results are the same as with default method
+  expect_equal(sobel_f1, sobel)
+  expect_equal(sobel_f2, sobel)
+  expect_equal(sobel_f3, sobel)
 
 })

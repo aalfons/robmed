@@ -140,3 +140,25 @@ test_that("multiple mediators not implemented", {
   expect_equal(cov_fit, reg_fit)
 
 })
+
+
+# fit mediation model through formula interface with data argument
+fit_f1 <- fit_mediation(Y ~ m(M1) + X, data = test_data,
+                        method = "covariance", robust = TRUE, prob = 0.9)
+# fit mediation model through formula interface without data argument
+fit_f2 <- fit_mediation(Y ~ m(M1) + X,
+                        method = "covariance", robust = TRUE, prob = 0.9)
+# define mediator outside formula
+med <- m(M1)
+fit_f3 <- fit_mediation(Y ~ med + X, data = test_data,
+                        method = "covariance", robust = TRUE, prob = 0.9)
+
+
+test_that("formula interface works correctly", {
+
+  # check that results are the same as with default method
+  expect_equal(fit_f1, foo)
+  expect_equal(fit_f2, foo)
+  expect_equal(fit_f3, foo)
+
+})

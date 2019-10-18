@@ -251,3 +251,25 @@ test_that("data returned by fortify() has correct attributes", {
   expect_identical(attr(density, "method"), "density")
 
 })
+
+
+# run mediation analysis through formula interface with data argument
+sobel_f1 <- test_mediation(Y ~ m(M1) + X, data = test_data, test = "sobel",
+                           method = "covariance", robust = TRUE, control = ctrl)
+# run mediation analysis through formula interface without data argument
+sobel_f2 <- test_mediation(Y ~ m(M1) + X, test = "sobel",
+                           method = "covariance", robust = TRUE, control = ctrl)
+# define mediator outside formula
+med <- m(M1)
+sobel_f3 <- test_mediation(Y ~ med + X, data = test_data, test = "sobel",
+                           method = "covariance", robust = TRUE, control = ctrl)
+
+
+test_that("formula interface works correctly", {
+
+  # check that results are the same as with default method
+  expect_equal(sobel_f1, sobel)
+  expect_equal(sobel_f2, sobel)
+  expect_equal(sobel_f3, sobel)
+
+})
