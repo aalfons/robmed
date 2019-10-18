@@ -25,16 +25,28 @@
 #' @aliases print.fit_mediation summary.reg_fit_mediation
 #' summary.cov_fit_mediation
 #'
-#' @param data  a data frame containing the variables.
+#' @param object  the first argument will determine the method of the generic
+#' function to be dispatched.  For the default method, this should be a data
+#' frame containing the variables.
+#' @param \dots  additional arguments to be passed down.  For the default
+#' method, this can be used to specify tuning parameters directly instead
+#' of via \code{control}.
+#' @param formula  	an object of class "formula" (or one that can be coerced to
+#' that class): a symbolic description of the model to be fitted.  Hypothesized
+#' mediator variables should be wrapped in a call to \code{\link{m}} (see
+#' examples), and any optional control variables should be wrapped in a call to
+#' \code{\link{covariates}}.
+#' @param data  for the \code{formula} method, a data frame containing the
+#' variables.
 #' @param x  a character string, an integer or a logical vector specifying the
-#' column of \code{data} containing the independent variable.
+#' column of \code{object} containing the independent variable.
 #' @param y  a character string, an integer or a logical vector specifying the
-#' column of \code{data} containing the dependent variable.
+#' column of \code{object} containing the dependent variable.
 #' @param m  a character, integer or logical vector specifying the columns of
-#' \code{data} containing the hypothesized mediator variables.
+#' \code{object} containing the hypothesized mediator variables.
 #' @param covariates  optional; a character, integer or logical vector
-#' specifying the columns of \code{data} containing additional covariates to be
-#' used as control variables.
+#' specifying the columns of \code{object} containing additional covariates to
+#' be used as control variables.
 #' @param method  a character string specifying the method of
 #' estimation.  Possible values are \code{"regression"} (the default)
 #' to estimate the effects via regressions, or \code{"covariance"} to
@@ -57,8 +69,6 @@
 #' \code{\link{cov_control}}.  No tuning parameters are necessary for median
 #' regression (\code{method = "regression"}, \code{robust = TRUE} and
 #' \code{median = TRUE}).
-#' @param \dots  additional arguments can be used to specify tuning parameters
-#' directly instead of via \code{control}.
 #'
 #' @return An object inheriting from class \code{"fit_mediation"} (class
 #' \code{"reg_fit_mediation"} if \code{method} is \code{"regression"} or
@@ -122,26 +132,112 @@
 #'
 #' @examples
 #' data("BSG2014")
-#' fit <- fit_mediation(BSG2014,
-#'                      x = "ValueDiversity",
-#'                      y = "TeamCommitment",
-#'                      m = "TaskConflict")
-#' test <- test_mediation(fit)
-#' summary(test)
+#'
+#' # to reproduce results in paper
+#' RNGversion("3.5.3")
+#' seed <- 20150601
+#'
+#' # formula interface
+#' set.seed(seed)
+#' fit1 <- fit_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+#'                       BSG2014)
+#' test1 <- test_mediation(fit1)
+#' summary(test1)
+#'
+#' # default method
+#' set.seed(seed)
+#' fit2 <- fit_mediation(BSG2014,
+#'                       x = "ValueDiversity",
+#'                       y = "TeamCommitment",
+#'                       m = "TaskConflict")
+#' test2 <- test_mediation(fit2)
+#' summary(test2)
 #'
 #' @keywords multivariate
 #'
 #' @import boot
 #' @import robustbase
-#' @importFrom quantreg rq
+#' @importFrom quantreg rq.fit
 #' @export
 
-fit_mediation <- function(data, x, y, m, covariates = NULL,
-                          method = c("regression", "covariance"),
-                          robust = TRUE, median = FALSE, control, ...) {
+fit_mediation <- function(object, ...) UseMethod("fit_mediation")
+
+
+#' @rdname fit_mediation
+#' @method fit_mediation formula
+#' @export
+
+fit_mediation.formula <- function(formula, data, ...) {
+  ## prepare model frame
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0)
+  mf <- mf[c(1, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  ## make sure that there are no interaction terms
+  ord <- attr(mt, "order")
+  if (length(ord) > 0 && any(ord > 1)) {
+    stop("interaction terms are not implemented for mediation models")
+  }
+  # make sure that dependent variable is specified
+  if (attr(mt, "response") == 0) {
+    stop("no dependent variable specified in formula")
+  }
+  d <- dim(mf[[1]])
+  if (!is.null(d) && d[2] > 1) {
+    stop("only one dependent variable allowed in formula")
+  }
+  index_y <- 1
+  y <- names(mf)[index_y]
+  # make sure that mediators are specified
+  index_m <- which(sapply(mf, inherits, "parallel_mediators"))
+  if (length(index_m) == 0) {
+    stop("mediators must be specified using m() in the formula")
+  } else if (length(index_m) > 1) {
+    stop("use m() only once in the formula to specify all mediators")
+  }
+  m <- colnames(mf[[index_m]])
+  # check if covariates are specified
+  index_covariates <- which(sapply(mf, inherits, "covariates"))
+  if (length(index_covariates) > 1) {
+    stop("use covariates() only once in the formula to specify all covariates")
+  }
+  have_covariates <- length(index_covariates) > 0
+  covariates <- if (have_covariates) colnames(mf[[index_covariates]])
+  # make sure that independent variable is specified
+  if (length(mf) == (2 + have_covariates)) {
+    stop("no independent variable specified in formula")
+  } else {
+    if (length(mf) == (3 + have_covariates)) {
+      d <- dim(mf[[3 + have_covariates]])
+      ok <- is.null(d) || d[2] == 1
+    } else ok <- FALSE
+    if (!ok) stop("only one independent variable allowed in formula")
+  }
+  index_x <- setdiff(seq(2, 3 + have_covariates), c(index_m, index_covariates))
+  x <- names(mf)[index_x]
+  # rebuild data frame
+  names(mf)[c(index_m, index_covariates)] <- ""  # ensure the correct names
+  mf <- c(mf, list(check.names = FALSE))
+  data <- do.call(data.frame, mf)
+  # call default method
+  fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
+}
+
+
+#' @rdname fit_mediation
+#' @method fit_mediation default
+#' @export
+
+fit_mediation.default <- function(object, x, y, m, covariates = NULL,
+                                  method = c("regression", "covariance"),
+                                  robust = TRUE, median = FALSE, control,
+                                  ...) {
   ## initializations
   # prepare data set
-  data <- as.data.frame(data)
+  data <- as.data.frame(object)
   x <- data[, x, drop = FALSE]
   p_x <- ncol(x)
   if (p_x != 1L) stop("exactly one independent variable required")
@@ -371,12 +467,65 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
 }
 
 
-## functions for model fits that make summary() work
+#' Create an object of hypothesized mediators or control variables
+#'
+#' \code{m} creates an object of hypothesized mediators, while
+#' \code{covariates} creates an object of control variables.  Usually, these
+#' are used in a formula specifying a mediation model.
+#'
+#' These are essentially wrappers for \code{\link[base]{cbind}} with a specific
+#' class prepended to the class(es) of the resulting object.
+#'
+#' @param \dots  variables are supplied as arguments, as usual separated by a
+#' comma.
+#'
+#' @return \code{m} returns an object of class \code{"parallel_mediators"} and
+#' \code{covariates} returns an object of class \code{"covariates"}.
+#' Typically, these inherit from class \code{"matrix"}.
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso \code{\link{fit_mediation}}, \code{\link{test_mediation}}
+#'
+#' @examples
+#' data("BSG2014")
+#'
+#' # inside formula
+#' fit_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+#'               data = BSG2014)
+#'
+#' # outside formula
+#' mediator <- with(BSG2014, m(TaskConflict))
+#' fit_mediation(TeamCommitment ~ mediator + ValueDiversity,
+#'               data = BSG2014)
+#'
+#' @keywords utilities
+#' @export
+
+m <- function(...) {
+  out <- cbind(...)
+  class(out) <- c("parallel_mediators", class(out))
+  out
+}
+
+
+#' @rdname m
+#' @export
+
+covariates <- function(...) {
+  out <- cbind(...)
+  class(out) <- c("covariates", class(out))
+  out
+}
+
+
+## model fitting functions that make summary() work
 # This will allow fit_mediation() to fit the regression models without a
 # formula, which is necessary to make the formula interface work.  Otherwise
 # formulas that contain log(.) or similar terms would cause errors when fitting
 # the models in fit_mediation().
 
+# OLS regression
 lm_fit <- function(x, y, intercept = TRUE) {
   # if requested, add constant for intercept
   if (intercept) {
@@ -396,6 +545,7 @@ lm_fit <- function(x, y, intercept = TRUE) {
   fit
 }
 
+# MM regression
 lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
   # if requested, add constant for intercept
   if (intercept) {
@@ -414,6 +564,7 @@ lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
   fit
 }
 
+# quantile (median) regression
 rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
   # summary() method requires data frame and formula to extract response and
   # predictor matrix
@@ -443,83 +594,4 @@ rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
   # add the class and return the model fit
   class(fit) <- "rq"
   fit
-}
-
-
-## functions to specify parallel mediators and covariates in formula interface
-
-m <- function(...) {
-  out <- cbind(...)
-  class(out) <- c("parallel_mediators", class(out))
-  out
-}
-
-covariates <- function(...) {
-  out <- cbind(...)
-  class(out) <- c("covariates", class(out))
-  out
-}
-
-
-## experimental formula interface
-# Hence it is a different function for now, but eventually fit_mediation()
-# should be a generic function with formula and default methods.
-
-fit_mediation_formula <- function(formula, data, ...) {
-  ## prepare model frame
-  mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data"), names(mf), 0)
-  mf <- mf[c(1, m)]
-  mf$drop.unused.levels <- TRUE
-  mf[[1]] <- as.name("model.frame")
-  mf <- eval(mf, parent.frame())
-  mt <- attr(mf, "terms")
-  ## make sure that there are no interaction terms
-  ord <- attr(mt, "order")
-  if (length(ord) > 0 && any(ord > 1)) {
-    stop("interaction terms are not implemented for mediation models")
-  }
-  # make sure that dependent variable is specified
-  if (attr(mt, "response") == 0) {
-    stop("no dependent variable specified in formula")
-  }
-  d <- dim(mf[[1]])
-  if (!is.null(d) && d[2] > 1) {
-    stop("only one dependent variable allowed in formula")
-  }
-  index_y <- 1
-  y <- names(mf)[index_y]
-  # make sure that mediators are specified
-  index_m <- which(sapply(mf, inherits, "parallel_mediators"))
-  if (length(index_m) == 0) {
-    stop("mediators must be specified using m() in the formula")
-  } else if (length(index_m) > 1) {
-    stop("use m() only once in the formula to specify all mediators")
-  }
-  m <- colnames(mf[[index_m]])
-  # check if covariates are specified
-  index_covariates <- which(sapply(mf, inherits, "covariates"))
-  if (length(index_covariates) > 1) {
-    stop("use covariates() only once in the formula to specify all covariates")
-  }
-  have_covariates <- length(index_covariates) > 0
-  covariates <- if (have_covariates) colnames(mf[[index_covariates]])
-  # make sure that independent variable is specified
-  if (length(mf) == (2 + have_covariates)) {
-    stop("no independent variable specified in formula")
-  } else {
-    if (length(mf) == (3 + have_covariates)) {
-      d <- dim(mf[[3 + have_covariates]])
-      ok <- is.null(d) || d[2] == 1
-    } else ok <- FALSE
-    if (!ok) stop("only one independent variable allowed in formula")
-  }
-  index_x <- setdiff(seq(2, 3 + have_covariates), c(index_m, index_covariates))
-  x <- names(mf)[index_x]
-  # rebuild data frame
-  names(mf)[c(index_m, index_covariates)] <- ""  # ensure the correct names
-  mf <- c(mf, list(check.names = FALSE))
-  data <- do.call(data.frame, mf)
-  # call default method
-  fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
 }
