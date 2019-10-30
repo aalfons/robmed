@@ -57,7 +57,7 @@ weighted_cov <- function(x, w, ...) {
 }
 
 # function to compute an ellipse based on center and covariance matrix
-ellipse <- function (center, cov, level = 0.975, n = 100) {
+ellipse <- function(center, cov, level = 0.975, n = 100) {
   # extract scales and correlation
   scale <- sqrt(diag(cov))
   r <- cov[1, 2] / prod(scale)
