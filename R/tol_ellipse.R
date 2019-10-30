@@ -5,7 +5,6 @@
 
 ## function to compute tolerance ellipses
 
-#' @importFrom ellipse ellipse
 #' @export
 tol_ellipse <- function(object, ...) UseMethod("tol_ellipse")
 
@@ -28,17 +27,29 @@ tol_ellipse.reg_fit_mediation <- function(object,
     stop("currently only implemented for simple mediation models")
   }
   variables <- match.arg(variables)
-  # select which variables to plot
-  if (variables == "mx") select <- c(object$x, object$m)
-  else if (variables == "ym") select <- c(object$m, object$y)
-  else select <- c(object$x, object$y)
-  # extract data
-  data <- object$data[, select]
+  # extract model fit
+  if (object$robust || variables != "mx") {
+    fit <- if (variables == "mx") object$fit_mx else object$fit_ymx
+  }
+  # extract data to plot
+  if (variables == "mx") {
+    select <- c(object$x, object$m)
+    data <- object$data[, select]
+  } else if (variables == "ym") {
+    x <- object$x
+    residuals <- object$data[, object$y] - coef(fit)[x] * object$data[, x]
+    data <- cbind(object$data[, object$m, drop = FALSE],
+                  .Residual = residuals)
+  } else {
+    m <- object$m
+    residuals <- object$data[, object$y] - coef(fit)[m] * object$data[, m]
+    data <- cbind(object$data[, object$x, drop = FALSE],
+                  .Residual = residuals)
+  }
   # obtain location and shape of ellipse
   if (object$robust) {
     # extract weights in case of robust regression
-    fit <- if (variables == "mx") "fit_mx" else "fit_ymx"
-    w <- weights(object[[fit]], type = "robustness")
+    w <- weights(fit, type = "robustness")
     # compute weighted mean and weighted covariance matrix
     center <- sapply(data, weighted.mean, w = w)
     cov <- weighted.cov(data, w = w)
@@ -46,10 +57,12 @@ tol_ellipse.reg_fit_mediation <- function(object,
     # compute mean and covariance matrix
     center <- colMeans(data)
     cov <- cov(data)
+    w <- NULL
   }
   # compute ellipse
-  ellipse <- ellipse(cov, centre = center, level = level, npoints = npoints)
-  as.data.frame(ellipse)
+  ellipse <- ellipse(center, cov, level = level, npoints = npoints)
+  # return data and ellipse
+  list(data = data, ellipse = as.data.frame(ellipse), weights = w)
 }
 
 #' @export
@@ -64,15 +77,33 @@ tol_ellipse.cov_fit_mediation <- function(object,
   variables <- match.arg(variables)
   # select which variables to plot
   if (variables == "mx") select <- c(object$x, object$m)
-  else if (variables == "ym") select <- c(object$m, object$y)
-  else select <- c(object$x, object$y)
+  else stop("not implemented yet")
   # extract covariance matrix
   center <- object$cov$center[select]
   cov <- object$cov$cov[select, select]
   # compute ellipse
-  ellipse <- ellipse(cov, centre = center, level = level, npoints = npoints)
+  ellipse <- ellipse(center, cov, level = level, npoints = npoints)
+  # TODO: also return data
   as.data.frame(ellipse)
 }
+
+# function to compute an ellipse based on center and covariance matrix
+ellipse <- function(center, cov, level = 0.975, npoints = 100) {
+  # extract scales and correlation
+  scale <- sqrt(diag(cov))
+  r <- cov[1, 2] / prod(scale)
+  # compute ellipse
+  d <- acos(r)
+  a <- seq(0, 2 * pi, length.out = npoints)
+  q <- sqrt(qchisq(level, df = 2))
+  x <- q * scale[1] * cos(a + d/2) + center[1]
+  y <- q * scale[2] * cos(a - d/2) + center[2]
+  xy <- cbind(x, y)
+  # add names of variables and return ellipse
+  colnames(xy) <- names(center)
+  xy
+}
+
 
 # ## @export
 # tol_ellipse.list <- function(object, ...) {
