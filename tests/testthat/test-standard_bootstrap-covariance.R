@@ -37,7 +37,7 @@ dot <- fortify(boot, method = "dot")
 density <- fortify(boot, method = "density")
 
 ## stuff needed to check correctness
-coef_names <- c("a", "b", "c", "c'", "ab")
+coef_names <- c("a", "b", "Direct", "Total", "ab")
 
 
 ## run tests
@@ -84,7 +84,7 @@ test_that("dimensions are correct", {
   expect_length(boot$ci, 2L)
   # dimensions of bootstrap replicates
   d_boot <- dim(boot$reps$t)
-  expect_identical(d_boot, c(as.integer(R), 5L))
+  expect_identical(d_boot, c(as.integer(R), 7L))
 
 })
 
@@ -110,17 +110,17 @@ test_that("output of coef() method has correct attributes", {
 test_that("coef() method returns correct values of coefficients", {
 
   # bootstrapped effects
-  expect_equivalent(coef(boot, parm = "a", type = "boot"), mean(boot$reps$t[, 2]))
-  expect_equivalent(coef(boot, parm = "b", type = "boot"), mean(boot$reps$t[, 3]))
-  expect_equivalent(coef(boot, parm = "c", type = "boot"), mean(boot$reps$t[, 4]))
-  expect_equivalent(coef(boot, parm = "c'", type = "boot"), mean(boot$reps$t[, 5]))
+  expect_equivalent(coef(boot, parm = "a", type = "boot"), mean(boot$reps$t[, 3]))
+  expect_equivalent(coef(boot, parm = "b", type = "boot"), mean(boot$reps$t[, 5]))
+  expect_equivalent(coef(boot, parm = "Direct", type = "boot"), mean(boot$reps$t[, 6]))
+  expect_equivalent(coef(boot, parm = "Total", type = "boot"), mean(boot$reps$t[, 7]))
   expect_equivalent(coef(boot, parm = "ab", type = "boot"), boot$ab)
 
   # effects computed on original sample
   expect_equivalent(coef(boot, parm = "a", type = "data"), boot$fit$a)
   expect_equivalent(coef(boot, parm = "b", type = "data"), boot$fit$b)
-  expect_equivalent(coef(boot, parm = "c", type = "data"), boot$fit$c)
-  expect_equivalent(coef(boot, parm = "c'", type = "data"), boot$fit$c_prime)
+  expect_equivalent(coef(boot, parm = "Direct", type = "data"), boot$fit$direct)
+  expect_equivalent(coef(boot, parm = "Total", type = "data"), boot$fit$total)
   expect_equivalent(coef(boot, parm = "ab", type = "data"), boot$fit$a * boot$fit$b)
 
 })
@@ -158,13 +158,13 @@ test_that("summary has correct structure", {
   expect_identical(summary_boot$object, boot)
   expect_identical(summary_theory$object, boot)
   # summary of the model fit
+  expect_s3_class(summary_boot$summary, "summary_cov_fit_mediation")
   expect_s3_class(summary_boot$summary, "summary_fit_mediation")
+  expect_s3_class(summary_theory$summary, "summary_cov_fit_mediation")
   expect_s3_class(summary_theory$summary, "summary_fit_mediation")
   # regression standard error for model y ~ m + x
-  expect_type(summary_boot$summary$s, "list")
-  expect_named(summary_boot$summary$s, "value")
-  expect_type(summary_theory$summary$s, "list")
-  expect_named(summary_theory$summary$s, "value")
+  expect_null(summary_boot$summary$s)
+  expect_null(summary_theory$summary$s)
   # R-squared for model y ~ m + x
   expect_null(summary_boot$summary$R2)
   expect_null(summary_theory$summary$R2)
@@ -183,15 +183,13 @@ test_that("attributes are correctly passed through summary", {
   expect_identical(summary_boot$summary$n, as.integer(n))
   expect_identical(summary_theory$summary$n, as.integer(n))
   # variable names
-  expect_identical(summary_boot$summary$variables, c("X", "Y", "M1"))
-  expect_null(summary_boot$summary$X)
-  expect_null(summary_boot$summary$Y)
-  expect_null(summary_boot$summary$M)
+  expect_identical(summary_boot$summary$x, "X")
+  expect_identical(summary_boot$summary$y, "Y")
+  expect_identical(summary_boot$summary$m, "M1")
   expect_null(summary_boot$summary$covariates)
-  expect_identical(summary_theory$summary$variables, c("X", "Y", "M1"))
-  expect_null(summary_theory$summary$X)
-  expect_null(summary_theory$summary$Y)
-  expect_null(summary_theory$summary$M)
+  expect_identical(summary_theory$summary$x, "X")
+  expect_identical(summary_theory$summary$y, "Y")
+  expect_identical(summary_theory$summary$m, "M1")
   expect_null(summary_theory$summary$covariates)
 
 })
@@ -212,23 +210,25 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_theory$summary$b), c(1L, 4L))
   expect_identical(rownames(summary_theory$summary$b), "M1")
   expect_identical(colnames(summary_theory$summary$b)[1], "Estimate")
-  # c path
-  expect_identical(dim(summary_boot$summary$c), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$c), "X")
-  expect_identical(colnames(summary_boot$summary$c)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$c), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$c), "X")
-  expect_identical(colnames(summary_theory$summary$c)[1], "Estimate")
-  # c' path
-  expect_identical(dim(summary_boot$summary$c_prime), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$c_prime), "X")
-  expect_identical(colnames(summary_boot$summary$c_prime)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$c_prime), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$c_prime), "X")
-  expect_identical(colnames(summary_theory$summary$c_prime)[1], "Estimate")
-  # covariates
-  expect_null(summary_boot$summary$covariate_effects)
-  expect_null(summary_theory$summary$covariate_effects)
+  # direct effect
+  expect_identical(dim(summary_boot$summary$direct), c(1L, 5L))
+  expect_identical(rownames(summary_boot$summary$direct), "X")
+  expect_identical(colnames(summary_boot$summary$direct)[1:2], c("Data", "Boot"))
+  expect_identical(dim(summary_theory$summary$direct), c(1L, 4L))
+  expect_identical(rownames(summary_theory$summary$direct), "X")
+  expect_identical(colnames(summary_theory$summary$direct)[1], "Estimate")
+  # total effect
+  expect_identical(dim(summary_boot$summary$total), c(1L, 5L))
+  expect_identical(rownames(summary_boot$summary$total), "X")
+  expect_identical(colnames(summary_boot$summary$total)[1:2], c("Data", "Boot"))
+  expect_identical(dim(summary_theory$summary$total), c(1L, 4L))
+  expect_identical(rownames(summary_theory$summary$total), "X")
+  expect_identical(colnames(summary_theory$summary$total)[1], "Estimate")
+  # no model fits
+  expect_null(summary_boot$summary$fit_mx)
+  expect_null(summary_boot$summary$fit_ymx)
+  expect_null(summary_theory$summary$fit_mx)
+  expect_null(summary_theory$summary$fit_ymx)
 
 })
 
@@ -237,18 +237,18 @@ test_that("effect summaries contain correct coefficient values", {
   # effects computed on original sample
   expect_identical(summary_boot$summary$a["X", "Data"], boot$fit$a)
   expect_identical(summary_boot$summary$b["M1", "Data"], boot$fit$b)
-  expect_identical(summary_boot$summary$c["X", "Data"], boot$fit$c)
-  expect_identical(summary_boot$summary$c_prime["X", "Data"], boot$fit$c_prime)
+  expect_identical(summary_boot$summary$direct["X", "Data"], boot$fit$direct)
+  expect_identical(summary_boot$summary$total["X", "Data"], boot$fit$total)
   expect_identical(summary_theory$summary$a["X", "Estimate"], boot$fit$a)
   expect_identical(summary_theory$summary$b["M1", "Estimate"], boot$fit$b)
-  expect_identical(summary_theory$summary$c["X", "Estimate"], boot$fit$c)
-  expect_identical(summary_theory$summary$c_prime["X", "Estimate"], boot$fit$c_prime)
+  expect_identical(summary_theory$summary$direct["X", "Estimate"], boot$fit$direct)
+  expect_identical(summary_theory$summary$total["X", "Estimate"], boot$fit$total)
 
   # bootstrapped effects
-  expect_equal(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 2]))
-  expect_equal(summary_boot$summary$b["M1", "Boot"], mean(boot$reps$t[, 3]))
-  expect_equal(summary_boot$summary$c["X", "Boot"], mean(boot$reps$t[, 4]))
-  expect_equal(summary_boot$summary$c_prime["X", "Boot"], mean(boot$reps$t[, 5]))
+  expect_equal(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 3]))
+  expect_equal(summary_boot$summary$b["M1", "Boot"], mean(boot$reps$t[, 5]))
+  expect_equal(summary_boot$summary$direct["X", "Boot"], mean(boot$reps$t[, 6]))
+  expect_equal(summary_boot$summary$total["X", "Boot"], mean(boot$reps$t[, 7]))
 
 })
 
@@ -262,7 +262,7 @@ test_that("data returned by fortify() has correct structure", {
   column_names <- c("Effect", "Point", "Lower", "Upper")
   expect_named(dot, column_names)
   # check that direct effect and indirect effect are plotted by default
-  effect_names <- c("c", "ab")
+  effect_names <- c("Direct", "ab")
   expect_identical(dot$Effect, factor(effect_names, levels = effect_names))
 
   ## density plot
@@ -313,16 +313,18 @@ test_that("data returned by fortify() has correct attributes", {
 })
 
 
-## only implemented for simple mediation without covariates
-
+# ## only implemented for simple mediation without covariates
+#
 # test_that("covariates not implemented", {
 #
 #   # run test with regression method
 #   set.seed(seed)
-#   test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
-#                              covariates = c("C1", "C2"), test = "boot",
-#                              R = 500, level = 0.9, type = "perc",
-#                              method = "regression", robust = FALSE)
+#   suppressWarnings(
+#     test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
+#                                covariates = c("C1", "C2"), test = "boot",
+#                                R = 500, level = 0.9, type = "perc",
+#                                method = "regression", robust = FALSE)
+#   )
 #
 #   # try to run test with covariates (should give warning)
 #   set.seed(seed)
@@ -343,10 +345,12 @@ test_that("data returned by fortify() has correct attributes", {
 #
 #   # run test with regression method
 #   set.seed(seed)
-#   test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-#                              test = "boot", R = 500, level = 0.9,
-#                              type = "perc", method = "regression",
-#                              robust = FALSE)
+#   suppressWarnings(
+#     test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
+#                                test = "boot", R = 500, level = 0.9,
+#                                type = "perc", method = "regression",
+#                                robust = FALSE)
+#   )
 #
 #   # try to run test with multiple mediators (should give warning)
 #   set.seed(seed)

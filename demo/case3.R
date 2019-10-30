@@ -21,12 +21,13 @@ plot(BSG2014[, c(x, y, m)], labels = gsub(" ", "\n", labs),
      pch = 21, bg = "black")
 
 # seed of random number generator
-today <- 20150601
+RNGversion("3.5.3")
+seed <- 20150601
 
 # perform standard method and proposed robust method
-set.seed(today)
+set.seed(seed)
 standard_boot <- test_mediation(BSG2014, x = x, y = y, m = m, robust = FALSE)
-set.seed(today)
+set.seed(seed)
 robust_boot <- test_mediation(BSG2014, x = x, y = y, m = m, robust = TRUE)
 
 # The standard method of Preacher & Hayes (2004, 2008) uses normal theory
@@ -56,7 +57,7 @@ weighted_cov <- function(x, w, ...) {
 }
 
 # function to compute an ellipse based on center and covariance matrix
-ellipse <- function (center, cov, level = 0.975, n = 100) {
+ellipse <- function(center, cov, level = 0.975, n = 100) {
   # extract scales and correlation
   scale <- sqrt(diag(cov))
   r <- cov[1, 2] / prod(scale)
@@ -128,7 +129,7 @@ plot(BSG2014[, c(bc_x, bc_y, bc_m)], labels = gsub(" ", "\n", labs),
      pch = 21, bg = "black")
 
 # perform standard method with transformed variables
-set.seed(today)
+set.seed(seed)
 bc_boot <- test_mediation(BSG2014, x = bc_x, y = bc_y, m = bc_m, robust = FALSE)
 summary(bc_boot, other = "theory")
 p_value(bc_boot)

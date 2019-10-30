@@ -19,12 +19,13 @@ plot(BSG2014[, c(x, y, m)], labels = gsub(" ", "\n", labs),
      pch = 21, bg = "black")
 
 # seed of random number generator
-today <- 20150601
+RNGversion("3.5.3")
+seed <- 20150601
 
 # perform standard method and proposed robust method
-set.seed(today)
+set.seed(seed)
 standard_boot <- test_mediation(BSG2014, x = x, y = y, m = m, robust = FALSE)
-set.seed(today)
+set.seed(seed)
 robust_boot <- test_mediation(BSG2014, x = x, y = y, m = m, robust = TRUE)
 
 # The standard method of Preacher & Hayes (2004, 2008) uses normal theory

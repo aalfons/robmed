@@ -12,7 +12,7 @@ shinyServer(function(input, output) {
   #  2) Its output type is a plot
 
   ## colors for plot
-  colors <- c("#F8766D", "#C77CFF", "#00BFC4")
+  colors <- c("#F8766D", "#F564E3", "#619CFF", "#00BFC4")
 
   ## function to generate data
   generate_data <- function(n_obs, a, b, c, n_out, d, seed) {
@@ -56,11 +56,11 @@ shinyServer(function(input, output) {
 
   ## scatter plot matrix of generated data
   output$scatterPlotMatrix <- renderPlot({
-    col_points <- rep.int(colors, c(input$n_out, 0, input$n_obs-input$n_out))
+    col_points <- rep.int(colors, c(input$n_out, 0, 0, input$n_obs-input$n_out))
     plot(df(), pch = 16, cex = 2, col = col_points, cex.axis = 1.5,
          cex.labels = 2, las = 1, oma = c(2.5, 2.5, 2.5, 10.5))
     legend("right", inset = c(-0.03, 0), legend = c("Good point", "Outlier"),
-           pch = 16, pt.cex = 1.4, col = colors[c(3, 1)], cex = 1.1,
+           pch = 16, pt.cex = 1.4, col = colors[c(4, 1)], cex = 1.1,
            y.intersp = 0.75, bty = "n", xpd = TRUE)
   })
 
@@ -83,10 +83,15 @@ shinyServer(function(input, output) {
                                          test = "boot", R = 1000, robust = TRUE,
                                          method = "covariance")
       }
+      if (input$median) {
+        median_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
+                                      test = "boot", R = 1000, robust = TRUE,
+                                      median = TRUE, method = "regression")
+      }
       if (input$robust) {
         robust_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
                                       test = "boot", R = 1000, robust = TRUE,
-                                      method = "regression")
+                                      median = FALSE, method = "regression")
       }
     })
 
@@ -94,10 +99,11 @@ shinyServer(function(input, output) {
     tests <- list()
     if (input$standard) tests$Standard <- standard_boot
     if (input$huberized) tests$Huberized <- huberized_boot
+    if (input$median) tests$Median <- median_boot
     if (input$robust) tests$ROBMED <- robust_boot
 
     # select colors
-    select <- c(input$standard, input$huberized, input$robust)
+    select <- c(input$standard, input$huberized, input$median, input$robust)
     selected_colors <- colors[select]
 
     # plot the density of the bootstrap distribution

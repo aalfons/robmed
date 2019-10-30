@@ -41,10 +41,6 @@
 #' \code{robmed} is a wrapper function for performing robust mediation analysis
 #' via regressions and the fast and robust bootstrap.
 #'
-#' \code{indirect} is a wrapper function for performing non-robust mediation
-#' analysis via regressions and the bootstrap (inspired by Preacher & Hayes'
-#' \code{SPSS} macro \code{INDIRECT}).
-#'
 #' @aliases print.boot_test_mediation print.sobel_test_mediation
 #'
 #' @param data  a data frame containing the variables.  Alternatively, this can
@@ -261,16 +257,6 @@ robmed <- function(..., test = "boot", method = "regression",
 }
 
 
-#' @rdname test_mediation
-#' @export
-
-indirect <- function(..., test = "boot", method = "regression",
-                     robust = FALSE, median = FALSE) {
-  test_mediation(..., test = "boot", method = "regression",
-                 robust = FALSE, median = FALSE)
-}
-
-
 ## internal function for bootstrap test
 boot_test_mediation <- function(fit,
                                 alternative = c("twosided", "less", "greater"),
@@ -301,21 +287,19 @@ boot_test_mediation <- function(fit,
             # compute coefficients from regression m ~ x + covariates
             x_i <- z_i[, c(1L, 2L, j_covariates)]
             m_i <- z_i[, 4L]
-            coef_m_i <- rq.fit(x_i, m_i, tau = 0.5)$coefficients
+            coef_m_i <- unname(rq.fit(x_i, m_i, tau = 0.5)$coefficients)
             # compute coefficients from regression y ~ m + x + covariates
             mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
             y_i <- z_i[, 3L]
-            coef_y_i <- rq.fit(mx_i, y_i, tau = 0.5)$coefficients
+            coef_y_i <- unname(rq.fit(mx_i, y_i, tau = 0.5)$coefficients)
             # compute effects
-            a <- unname(coef_m_i[2L])
-            b <- unname(coef_y_i[2L])
-            c <- unname(coef_y_i[3L])
+            a <- coef_m_i[2L]
+            b <- coef_y_i[2L]
+            direct <- coef_y_i[3L]
             ab <- a * b
-            c_prime <- ab + c
-            # compute effects of control variables if they exist
-            covariates <- unname(coef_y_i[-seq_len(3L)])
+            total <- ab + direct
             # return effects
-            c(ab, a, b, c, c_prime, covariates)
+            c(ab, coef_m_i, coef_y_i, total)
           }
         } else{
           # multiple mediators
@@ -336,14 +320,12 @@ boot_test_mediation <- function(fit,
             # compute effects
             a <- unname(coef_m_i[2L, ])
             b <- unname(coef_y_i[1L + seq_len(p_m)])
-            c <- unname(coef_y_i[2L + p_m])
+            direct <- unname(coef_y_i[2L + p_m])
             ab <- a * b
             sum_ab <- sum(ab)
-            c_prime <- sum_ab + c
-            # compute effects of control variables if they exist
-            covariates <- unname(coef_y_i[-seq_len(2L + p_m)])
+            total <- sum_ab + direct
             # return effects
-            c(sum_ab, ab, a, b, c, c_prime, covariates)
+            c(sum_ab, ab, coef_m_i, coef_y_i, total)
           }
         }
         # perform standard bootstrap
@@ -401,18 +383,16 @@ boot_test_mediation <- function(fit,
             coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
               crossprod(weighted_mx_i, weighted_y_i)
             # compute corrected coefficients
-            coef_m_i <- drop(coef_m + corr_m %*% (coef_m_i - coef_m))
-            coef_y_i <- drop(coef_y + corr_y %*% (coef_y_i - coef_y))
+            coef_m_i <- unname(drop(coef_m + corr_m %*% (coef_m_i - coef_m)))
+            coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
             # compute effects
-            a <- unname(coef_m_i[2L])
-            b <- unname(coef_y_i[2L])
-            c <- unname(coef_y_i[3L])
+            a <- coef_m_i[2L]
+            b <- coef_y_i[2L]
+            direct <- coef_y_i[3L]
             ab <- a * b
-            c_prime <- ab + c
-            # compute effects of control variables if they exist
-            covariates <- unname(coef_y_i[-(1L:3L)])
+            total <- ab + direct
             # return effects
-            c(ab, a, b, c, c_prime, covariates)
+            c(ab, coef_m_i, coef_y_i, total)
           }
         } else {
           # multiple mediators
@@ -464,14 +444,12 @@ boot_test_mediation <- function(fit,
             # compute effects
             a <- unname(coef_m_i[2L, ])
             b <- unname(coef_y_i[1L + seq_len(p_m)])
-            c <- unname(coef_y_i[2L + p_m])
+            direct <- unname(coef_y_i[2L + p_m])
             ab <- a * b
             sum_ab <- sum(ab)
-            c_prime <- sum_ab + c
-            # compute effects of control variables if they exist
-            covariates <- unname(coef_y_i[-seq_len(2L + p_m)])
+            total <- sum_ab + direct
             # return effects
-            c(sum_ab, ab, a, b, c, c_prime, covariates)
+            c(sum_ab, ab, coef_m_i, coef_y_i, total)
           }
         }
         # perform fast and robust bootstrap
@@ -493,21 +471,19 @@ boot_test_mediation <- function(fit,
           # compute coefficients from regression m ~ x + covariates
           x_i <- z_i[, c(1L, 2L, j_covariates)]
           m_i <- z_i[, 4L]
-          coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
+          coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
           # compute coefficients from regression y ~ m + x + covariates
           mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
           y_i <- z_i[, 3L]
-          coef_y_i <- drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i))
+          coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
           # compute effects
-          a <- unname(coef_m_i[2L])
-          b <- unname(coef_y_i[2L])
-          c <- unname(coef_y_i[3L])
+          a <- coef_m_i[2L]
+          b <- coef_y_i[2L]
+          direct <- coef_y_i[3L]
           ab <- a * b
-          c_prime <- ab + c
-          # compute effects of control variables if they exist
-          covariates <- unname(coef_y_i[-seq_len(3L)])
+          total <- ab + direct
           # return effects
-          c(ab, a, b, c, c_prime, covariates)
+          c(ab, coef_m_i, coef_y_i, total)
         }
       } else{
         # multiple mediators
@@ -529,14 +505,12 @@ boot_test_mediation <- function(fit,
           # compute effects
           a <- unname(coef_m_i[2L, ])
           b <- unname(coef_y_i[1L + seq_len(p_m)])
-          c <- unname(coef_y_i[2L + p_m])
+          direct <- unname(coef_y_i[2L + p_m])
           ab <- a * b
           sum_ab <- sum(ab)
-          c_prime <- sum_ab + c
-          # compute effects of control variables if they exist
-          covariates <- unname(coef_y_i[-seq_len(2L + p_m)])
+          total <- sum_ab + direct
           # return effects
-          c(sum_ab, ab, a, b, c, c_prime, covariates)
+          c(sum_ab, ab, coef_m_i, coef_y_i, total)
         }
       }
       # perform standard bootstrap
@@ -566,9 +540,9 @@ boot_test_mediation <- function(fit,
       a <- S[m, x] / S[x, x]
       det <- S[x, x] * S[m, m] - S[m, x]^2
       b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
-      c <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
-      c_prime <- S[y, x] / S[x, x]
-      c(a*b, a, b, c, c_prime)
+      direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+      total <- S[y, x] / S[x, x]
+      c(a*b, NA_real_, a, NA_real_, b, direct, total)
     }, R=R, ...)
     R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
   } else stop("method not implemented")
@@ -595,6 +569,7 @@ boot_test_mediation <- function(fit,
   result
 }
 
+
 ## internal function for sobel test
 sobel_test_mediation <- function(fit,
                                  alternative = c("twosided", "less", "greater"),
@@ -604,8 +579,13 @@ sobel_test_mediation <- function(fit,
   b <- fit$b
   # compute standard errors
   summary <- get_summary(fit)
-  sa <- summary$a[, 2L]
-  sb <- summary$b[, 2L]
+  if (inherits(fit, "reg_fit_mediation")) {
+    sa <- summary$fit_mx$coefficients[2L, 2L]
+    sb <- summary$fit_ymx$coefficients[2L, 2L]
+  } else if (inherits(fit, "cov_fit_mediation")) {
+    sa <- summary$a[, 2L]
+    sb <- summary$b[, 2L]
+  } else stop("not implemented for this type of model fit")
   # compute test statistic and p-Value
   ab <- a * b
   se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
@@ -618,9 +598,10 @@ sobel_test_mediation <- function(fit,
   result
 }
 
-## wrapper function for boot() that ignores unused arguments, but allows
-## arguments for parallel computing to be passed down
-local_boot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
+
+# ## wrapper function for boot() that ignores unused arguments, but allows
+# ## arguments for parallel computing to be passed down
+# local_boot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
 ## get control arguments for psi function as used in a given model fit
 get_psi_control <- function(object) object$control[c("tuning.psi", "psi")]
@@ -643,4 +624,41 @@ p_value_z <- function(z, alternative = c("twosided", "less", "greater")) {
   # compute p-value
   switch(alternative, twosided = 2 * pnorm(abs(z), lower.tail = FALSE),
          less = pnorm(z), greater = pnorm(z, lower.tail = FALSE))
+}
+
+
+# The function for bootstrap replicates is required to return vector.  This
+# means that the columns of the bootstrap replicates contain coefficient
+# estimates from different models.  This utility function returns the indices
+# that correspond to the respective models, which makes it easier to extract
+# the desired coefficients.
+get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
+  # numbers of coefficients in different models
+  if (indirect) p_ab <- if (p_m == 1L) 1L else 1L + p_m
+  else p_ab <- 0L
+  p_mx <- rep.int(2L + p_covariates, p_m)
+  p_ymx <- 2L + p_m + p_covariates
+  p_total <- 1
+  p_all <- sum(p_ab, p_mx, p_ymx, p_total)
+  indices <- seq_len(p_all)
+  # the first columns correspond to indirect effect(s) of x on y
+  first <- 1L
+  indices_ab <- if (indirect) seq.int(first, length.out = p_ab) else integer()
+  # the next columns correspond to models m ~ x + covariates
+  first <- first + p_ab
+  if (p_m == 1L) {
+    indices_mx <- seq.int(from = first, length.out = p_mx)
+  } else {
+    first_mx <- first + c(0L, cumsum(p_mx[-1L]))
+    indices_mx <- mapply(seq.int, from = first_mx, length.out = p_mx,
+                         SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  }
+  # the next columns correspond to model y ~ m + x + covariates
+  first <- first + sum(p_mx)
+  indices_ymx <- seq.int(from = first, length.out = p_ymx)
+  # the last column corresponds to the total effect of x on y
+  index_total <- first + p_ymx
+  # return list of indices
+  list(ab = indices_ab, fit_mx = indices_mx, fit_ymx = indices_ymx,
+       total = index_total)
 }
