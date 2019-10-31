@@ -15,36 +15,56 @@ tol_ellipse.test_mediation <- function(object, ...) {
 }
 
 #' @export
-tol_ellipse.reg_fit_mediation <- function(object,
-                                          variables = c("mx", "ym", "yx"),
-                                          level = 0.975, npoints = 100,
-                                          ...) {
+tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
+                                          vertical = NULL, partial = FALSE,
+                                          level = 0.975, npoints = 100, ...) {
   # initializations
   if (object$robust && object$median) {
     stop("tolerance ellipse not meaningful for median regression")
   }
-  if (length(object$m) + length(object$covariates) > 1) {
-    stop("currently only implemented for simple mediation models")
+  # extract variable names
+  x <- object$x
+  y <- object$y
+  m <- object$m
+  # check variable on vertical axis
+  if (is.null(vertical)) vertical <- m
+  else {
+    if (!is.character(vertical) && length(vertical) == 1) {
+      stop("only one variable allowed for the vertical axis")
+    }
+    if (!(vertical %in% m || vertical == y)) {
+      stop("variable on the vertical axis must be ",
+           "the dependent variable or a mediator")
+    }
   }
-  variables <- match.arg(variables)
+  # check variable on horizontal axis
+  if (is.null(horizontal)) horizontal <- x
+  else {
+    if (!is.character(horizontal) && length(horizontal) == 1) {
+      stop("only one variable allowed for the horizontal axis")
+    }
+    if (vertical %in% m && horizontal != x) {
+      stop("variable on the horizontal axis must be the independent variable")
+    } else if (vertical == y && !(horizontal %in% m || horizontal == x)) {
+      stop("variable on the horizontal axis must be ",
+           "the dependent variable or a mediator")
+    }
+  }
+  # other initializations
+  partial <- isTRUE(partial)
+  have_mx <- vertical == m && horizontal == x
   # extract model fit
-  if (object$robust || variables != "mx") {
-    fit <- if (variables == "mx") object$fit_mx else object$fit_ymx
+  if (partial || object$robust) {
+    fit <- if (have_mx) object$fit_mx else object$fit_ymx
   }
   # extract data to plot
-  if (variables == "mx") {
-    select <- c(object$x, object$m)
-    data <- object$data[, select]
-  } else if (variables == "ym") {
-    x <- object$x
-    residuals <- object$data[, object$y] - coef(fit)[x] * object$data[, x]
-    data <- cbind(object$data[, object$m, drop = FALSE],
-                  .Residual = residuals)
+  if (partial) {
+    x <- object$data[, horizontal]
+    y <- residuals(fit) + coef(fit)[horizontal] * x
+    data <- data.frame(x, y)
   } else {
-    m <- object$m
-    residuals <- object$data[, object$y] - coef(fit)[m] * object$data[, m]
-    data <- cbind(object$data[, object$x, drop = FALSE],
-                  .Residual = residuals)
+    data <- data.frame(x = object$data[, horizontal],
+                       y = object$data[, vertical])
   }
   # obtain location and shape of ellipse
   if (object$robust) {
@@ -62,30 +82,31 @@ tol_ellipse.reg_fit_mediation <- function(object,
   # compute ellipse
   ellipse <- ellipse(center, cov, level = level, npoints = npoints)
   # return data and ellipse
-  list(data = data, ellipse = as.data.frame(ellipse), weights = w)
+  list(data = data, ellipse = as.data.frame(ellipse), weights = w,
+       horizontal = horizontal, vertical = vertical, partial = partial)
 }
 
-#' @export
-tol_ellipse.cov_fit_mediation <- function(object,
-                                          variables = c("mx", "ym", "yx"),
-                                          level = 0.975, npoints = 100,
-                                          ...) {
-  # initializations
-  if (length(object$m) + length(object$covariates) > 1) {
-    stop("currently only implemented for simple mediation models")
-  }
-  variables <- match.arg(variables)
-  # select which variables to plot
-  if (variables == "mx") select <- c(object$x, object$m)
-  else stop("not implemented yet")
-  # extract covariance matrix
-  center <- object$cov$center[select]
-  cov <- object$cov$cov[select, select]
-  # compute ellipse
-  ellipse <- ellipse(center, cov, level = level, npoints = npoints)
-  # TODO: also return data
-  as.data.frame(ellipse)
-}
+# ## @export
+# tol_ellipse.cov_fit_mediation <- function(object,
+#                                           variables = c("mx", "ym", "yx"),
+#                                           level = 0.975, npoints = 100,
+#                                           ...) {
+#   # initializations
+#   if (length(object$m) + length(object$covariates) > 1) {
+#     stop("currently only implemented for simple mediation models")
+#   }
+#   variables <- match.arg(variables)
+#   # select which variables to plot
+#   if (variables == "mx") select <- c(object$x, object$m)
+#   else stop("not implemented yet")
+#   # extract covariance matrix
+#   center <- object$cov$center[select]
+#   cov <- object$cov$cov[select, select]
+#   # compute ellipse
+#   ellipse <- ellipse(center, cov, level = level, npoints = npoints)
+#   # TODO: also return data
+#   as.data.frame(ellipse)
+# }
 
 # function to compute an ellipse based on center and covariance matrix
 ellipse <- function(center, cov, level = 0.975, npoints = 100) {
