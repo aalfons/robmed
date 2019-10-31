@@ -170,56 +170,92 @@ weighted.crossprod <- function(x, w) {
 }
 
 
-# ## @import ggplot2
-# ## @importFrom ellipse ellipse
-# ## @export
-# ellipse_plot <- function(object, ...) UseMethod("ellipse_plot")
+#' @import ggplot2
+#' @export
+ellipse_plot <- function(object, ...) UseMethod("ellipse_plot")
+
+#' @export
+ellipse_plot.boot_test_mediation <- function(object, ...) {
+  # initial checks
+  if (!inherits(object$fit, "reg_fit_mediation")) {
+    stop("not implemented for this type of mediation model")
+  }
+  # call method for mediation model fit
+  ellipse_plot(object$fit, ...)
+}
+
+#' @export
+ellipse_plot.reg_fit_mediation <- function(object, horizontal = NULL,
+                                           vertical = NULL, partial = FALSE,
+                                           ...) {
+  # obtain data to be plotted and tolerance ellipse
+  # TODO: change this such that tol_ellipse() returns data frame for points
+  #       including weights, coefficients component, etc. (everything to
+  #       generate the plot)
+  df_list <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
+                         partial = partial, ...)
+  # extract data for plotting points and define aesthetic mapping
+  df_points <- df_list$data
+  aes_points <- list(x = "x", y = "y")
+  # add weights in case of robust regression
+  weights <- df_list$weights
+  have_weights <- !is.null(weights)
+  if (have_weights) {
+    df_points$Weight <- weights
+    aes_points$fill <- "Weight"
+  }
+  # extract coefficients of regression line
+  have_mx <- df_list$vertical == object$m && df_list$horizontal == object$x
+  coefficients <- if (have_mx) coef(object$fit_mx) else coef(object$fit_ymx)
+  # create plot
+  p <- ggplot() +
+    geom_path(aes_string(x = "x", y = "y"), data = df_list$ellipse) +
+    geom_point(do.call(aes_string, aes_points), data = df_points, shape = 21)
+  # add line representing (partial) effect
+  if (partial || have_mx) {
+    if (have_mx && !partial) intercept <- coefficients["(Intercept)"]
+    else intercept <- 0
+    slope <- coefficients[df_list$horizontal]
+    p <- p + geom_abline(intercept = intercept, slope = slope)
+  }
+  # add nice labels
+  if (df_list$partial) ylab <- paste("Partial residuals of", df_list$vertical)
+  else ylab <- df_list$vertical
+  p <- p + labs(x = df_list$horizontal, y = ylab)
+  # add color gradient for weights
+  if (have_weights) {
+    p <- p + scale_fill_gradient(low = "transparent", high = "black")
+  }
+  # return plot
+  p
+}
+
+
+# foo <- tol_ellipse(test, horizontal = "ValueDiversity", vertical = "TaskConflict")
+# df_points <- cbind(foo$data, Weight = foo$weights)
+# coefficients <- coef(test$fit$fit_mx)
+# ggplot() +
+#   geom_point(aes(x = x, y = y, color = Weight),
+#              data = df_points) +
+#   geom_path(aes(x = x, y = y), data = foo$ellipse) +
+#   geom_abline(intercept = coefficients[1], slope = coefficients["ValueDiversity"]) +
+#   labs(x = "ValueDiversity", y = "TaskConflict")
 #
-# ## @export
-# ellipse_plot.boot_test_mediation <- function(object, ...) {
-#   # initial checks
-#   if (!inherits(object$fit, "reg_fit_mediation")) {
-#     stop("not implemented for this type of mediation model")
-#   }
-#   if (length(object$fit$m) + length(object$fit$covariates) > 1) {
-#     stop("currently only implemented for simple mediation models")
-#   }
-#   # call method for mediation model fit
-#   ellipse_plot(object$fit)
-# }
+# bar <- tol_ellipse(test, horizontal = "ValueDiversity", vertical = "TeamCommitment", partial = TRUE)
+# df_points <- cbind(bar$data, Weight = bar$weights)
+# coefficients <- coef(test$fit$fit_ymx)
+# ggplot() +
+#   geom_point(aes(x = x, y = y, color = Weight),
+#              data = df_points) +
+#   geom_path(aes(x = x, y = y), data = bar$ellipse) +
+#   geom_abline(intercept = 0, slope = coefficients[bar$horizontal]) +
+#   labs(x = bar$horizontal, y = paste("Partial residual of", bar$vertical))
 #
-# ## @export
-# ellipse_plot.reg_fit_mediation <- function(object, fit = c("mx", "ymx"),
-#                                            level = 0.975, npoints = 100,
-#                                            ...) {
-#   # selector for requested model fit
-#   postfix <- match.arg(fit)
-#   fit <- paste("fit", postfix, sep = "_")
-#   if (postfix == "mx") {
-#     y <- object$m
-#     x <- object$x
-#   } else {
-#     stop("not implemented yet")
-#   }
-#   # create data frame for plotting points
-#   df_points <- object$data[, c(x, y)]
-#   # add weights in case of robust regression
-#   aes_points <- list(x = x, y = y)
-#   if (object$robust) {
-#     # FIXME: make sure that neighter variable is called 'Weight'
-#     df_points$Weight <- weights(object[[fit]], type = "robustness")
-#     aes_points$colour <- "Weight"
-#     # aes_points$size <- "Weight"
-#   }
-#   aes_points <- do.call(aes_string, aes_points)
-#   # create data frame for plotting ellipse
-#   df_ellipse <- tol_ellipse(object, fit = postfix, level = level,
-#                                 npoints = npoints)
-#   # extract coefficients of regression line
-#   coefficients <- coef(object[[fit]])
-#   # create plot
-#   ggplot() +
-#     geom_path(aes_string(x = x, y = y), data = df_ellipse) +
-#     geom_point(aes_points, data = df_points) +
-#     geom_abline(intercept = coefficients[1], slope = coefficients[2])
-# }
+# bar <- tol_ellipse(test, horizontal = "TaskConflict", vertical = "TeamCommitment", partial = FALSE)
+# df_points <- cbind(bar$data, Weight = bar$weights)
+# coefficients <- coef(test$fit$fit_ymx)
+# ggplot() +
+#   geom_point(aes(x = x, y = y, color = Weight),
+#              data = df_points) +
+#   geom_path(aes(x = x, y = y), data = bar$ellipse) +
+#   labs(x = bar$horizontal, y = bar$vertical)
