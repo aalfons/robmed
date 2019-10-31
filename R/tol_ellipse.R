@@ -54,14 +54,24 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   partial <- isTRUE(partial)
   have_mx <- vertical == m && horizontal == x
   # extract model fit
-  if (partial || object$robust) {
+  if (partial || have_mx || object$robust) {
     fit <- if (have_mx) object$fit_mx else object$fit_ymx
+  }
+  # if applicable, extract intercept and slope
+  if (partial || have_mx) {
+    coefficients <- coef(fit)
+    if (have_mx && !partial) intercept <- unname(coefficients["(Intercept)"])
+    else intercept <- 0
+    slope <- unname(coefficients[horizontal])
+  } else {
+    intercept <- NULL
+    slope <- NULL
   }
   # extract data to plot
   if (partial) {
     x <- object$data[, horizontal]
-    y <- residuals(fit) + coef(fit)[horizontal] * x
-    data <- data.frame(x, y)
+    y <- residuals(fit) + slope * x
+    data <- data.frame(x = x, y = y)
   } else {
     data <- data.frame(x = object$data[, horizontal],
                        y = object$data[, vertical])
@@ -73,17 +83,20 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
     # compute weighted mean and weighted covariance matrix
     center <- sapply(data, weighted.mean, w = w)
     cov <- weighted.cov(data, w = w)
+    # add weights to data frame
+    data$Weight <- w
   } else {
     # compute mean and covariance matrix
     center <- colMeans(data)
     cov <- cov(data)
-    w <- NULL
   }
   # compute ellipse
   ellipse <- ellipse(center, cov, level = level, npoints = npoints)
   # return data and ellipse
-  list(data = data, ellipse = as.data.frame(ellipse), weights = w,
-       horizontal = horizontal, vertical = vertical, partial = partial)
+  list(data = data, ellipse = as.data.frame(ellipse),
+       intercept = intercept, slope = slope,
+       horizontal = horizontal, vertical = vertical,
+       partial = partial, robust = object$robust)
 }
 
 # ## @export
@@ -189,41 +202,25 @@ ellipse_plot.reg_fit_mediation <- function(object, horizontal = NULL,
                                            vertical = NULL, partial = FALSE,
                                            ...) {
   # obtain data to be plotted and tolerance ellipse
-  # TODO: change this such that tol_ellipse() returns data frame for points
-  #       including weights, coefficients component, etc. (everything to
-  #       generate the plot)
   df_list <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
                          partial = partial, ...)
-  # extract data for plotting points and define aesthetic mapping
-  df_points <- df_list$data
-  aes_points <- list(x = "x", y = "y")
-  # add weights in case of robust regression
-  weights <- df_list$weights
-  have_weights <- !is.null(weights)
-  if (have_weights) {
-    df_points$Weight <- weights
-    aes_points$fill <- "Weight"
-  }
-  # extract coefficients of regression line
-  have_mx <- df_list$vertical == object$m && df_list$horizontal == object$x
-  coefficients <- if (have_mx) coef(object$fit_mx) else coef(object$fit_ymx)
+  # define aesthetic mapping for plotting points
+  if (df_list$robust) aes_data <- aes_string(x = "x", y = "y", fill = "Weight")
+  else aes_data <- aes_string(x = "x", y = "y")
   # create plot
   p <- ggplot() +
     geom_path(aes_string(x = "x", y = "y"), data = df_list$ellipse) +
-    geom_point(do.call(aes_string, aes_points), data = df_points, shape = 21)
+    geom_point(aes_data, data = df_list$data, shape = 21)
   # add line representing (partial) effect
-  if (partial || have_mx) {
-    if (have_mx && !partial) intercept <- coefficients["(Intercept)"]
-    else intercept <- 0
-    slope <- coefficients[df_list$horizontal]
-    p <- p + geom_abline(intercept = intercept, slope = slope)
+  if (!is.null(df_list$intercept) && !is.null(df_list$slope)) {
+    p <- p + geom_abline(intercept = df_list$intercept, slope = df_list$slope)
   }
   # add nice labels
   if (df_list$partial) ylab <- paste("Partial residuals of", df_list$vertical)
   else ylab <- df_list$vertical
   p <- p + labs(x = df_list$horizontal, y = ylab)
   # add color gradient for weights
-  if (have_weights) {
+  if (df_list$robust) {
     p <- p + scale_fill_gradient(low = "transparent", high = "black")
   }
   # return plot
