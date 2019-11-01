@@ -116,9 +116,10 @@ fortify.boot_test_mediation <- function(model, data,
     }
     # add additional information as attributes
     attr(data, "mapping") <- aes_string(x = "ab", y = "Density")
-    attr(data, "geom") <- function(..., stat) {
-      geom_density(..., stat = "identity")
-    }
+    # attr(data, "geom") <- function(..., stat) {
+    #   geom_density(..., stat = "identity")
+    # }
+    attr(data, "geom") <- geom_densityline
     attr(data, "main") <- "Bootstrap distribution"
     if(p_m == 1L) {
       attr(data, "ci") <- data.frame(ab = ab, Density = NA_real_,
@@ -181,9 +182,10 @@ fortify.sobel_test_mediation <- function(model, data,
     data <- data.frame(ab=x, Density=y)
     # add additional information as attributes
     attr(data, "mapping") <- aes_string(x="ab", y="Density")
-    attr(data, "geom") <- function(..., stat) {
-      geom_density(..., stat = "identity")
-    }
+    # attr(data, "geom") <- function(..., stat) {
+    #   geom_density(..., stat = "identity")
+    # }
+    attr(data, "geom") <- geom_densityline
     attr(data, "main") <- "Assumed normal distribution"
     attr(data, "ci") <- data.frame(ab, Density=dnorm(ab, mean=ab, sd=se),
                                    Lower=ci[1], Upper=ci[2])
@@ -247,9 +249,10 @@ fortify.list <- function(model, data, ...) {
     # additional information for density plot
     info$mapping <- aes_string(x = "ab", y = "Density", color = "Method")
     if(any(is_boot) && any(is_sobel)) {
-      info$geom <- function(..., stat) {
-        geom_density(..., stat = "identity")
-      }
+      # info$geom <- function(..., stat) {
+      #   geom_density(..., stat = "identity")
+      # }
+      info$geom <- geom_densityline
       info$main <- NULL
     }
     # combine confidence intervals for the methods

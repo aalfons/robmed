@@ -189,11 +189,19 @@ density_plot <- function(data, mapping, facets, main = NULL,
 }
 
 
+## custom geom for density estimate to be used in density plot
+#  1) always use stat = "identity" because the density is already estimated
+#  2) do not allow for a fill color because a filled rectangle is used to
+#     display the confidence interval
+geom_densityline <- function(..., stat, fill, bg, alpha) {
+  geom_density(..., stat = "identity")
+}
+
 ## custom geom for vertical line to be used in density plot:
-#  1) avoid passing argument 'alpha' to ensure that line is of the same style as
-#     lines of density
+#  1) avoid passing argument 'alpha' to ensure that line is of the same style
+#     as lines of density
 #  2) avoid passing unknown argument 'fill'
-geom_indirect <- function(..., alpha, fill) geom_vline(...)
+geom_indirect <- function(..., fill, bg, alpha) geom_vline(...)
 
 ## custom geom for confidence intervals to be used in density plot:
 #  fix transparant rectangle without edges and avoid duplication of arguments
@@ -204,9 +212,10 @@ geom_ci <- function(...) {
   # replace argument names with standardized ones
   standardized_names <- standardise_aes_names(argument_names)
   names(arguments) <- standardized_names
-  # make sure that there is no border and that rectangle is transparent
+  # make sure that there is no border
   arguments$colour <- NA
-  arguments$alpha <- 0.2
+  # use default transparency if not specified otherwise
+  if (is.null(arguments$alpha)) arguments$alpha <- 0.2
   # call existing geom function
   do.call(geom_rect, arguments)
 }
