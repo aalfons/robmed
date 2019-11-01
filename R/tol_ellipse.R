@@ -121,7 +121,16 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
 #   as.data.frame(ellipse)
 # }
 
-# function to compute an ellipse based on center and covariance matrix
+# ## @export
+# tol_ellipse.list <- function(object, ...) {
+#   # If I add a column 'Method' to the data frame, it could happen that one of
+#   # the variables is also called 'Method'
+#   # Maybe let the user do some work for combining ellipses?
+#   stop("not implemented yet")
+# }
+
+
+## workhorse function to compute ellipse based on center and covariance matrix
 ellipse <- function(center, cov, level = 0.975, npoints = 100) {
   # extract scales and correlation
   scale <- sqrt(diag(cov))
@@ -137,15 +146,6 @@ ellipse <- function(center, cov, level = 0.975, npoints = 100) {
   colnames(xy) <- names(center)
   xy
 }
-
-
-# ## @export
-# tol_ellipse.list <- function(object, ...) {
-#   # If I add a column 'Method' to the data frame, it could happen that one of
-#   # the variables is also called 'Method'
-#   # Maybe let the user do some work for combining ellipses?
-#   stop("not implemented yet")
-# }
 
 
 ## utility functions
@@ -181,78 +181,3 @@ weighted.crossprod <- function(x, w) {
     sum(xi * xj * w) / (sum(w) - 1)
   }))
 }
-
-
-#' @import ggplot2
-#' @export
-ellipse_plot <- function(object, ...) UseMethod("ellipse_plot")
-
-#' @export
-ellipse_plot.boot_test_mediation <- function(object, ...) {
-  # initial checks
-  if (!inherits(object$fit, "reg_fit_mediation")) {
-    stop("not implemented for this type of mediation model")
-  }
-  # call method for mediation model fit
-  ellipse_plot(object$fit, ...)
-}
-
-#' @export
-ellipse_plot.reg_fit_mediation <- function(object, horizontal = NULL,
-                                           vertical = NULL, partial = FALSE,
-                                           ...) {
-  # obtain data to be plotted and tolerance ellipse
-  df_list <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
-                         partial = partial, ...)
-  # define aesthetic mapping for plotting points
-  if (df_list$robust) aes_data <- aes_string(x = "x", y = "y", fill = "Weight")
-  else aes_data <- aes_string(x = "x", y = "y")
-  # create plot
-  p <- ggplot() +
-    geom_path(aes_string(x = "x", y = "y"), data = df_list$ellipse) +
-    geom_point(aes_data, data = df_list$data, shape = 21)
-  # add line representing (partial) effect
-  if (!is.null(df_list$intercept) && !is.null(df_list$slope)) {
-    p <- p + geom_abline(intercept = df_list$intercept, slope = df_list$slope)
-  }
-  # add nice labels
-  if (df_list$partial) ylab <- paste("Partial residuals of", df_list$vertical)
-  else ylab <- df_list$vertical
-  p <- p + labs(x = df_list$horizontal, y = ylab)
-  # add color gradient for weights
-  if (df_list$robust) {
-    p <- p + scale_fill_gradient(low = "transparent", high = "black")
-  }
-  # return plot
-  p
-}
-
-
-# foo <- tol_ellipse(test, horizontal = "ValueDiversity", vertical = "TaskConflict")
-# df_points <- cbind(foo$data, Weight = foo$weights)
-# coefficients <- coef(test$fit$fit_mx)
-# ggplot() +
-#   geom_point(aes(x = x, y = y, color = Weight),
-#              data = df_points) +
-#   geom_path(aes(x = x, y = y), data = foo$ellipse) +
-#   geom_abline(intercept = coefficients[1], slope = coefficients["ValueDiversity"]) +
-#   labs(x = "ValueDiversity", y = "TaskConflict")
-#
-# bar <- tol_ellipse(test, horizontal = "ValueDiversity", vertical = "TeamCommitment", partial = TRUE)
-# df_points <- cbind(bar$data, Weight = bar$weights)
-# coefficients <- coef(test$fit$fit_ymx)
-# ggplot() +
-#   geom_point(aes(x = x, y = y, color = Weight),
-#              data = df_points) +
-#   geom_path(aes(x = x, y = y), data = bar$ellipse) +
-#   geom_abline(intercept = 0, slope = coefficients[bar$horizontal]) +
-#   labs(x = bar$horizontal, y = paste("Partial residual of", bar$vertical))
-#
-# bar <- tol_ellipse(test, horizontal = "TaskConflict", vertical = "TeamCommitment", partial = FALSE)
-# df_points <- cbind(bar$data, Weight = bar$weights)
-# coefficients <- coef(test$fit$fit_ymx)
-# ggplot() +
-#   geom_point(aes(x = x, y = y, color = Weight),
-#              data = df_points) +
-#   geom_path(aes(x = x, y = y), data = bar$ellipse) +
-#   labs(x = bar$horizontal, y = bar$vertical)
