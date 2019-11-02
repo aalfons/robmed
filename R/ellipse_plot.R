@@ -43,7 +43,8 @@ ellipse_plot.reg_fit_mediation <- function(object, horizontal = NULL,
   p <- p + labs(x = df_list$horizontal, y = ylab)
   # add color gradient for weights
   if (df_list$robust) {
-    p <- p + scale_fill_gradient(low = "transparent", high = "black")
+    p <- p +
+      scale_fill_gradient(limits = 0:1, low = "transparent", high = "black")
   }
   # return plot
   p
