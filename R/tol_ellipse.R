@@ -52,7 +52,7 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical == m && horizontal == x
+  have_mx <- vertical == m && horizontal == x && length(object$covariates) == 0
   # extract model fit
   if (partial || have_mx || object$robust) {
     fit <- if (have_mx) object$fit_mx else object$fit_ymx
