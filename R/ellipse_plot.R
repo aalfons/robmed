@@ -9,19 +9,19 @@
 ellipse_plot <- function(object, ...) UseMethod("ellipse_plot")
 
 #' @export
-ellipse_plot.boot_test_mediation <- function(object, ...) {
-  # initial checks
-  if (!inherits(object$fit, "reg_fit_mediation")) {
-    stop("not implemented for this type of mediation model")
-  }
+ellipse_plot.test_mediation <- function(object, ...) {
+  # # initial checks
+  # if (!inherits(object$fit, "reg_fit_mediation")) {
+  #   stop("not implemented for this type of mediation model")
+  # }
   # call method for mediation model fit
   ellipse_plot(object$fit, ...)
 }
 
 #' @export
-ellipse_plot.reg_fit_mediation <- function(object, horizontal = NULL,
-                                           vertical = NULL, partial = FALSE,
-                                           level = 0.975, npoints = 100, ...) {
+ellipse_plot.fit_mediation <- function(object, horizontal = NULL,
+                                       vertical = NULL, partial = FALSE,
+                                       level = 0.975, npoints = 100, ...) {
   # obtain data to be plotted and tolerance ellipse
   df_list <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
                          partial = partial, level = level, npoints = npoints)

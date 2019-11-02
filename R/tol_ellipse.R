@@ -99,27 +99,72 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
        partial = partial, robust = object$robust)
 }
 
-# ## @export
-# tol_ellipse.cov_fit_mediation <- function(object,
-#                                           variables = c("mx", "ym", "yx"),
-#                                           level = 0.975, npoints = 100,
-#                                           ...) {
-#   # initializations
-#   if (length(object$m) + length(object$covariates) > 1) {
-#     stop("currently only implemented for simple mediation models")
-#   }
-#   variables <- match.arg(variables)
-#   # select which variables to plot
-#   if (variables == "mx") select <- c(object$x, object$m)
-#   else stop("not implemented yet")
-#   # extract covariance matrix
-#   center <- object$cov$center[select]
-#   cov <- object$cov$cov[select, select]
-#   # compute ellipse
-#   ellipse <- ellipse(center, cov, level = level, npoints = npoints)
-#   # TODO: also return data
-#   as.data.frame(ellipse)
-# }
+#' @export
+tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
+                                          vertical = NULL, partial = FALSE,
+                                          level = 0.975, npoints = 100, ...) {
+  # extract variable names
+  x <- object$x
+  y <- object$y
+  m <- object$m
+  # check variable on vertical axis
+  if (is.null(vertical)) vertical <- m
+  else {
+    if (!is.character(vertical) && length(vertical) == 1) {
+      stop("only one variable allowed for the vertical axis")
+    }
+    if (vertical != m && vertical != y) {
+      stop("variable on the vertical axis must be ",
+           "the dependent variable or the mediator")
+    }
+  }
+  # check variable on horizontal axis
+  if (is.null(horizontal)) horizontal <- x
+  else {
+    if (!is.character(horizontal) && length(horizontal) == 1) {
+      stop("only one variable allowed for the horizontal axis")
+    }
+    if (vertical == m && horizontal != x) {
+      stop("variable on the horizontal axis must be the independent variable")
+    } else if (vertical == y && (horizontal != m && horizontal != x)) {
+      stop("variable on the horizontal axis must be ",
+           "the dependent variable or a mediator")
+    }
+  }
+  # other initializations
+  partial <- isTRUE(partial)
+  have_mx <- vertical == m && horizontal == x
+  # extract covariance fit
+  fit <- object$cov
+  # extract information to be plotted
+  if (partial) {
+    stop("not implemented yet")
+  } else {
+    # extract data to plot
+    data <- data.frame(x = object$data[, horizontal],
+                       y = object$data[, vertical])
+    # extract location and shape of ellipse
+    select <- c(horizontal, vertical)
+    center <- fit$center[select]
+    cov <- fit$cov[select, select]
+  }
+  # TODO: if applicable, compute intercept and slope
+  # if (partial || have_mx) {
+  #
+  # }
+  intercept <- NULL
+  slope <- NULL
+  # in case of robust covariance matrix, add interpretable robustness weights
+  if (object$robust) data$Weight <- weights(fit, type = "relative")
+  # compute ellipse
+  ellipse <- ellipse(center, cov, level = level, npoints = npoints)
+  colnames(ellipse) <- c("x", "y")
+  # return data and ellipse
+  list(data = data, ellipse = as.data.frame(ellipse),
+       intercept = intercept, slope = slope,
+       horizontal = horizontal, vertical = vertical,
+       partial = partial, robust = object$robust)
+}
 
 # ## @export
 # tol_ellipse.list <- function(object, ...) {
