@@ -7,6 +7,8 @@ Changes in robmed version 0.5.1
     + Bugfix in density_plot(): avoids that duplicated or unknown arguments are
       passed to geom()'s via the ... argument.
 
+    + Updated demos for empirical cases 2 and 3.
+
 
 Changes in robmed version 0.5.0
 

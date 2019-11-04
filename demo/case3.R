@@ -79,7 +79,14 @@ w <- weights(robust_boot$fit$fit_mx, type = "robustness")
 standard_center <- colMeans(BSG2014[, c(x, m)])
 standard_cov <- cov(BSG2014[, c(x, m)])
 robust_center <- sapply(BSG2014[, c(x, m)], weighted.mean, w = w)
-robust_cov <- weighted_cov(BSG2014[, c(x, m)], w = w)
+# The weighted covariance matrix with weights from MM-regression needs to be
+# multiplied with a correction factor.  Otherwise the determinant (volume) of
+# the covariance matrix would be underestimated, as observations are also
+# partly downweighted under the mediation model.  Here this correction factor
+# was simulated from 100 000 simulation runs for a mediation model with
+# parameter values drawn from the sampling distributions of the coefficient
+# estimators obtained in this example.
+robust_cov <- 1.039766 * weighted_cov(BSG2014[, c(x, m)], w = w)
 # compute tolerance ellipses
 standard_ellipse <- ellipse(standard_center, standard_cov, level = 0.975)
 robust_ellipse <- ellipse(robust_center, robust_cov, level = 0.975)
