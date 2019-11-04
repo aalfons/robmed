@@ -82,7 +82,7 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
     w <- weights(fit, type = "robustness")
     # compute weighted mean and weighted covariance matrix
     center <- sapply(data, weighted.mean, w = w)
-    cov <- weighted.cov(data, w = w)
+    cov <- weighted.cov(data, w = w)  # FIXME: multiply with correction factor
     # add weights to data frame
     data$Weight <- w
   } else {
