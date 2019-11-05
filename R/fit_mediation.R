@@ -218,9 +218,17 @@ fit_mediation.formula <- function(formula, data, ...) {
     stop("only one independent variable allowed in formula")
   }
   x <- names(mf)[index_x]
-  # rebuild data frame
+  # prepare to rebuild data frame
+  mf <- as.list(mf)
   names(mf)[c(index_m, index_covariates)] <- ""  # ensure the correct names
-  mf <- c(mf, list(check.names = FALSE))
+  mf[[index_m]] <- as.data.frame(mf[[index_m]])
+  if (have_covariates) {
+    mf[[index_covariates]] <- as.data.frame(mf[[index_covariates]])
+  }
+  # add additional arguments to be passed to data.frame()
+  mf$check.names <- FALSE
+  mf$stringsAsFactors <- TRUE
+  # rebuild data frame
   data <- do.call(data.frame, mf)
   # call default method
   fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
@@ -464,58 +472,6 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result
-}
-
-
-#' Create an object of hypothesized mediators or control variables
-#'
-#' \code{m} creates an object of hypothesized mediators, while
-#' \code{covariates} creates an object of control variables.  Usually, these
-#' are used in a formula specifying a mediation model.
-#'
-#' These are essentially wrappers for \code{\link[base]{cbind}} with a specific
-#' class prepended to the class(es) of the resulting object.
-#'
-#' @param \dots  variables are supplied as arguments, as usual separated by a
-#' comma.
-#'
-#' @return \code{m} returns an object of class \code{"parallel_mediators"} and
-#' \code{covariates} returns an object of class \code{"covariates"}.
-#' Typically, these inherit from class \code{"matrix"}.
-#'
-#' @author Andreas Alfons
-#'
-#' @seealso \code{\link{fit_mediation}}, \code{\link{test_mediation}}
-#'
-#' @examples
-#' data("BSG2014")
-#'
-#' # inside formula
-#' fit_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
-#'               data = BSG2014)
-#'
-#' # outside formula
-#' mediator <- with(BSG2014, m(TaskConflict))
-#' fit_mediation(TeamCommitment ~ mediator + ValueDiversity,
-#'               data = BSG2014)
-#'
-#' @keywords utilities
-#' @export
-
-m <- function(...) {
-  out <- cbind(...)
-  class(out) <- c("parallel_mediators", class(out))
-  out
-}
-
-
-#' @rdname m
-#' @export
-
-covariates <- function(...) {
-  out <- cbind(...)
-  class(out) <- c("covariates", class(out))
-  out
 }
 
 
