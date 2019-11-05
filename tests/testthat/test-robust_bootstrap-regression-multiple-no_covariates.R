@@ -331,9 +331,7 @@ test_that("data returned by fortify() has correct attributes", {
   mapping <- aes_string(x = "ab", y = "Density")
   expect_equal(attr(density, "mapping"), mapping)
   # check default geom()
-  expect_equal(attr(density, "geom"), function(..., stat) {
-    geom_density(..., stat = "identity")
-  })
+  expect_equal(attr(density, "geom"), robmed:::geom_densityline)
   # check facets
   expect_equal(attr(density, "facets"), ~Effect)
   # check title
