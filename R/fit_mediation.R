@@ -246,17 +246,31 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   ## initializations
   # prepare data set
   data <- as.data.frame(object)
+  # check independent variable
   x <- data[, x, drop = FALSE]
   p_x <- ncol(x)
   if (p_x != 1L) stop("exactly one independent variable required")
+  convert_x <- !is.numeric(x[, 1L])
+  # check dependent variable
   y <- data[, y, drop = FALSE]
   p_y <- ncol(y)
   if (p_y != 1L) stop("exactly one dependent variable required")
+  if (!is.numeric(y[, 1L])) {
+    stop("currently only implemented for a numeric dependent variable")
+  }
+  # check hypothesized mediator variables
   m <- data[, m, drop = FALSE]
   p_m <- ncol(m)
   if (p_m == 0L) stop("at least one hypothesized mediator variable required")
+  if (!all(sapply(m, is.numeric))) {
+    stop("currently only implemented for numeric hypothesized mediators")
+  }
+  # extract covariates
   covariates <- data[, covariates, drop = FALSE]
   p_covariates <- ncol(covariates)
+  have_covariates <- p_covariates > 0L
+  convert_covariates <- have_covariates && !all(sapply(covariates, is.numeric))
+  # reorder columns of data frame
   data <- cbind(x, y, m, covariates)
   # extract names
   cn <- names(data)
@@ -264,17 +278,41 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   y <- cn[2L]
   m <- cn[2L + seq_len(p_m)]
   covariates <- cn[-(seq_len(2L + p_m))]
-  # make sure that variables are numeric
-  convert <- !sapply(data, is.numeric)
-  data[convert] <- lapply(data[convert], as.numeric)
   # remove incomplete observations
   data <- data[complete.cases(data), ]
+  # if necessary, convert non-numeric independent variable
+  if (convert_x) {
+    # construct variables for design matrix as usual
+    x <- data[, x, drop = FALSE]
+    x <- model.matrix(~ ., data = x)[, -1, drop = FALSE]
+    # check if there is still only one variable
+    p_x <- ncol(x)
+    if (p_x != 1L) {
+      stop("currently only implemented for a numeric ",
+           "or binary independent variable")
+    }
+    # replace independent variable in data frame with converted one
+    data <- cbind(x, data[, c(y, m, covariates), drop = FALSE])
+    # update variable name
+    x <- colnames(x)
+  }
+  # if necessary, convert non-numeric covariates
+  if (convert_covariates) {
+    # construct variables for design matrix as usual
+    covariates <- data[, covariates, drop = FALSE]
+    covariates <- model.matrix(~ ., data = covariates)[, -1, drop = FALSE]
+    # replace covariates in data frame with converted ones
+    data <- cbind(data[, c(x, y, m), drop = FALSE], covariates)
+    # update number of covariates and variable names
+    p_covariates <- ncol(covariates)
+    covariates <- colnames(covariates)
+  }
   # check if there are enough observations
   d <- dim(data)
   if (d[1L] <= d[2L]) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
-  if ((p_m > 1L || p_covariates > 0L) && method == "covariance") {
+  if ((p_m > 1L || have_covariates) && method == "covariance") {
     method <- "regression"
     warning("covariance method not available with multiple mediators ",
             "or any covariates; using regression method")

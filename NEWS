@@ -2,6 +2,9 @@ Changes in robmed version 0.6.0
 
     + Added formula interface.
 
+    + fit_mediation() now checks for variable type rather than converting all
+      variables to numeric.
+
     + density_plot() now uses argument 'fill' only for the filled rectangle
       that illustrates the confidence interval, and allows to customize the
       transparency of the confidence interval via argument 'alpha'.
