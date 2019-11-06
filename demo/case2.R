@@ -3,7 +3,7 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-# load package and data
+# load packages and data
 library("MASS")
 library("robmed")
 data("BSG2014")
