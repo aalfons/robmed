@@ -6,7 +6,7 @@
 # load packages and data
 library("dplyr")
 library("tidyr")
-data("BSG2014")
+data("BSG2014", package = "robmed")
 
 # compute descriptive statistics
 descriptives <- BSG2014 %>%
