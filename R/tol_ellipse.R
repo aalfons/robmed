@@ -133,27 +133,72 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical == m && horizontal == x
+  select <- c(horizontal, vertical)
   # extract covariance fit
   fit <- object$cov
   # extract information to be plotted
-  if (partial) {
-    stop("not implemented yet")
-  } else {
+  if (vertical == m) {
+    # extract location and shape of ellipse
+    center <- fit$center[select]
+    cov <- fit$cov[select, select]
+    # compute intercept and slope
+    slope <- cov[vertical, horizontal] / cov[horizontal, horizontal]
+    intercept <- center[vertical] - slope * center[horizontal]
     # extract data to plot
     data <- data.frame(x = object$data[, horizontal],
                        y = object$data[, vertical])
-    # extract location and shape of ellipse
-    select <- c(horizontal, vertical)
-    center <- fit$center[select]
-    cov <- fit$cov[select, select]
+    # if requested, make correction for partial residual plot
+    if (partial) {
+      data$y <- data$y - intercept
+      center[vertical] <- center[vertical] - intercept
+      intercept <- 0
+    }
+  } else {
+    # dependent variable on the vertical axis
+    if (partial) {
+      # extract all means and full covariance matrix
+      center <- fit$center
+      cov <- fit$cov
+      # compute regression coefficient
+      det <- cov[x, x] * cov[m, m] - cov[m, x]^2
+      b <- (-cov[m, x] * cov[y, x] + cov[x, x] * cov[y, m]) / det
+      direct <- (cov[m, m] * cov[y, x] - cov[m, x] * cov[y, m]) / det
+      i_y <- unname(center[y] - b * center[m] - direct * center[x])
+      # compute data to plot
+      if (horizontal == x) {
+        # compute partial residuals
+        residuals <- object$data[, vertical] - i_y - b * object$data[, m]
+        # adjust location and shape of ellipse
+        center[vertical] <- center[vertical] - i_y - b * center[m]
+        cov[y, y] <- cov[y, y] + b^2 * cov[m, m] + 2 * b * cov[y, m]
+        cov[y, x] <- cov[y, x] - b * cov[m, x]
+      } else {
+        # compute partial residuals
+        residuals <- object$data[, vertical] - i_y - direct * object$data[, x]
+        # adjust location and shape of ellipse
+        center[vertical] <- center[vertical] - i_y - direct * center[x]
+        cov[y, y] <- cov[y, y] + direct^2 * cov[x, x] + 2 * direct * cov[y, x]
+        cov[y, m] <- cov[y, m] - direct * cov[x, m]
+      }
+      data <- data.frame(x = object$data[, horizontal], y = residuals)
+      # extract location and shape of ellipse
+      center <- center[select]
+      cov <- cov[select, select]
+      # compute intercept and slope
+      intercept <- 0
+      slope <- if (horizontal == x) direct else b
+    } else {
+      # extract location and shape of ellipse
+      center <- fit$center[select]
+      cov <- fit$cov[select, select]
+      # extract data to plot
+      data <- data.frame(x = object$data[, horizontal],
+                         y = object$data[, vertical])
+      # do not plot line for effect
+      intercept <- NULL
+      slope <- NULL
+    }
   }
-  # TODO: if applicable, compute intercept and slope
-  # if (partial || have_mx) {
-  #
-  # }
-  intercept <- NULL
-  slope <- NULL
   # in case of robust covariance matrix, add interpretable robustness weights
   if (object$robust) data$Weight <- weights(fit, type = "relative")
   # compute ellipse
