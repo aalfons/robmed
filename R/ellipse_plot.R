@@ -9,43 +9,62 @@
 ellipse_plot <- function(object, ...) UseMethod("ellipse_plot")
 
 #' @export
-ellipse_plot.test_mediation <- function(object, ...) {
-  # # initial checks
-  # if (!inherits(object$fit, "reg_fit_mediation")) {
-  #   stop("not implemented for this type of mediation model")
-  # }
-  # call method for mediation model fit
-  ellipse_plot(object$fit, ...)
+ellipse_plot.default <- function(object, horizontal = NULL, vertical = NULL,
+                                 partial = FALSE, level = 0.975, npoints = 100,
+                                 ...) {
+  # compute tolerance ellipse
+  ellipse <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
+                         partial = partial, level = level, npoints = npoints)
+  # call method for tolerance ellipse objects
+  ellipse_plot(ellipse, ...)
 }
 
 #' @export
-ellipse_plot.fit_mediation <- function(object, horizontal = NULL,
-                                       vertical = NULL, partial = FALSE,
-                                       level = 0.975, npoints = 100, ...) {
-  # obtain data to be plotted and tolerance ellipse
-  df_list <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
-                         partial = partial, level = level, npoints = npoints)
+ellipse_plot.tol_ellipse <- function(object, ...) {
+  # initializations
+  robust <- any(object$robust)
+  have_line <- !is.null(object$line)
+  have_methods <- !is.null(object$methods)
+  tmp <- "Method" %in% names(object$data)
+  use_color <- have_methods && !tmp
+  use_facets <- have_methods && tmp
+  # define aesthetic mapping for plotting ellipses and lines
+  if (have_methods && use_color) {
+    aes_ellipse <- aes_string(x = "x", y = "y", color = "Method")
+    if (have_line) {
+      aes_line <- aes_string(intercept = "intercept", slope = "slope",
+                             color = "Method")
+    }
+  } else {
+    aes_ellipse <- aes_string(x = "x", y = "y")
+    if (have_line) {
+      aes_line <- aes_string(intercept = "intercept", slope = "slope")
+    }
+  }
   # define aesthetic mapping for plotting points
-  if (df_list$robust) aes_data <- aes_string(x = "x", y = "y", fill = "Weight")
-  else aes_data <- aes_string(x = "x", y = "y")
+  if (robust) {
+    aes_data <- aes_string(x = "x", y = "y", fill = "Weight")
+  } else aes_data <- aes_string(x = "x", y = "y")
+  # FIXME: use black fill color as default for nonrobust fits
   # create plot
   p <- ggplot() +
-    geom_ellipse(aes_string(x = "x", y = "y"), data = df_list$ellipse, ...) +
-    geom_scatter(aes_data, data = df_list$data, ...)
+    geom_ellipse(aes_ellipse, data = object$ellipse, ...) +
+    geom_scatter(aes_data, data = object$data, ...)
   # add line representing (partial) effect
-  if (!is.null(df_list$intercept) && !is.null(df_list$slope)) {
+  if (have_line) {
     p <- p +
-      geom_effect(intercept = df_list$intercept, slope = df_list$slope, ...)
+      geom_effect(aes_line, data = object$line, ...)
   }
   # add nice labels
-  if (df_list$partial) ylab <- paste("Partial residuals of", df_list$vertical)
-  else ylab <- df_list$vertical
-  p <- p + labs(x = df_list$horizontal, y = ylab)
+  if (object$partial) ylab <- paste("Partial residuals of", object$vertical)
+  else ylab <- object$vertical
+  p <- p + labs(x = object$horizontal, y = ylab)
   # add color gradient for weights
-  if (df_list$robust) {
-    p <- p +
-      scale_fill_gradient(limits = 0:1, low = "white", high = "black")
+  if (robust) {
+    p <- p + scale_fill_gradient(limits = 0:1, low = "white", high = "black")
   }
+  # add facets in case of multiple methods
+  if(use_facets) p <- p + facet_wrap(~ Method)
   # return plot
   p
 }
@@ -75,4 +94,6 @@ geom_scatter <- function(..., linetype, lty, lwd) {
 geom_ellipse <- function(..., fill, bg, shape, pch, cex) geom_path(...)
 
 ## custom geom for (partial) effect: avoid passing unknown argument 'fill'
-geom_effect <- function(..., fill, bg, shape, pch, cex) geom_abline(...)
+geom_effect <- function(..., fill, bg, shape, pch, cex, show.legend = FALSE) {
+  geom_abline(..., show.legend = show.legend)
+}

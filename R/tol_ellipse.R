@@ -63,10 +63,8 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
     if (have_mx && !partial) intercept <- unname(coefficients["(Intercept)"])
     else intercept <- 0
     slope <- unname(coefficients[horizontal])
-  } else {
-    intercept <- NULL
-    slope <- NULL
-  }
+    line <- data.frame(intercept = intercept, slope = slope)
+  } else line <- NULL
   # extract data to plot
   if (partial) {
     x <- object$data[, horizontal]
@@ -93,10 +91,11 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   # compute ellipse
   ellipse <- ellipse(center, cov, level = level, npoints = npoints)
   # return data and ellipse
-  list(data = data, ellipse = as.data.frame(ellipse),
-       intercept = intercept, slope = slope,
-       horizontal = horizontal, vertical = vertical,
-       partial = partial, robust = object$robust)
+  out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
+              horizontal = horizontal, vertical = vertical, partial = partial,
+              robust = object$robust)
+  class(out) <- "tol_ellipse"
+  out
 }
 
 #' @export
@@ -142,8 +141,8 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
     center <- fit$center[select]
     cov <- fit$cov[select, select]
     # compute intercept and slope
-    slope <- cov[vertical, horizontal] / cov[horizontal, horizontal]
-    intercept <- center[vertical] - slope * center[horizontal]
+    slope <- unname(cov[vertical, horizontal] / cov[horizontal, horizontal])
+    intercept <- unname(center[vertical] - slope * center[horizontal])
     # extract data to plot
     data <- data.frame(x = object$data[, horizontal],
                        y = object$data[, vertical])
@@ -153,6 +152,8 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
       center[vertical] <- center[vertical] - intercept
       intercept <- 0
     }
+    # combine information for line representing (partial) effect
+    line <- data.frame(intercept = intercept, slope = slope)
   } else {
     # dependent variable on the vertical axis
     if (partial) {
@@ -186,7 +187,9 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
       cov <- cov[select, select]
       # compute intercept and slope
       intercept <- 0
-      slope <- if (horizontal == x) direct else b
+      slope <- if (horizontal == x) unname(direct) else unname(b)
+      # combine information for line representing (partial) effect
+      line <- data.frame(intercept = intercept, slope = slope)
     } else {
       # extract location and shape of ellipse
       center <- fit$center[select]
@@ -195,8 +198,7 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
       data <- data.frame(x = object$data[, horizontal],
                          y = object$data[, vertical])
       # do not plot line for effect
-      intercept <- NULL
-      slope <- NULL
+      line <- NULL
     }
   }
   # in case of robust covariance matrix, add interpretable robustness weights
@@ -205,19 +207,83 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
   ellipse <- ellipse(center, cov, level = level, npoints = npoints)
   colnames(ellipse) <- c("x", "y")
   # return data and ellipse
-  list(data = data, ellipse = as.data.frame(ellipse),
-       intercept = intercept, slope = slope,
-       horizontal = horizontal, vertical = vertical,
-       partial = partial, robust = object$robust)
+  out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
+              horizontal = horizontal, vertical = vertical, partial = partial,
+              robust = object$robust)
+  class(out) <- "tol_ellipse"
+  out
 }
 
-# ## @export
-# tol_ellipse.list <- function(object, ...) {
-#   # If I add a column 'Method' to the data frame, it could happen that one of
-#   # the variables is also called 'Method'
-#   # Maybe let the user do some work for combining ellipses?
-#   stop("not implemented yet")
-# }
+#' @export
+tol_ellipse.list <- function(object, ...) {
+  ## initializations
+  is_test <- sapply(object, inherits, "test_mediation")
+  is_fit <- sapply(object, inherits, "fit_mediation")
+  object <- object[is_test | is_fit]
+  if(length(object) == 0L) {
+    stop('no objects inheriting from class "test_mediation" or "fit_mediation"')
+  }
+  # TODO: check that variables are the same
+  # check names of list elements
+  methods <- names(object)
+  if(is.null(methods)) methods <- seq_along(object)
+  else {
+    replace <- methods == "" | duplicated(methods)
+    methods[replace] <- seq_along(object)[replace]
+  }
+  # compute tolerance ellipse for each list element
+  tol_ellipse_list <- lapply(object, tol_ellipse, ...)
+  # check for properties of tolerance ellipses
+  partial <- tol_ellipse_list[[1]]$partial
+  robust <- sapply(tol_ellipse_list, "[[", "robust")
+  sum_robust <- sum(robust)
+  # combine information of tolerance ellipses
+  # TODO: should there be an argument to define what to return?
+  if (partial || sum_robust > 1L) {
+    # combine data sets
+    # For a partial residuals plot, those partial residuals are different for
+    # every method.  Otherwise if there are multiple robust methods, there are
+    # different weights.
+    if (sum_robust == 0L) {
+      # add column identifying the method to data for scatter plots
+      data_list <- mapply(function(ellipse, method) {
+        cbind(Method = method, ellipse$data)
+      }, ellipse = tol_ellipse_list, method = methods,
+      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    } else {
+      # if there is a robust method, add column with weights for nonrobust
+      # methods as well
+      data_list <- mapply(function(ellipse, method) {
+        if (ellipse$robust) cbind(Method = method, ellipse$data)
+        else cbind(Method = method, ellipse$data, Weight = 1)
+      }, ellipse = tol_ellipse_list, method = methods,
+      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    }
+    # combine data sets for scatter plots
+    data <- do.call(rbind, data_list)
+  } else if (sum_robust == 1L) data <- tol_ellipse_list[[which(robust)]]$data
+  else data <- tol_ellipse_list[[1]]$data
+  # combine data for ellipses
+  ellipse_list <- mapply(function(ellipse, method) {
+    cbind(Method = method, ellipse$ellipse)
+  }, ellipse = tol_ellipse_list, method = methods,
+  SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  ellipses <- do.call(rbind, ellipse_list)
+  # combine data for lines representing (partial) effects
+  line_list <- mapply(function(ellipse, method) {
+    line <- ellipse$line
+    if (!is.null(line)) cbind(Method = method, line)
+  }, ellipse = tol_ellipse_list, method = methods,
+  SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  lines <- do.call(rbind, line_list)
+  # return results
+  out <- list(data = data, ellipse = ellipses, line = lines,
+              horizontal = tol_ellipse_list[[1]]$horizontal,
+              vertical = tol_ellipse_list[[1]]$vertical,
+              partial = partial, robust = robust, methods = methods)
+  class(out) <- "tol_ellipse"
+  out
+}
 
 
 ## workhorse function to compute ellipse based on center and covariance matrix
