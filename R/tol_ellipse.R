@@ -20,14 +20,17 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
                                           level = 0.975, npoints = 100, ...) {
   # initializations
   if (object$robust && object$median) {
+    # weights for weighted covariance matrix can be infinite for median
+    # regression (if there is a residual that is exactly 0)
     stop("tolerance ellipse not meaningful for median regression")
   }
   # extract variable names
   x <- object$x
   y <- object$y
   m <- object$m
+  covariates <- object$covariates
   # check variable on vertical axis
-  if (is.null(vertical)) vertical <- m
+  if (is.null(vertical)) vertical <- m  # FIXME: this only works for single mediator
   else {
     if (!is.character(vertical) && length(vertical) == 1) {
       stop("only one variable allowed for the vertical axis")
@@ -52,14 +55,18 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical == m && horizontal == x && length(object$covariates) == 0
+  have_mx <- vertical == m && horizontal == x && length(covariates) == 0
+  robust <- object$robust
   # extract model fit
-  if (partial || have_mx || object$robust) {
+  if (partial || have_mx || robust) {
+    # FIXME: this only works for single mediator
     fit <- if (have_mx) object$fit_mx else object$fit_ymx
+    coefficients <- coef(fit)
   }
+  # if applicable, extract residuals
+  if (partial || robust) residuals <- residuals(fit)
   # if applicable, extract intercept and slope
   if (partial || have_mx) {
-    coefficients <- coef(fit)
     if (have_mx && !partial) intercept <- unname(coefficients["(Intercept)"])
     else intercept <- 0
     slope <- unname(coefficients[horizontal])
@@ -68,19 +75,74 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   # extract data to plot
   if (partial) {
     x <- object$data[, horizontal]
-    y <- residuals(fit) + slope * x
+    y <- residuals + slope * x
     data <- data.frame(x = x, y = y)
   } else {
     data <- data.frame(x = object$data[, horizontal],
                        y = object$data[, vertical])
   }
   # obtain location and shape of ellipse
-  if (object$robust) {
+  if (robust) {
+    # The weighted covariance matrix with weights from robust regression is
+    # underestimated in the direction of the residuals, but the submatrix that
+    # involves only the explanatory variables is correctly estimated under the
+    # model.  We therefore start with the corrected variance of the residuals
+    # and the weighted covariance matrix of the predictor variables, and then
+    # transform to obtain the variance of the response variable and the
+    # covariances of the response with the explanatory variables.
+    # -----
+    # # compute correction factor for variance of the residuals
+    # # (commented out since we can use the residual scale from the "lmrob"
+    # # object, which is already corrected for downweighting observations)
+    # control <- fit$control
+    # # the following integrals compute the result at the model
+    # integrand1 <- function(y) {
+    #   Mwgt(y, cc=control$tuning.psi, psi=control$psi) * y^2 * dnorm(y)
+    # }
+    # numerator <- integrate(integrand1, lower = -10, upper = 10,
+    #                        rel.tol = .Machine$double.eps^0.5)
+    # integrand2 <- function(y) {
+    #   Mwgt(y, cc=control$tuning.psi, psi=control$psi) * dnorm(y)
+    # }
+    # denominator <- integrate(integrand2, lower = -10, upper = 10,
+    #                          rel.tol = .Machine$double.eps^0.5)
+    # # the correction factor is the inverse of the result at the model
+    # correction <- denominator$value / numerator$value
+    # -----
     # extract weights in case of robust regression
     w <- weights(fit, type = "robustness")
-    # compute weighted mean and weighted covariance matrix
-    center <- sapply(data, weighted.mean, w = w)
-    cov <- weighted.cov(data, w = w)  # FIXME: multiply with correction factor
+    if (partial) {
+      # compute center
+      center_x <- weighted.mean(data$x, w = w)
+      center_y <- slope * center_x
+      center <- c(x = center_x, y = center_y)
+      # compute covariance matrix
+      cov_xx <- weighted.var(data$x, w = w, center = center_x)
+      cov_xy <- slope * cov_xx
+      cov_yy <- slope^2 * cov_xx + fit$scale^2
+      cov <- cbind(rbind(cov_xx, cov_xy), rbind(cov_xy, cov_yy))
+      dimnames(cov) <- replicate(2, c("x", "y"), simplify = FALSE)
+    } else {
+      # compute weighted mean and weighted covariance matrix of all explanatory
+      # variables, as this is necessary for proper correction
+      predictors <- if (vertical == m) c(x, covariates) else c(m, x, covariates)
+      predictor_data <- object$data[, predictors, drop = FALSE]
+      m_x <- sapply(predictor_data, weighted.mean, w = w)
+      S_xx <- weighted.cov(predictor_data, w = w, center = m_x)
+      # extract regression coefficients
+      alpha_hat <- coefficients[1]
+      beta_hat <- coefficients[-1]
+      # reconstruct center estimate
+      center_x <- unname(m_x[horizontal])
+      center_y <- alpha_hat + crossprod(m_x, beta_hat)
+      center <- c(x = center_x, y = center_y)
+      # reconstruct estimate of covariance matrix
+      cov_xx <- S_xx[horizontal, horizontal, drop = FALSE]
+      cov_xy <- S_xx[horizontal, , drop = FALSE] %*% beta_hat
+      cov_yy <- t(beta_hat) %*% S_xx %*% beta_hat + fit$scale^2
+      cov <- cbind(rbind(cov_xx, cov_xy), rbind(cov_xy, cov_yy))
+      dimnames(cov) <- replicate(2, c("x", "y"), simplify = FALSE)
+    }
     # add weights to data frame
     data$Weight <- w
   } else {
@@ -93,7 +155,7 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   # return data and ellipse
   out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
               horizontal = horizontal, vertical = vertical, partial = partial,
-              robust = object$robust)
+              robust = robust)
   class(out) <- "tol_ellipse"
   out
 }
@@ -306,12 +368,36 @@ ellipse <- function(center, cov, level = 0.975, npoints = 100) {
 
 ## utility functions
 
+# weighted variance
+weighted.var <- function(x, w, center = NULL, ..., na.rm = TRUE) {
+  na.rm <- isTRUE(na.rm)
+  if(missing(w)) var(x, na.rm = na.rm)
+  else {
+    # initial checks
+    x <- as.numeric(x)
+    w <- as.numeric(w)
+    if(length(w) != length(x)) stop("'w' must have the same length as 'x'")
+    if (is.null(center)) center <- weighted.mean(x, w = w, na.rm = na.rm)
+    else if (length(center) != 1) stop("'center' must have length 1")
+    # if requested, remove missing values
+    if(na.rm) {
+      select <- !is.na(x)
+      x <- x[select]
+      w <- w[select]
+    }
+    # denominator is chosen such that it reduces to unbiased estimator if all
+    # weights are equal to 1
+    if(length(x) <= 1 || sum(w > 0) <= 1) NA
+    else sum((x - center)^2 * w) / (sum(w) - 1)
+  }
+}
+
 # weighted covariance matrix
 weighted.cov <- function(x, w, center = NULL, ...) {
   x <- as.matrix(x)
   if (missing(w)) cov(x, use = "pairwise.complete.obs")
   else {
-    # initial check
+    # initial checks
     if (length(w) != nrow(x)) {
       stop("length of 'w' must equal the number of rows in 'x'")
     }
@@ -328,12 +414,28 @@ weighted.cov <- function(x, w, center = NULL, ...) {
 # weighted cross product
 weighted.crossprod <- function(x, w) {
   ci <- colnames(x)
-  if (is.null(ci)) ci <- seq_len(ncol(x))
-  sapply(ci, function(j) sapply(ci, function(i) {
-    select <- !is.na(x[, i]) & !is.na(x[, j])
-    xi <- x[select, i]
-    xj <- x[select, j]
+  p <- ncol(x)
+  if (p == 0) matrix(numeric(), nrow = 0, ncol = 0)
+  else if (p == 1) {
+    # remove missing values
+    select <- !is.na(x)
+    x <- x[select, ]
     w <- w[select]
-    sum(xi * xj * w) / (sum(w) - 1)
-  }))
+    # denominator is chosen such that it reduces to unbiased estimator if all
+    # weights are equal to 1
+    matrix(sum(w * x^2) / (sum(w) - 1), nrow = 1, ncol = 1,
+           dimnames = replicate(2, ci, simplify = FALSE))
+  } else {
+    if (is.null(ci)) ci <- seq_len(p)
+    sapply(ci, function(j) sapply(ci, function(i) {
+      # use pairwise complete observations
+      select <- !is.na(x[, i]) & !is.na(x[, j])
+      xi <- x[select, i]
+      xj <- x[select, j]
+      w <- w[select]
+      # denominator is chosen such that it reduces to unbiased estimator if all
+      # weights are equal to 1
+      sum(xi * xj * w) / (sum(w) - 1)
+    }))
+  }
 }
