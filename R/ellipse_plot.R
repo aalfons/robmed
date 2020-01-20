@@ -45,7 +45,6 @@ ellipse_plot.tol_ellipse <- function(object, ...) {
   if (robust) {
     aes_data <- aes_string(x = "x", y = "y", fill = "Weight")
   } else aes_data <- aes_string(x = "x", y = "y")
-  # FIXME: use black fill color as default for nonrobust fits
   # create plot
   p <- ggplot() +
     geom_ellipse(aes_ellipse, data = object$ellipse, ...) +
@@ -86,6 +85,12 @@ geom_scatter <- function(..., linetype, lty, lwd) {
     warning("only plot symbols 21 to 25 allowed, using default symbol 21",
             call. = FALSE)
   }
+  # use black fill color as default for nonrobust fits
+  # (if there are robust fits, the fill color is specified in the aesthetic
+  # mapping, otherwise it would be possible that a user overrides the fill
+  # color by passing additional arguments via ...)
+  aes <- arguments[[1]]
+  if (is.null(aes$fill) && is.null(arguments$fill)) arguments$fill <- "black"
   # call existing geom function
   do.call(geom_point, arguments)
 }
