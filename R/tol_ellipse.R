@@ -30,9 +30,9 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   m <- object$m
   covariates <- object$covariates
   # check variable on vertical axis
-  if (is.null(vertical)) vertical <- m[1]
+  if (is.null(vertical)) vertical <- m[1L]
   else {
-    if (!is.character(vertical) && length(vertical) == 1) {
+    if (!is.character(vertical) && length(vertical) == 1L) {
       stop("only one variable allowed for the vertical axis")
     }
     if (!(vertical %in% m || vertical == y)) {
@@ -43,7 +43,7 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   # check variable on horizontal axis
   if (is.null(horizontal)) horizontal <- x
   else {
-    if (!is.character(horizontal) && length(horizontal) == 1) {
+    if (!is.character(horizontal) && length(horizontal) == 1L) {
       stop("only one variable allowed for the horizontal axis")
     }
     if (vertical %in% m && horizontal != x) {
@@ -55,12 +55,12 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical %in% m && horizontal == x && length(covariates) == 0
+  have_mx <- vertical %in% m && horizontal == x && length(covariates) == 0L
   robust <- object$robust
   # extract model fit
   if (partial || have_mx || robust) {
     if (vertical %in% m) {
-      fit <- if (length(m) > 1) object$fit_mx[[vertical]] else object$fit_mx
+      fit <- if (length(m) > 1L) object$fit_mx[[vertical]] else object$fit_mx
     } else fit <- object$fit_ymx
     coefficients <- coef(fit)
   }
@@ -134,8 +134,8 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
       m_x <- sapply(predictor_data, weighted.mean, w = w)
       S_xx <- weighted.cov(predictor_data, w = w, center = m_x)
       # extract regression coefficients
-      alpha_hat <- coefficients[1]
-      beta_hat <- coefficients[-1]
+      alpha_hat <- coefficients[1L]
+      beta_hat <- coefficients[-1L]
       # reconstruct center estimate
       center_x <- unname(m_x[horizontal])
       center_y <- alpha_hat + crossprod(m_x, beta_hat)
@@ -175,7 +175,7 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m
   else {
-    if (!is.character(vertical) && length(vertical) == 1) {
+    if (!is.character(vertical) && length(vertical) == 1L) {
       stop("only one variable allowed for the vertical axis")
     }
     if (vertical != m && vertical != y) {
@@ -186,7 +186,7 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
   # check variable on horizontal axis
   if (is.null(horizontal)) horizontal <- x
   else {
-    if (!is.character(horizontal) && length(horizontal) == 1) {
+    if (!is.character(horizontal) && length(horizontal) == 1L) {
       stop("only one variable allowed for the horizontal axis")
     }
     if (vertical == m && horizontal != x) {
