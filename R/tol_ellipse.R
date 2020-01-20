@@ -30,7 +30,7 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   m <- object$m
   covariates <- object$covariates
   # check variable on vertical axis
-  if (is.null(vertical)) vertical <- m  # FIXME: this only works for single mediator
+  if (is.null(vertical)) vertical <- m[1]
   else {
     if (!is.character(vertical) && length(vertical) == 1) {
       stop("only one variable allowed for the vertical axis")
@@ -55,12 +55,13 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical == m && horizontal == x && length(covariates) == 0
+  have_mx <- vertical %in% m && horizontal == x && length(covariates) == 0
   robust <- object$robust
   # extract model fit
   if (partial || have_mx || robust) {
-    # FIXME: this only works for single mediator
-    fit <- if (have_mx) object$fit_mx else object$fit_ymx
+    if (vertical %in% m) {
+      fit <- if (length(m) > 1) object$fit_mx[[vertical]] else object$fit_mx
+    } else fit <- object$fit_ymx
     coefficients <- coef(fit)
   }
   # if applicable, extract residuals
@@ -92,8 +93,6 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
     # covariances of the response with the explanatory variables.
     # -----
     # # compute correction factor for variance of the residuals
-    # # (commented out since we can use the residual scale from the "lmrob"
-    # # object, which is already corrected for downweighting observations)
     # control <- fit$control
     # # the following integrals compute the result at the model
     # integrand1 <- function(y) {
@@ -108,6 +107,10 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
     #                          rel.tol = .Machine$double.eps^0.5)
     # # the correction factor is the inverse of the result at the model
     # correction <- denominator$value / numerator$value
+    # -----
+    # the computation of the correction factor is commented out since we
+    # can use the residual scale from the "lmrob" object, which is already
+    # corrected for downweighting observations
     # -----
     # extract weights in case of robust regression
     w <- weights(fit, type = "robustness")
@@ -125,7 +128,8 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
     } else {
       # compute weighted mean and weighted covariance matrix of all explanatory
       # variables, as this is necessary for proper correction
-      predictors <- if (vertical == m) c(x, covariates) else c(m, x, covariates)
+      if (vertical %in% m) predictors <- c(x, covariates)
+      else predictors <- c(m, x, covariates)
       predictor_data <- object$data[, predictors, drop = FALSE]
       m_x <- sapply(predictor_data, weighted.mean, w = w)
       S_xx <- weighted.cov(predictor_data, w = w, center = m_x)
