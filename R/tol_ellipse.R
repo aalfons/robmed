@@ -289,7 +289,15 @@ tol_ellipse.list <- function(object, ...) {
   if(length(object) == 0L) {
     stop('no objects inheriting from class "test_mediation" or "fit_mediation"')
   }
-  # TODO: check that variables are the same
+  # check that variables are the same
+  variables <- lapply(object, function(x) {
+    fit <- x$fit
+    c(fit$x, fit$y, fit$m, fit$covariates)
+  })
+  all_identical <- all(sapply(variables[-1L], identical, variables[[1L]]))
+  if(!isTRUE(all_identical)) {
+    stop("all mediation objects must use the same variables")
+  }
   # check names of list elements
   methods <- names(object)
   if(is.null(methods)) methods <- seq_along(object)
