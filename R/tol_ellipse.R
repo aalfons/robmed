@@ -290,6 +290,8 @@ tol_ellipse.list <- function(object, ...) {
     stop('no objects inheriting from class "test_mediation" or "fit_mediation"')
   }
   # check that variables are the same
+  # FIXME: variables could be the same, but in different configurations
+  #        (same variable once as mediator, once as covariate)
   variables <- lapply(object, function(x) {
     fit <- x$fit
     c(fit$x, fit$y, fit$m, fit$covariates)
