@@ -93,6 +93,9 @@ get_density.list <- function(object, ...) {
     methods[replace] <- seq_along(object)[replace]
   }
   # extract information for each list element
+  # TODO: check that confidence levels are the same for all objects
+  # that applies only to bootstrap tests; if they are all the same then use
+  # this confidence level for Sobel tests
   tmp <- lapply(object, get_density, ...)
   # reorganize information on the density in the proper structure
   density_list <- mapply(function(object, method) {

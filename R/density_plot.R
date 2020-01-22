@@ -27,8 +27,8 @@ density_plot.sobel_test_mediation <- function(object, grid = NULL,
 
 #' @export
 density_plot.indirect_density <- function(object, ...) {
-  # define aesthetic mapping for density estimate of the indirect effect
-  # define aesthetic mappings for point estimate and confidence interval
+  # define aesthetic mappings for density estimate, point estimate and
+  # confidence interval
   if(is.null(object$methods)) {
     mapping_density <- aes_string(x = "ab", y = "Density")
     mapping_line <- aes_string(xintercept = "ab")
