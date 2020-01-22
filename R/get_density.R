@@ -16,7 +16,7 @@ get_density.boot_test_mediation <- function(object, ...) {
   ab <- object$ab
   ci <- object$ci
   # extract information to be plotted
-  if(p_m == 1L) {
+  if (p_m == 1L) {
     # construct data frame containing bootstrap density
     pdf <- density(object$reps$t[, 1L])
     density <- data.frame(ab = pdf$x, Density = pdf$y)
@@ -37,7 +37,7 @@ get_density.boot_test_mediation <- function(object, ...) {
                      Upper = unname(ci[, 2L]))
   }
   # return density and confidence interval
-  out <- list(density = density, ci = ci, test = "boot")
+  out <- list(density = density, ci = ci, test = "boot", level = object$level)
   if (p_m > 1L) out$effects <- effects
   class(out) <- "indirect_density"
   out
@@ -47,9 +47,9 @@ get_density.boot_test_mediation <- function(object, ...) {
 #' @export
 get_density.sobel_test_mediation <- function(object, grid = NULL, level = 0.95,
                                              ...) {
-  # initialization
+  # initializations
   level <- rep(as.numeric(level), length.out = 1)
-  if(is.na(level) || level < 0 || level > 1) level <- formals()$level
+  if (is.na(level) || level < 0 || level > 1) level <- formals()$level
   # extract point estimate and standard error
   ab <- object$ab
   se <- object$se
@@ -62,9 +62,9 @@ get_density.sobel_test_mediation <- function(object, grid = NULL, level = 0.95,
   density <- data.frame(ab = grid, Density = y)
   # construct data frame containing confidence interval
   ci <- confint_z(ab, se, level = level, alternative = object$alternative)
-  ci <- data.frame(ab, Lower=ci[1], Upper=ci[2])
+  ci <- data.frame(ab, Lower = ci[1], Upper = ci[2])
   # return density and confidence interval
-  out <- list(density = density, ci = ci, test = "sobel")
+  out <- list(density = density, ci = ci, test = "sobel", level = level)
   class(out) <- "indirect_density"
   out
 }
@@ -75,28 +75,30 @@ get_density.list <- function(object, ...) {
   is_boot <- sapply(object, inherits, "boot_test_mediation")
   is_sobel <- sapply(object, inherits, "sobel_test_mediation")
   object <- object[is_boot | is_sobel]
-  if(length(object) == 0) {
+  if (length(object) == 0L) {
     stop('no objects inheriting from class "test_mediation"')
   }
   # check that variables are the same
   components <- c("x", "y", "m", "covariates")
   variables <- lapply(object, function(x) x$fit[components])
   all_identical <- all(sapply(variables[-1L], identical, variables[[1L]]))
-  if(!isTRUE(all_identical)) {
+  if (!isTRUE(all_identical)) {
     stop("all mediation objects must use the same variables")
   }
   # check names of list elements
   methods <- names(object)
-  if(is.null(methods)) methods <- seq_along(object)
+  if (is.null(methods)) methods <- seq_along(object)
   else {
     replace <- methods == "" | duplicated(methods)
     methods[replace] <- seq_along(object)[replace]
   }
   # extract information for each list element
-  # TODO: check that confidence levels are the same for all objects
-  # that applies only to bootstrap tests; if they are all the same then use
-  # this confidence level for Sobel tests
   tmp <- lapply(object, get_density, ...)
+  # check that confidence levels are the same for all objects
+  level <- unique(sapply(tmp, "[[", "level"))
+  if (length(level) != 1L) {
+    stop("confidence level must be the same for all mediation objects")
+  }
   # reorganize information on the density in the proper structure
   density_list <- mapply(function(object, method) {
     data.frame(Method = method, object$density)
@@ -111,9 +113,9 @@ get_density.list <- function(object, ...) {
   test <- sapply(tmp, "[[", "test")
   # all objects have the same variables, so we can take the information on the
   # indirect effects from the first one
-  effects <- tmp[[1]]$effects
+  effects <- tmp[[1L]]$effects
   # return density and confidence interval
-  out <- list(density = density, ci = ci, test = test)
+  out <- list(density = density, ci = ci, test = test, level = level)
   if (!is.null(effects)) out$effects <- effects
   out$methods <- methods
   class(out) <- "indirect_density"

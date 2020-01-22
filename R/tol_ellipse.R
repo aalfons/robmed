@@ -286,19 +286,19 @@ tol_ellipse.list <- function(object, ...) {
   is_test <- sapply(object, inherits, "test_mediation")
   is_fit <- sapply(object, inherits, "fit_mediation")
   object <- object[is_test | is_fit]
-  if(length(object) == 0L) {
+  if (length(object) == 0L) {
     stop('no objects inheriting from class "test_mediation" or "fit_mediation"')
   }
   # check that variables are the same
   components <- c("x", "y", "m", "covariates")
   variables <- lapply(object, function(x) x$fit[components])
   all_identical <- all(sapply(variables[-1L], identical, variables[[1L]]))
-  if(!isTRUE(all_identical)) {
+  if (!isTRUE(all_identical)) {
     stop("all mediation objects must use the same variables")
   }
   # check names of list elements
   methods <- names(object)
-  if(is.null(methods)) methods <- seq_along(object)
+  if (is.null(methods)) methods <- seq_along(object)
   else {
     replace <- methods == "" | duplicated(methods)
     methods[replace] <- seq_along(object)[replace]
@@ -381,23 +381,23 @@ ellipse <- function(center, cov, level = 0.975, npoints = 100) {
 # weighted variance
 weighted.var <- function(x, w, center = NULL, ..., na.rm = TRUE) {
   na.rm <- isTRUE(na.rm)
-  if(missing(w)) var(x, na.rm = na.rm)
+  if (missing(w)) var(x, na.rm = na.rm)
   else {
     # initial checks
     x <- as.numeric(x)
     w <- as.numeric(w)
-    if(length(w) != length(x)) stop("'w' must have the same length as 'x'")
+    if (length(w) != length(x)) stop("'w' must have the same length as 'x'")
     if (is.null(center)) center <- weighted.mean(x, w = w, na.rm = na.rm)
     else if (length(center) != 1) stop("'center' must have length 1")
     # if requested, remove missing values
-    if(na.rm) {
+    if (na.rm) {
       select <- !is.na(x)
       x <- x[select]
       w <- w[select]
     }
     # denominator is chosen such that it reduces to unbiased estimator if all
     # weights are equal to 1
-    if(length(x) <= 1 || sum(w > 0) <= 1) NA
+    if (length(x) <= 1 || sum(w > 0) <= 1) NA_real_
     else sum((x - center)^2 * w) / (sum(w) - 1)
   }
 }

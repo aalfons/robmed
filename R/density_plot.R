@@ -26,6 +26,14 @@ density_plot.sobel_test_mediation <- function(object, grid = NULL,
 }
 
 #' @export
+density_plot.list <- function(object, grid = NULL, level = 0.95, ...) {
+  # extract information
+  density <- get_density(object, grid = grid, level = level, ...)
+  # call method for corresponding objects
+  density_plot(density, ...)
+}
+
+#' @export
 density_plot.indirect_density <- function(object, ...) {
   # define aesthetic mappings for density estimate, point estimate and
   # confidence interval

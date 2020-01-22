@@ -63,7 +63,7 @@ ellipse_plot.tol_ellipse <- function(object, ...) {
     p <- p + scale_fill_gradient(limits = 0:1, low = "white", high = "black")
   }
   # add facets in case of multiple methods
-  if(use_facets) p <- p + facet_wrap(~ Method)
+  if (use_facets) p <- p + facet_wrap(~ Method)
   # return plot
   p
 }
