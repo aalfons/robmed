@@ -78,7 +78,13 @@ get_density.list <- function(object, ...) {
   if(length(object) == 0) {
     stop('no objects inheriting from class "test_mediation"')
   }
-  # TODO: check that variables are the same
+  # check that variables are the same
+  components <- c("x", "y", "m", "covariates")
+  variables <- lapply(object, function(x) x$fit[components])
+  all_identical <- all(sapply(variables[-1L], identical, variables[[1L]]))
+  if(!isTRUE(all_identical)) {
+    stop("all mediation objects must use the same variables")
+  }
   # check names of list elements
   methods <- names(object)
   if(is.null(methods)) methods <- seq_along(object)
@@ -105,7 +111,7 @@ get_density.list <- function(object, ...) {
   effects <- tmp[[1]]$effects
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = test)
-  out$effects <- effects
+  if (!is.null(effects)) out$effects <- effects
   out$methods <- methods
   class(out) <- "indirect_density"
   out
