@@ -282,7 +282,7 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
 
 #' @export
 tol_ellipse.list <- function(object, ...) {
-  ## initializations
+  # initializations
   is_test <- sapply(object, inherits, "test_mediation")
   is_fit <- sapply(object, inherits, "fit_mediation")
   object <- object[is_test | is_fit]

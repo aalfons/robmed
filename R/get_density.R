@@ -73,7 +73,7 @@ get_density.sobel_test_mediation <- function(object, grid = NULL, level = 0.95,
 
 #' @export
 get_density.list <- function(object, ...) {
-  ## initializations
+  # initializations
   is_boot <- sapply(object, inherits, "boot_test_mediation")
   is_sobel <- sapply(object, inherits, "sobel_test_mediation")
   object <- object[is_boot | is_sobel]
