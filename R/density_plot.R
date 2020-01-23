@@ -66,7 +66,7 @@ density_plot.indirect_density <- function(object, ...) {
 }
 
 
-## internal function for density plot
+## internal function for density plot (deprecated)
 density_plot_fortified <- function(data, mapping, facets, main = NULL,
                                    xlab = NULL, ylab = NULL, ...) {
   # define default title and axis labels
