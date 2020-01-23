@@ -119,8 +119,9 @@ plot_mediation.list <- function(object, data, method = c("dot", "density"),
 plot_mediation.default <- function(object, mapping = attr(object, "mapping"),
                                    facets = attr(object, "facets"), ...) {
   # create selected plot
-  if(attr(object, "method") == "dot") dot_plot(object, mapping, facets, ...)
-  else density_plot_fortified(object, mapping, facets, ...)
+  if(attr(object, "method") == "dot") {
+    dot_plot_fortified(object, mapping, facets, ...)
+  } else density_plot_fortified(object, mapping, facets, ...)
 }
 
 
@@ -136,18 +137,3 @@ autoplot.test_mediation <- function(object, ...) plot_mediation(object, ...)
 #' @export
 
 plot.test_mediation <- function(x, ...) plot_mediation(x, ...)
-
-
-## internal function for dot plot
-dot_plot <- function(data, mapping, facets, main = NULL,
-                     xlab = NULL, ylab = NULL, ...) {
-  # generate plot
-  geom <- attr(data, "geom")
-  p <- ggplot(data, mapping) + geom(...) + labs(title=main, x=xlab, y=ylab)
-  if(!is.null(facets)) {
-    # split plot into different panels
-    if(length(facets) == 2) p <- p + facet_wrap(facets)
-    else p <- p + facet_grid(facets)
-  }
-  p
-}
