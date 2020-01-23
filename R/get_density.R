@@ -12,17 +12,12 @@ get_density <- function(object, ...) UseMethod("get_density")
 get_density.boot_test_mediation <- function(object, ...) {
   # initialization
   p_m <- length(object$fit$m)
+  have_effects <- p_m > 1L
   # extract point estimate and confidence interval
   ab <- object$ab
   ci <- object$ci
   # extract information to be plotted
-  if (p_m == 1L) {
-    # construct data frame containing bootstrap density
-    pdf <- density(object$reps$t[, 1L])
-    density <- data.frame(ab = pdf$x, Density = pdf$y)
-    # construct data frame containing confidence interval
-    ci <- data.frame(ab = ab, Lower = ci[1L], Upper = ci[2L])
-  } else {
+  if (have_effects) {
     # information on indirect effects
     effects <- names(ab)
     # construct data frame containing bootstrap density
@@ -35,10 +30,16 @@ get_density.boot_test_mediation <- function(object, ...) {
     ci <- data.frame(Effect = effects, ab = unname(ab),
                      Lower = unname(ci[, 1L]),
                      Upper = unname(ci[, 2L]))
+  } else {
+    # construct data frame containing bootstrap density
+    pdf <- density(object$reps$t[, 1L])
+    density <- data.frame(ab = pdf$x, Density = pdf$y)
+    # construct data frame containing confidence interval
+    ci <- data.frame(ab = ab, Lower = ci[1L], Upper = ci[2L])
   }
   # return density and confidence interval
-  out <- list(density = density, ci = ci, test = "boot", level = object$level)
-  if (p_m > 1L) out$effects <- effects
+  out <- list(density = density, ci = ci, test = "boot", level = object$level,
+              have_effects = have_effects, have_methods = FALSE)
   class(out) <- "indirect_density"
   out
 }
@@ -64,7 +65,8 @@ get_density.sobel_test_mediation <- function(object, grid = NULL, level = 0.95,
   ci <- confint_z(ab, se, level = level, alternative = object$alternative)
   ci <- data.frame(ab, Lower = ci[1], Upper = ci[2])
   # return density and confidence interval
-  out <- list(density = density, ci = ci, test = "sobel", level = level)
+  out <- list(density = density, ci = ci, test = "sobel", level = level,
+              have_effects = FALSE, have_methods = FALSE)
   class(out) <- "indirect_density"
   out
 }
@@ -111,13 +113,12 @@ get_density.list <- function(object, ...) {
   ci <- do.call(rbind, ci_list)
   # extract information on type of test
   test <- sapply(tmp, "[[", "test")
-  # all objects have the same variables, so we can take the information on the
-  # indirect effects from the first one
-  effects <- tmp[[1L]]$effects
+  # all objects have the same variables, so we can take the information
+  # whether there are multiple indirect effects from the first one
+  have_effects <- tmp[[1L]]$have_effects
   # return density and confidence interval
-  out <- list(density = density, ci = ci, test = test, level = level)
-  if (!is.null(effects)) out$effects <- effects
-  out$methods <- methods
+  out <- list(density = density, ci = ci, test = test, level = level,
+              have_effects = have_effects, have_methods = TRUE)
   class(out) <- "indirect_density"
   out
 }

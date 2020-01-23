@@ -37,17 +37,17 @@ density_plot.list <- function(object, grid = NULL, level = 0.95, ...) {
 density_plot.indirect_density <- function(object, ...) {
   # define aesthetic mappings for density estimate, point estimate and
   # confidence interval
-  if(is.null(object$methods)) {
-    mapping_density <- aes_string(x = "ab", y = "Density")
-    mapping_line <- aes_string(xintercept = "ab")
-    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
-                               ymin = -Inf, ymax = Inf)
-  } else {
+  if(object$have_methods) {
     mapping_density <- aes_string(x = "ab", y = "Density", color = "Method")
     mapping_line <- aes_string(xintercept = "ab", color = "Method")
     mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
                                ymin = -Inf, ymax = Inf,
                                fill = "Method")
+  } else {
+    mapping_density <- aes_string(x = "ab", y = "Density")
+    mapping_line <- aes_string(xintercept = "ab")
+    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
+                               ymin = -Inf, ymax = Inf)
   }
   # define default title
   if (all(object$test == "boot")) title <- "Bootstrap distribution"
@@ -60,7 +60,7 @@ density_plot.indirect_density <- function(object, ...) {
     geom_ci(mapping_rect, data = object$ci, ...) +
     labs(title = title, x = "Indirect effect", y = "Density")
   # split plot into different panels in case of multiple indirect effects
-  if(!is.null(object$effects)) p <- p + facet_wrap(~ Effect, scales = "free")
+  if(object$have_effects) p <- p + facet_wrap(~ Effect, scales = "free")
   # return plot
   p
 }

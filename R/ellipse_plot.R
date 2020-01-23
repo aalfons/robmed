@@ -24,12 +24,12 @@ ellipse_plot.tol_ellipse <- function(object, ...) {
   # initializations
   robust <- any(object$robust)
   have_line <- !is.null(object$line)
-  have_methods <- !is.null(object$methods)
+  have_methods <- object$have_methods
   tmp <- "Method" %in% names(object$data)
   use_color <- have_methods && !tmp
   use_facets <- have_methods && tmp
   # define aesthetic mapping for plotting ellipses and lines
-  if (have_methods && use_color) {
+  if (use_color) {
     aes_ellipse <- aes_string(x = "x", y = "y", color = "Method")
     if (have_line) {
       aes_line <- aes_string(intercept = "intercept", slope = "slope",

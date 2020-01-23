@@ -159,7 +159,7 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   # return data and ellipse
   out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
               horizontal = horizontal, vertical = vertical, partial = partial,
-              robust = robust)
+              robust = robust, have_methods = FALSE)
   class(out) <- "tol_ellipse"
   out
 }
@@ -275,7 +275,7 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
   # return data and ellipse
   out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
               horizontal = horizontal, vertical = vertical, partial = partial,
-              robust = object$robust)
+              robust = object$robust, have_methods = FALSE)
   class(out) <- "tol_ellipse"
   out
 }
@@ -352,7 +352,8 @@ tol_ellipse.list <- function(object, ...) {
   out <- list(data = data, ellipse = ellipses, line = lines,
               horizontal = tol_ellipse_list[[1]]$horizontal,
               vertical = tol_ellipse_list[[1]]$vertical,
-              partial = partial, robust = robust, methods = methods)
+              partial = partial, robust = robust,
+              have_methods = TRUE)
   class(out) <- "tol_ellipse"
   out
 }
