@@ -17,6 +17,17 @@ dot_plot.default <- function(object, parm = NULL, ...) {
 }
 
 #' @export
+dot_plot.boot_test_mediation <- function(object, parm = NULL,
+                                         type = c("boot", "data"),
+                                         other = c("boot", "theory"),
+                                         ...) {
+  # extract information
+  dot <- get_dot(object, parm = parm, type = type, other = other, ...)
+  # call method for corresponding objects
+  dot_plot(dot, ...)
+}
+
+#' @export
 dot_plot.sobel_test_mediation <- function(object, parm = NULL,
                                           level = 0.95, ...) {
   # extract information
@@ -26,9 +37,11 @@ dot_plot.sobel_test_mediation <- function(object, parm = NULL,
 }
 
 #' @export
-dot_plot.list <- function(object, parm = NULL, level = 0.95, ...) {
+dot_plot.list <- function(object, parm = NULL, type = c("boot", "data"),
+                          other = c("boot", "theory"), level = 0.95, ...) {
   # extract information
-  dot <- get_dot(object, parm = parm, level = level, ...)
+  dot <- get_dot(object, parm = parm, type = type,
+                 other = other,  level = level, ...)
   # call method for corresponding objects
   dot_plot(dot, ...)
 }

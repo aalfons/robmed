@@ -11,7 +11,10 @@
 get_dot <- function(object, ...) UseMethod("get_dot")
 
 #' @export
-get_dot.boot_test_mediation <- function(object, parm = NULL, ...) {
+get_dot.boot_test_mediation <- function(object, parm = NULL,
+                                        type = c("boot", "data"),
+                                        other = c("boot", "theory"),
+                                        ...) {
   # initializations
   p_m <- length(object$fit$m)
   if (is.null(parm)) {
@@ -19,9 +22,9 @@ get_dot.boot_test_mediation <- function(object, parm = NULL, ...) {
     else parm <- c("Direct", paste("ab", names(object$ab), sep = "_"))
   }
   # extract point estimates
-  coefficients <- coef(object, parm = parm)
+  coefficients <- coef(object, parm = parm, type = type)
   # extract confidence intervals
-  ci <- confint(object, parm = parm)
+  ci <- confint(object, parm = parm, other = other)
   # construct data frame
   effects <- rownames(ci)
   ci <- data.frame(Effect = factor(effects, levels = effects),
