@@ -62,18 +62,3 @@ ci_plot.setup_ci_plot <- function(object, ...) {
     labs(title = NULL, x = NULL, y = NULL) +
     facet_wrap(~ Effect, scales = "free")
 }
-
-
-## internal function for dot plot (deprecated)
-dot_plot_fortified <- function(data, mapping, facets, main = NULL,
-                               xlab = NULL, ylab = NULL, ...) {
-  # generate plot
-  geom <- attr(data, "geom")
-  p <- ggplot(data, mapping) + geom(...) + labs(title=main, x=xlab, y=ylab)
-  if(!is.null(facets)) {
-    # split plot into different panels
-    if(length(facets) == 2) p <- p + facet_wrap(facets)
-    else p <- p + facet_grid(facets)
-  }
-  p
-}

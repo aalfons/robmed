@@ -5,42 +5,38 @@
 
 #' Plot (robust) mediation analysis results
 #'
-#' Produce dot plots of selected coefficients from regression models computed
-#' in (robust) mediation analysis, or density plots of the indirect effect.
+#' Visualize results from (robust) mediation analysis.
+#'
+#' The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}},
+#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}}, depending on
+#' argument \code{which}.
+#'
+#' The \code{"\link{fit_mediation}"} method is a wrapper for
+#' \code{\link{ellipse_plot}}.
+#'
+#' @name plot-methods
 #'
 #' @param object,x  an object inheriting from class
-#' \code{"\link{test_mediation}"} containing results from (robust) mediation
-#' analysis.  For \code{plot_mediation}, a list of such objects may be supplied
-#' as well.
-#' @param data  an optional numeric vector containing the \eqn{x}-values at
-#' which to evaluate the assumed normal density from Sobel's test (only used in
-#' case of a density plot).  The default is to take 100 equally spaced points
-#' between the estimated indirect effect \eqn{\pm}{+/-} three times the
-#' standard error according to Sobel's formula.
-#' @param method  a character string specifying which plot to produce.
-#' Possible values are \code{"dot"} for a dot plot of selected coefficients, or
-#' \code{"density"} for a density plot of the indirect effect(s).
-#' @param parm  a character string specifying the coefficients to be included
-#' in a dot plot.  The default is to include the direct and the indirect
-#' effect(s).
-#' @param level  numeric;  the confidence level of the confidence intervals
-#' from Sobel's test to be included in a dot plot.  The default is to include
-#' 95\% confidence intervals.
-#' @param mapping  an aesthetic mapping to override the default behavior (see
-#' \code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_}}).
-#' @param facets  a faceting formula to override the default behavior (only
-#' used in case of a dot plot).  If supplied, \code{\link[ggplot2]{facet_wrap}}
-#' or \code{\link[ggplot2]{facet_grid}} is called depending on whether the
-#' formula is one-sided or two-sided.
-#' @param \dots  additional arguments to be passed to and from methods.
+#' \code{"\link{fit_mediation}"} or \code{"\link{test_mediation}"} containing
+#' results from (robust) mediation analysis.
+#' @param which  a character string specifying which plot to produce.
+#' Possible values are \code{"ci"} for a dot plot of selected coefficients
+#' together with confidence intervals (see \code{\link{ci_plot}}),
+#' \code{"density"} for a density plot of the indirect effect(s) (see
+#' \code{\link{density_plot}}), or \code{"ellipse"} for a diagnostic plot
+#' of the data together with a tolerance ellipse (see
+#' \code{\link{ellipse_plot}}).
+#' @param \dots  additional arguments to be passed down.
 #'
 #' @return An object of class \code{"ggplot"} (see
 #' \code{\link[ggplot2]{ggplot}}).
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{test_mediation}},
-#' \code{\link[=fortify.test_mediation]{fortify}}
+#' @seealso
+#' \code{\link{fit_mediation}}, \code{\link{test_mediation}}
+#'
+#' \code{\link{ci_plot}}, \code{\link{density_plot}}, \code{\link{ellipse_plot}}
 #'
 #' @examples
 #' data("BSG2014")
@@ -53,8 +49,9 @@
 #'                               robust = TRUE)
 #'
 #' # create plots for robust bootstrap test
-#' plot(robust_boot, method = "dot")
-#' plot(robust_boot, method = "density")
+#' plot(robust_boot, which = "ci")
+#' plot(robust_boot, which = "density")
+#' plot(robust_boot, which = "ellipse")
 #'
 #' # run standard bootstrap test
 #' standard_boot <- test_mediation(BSG2014,
@@ -65,75 +62,59 @@
 #'
 #' # compare robust and standard tests
 #' tests <- list(Robust = robust_boot, Standard = standard_boot)
-#' plot_mediation(tests, method = "dot")
-#' plot_mediation(tests, method = "density")
+#' ci_plot(tests)
+#' density_plot(tests)
+#' ellipse_plot(tests)
 #'
 #' @keywords hplot
 #'
 #' @import ggplot2
-#' @export
 
-plot_mediation <- function(object, ...) UseMethod("plot_mediation")
+NULL
 
 
-#' @rdname plot_mediation
-#' @method plot_mediation boot_test_mediation
-#' @export
-
-plot_mediation.boot_test_mediation <- function(object,
-                                               method = c("dot", "density"),
-                                               parm = NULL, ...) {
-  data <- fortify(object, method=method, parm=parm)
-  plot_mediation(data, ...)
+## internal function for plotting
+plot_internal <- function(object, which = c("ci", "density", "ellipse"), ...) {
+  # initializations
+  which <- match.arg(which)
+  # call selected plot function
+  if (which == "ci") ci_plot(object, ...)
+  else if (which == "density") density_plot(object, ...)
+  else if (which == "ellipse") ellipse_plot(object, ...)
+  else stop("type of plot not implemented")  # shouldn't happen
 }
 
 
-#' @rdname plot_mediation
-#' @method plot_mediation sobel_test_mediation
+#' @rdname plot-methods
+#' @method autoplot fit_mediation
 #' @export
 
-plot_mediation.sobel_test_mediation <- function(object, data,
-                                                method = c("dot", "density"),
-                                                parm = c("Direct", "ab"),
-                                                level = 0.95, ...) {
-  data <- fortify(object, data=data, method=method, parm=parm, level=level)
-  plot_mediation(data, ...)
-}
+autoplot.fit_mediation <- function(object, ...) ellipse_plot(object, ...)
 
 
-#' @rdname plot_mediation
-#' @method plot_mediation list
-#' @export
-
-plot_mediation.list <- function(object, data, method = c("dot", "density"),
-                                parm = NULL, level = 0.95, ...) {
-  data <- fortify(object, data=data, method=method, parm=parm, level=level)
-  plot_mediation(data, ...)
-}
-
-
-#' @rdname plot_mediation
-#' @method plot_mediation default
-#' @export
-
-plot_mediation.default <- function(object, mapping = attr(object, "mapping"),
-                                   facets = attr(object, "facets"), ...) {
-  # create selected plot
-  if(attr(object, "method") == "dot") {
-    dot_plot_fortified(object, mapping, facets, ...)
-  } else density_plot_fortified(object, mapping, facets, ...)
-}
-
-
-#' @rdname plot_mediation
+#' @rdname plot-methods
 #' @method autoplot test_mediation
 #' @export
 
-autoplot.test_mediation <- function(object, ...) plot_mediation(object, ...)
+autoplot.test_mediation <- function(object,
+                                    which = c("ci", "density", "ellipse"),
+                                    ...) {
+  plot_internal(object, which = which, ...)
+}
 
 
-#' @rdname plot_mediation
+#' @rdname plot-methods
+#' @method plot fit_mediation
+#' @export
+
+plot.fit_mediation <- function(x, ...) ellipse_plot(x, ...)
+
+
+#' @rdname plot-methods
 #' @method plot test_mediation
 #' @export
 
-plot.test_mediation <- function(x, ...) plot_mediation(x, ...)
+plot.test_mediation <- function(x, which = c("ci", "density", "ellipse"),
+                                ...) {
+  plot_internal(x, which = which, ...)
+}

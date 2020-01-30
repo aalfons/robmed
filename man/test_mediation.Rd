@@ -210,9 +210,8 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 \code{\link{fit_mediation}}
 
 \code{\link[=coef.test_mediation]{coef}},
-\code{\link[=confint.test_mediation]{confint}},
-\code{\link[=fortify.test_mediation]{fortify}} and
-\code{\link[=plot_mediation]{plot}} methods, \code{\link{p_value}}
+\code{\link[=confint.test_mediation]{confint}} and
+\code{\link[=plot-methods]{plot}} methods, \code{\link{p_value}}
 
 \code{\link[boot]{boot}}, \code{\link[robustbase]{lmrob}},
 \code{\link[stats]{lm}}, \code{\link{cov_Huber}}, \code{\link{cov_ML}}
