@@ -11,30 +11,30 @@ density_plot <- function(object, ...) UseMethod("density_plot")
 #' @export
 density_plot.default <- function(object, ...) {
   # extract information
-  density <- get_density(object, ...)
+  setup <- setup_density_plot(object, ...)
   # call method for corresponding objects
-  density_plot(density, ...)
+  density_plot(setup, ...)
 }
 
 #' @export
 density_plot.sobel_test_mediation <- function(object, grid = NULL,
                                               level = 0.95, ...) {
   # extract information
-  density <- get_density(object, grid = grid, level = level, ...)
+  setup <- setup_density_plot(object, grid = grid, level = level, ...)
   # call method for corresponding objects
-  density_plot(density, ...)
+  density_plot(setup, ...)
 }
 
 #' @export
 density_plot.list <- function(object, grid = NULL, level = 0.95, ...) {
   # extract information
-  density <- get_density(object, grid = grid, level = level, ...)
+  setup <- setup_density_plot(object, grid = grid, level = level, ...)
   # call method for corresponding objects
-  density_plot(density, ...)
+  density_plot(setup, ...)
 }
 
 #' @export
-density_plot.indirect_density <- function(object, ...) {
+density_plot.setup_density_plot <- function(object, ...) {
   # define aesthetic mappings for density estimate, point estimate and
   # confidence interval
   if(object$have_methods) {

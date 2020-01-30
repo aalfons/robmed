@@ -13,14 +13,15 @@ ellipse_plot.default <- function(object, horizontal = NULL, vertical = NULL,
                                  partial = FALSE, level = 0.975, npoints = 100,
                                  ...) {
   # compute tolerance ellipse
-  ellipse <- tol_ellipse(object, horizontal = horizontal, vertical = vertical,
-                         partial = partial, level = level, npoints = npoints)
+  setup <- setup_ellipse_plot(object, horizontal = horizontal,
+                                vertical = vertical, partial = partial,
+                                level = level, npoints = npoints)
   # call method for tolerance ellipse objects
-  ellipse_plot(ellipse, ...)
+  ellipse_plot(setup, ...)
 }
 
 #' @export
-ellipse_plot.tol_ellipse <- function(object, ...) {
+ellipse_plot.setup_ellipse_plot <- function(object, ...) {
   # initializations
   robust <- any(object$robust)
   have_line <- !is.null(object$line)

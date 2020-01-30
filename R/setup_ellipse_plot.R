@@ -6,18 +6,22 @@
 ## function to compute tolerance ellipses
 
 #' @export
-tol_ellipse <- function(object, ...) UseMethod("tol_ellipse")
+setup_ellipse_plot <- function(object, ...) UseMethod("setup_ellipse_plot")
 
 #' @export
-tol_ellipse.test_mediation <- function(object, ...) {
+setup_ellipse_plot.test_mediation <- function(object, ...) {
   # simply call methods for mediation model fit
-  tol_ellipse(object$fit, ...)
+  setup_ellipse_plot(object$fit, ...)
 }
 
 #' @export
-tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
-                                          vertical = NULL, partial = FALSE,
-                                          level = 0.975, npoints = 100, ...) {
+setup_ellipse_plot.reg_fit_mediation <- function(object,
+                                                 horizontal = NULL,
+                                                 vertical = NULL,
+                                                 partial = FALSE,
+                                                 level = 0.975,
+                                                 npoints = 100,
+                                                 ...) {
   # initializations
   if (object$robust && object$median) {
     # weights for weighted covariance matrix can be infinite for median
@@ -160,14 +164,18 @@ tol_ellipse.reg_fit_mediation <- function(object, horizontal = NULL,
   out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
               horizontal = horizontal, vertical = vertical, partial = partial,
               robust = robust, have_methods = FALSE)
-  class(out) <- "tol_ellipse"
+  class(out) <- "setup_ellipse_plot"
   out
 }
 
 #' @export
-tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
-                                          vertical = NULL, partial = FALSE,
-                                          level = 0.975, npoints = 100, ...) {
+setup_ellipse_plot.cov_fit_mediation <- function(object,
+                                                 horizontal = NULL,
+                                                 vertical = NULL,
+                                                 partial = FALSE,
+                                                 level = 0.975,
+                                                 npoints = 100,
+                                                 ...) {
   # extract variable names
   x <- object$x
   y <- object$y
@@ -276,12 +284,12 @@ tol_ellipse.cov_fit_mediation <- function(object, horizontal = NULL,
   out <- list(data = data, ellipse = as.data.frame(ellipse), line = line,
               horizontal = horizontal, vertical = vertical, partial = partial,
               robust = object$robust, have_methods = FALSE)
-  class(out) <- "tol_ellipse"
+  class(out) <- "setup_ellipse_plot"
   out
 }
 
 #' @export
-tol_ellipse.list <- function(object, ...) {
+setup_ellipse_plot.list <- function(object, ...) {
   # initializations
   is_test <- sapply(object, inherits, "test_mediation")
   is_fit <- sapply(object, inherits, "fit_mediation")
@@ -304,7 +312,7 @@ tol_ellipse.list <- function(object, ...) {
     methods[replace] <- seq_along(object)[replace]
   }
   # compute tolerance ellipse for each list element
-  tol_ellipse_list <- lapply(object, tol_ellipse, ...)
+  tol_ellipse_list <- lapply(object, setup_ellipse_plot, ...)
   # check for properties of tolerance ellipses
   partial <- tol_ellipse_list[[1]]$partial
   robust <- sapply(tol_ellipse_list, "[[", "robust")
@@ -354,7 +362,7 @@ tol_ellipse.list <- function(object, ...) {
               vertical = tol_ellipse_list[[1]]$vertical,
               partial = partial, robust = robust,
               have_methods = TRUE)
-  class(out) <- "tol_ellipse"
+  class(out) <- "setup_ellipse_plot"
   out
 }
 

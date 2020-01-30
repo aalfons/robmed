@@ -6,48 +6,48 @@
 
 #' @import ggplot2
 #' @export
-dot_plot <- function(object, ...) UseMethod("dot_plot")
+ci_plot <- function(object, ...) UseMethod("ci_plot")
 
 #' @export
-dot_plot.default <- function(object, parm = NULL, ...) {
+ci_plot.default <- function(object, parm = NULL, ...) {
   # extract information
-  dot <- get_dot(object, parm = parm, ...)
+  setup <- setup_ci_plot(object, parm = parm, ...)
   # call method for corresponding objects
-  dot_plot(dot, ...)
+  ci_plot(setup, ...)
 }
 
 #' @export
-dot_plot.boot_test_mediation <- function(object, parm = NULL,
-                                         type = c("boot", "data"),
-                                         other = c("boot", "theory"),
-                                         ...) {
+ci_plot.boot_test_mediation <- function(object, parm = NULL,
+                                        type = c("boot", "data"),
+                                        other = c("boot", "theory"),
+                                        ...) {
   # extract information
-  dot <- get_dot(object, parm = parm, type = type, other = other, ...)
+  setup <- setup_ci_plot(object, parm = parm, type = type, other = other, ...)
   # call method for corresponding objects
-  dot_plot(dot, ...)
+  ci_plot(setup, ...)
 }
 
 #' @export
-dot_plot.sobel_test_mediation <- function(object, parm = NULL,
-                                          level = 0.95, ...) {
+ci_plot.sobel_test_mediation <- function(object, parm = NULL,
+                                         level = 0.95, ...) {
   # extract information
-  dot <- get_dot(object, parm = parm, level = level, ...)
+  setup <- setup_ci_plot(object, parm = parm, level = level, ...)
   # call method for corresponding objects
-  dot_plot(dot, ...)
+  ci_plot(setup, ...)
 }
 
 #' @export
-dot_plot.list <- function(object, parm = NULL, type = c("boot", "data"),
-                          other = c("boot", "theory"), level = 0.95, ...) {
+ci_plot.list <- function(object, parm = NULL, type = c("boot", "data"),
+                         other = c("boot", "theory"), level = 0.95, ...) {
   # extract information
-  dot <- get_dot(object, parm = parm, type = type,
+  setup <- setup_ci_plot(object, parm = parm, type = type,
                  other = other,  level = level, ...)
   # call method for corresponding objects
-  dot_plot(dot, ...)
+  ci_plot(setup, ...)
 }
 
 #' @export
-dot_plot.effect_dot <- function(object, ...) {
+ci_plot.setup_ci_plot <- function(object, ...) {
   # define aesthetic mapping for confidence interval
   if (object$have_methods) {
     mapping <- aes_string(x = "Method", y = "Estimate",

@@ -3,18 +3,16 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-## function to prepare information for dot plot
-
-## return data frame as one component and logical 'have_methods' as another
+## function to prepare information for confidence interval plot
 
 #' @export
-get_dot <- function(object, ...) UseMethod("get_dot")
+setup_ci_plot <- function(object, ...) UseMethod("setup_ci_plot")
 
 #' @export
-get_dot.boot_test_mediation <- function(object, parm = NULL,
-                                        type = c("boot", "data"),
-                                        other = c("boot", "theory"),
-                                        ...) {
+setup_ci_plot.boot_test_mediation <- function(object, parm = NULL,
+                                              type = c("boot", "data"),
+                                              other = c("boot", "theory"),
+                                              ...) {
   # initializations
   p_m <- length(object$fit$m)
   if (is.null(parm)) {
@@ -33,13 +31,13 @@ get_dot.boot_test_mediation <- function(object, parm = NULL,
                    Upper = unname(ci[, 2L]))
   # return point estimates and confidence interval
   out <- list(ci = ci, level = object$level, have_methods = FALSE)
-  class(out) <- "effect_dot"
+  class(out) <- "setup_ci_plot"
   out
 }
 
 #' @export
-get_dot.sobel_test_mediation <- function(object, parm = NULL,
-                                         level = 0.95, ...) {
+setup_ci_plot.sobel_test_mediation <- function(object, parm = NULL,
+                                               level = 0.95, ...) {
   # initializations
   if (is.null(parm)) parm <- c("Direct", "ab")
   level <- rep(as.numeric(level), length.out = 1)
@@ -56,12 +54,12 @@ get_dot.sobel_test_mediation <- function(object, parm = NULL,
                    Upper = unname(ci[, 2L]))
   # return point estimates and confidence interval
   out <- list(ci = ci, level = level, have_methods = FALSE)
-  class(out) <- "effect_dot"
+  class(out) <- "setup_ci_plot"
   out
 }
 
 #' @export
-get_dot.list <- function(object, ...) {
+setup_ci_plot.list <- function(object, ...) {
   # initializations
   is_boot <- sapply(object, inherits, "boot_test_mediation")
   is_sobel <- sapply(object, inherits, "sobel_test_mediation")
@@ -84,7 +82,7 @@ get_dot.list <- function(object, ...) {
     methods[replace] <- seq_along(object)[replace]
   }
   # extract information for each list element
-  tmp <- lapply(object, get_dot, ...)
+  tmp <- lapply(object, setup_ci_plot, ...)
   # check that confidence levels are the same for all objects
   level <- unique(sapply(tmp, "[[", "level"))
   if (length(level) != 1L) {
@@ -97,6 +95,6 @@ get_dot.list <- function(object, ...) {
   ci <- do.call(rbind, ci_list)
   # return point estimates and confidence interval
   out <- list(ci = ci, level = level, have_methods = TRUE)
-  class(out) <- "effect_dot"
+  class(out) <- "setup_ci_plot"
   out
 }

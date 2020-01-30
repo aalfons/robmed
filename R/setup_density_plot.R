@@ -6,10 +6,10 @@
 ## function to prepare information for density plot
 
 #' @export
-get_density <- function(object, ...) UseMethod("get_density")
+setup_density_plot <- function(object, ...) UseMethod("setup_density_plot")
 
 #' @export
-get_density.boot_test_mediation <- function(object, ...) {
+setup_density_plot.boot_test_mediation <- function(object, ...) {
   # initialization
   p_m <- length(object$fit$m)
   have_effects <- p_m > 1L
@@ -40,14 +40,14 @@ get_density.boot_test_mediation <- function(object, ...) {
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = "boot", level = object$level,
               have_effects = have_effects, have_methods = FALSE)
-  class(out) <- "indirect_density"
+  class(out) <- "setup_density_plot"
   out
 }
 
 #' @import stats
 #' @export
-get_density.sobel_test_mediation <- function(object, grid = NULL, level = 0.95,
-                                             ...) {
+setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
+                                                    level = 0.95, ...) {
   # initializations
   level <- rep(as.numeric(level), length.out = 1)
   if (is.na(level) || level < 0 || level > 1) level <- formals()$level
@@ -67,12 +67,12 @@ get_density.sobel_test_mediation <- function(object, grid = NULL, level = 0.95,
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = "sobel", level = level,
               have_effects = FALSE, have_methods = FALSE)
-  class(out) <- "indirect_density"
+  class(out) <- "setup_density_plot"
   out
 }
 
 #' @export
-get_density.list <- function(object, ...) {
+setup_density_plot.list <- function(object, ...) {
   # initializations
   is_boot <- sapply(object, inherits, "boot_test_mediation")
   is_sobel <- sapply(object, inherits, "sobel_test_mediation")
@@ -95,7 +95,7 @@ get_density.list <- function(object, ...) {
     methods[replace] <- seq_along(object)[replace]
   }
   # extract information for each list element
-  tmp <- lapply(object, get_density, ...)
+  tmp <- lapply(object, setup_density_plot, ...)
   # check that confidence levels are the same for all objects
   level <- unique(sapply(tmp, "[[", "level"))
   if (length(level) != 1L) {
@@ -119,6 +119,6 @@ get_density.list <- function(object, ...) {
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = test, level = level,
               have_effects = have_effects, have_methods = TRUE)
-  class(out) <- "indirect_density"
+  class(out) <- "setup_density_plot"
   out
 }
