@@ -4,11 +4,79 @@
 # --------------------------------------
 
 
+#' Density plot of the indirect effect(s)
+#'
+#' Produce a density plot of the indirect effect(s) from (robust) mediation
+#' analysis.  In addition to the density, a vertical line representing the
+#' point estimate and a shaded area representing the confidence interval are
+#' drawn.
+#'
+#' Methods first call \code{\link{setup_density_plot}} to extract all necessary
+#' information to produce the plot, then the \code{"\link{setup_density_plot}"}
+#' method is called to produce the plot.
+#'
+#' @param object  an object inheriting from class
+#' \code{"\link{test_mediation}"} containing results from
+#' (robust) mediation analysis, or a list of such objects.
+#' @param grid  an optional numeric vector containing the values at which to
+#' evaluate the assumed normal density from Sobel's test.  The default is to
+#' take 512 equally spaced points between the estimated indirect effect
+#' \eqn{\pm}{+/-} three times the standard error according to Sobel's formula.
+#' @param level  numeric;  the confidence level of the confidence intervals
+#' from Sobel's test.  The default is to include 95\% confidence intervals.
+#' @param \dots  additional arguments to be passed down.
+#'
+#' @return An object of class \code{"ggplot"} (see
+#' \code{\link[ggplot2]{ggplot}}).
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso
+#' \code{\link{test_mediation}}, \code{\link{setup_density_plot}}
+#'
+#' \code{\link{ci_plot}}, \code{\link{ellipse_plot}}, \code{\link{plot-methods}}
+#'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' robust_boot <- test_mediation(BSG2014,
+#'                               x = "ValueDiversity",
+#'                               y = "TeamCommitment",
+#'                               m = "TaskConflict",
+#'                               robust = TRUE)
+#'
+#' # create plot for robust bootstrap test
+#' density_plot(robust_boot)
+#' density_plot(robust_boot, color = "#00BFC4", fill = "#00BFC4")
+#'
+#' # run standard bootstrap test
+#' standard_boot <- test_mediation(BSG2014,
+#'                                 x = "ValueDiversity",
+#'                                 y = "TeamCommitment",
+#'                                 m = "TaskConflict",
+#'                                 robust = FALSE)
+#'
+#' # compare robust and standard tests
+#' tests <- list(Standard = standard_boot, Robust = robust_boot)
+#' density_plot(tests)
+#'
+#' # the plot can be customized in the usual way
+#' density_plot(tests) + theme_bw() +
+#'   labs(title = "Standard vs robust bootstrap test")
+#'
+#' @keywords hplot
+#'
 #' @import ggplot2
 #' @export
+
 density_plot <- function(object, ...) UseMethod("density_plot")
 
+
+#' @rdname density_plot
+#' @method density_plot default
 #' @export
+
 density_plot.default <- function(object, ...) {
   # extract information
   setup <- setup_density_plot(object, ...)
@@ -16,7 +84,11 @@ density_plot.default <- function(object, ...) {
   density_plot(setup, ...)
 }
 
+
+#' @rdname density_plot
+#' @method density_plot sobel_test_mediation
 #' @export
+
 density_plot.sobel_test_mediation <- function(object, grid = NULL,
                                               level = 0.95, ...) {
   # extract information
@@ -25,7 +97,11 @@ density_plot.sobel_test_mediation <- function(object, grid = NULL,
   density_plot(setup, ...)
 }
 
+
+#' @rdname density_plot
+#' @method density_plot list
 #' @export
+
 density_plot.list <- function(object, grid = NULL, level = 0.95, ...) {
   # extract information
   setup <- setup_density_plot(object, grid = grid, level = level, ...)
@@ -33,7 +109,11 @@ density_plot.list <- function(object, grid = NULL, level = 0.95, ...) {
   density_plot(setup, ...)
 }
 
+
+#' @rdname density_plot
+#' @method density_plot setup_density_plot
 #' @export
+
 density_plot.setup_density_plot <- function(object, ...) {
   # define aesthetic mappings for density estimate, point estimate and
   # confidence interval

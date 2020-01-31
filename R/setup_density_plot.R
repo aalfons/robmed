@@ -3,12 +3,95 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-## function to prepare information for density plot
-
+#' Set up information for a density plot of the indirect effect(s)
+#'
+#' Extract the relevant information for a density plot of the indirect
+#' effect(s) from results of (robust) mediation analysis.
+#'
+#' This function is used internally by \code{\link{density_plot}}.  It may also
+#' be useful for users who want to produce a similar plot, but who want more
+#' control over what information to display.
+#'
+#' @param object  an object inheriting from class
+#' \code{"\link{test_mediation}"} containing results from
+#' (robust) mediation analysis, or a list of such objects.
+#' @param grid  an optional numeric vector containing the values at which to
+#' evaluate the assumed normal density from Sobel's test.  The default is to
+#' take 512 equally spaced points between the estimated indirect effect
+#' \eqn{\pm}{+/-} three times the standard error according to Sobel's formula.
+#' @param level  numeric;  the confidence level of the confidence intervals
+#' from Sobel's test.  The default is to include 95\% confidence intervals.
+#' @param \dots  additional arguments to be passed down.
+#'
+#' @return An object of class \code{"setup_density_plot"} with the following
+#' components:
+#' \item{density}{a data frame containing the values of the indirect effect
+#' where the density is estimated (column \code{ab}), and the estimated density
+#' values (column \code{Density}).  In case of a multiple mediator
+#' model, there is a column \code{Effect} that indicates the different
+#' indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
+#' been supplied, there is also a column \code{Method}, which takes the names
+#' or indices of the list elements to indicate the different methods.}
+#' \item{ci}{a data frame consisting of column \code{ab} containing the point
+#' estimates, column \code{Lower} for the lower confidence limit, and column
+#' \code{Upper} for the upper confidence limit.  In case of a multiple mediator
+#' model, there is a column \code{Effect} that indicates the different
+#' indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
+#' been supplied, there is also a column \code{Method}, which takes the names
+#' or indices of the list elements to indicate the different methods.}
+#' \item{test}{a character string indicating whether the object contains
+#' results from a bootstrap test (\code{"boot"}) or a Sobel test
+#' (\code{"sobel"}), or a vector of such character strings if a list of
+#' \code{"\link{test_mediation}"} objects has been supplied.}
+#' \item{level}{numeric; the confidence level used for the confidence intervals
+#' of the indirect effect(s).}
+#' \item{have_effects}{a logical indicating whether the mediation model
+#' contains multiple mediators.  If \code{TRUE}, the data frames in the
+#' \code{density} and \code{ci} components contain a column \code{Effect}.}
+#' \item{have_methods}{a logical indicating whether a list of
+#' \code{"\link{test_mediation}"} objects has been supplied.  If \code{TRUE},
+#' the data frames in the \code{density} and \code{ci} components contain a
+#' column \code{Method}.}
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso
+#' \code{\link{test_mediation}}, \code{\link{density_plot}}
+#'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' robust_boot <- test_mediation(BSG2014,
+#'                               x = "ValueDiversity",
+#'                               y = "TeamCommitment",
+#'                               m = "TaskConflict",
+#'                               robust = TRUE)
+#'
+#' # set up information for density plot
+#' setup <- setup_density_plot(robust_boot)
+#'
+#' # plot only density and confidence interval
+#' ggplot() +
+#'   geom_density(aes(x = ab, y = Density), data = setup$density,
+#'                stat = "identity") +
+#'   geom_rect(aes(xmin = Lower, xmax = Upper,
+#'                 ymin = -Inf, ymax = Inf),
+#'             data = setup$ci, color = NA, alpha = 0.2) +
+#'   labs(x = "Indirect effect", y = "Bootstrap density")
+#'
+#' @keywords hplot
+#'
+#' @import stats
 #' @export
+
 setup_density_plot <- function(object, ...) UseMethod("setup_density_plot")
 
+
+#' @rdname setup_density_plot
+#' @method setup_density_plot boot_test_mediation
 #' @export
+
 setup_density_plot.boot_test_mediation <- function(object, ...) {
   # initialization
   p_m <- length(object$fit$m)
@@ -44,8 +127,11 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
   out
 }
 
-#' @import stats
+
+#' @rdname setup_density_plot
+#' @method setup_density_plot sobel_test_mediation
 #' @export
+
 setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
                                                     level = 0.95, ...) {
   # initializations
@@ -71,7 +157,11 @@ setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
   out
 }
 
+
+#' @rdname setup_density_plot
+#' @method setup_density_plot list
 #' @export
+
 setup_density_plot.list <- function(object, ...) {
   # initializations
   is_boot <- sapply(object, inherits, "boot_test_mediation")

@@ -7,12 +7,12 @@
 #'
 #' Visualize results from (robust) mediation analysis.
 #'
-#' The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}},
-#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}}, depending on
-#' argument \code{which}.
-#'
 #' The \code{"\link{fit_mediation}"} method is a wrapper for
 #' \code{\link{ellipse_plot}}.
+#'
+#' The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}},
+#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}}, depending on
+#' the argument \code{which}.
 #'
 #' @name plot-methods
 #'
@@ -52,19 +52,6 @@
 #' plot(robust_boot, which = "ci")
 #' plot(robust_boot, which = "density")
 #' plot(robust_boot, which = "ellipse")
-#'
-#' # run standard bootstrap test
-#' standard_boot <- test_mediation(BSG2014,
-#'                                 x = "ValueDiversity",
-#'                                 y = "TeamCommitment",
-#'                                 m = "TaskConflict",
-#'                                 robust = FALSE)
-#'
-#' # compare robust and standard tests
-#' tests <- list(Robust = robust_boot, Standard = standard_boot)
-#' ci_plot(tests)
-#' density_plot(tests)
-#' ellipse_plot(tests)
 #'
 #' @keywords hplot
 #'
