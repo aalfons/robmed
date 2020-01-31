@@ -43,10 +43,10 @@ model, there is a column \code{Effect} that indicates the different
 indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
 been supplied, there is also a column \code{Method}, which takes the names
 or indices of the list elements to indicate the different methods.}
-\item{ci}{a data frame consisting of column \code{ab} containing the point
-estimates, column \code{Lower} for the lower confidence limit, and column
-\code{Upper} for the upper confidence limit.  In case of a multiple mediator
-model, there is a column \code{Effect} that indicates the different
+\item{ci}{a data frame consisting of column \code{Estimate} containing the
+point estimates, column \code{Lower} for the lower confidence limit, and
+column \code{Upper} for the upper confidence limit.  In case of a multiple
+mediator model, there is a column \code{Effect} that indicates the different
 indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
 been supplied, there is also a column \code{Method}, which takes the names
 or indices of the list elements to indicate the different methods.}

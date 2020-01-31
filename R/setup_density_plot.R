@@ -34,10 +34,10 @@
 #' indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
 #' been supplied, there is also a column \code{Method}, which takes the names
 #' or indices of the list elements to indicate the different methods.}
-#' \item{ci}{a data frame consisting of column \code{ab} containing the point
-#' estimates, column \code{Lower} for the lower confidence limit, and column
-#' \code{Upper} for the upper confidence limit.  In case of a multiple mediator
-#' model, there is a column \code{Effect} that indicates the different
+#' \item{ci}{a data frame consisting of column \code{Estimate} containing the
+#' point estimates, column \code{Lower} for the lower confidence limit, and
+#' column \code{Upper} for the upper confidence limit.  In case of a multiple
+#' mediator model, there is a column \code{Effect} that indicates the different
 #' indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
 #' been supplied, there is also a column \code{Method}, which takes the names
 #' or indices of the list elements to indicate the different methods.}
@@ -102,8 +102,6 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
   ab <- object$ab
   ci <- object$ci
   # extract information to be plotted
-  # FIXME: rename the column for the point estimates to 'Estimate'
-  #        to be consistent with setup_ci_plot()
   if (have_effects) {
     # information on indirect effects
     effects <- names(ab)
@@ -114,15 +112,14 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
     }, pdf = pdf_list, effect = effects, SIMPLIFY = FALSE, USE.NAMES = FALSE)
     density <- do.call(rbind, density_list)
     # construct data frame containing confidence interval
-    ci <- data.frame(Effect = effects, ab = unname(ab),
-                     Lower = unname(ci[, 1L]),
-                     Upper = unname(ci[, 2L]))
+    ci <- data.frame(Effect = effects, Estimate = unname(ab),
+                     Lower = unname(ci[, 1L]), Upper = unname(ci[, 2L]))
   } else {
     # construct data frame containing bootstrap density
     pdf <- density(object$reps$t[, 1L])
     density <- data.frame(ab = pdf$x, Density = pdf$y)
     # construct data frame containing confidence interval
-    ci <- data.frame(ab = ab, Lower = ci[1L], Upper = ci[2L])
+    ci <- data.frame(Estimate = ab, Lower = ci[1L], Upper = ci[2L])
   }
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = "boot", level = object$level,

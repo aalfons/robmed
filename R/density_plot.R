@@ -121,13 +121,13 @@ density_plot.setup_density_plot <- function(object, ...) {
   # confidence interval
   if(object$have_methods) {
     mapping_density <- aes_string(x = "ab", y = "Density", color = "Method")
-    mapping_line <- aes_string(xintercept = "ab", color = "Method")
+    mapping_line <- aes_string(xintercept = "Estimate", color = "Method")
     mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
                                ymin = -Inf, ymax = Inf,
                                fill = "Method")
   } else {
     mapping_density <- aes_string(x = "ab", y = "Density")
-    mapping_line <- aes_string(xintercept = "ab")
+    mapping_line <- aes_string(xintercept = "Estimate")
     mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
                                ymin = -Inf, ymax = Inf)
   }
