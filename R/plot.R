@@ -20,7 +20,7 @@
 #' \code{"\link{fit_mediation}"} or \code{"\link{test_mediation}"} containing
 #' results from (robust) mediation analysis.
 #' @param which  a character string specifying which plot to produce.
-#' Possible values are \code{"ci"} for a dot plot of selected coefficients
+#' Possible values are \code{"ci"} for a dot plot of selected effects
 #' together with confidence intervals (see \code{\link{ci_plot}}),
 #' \code{"density"} for a density plot of the indirect effect(s) (see
 #' \code{\link{density_plot}}), or \code{"ellipse"} for a diagnostic plot

@@ -24,6 +24,8 @@
 #' \eqn{\pm}{+/-} three times the standard error according to Sobel's formula.
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test.  The default is to include 95\% confidence intervals.
+#' Note that this is not used for bootstrap tests, as those require to specify
+#' the confidence level already in \code{\link{test_mediation}}.
 #' @param \dots  additional arguments to be passed down.
 #'
 #' @return An object of class \code{"ggplot"} (see

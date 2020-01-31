@@ -32,7 +32,9 @@ take 512 equally spaced points between the estimated indirect effect
 \eqn{\pm}{+/-} three times the standard error according to Sobel's formula.}
 
 \item{level}{numeric;  the confidence level of the confidence intervals
-from Sobel's test.  The default is to include 95\% confidence intervals.}
+from Sobel's test.  The default is to include 95\% confidence intervals.
+Note that this is not used for bootstrap tests, as those require to specify
+the confidence level already in \code{\link{test_mediation}}.}
 }
 \value{
 An object of class \code{"ggplot"} (see

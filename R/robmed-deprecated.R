@@ -11,16 +11,15 @@
 #' \code{fortify} supplements the estimated coefficients with other useful
 #' information for informative visualization of the (robust) mediation analysis
 #' results.  It is thereby possible to construct data frames for dot plots of
-#' selected coefficients, as well as density plots of the indirect effect.
+#' selected effects, as well as density plots of the indirect effect.
 #' From version 0.6.0 onwards, it is recommended to use
 #' \code{\link{setup_ci_plot}}, \code{\link{setup_density_plot}}, or
 #' \code{\link{setup_ellipse_plot}} instead.
 #'
-#' \code{plot_mediation} produces a dot plot of selected coefficients from
-#' regression models computed in (robust) mediation analysis, or a density plot
-#' of the indirect effect.  From version 0.6.0 onwards, it is recommended to
-#' use \code{\link{ci_plot}}, \code{\link{density_plot}}, or
-#' \code{\link{ellipse_plot}} instead.
+#' \code{plot_mediation} produces a dot plot of selected effects in the
+#' mediation model, or a density plot of the indirect effect.  From
+#' version 0.6.0 onwards, it is recommended to use \code{\link{ci_plot}},
+#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}} instead.
 #'
 #' @name robmed-deprecated
 #'
@@ -36,9 +35,8 @@
 #' according to Sobel's formula.
 #' @param method  a character string specifying for which plot to construct the
 #' data frame.  Possible values are \code{"dot"} for a dot plot of selected
-#' coefficients, or \code{"density"} for a density plot of the indirect
-#' effect(s).
-#' @param parm  a character string specifying the coefficients to be included
+#' effects, or \code{"density"} for a density plot of the indirect effect(s).
+#' @param parm  a character string specifying the effects to be included
 #' in a dot plot.  The default is to include the direct and the indirect
 #' effect(s).
 #' @param level  numeric;  the confidence level of the confidence intervals
