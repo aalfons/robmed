@@ -3,6 +3,7 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
+
 #' Set up information for a density plot of the indirect effect(s)
 #'
 #' Extract the relevant information for a density plot of the indirect

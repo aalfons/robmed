@@ -3,18 +3,133 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-## function to compute tolerance ellipses
 
+#' Set up a diagnostic plot with a tolerance ellipse
+#'
+#' Extract the relevant information for a diagnostic plot with a tolerance
+#' ellipse from results of (robust) mediation analysis.
+#'
+#' This function is used internally by \code{\link{ellipse_plot}}.  It may also
+#' be useful for users who want to produce a similar plot, but who want more
+#' control over what information to display or how to display that information.
+#'
+#' @param object  an object inheriting from class \code{"\link{fit_mediation}"}
+#' or \code{"\link{test_mediation}"} containing results from (robust) mediation
+#' analysis, or a list of such objects.
+#' @param horizontal  a character string specifying the variable to be
+#' plotted on the horizontal axis.  If the dependent variable is chosen for
+#' the vertical axis, a hypothsized mediator or the independent variable must
+#' be selected for the horizontal axis.  If a hypothesized mediator is chosen
+#' for the vertical axis, the independent variable must be selected for the
+#' horizontal axis.  The default is to plot the independent variable on the
+#' horizontal axis.
+#' @param vertical  a character string specifying the variable to be
+#' plotted on the vertical axis: the dependent variable or a hypothesized
+#' mediator.  The default is to plot the first hypothesized mediator on the
+#' vertical axis.
+#' @param partial  a logical indicating whether to extract the observed values
+#' of the selected variable for the vertical axis (\code{FALSE}), or the
+#' partial residuals with respect to the variable on the horizontal axis
+#' (\code{TRUE}).  The latter allows to display the corresponding regression
+#' coefficient by a line.
+#' @param level  numeric; the confidence level of the tolerance ellipse.  It
+#' gives the percentage of observations that are expected to lie within the
+#' ellipse under the assumption of a normal distribution, and therefore it
+#' controls the size of the ellipse.  The default is such that the ellipse is
+#' expected to contain 97.5\% of the observations.
+#' @param npoints  The number of grid points used to evaluate the ellipse.  The
+#' default is to use 100 grid points.
+#' @param \dots  additional arguments to be passed down.
+#'
+#' @return An object of class \code{"setup_ellipse_plot"} with the following
+#' components:
+#' \item{data}{a data frame containing the coordinates of the data points to
+#' be plotted on the horizontal axis (column \code{x}) and the coordinates
+#' on the vertical axis (column \code{y}).  For robust methods that assign
+#' outlyingness weights to each data point, those weights are given in column
+#' \code{Weight}.  If a list of objects has been supplied and there are
+#' multiple objects from such robust methods, or if partial residuals are to be
+#' plotted on the vertical axis, there is also a column \code{Method}, which
+#' takes the names or indices of the list elements to indicate the different
+#' methods.}
+#' \item{ellipse}{a data frame containing the coordinates of the tolerance
+#' ellipse on the horizontal axis (column \code{x}) and on the vertical axis
+#' (column \code{y}).  If a list of objects has been supplied, there is also a
+#' column \code{Method}, which takes the names or indices of the list elements
+#' to indicate the different methods.}
+#' \item{line}{a data frame with columns \code{intercept} and \code{slope}
+#' containing the intercept and slope, respectively, of the regression line to
+#' be plotted.  If  a list of objects has been supplied, there is also a column
+#' \code{Method}, which takes the names or indices of the list elements to
+#' indicate the different methods. This is only returned if \code{partial} is
+#' \code{TRUE}, or in case of a simple mediation model (without control
+#' variables) when the hypothesized mediator is plotted on the vertical axis
+#' and the independent variable is plotted on the horizontal axis.}
+#' \item{horizontal}{a character string giving the variable to be plotted on
+#' the horizontal axis.}
+#' \item{vertical}{a character string giving the variable to be plotted on the
+#' vertical axis}
+#' \item{partial}{a logical indicating whether the values to be plotted on the
+#' vertical axis correspond to the observed values of the selected variable
+#' (\code{FALSE}), or the partial residuals with respect to the variable on the
+#' horizontal axis (\code{TRUE}).}
+#' \item{robust}{a logical indicating whether the object contains results from
+#' a robust method, or a vector of such logicals if a list of objects has been
+#' supplied.}
+#' \item{have_methods}{a logical indicating whether a list of objects has been
+#' supplied.}
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso
+#' \code{\link{fit_mediation}}, \code{\link{test_mediation}},
+#' \code{\link{ellipse_plot}}
+#'
+#' @examples
+#' data("BSG2014")
+#'
+#' # run fast and robust bootstrap test
+#' robust_boot <- test_mediation(BSG2014,
+#'                               x = "ValueDiversity",
+#'                               y = "TeamCommitment",
+#'                               m = "TaskConflict",
+#'                               robust = TRUE)
+#'
+#' # set up information for plot
+#' setup <- setup_ellipse_plot(robust_boot)
+#'
+#' # plot only data and tolerance ellipse
+#' ggplot() +
+#'   geom_path(aes(x = x, y = y), data = setup$ellipse,
+#'             color = "#00BFC4") +
+#'   geom_point(aes(x = x, y = y, fill = Weight),
+#'              data = setup$data, shape = 21) +
+#'   scale_fill_gradient(limits = 0:1, low = "white",
+#'                       high = "black") +
+#'   labs(x = setup$horizontal, y = setup$vertical)
+#'
+#' @keywords hplot
+#'
+#' @import ggplot2
 #' @export
+
 setup_ellipse_plot <- function(object, ...) UseMethod("setup_ellipse_plot")
 
+
+#' @rdname setup_ellipse_plot
+#' @method setup_ellipse_plot test_mediation
 #' @export
+
 setup_ellipse_plot.test_mediation <- function(object, ...) {
   # simply call methods for mediation model fit
   setup_ellipse_plot(object$fit, ...)
 }
 
+
+#' @rdname setup_ellipse_plot
+#' @method setup_ellipse_plot reg_fit_mediation
 #' @export
+
 setup_ellipse_plot.reg_fit_mediation <- function(object,
                                                  horizontal = NULL,
                                                  vertical = NULL,
@@ -168,7 +283,11 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   out
 }
 
+
+#' @rdname setup_ellipse_plot
+#' @method setup_ellipse_plot cov_fit_mediation
 #' @export
+
 setup_ellipse_plot.cov_fit_mediation <- function(object,
                                                  horizontal = NULL,
                                                  vertical = NULL,
@@ -288,7 +407,11 @@ setup_ellipse_plot.cov_fit_mediation <- function(object,
   out
 }
 
+
+#' @rdname setup_ellipse_plot
+#' @method setup_ellipse_plot list
 #' @export
+
 setup_ellipse_plot.list <- function(object, ...) {
   # initializations
   is_test <- sapply(object, inherits, "test_mediation")

@@ -3,6 +3,7 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
+
 #' Set up information for a dot plot with confidence intervals
 #'
 #' Extract the relevant information for a dot plot with confidence intervals of
