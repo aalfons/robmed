@@ -70,7 +70,7 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$x, "X")
   expect_identical(boot$fit$y, "Y")
   expect_identical(boot$fit$m, "M1")
-  expect_null(boot$fit$covariates)
+  expect_identical(boot$fit$covariates, character())
   # robust fit and test
   expect_true(boot$fit$robust)
   expect_equal(boot$fit$control, ctrl)

@@ -67,7 +67,7 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$x, "X")
   expect_identical(sobel$fit$y, "Y")
   expect_identical(sobel$fit$m, "M1")
-  expect_null(sobel$fit$covariates)
+  expect_identical(sobel$fit$covariates, character())
   # robust fit and test
   expect_false(sobel$fit$robust)
   expect_null(sobel$fit$control)
