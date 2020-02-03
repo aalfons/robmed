@@ -151,7 +151,7 @@ setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
   density <- data.frame(ab = grid, Density = y)
   # construct data frame containing confidence interval
   ci <- confint_z(ab, se, level = level, alternative = object$alternative)
-  ci <- data.frame(ab, Lower = ci[1], Upper = ci[2])
+  ci <- data.frame(Estimate = ab, Lower = ci[1], Upper = ci[2])
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = "sobel", level = level,
               have_effects = FALSE, have_methods = FALSE)
