@@ -74,6 +74,7 @@
 #'
 #' # plot only density and confidence interval
 #' ggplot() +
+#'   geom_hline(yintercept = 0, color = "darkgrey") +
 #'   geom_pointrange(aes(x = "Robust bootstrap", y = Estimate,
 #'                       ymin = Lower, ymax = Upper),
 #'                   data = setup$ci) +

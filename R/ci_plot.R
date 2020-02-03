@@ -77,7 +77,9 @@
 #' ci_plot(tests)
 #'
 #' # the plot can be customized in the usual way
-#' ci_plot(tests) + coord_flip() + theme_bw() +
+#' ci_plot(tests) +
+#'   geom_hline(yintercept = 0, color = "darkgrey") +
+#'   coord_flip() + theme_bw() +
 #'   labs(title = "Standard vs robust bootstrap test")
 #'
 #' @keywords hplot
