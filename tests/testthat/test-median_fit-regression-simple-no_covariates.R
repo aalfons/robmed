@@ -98,3 +98,10 @@ test_that("coef() method returns correct values of coefficients", {
 test_that("summary returns original object", {
   expect_identical(foo, bar)
 })
+
+test_that("object returned by setup_ellipse_plot() has correct structure", {
+
+  # not meaningful for median regression
+  expect_error(setup_ellipse_plot(boot))
+
+})
