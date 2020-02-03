@@ -106,13 +106,13 @@ robust_boot <- test_mediation(BSG2014,
                               robust = TRUE)
 
 # create dot plot for robust bootstrap test
-plot(robust_boot, method = "dot")
+plot_mediation(robust_boot, method = "dot")
 # equivalently
 dot <- fortify(robust_boot, method = "dot")
 plot_mediation(dot)
 
 # create density plot for robust bootstrap test
-plot(robust_boot, method = "density")
+plot_mediation(robust_boot, method = "density")
 # equivalently
 density <- fortify(robust_boot, method = "density")
 plot_mediation(density)
@@ -125,7 +125,7 @@ standard_boot <- test_mediation(BSG2014,
                                 robust = FALSE)
 
 # compare robust and standard tests
-tests <- list(Robust = robust_boot, Standard = standard_boot)
+tests <- list(Standard = standard_boot, Robust = robust_boot)
 plot_mediation(tests, method = "dot")
 plot_mediation(tests, method = "density")
 
