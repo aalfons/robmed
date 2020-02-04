@@ -1,11 +1,25 @@
 Changes in robmed version 0.6.0
 
+    + New plot function ellipse_plot() for a diagnostic plot with a tolerance
+      ellipse.
+
+    + dot_plot() has been renamed to ci_plot() and is now creating panels for
+      different effects instead of different methods.
+
     + density_plot() now uses argument 'fill' only for the filled rectangle
       that illustrates the confidence interval, and allows to customize the
       transparency of the confidence interval via argument 'alpha'.
 
     + Bugfix in density_plot(): avoids that duplicated or unknown arguments are
       passed to geom()'s via the ... argument.
+
+    + Functions ci_plot() and density_plot() are now exported and replace
+      plot_mediation().
+
+    + New functions setup_ci_plot(), setup_density_plot() and
+      setup_ellipse_plot() to extract relevant information for plots.
+
+    + fortify() and plot_mediation() are now deprecated.
 
     + Updated demos for empirical cases 2 and 3.
 
