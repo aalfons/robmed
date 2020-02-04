@@ -506,7 +506,7 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
   total <- S[y, x] / S[x, x]
   # return results
   result <- list(a=a, b=b, direct=direct, total=total, cov=cov, x=x, y=y, m=m,
-                 data=data, robust=robust)
+                 covariates = character(), data=data, robust=robust)
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result

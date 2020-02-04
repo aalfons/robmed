@@ -108,7 +108,7 @@ shinyServer(function(input, output) {
 
     # plot the density of the bootstrap distribution
     if (length(tests) > 0) {
-      dp <- plot_mediation(tests, method = "density") +
+      dp <- density_plot(tests) +
         geom_vline(xintercept = input$a * input$b) +
         scale_color_manual(values = selected_colors) +
         scale_fill_manual(values = selected_colors) +

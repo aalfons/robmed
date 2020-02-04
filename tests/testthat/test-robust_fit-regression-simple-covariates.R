@@ -28,6 +28,11 @@ foo <- fit_mediation(test_data, x = "X", y = "Y", m = "M",
                      robust = TRUE, median = FALSE, max_iterations = 500)
 bar <- summary(foo)
 
+## create data for plotting
+ellipse_default <- setup_ellipse_plot(foo)
+ellipse_partial <- setup_ellipse_plot(foo, horizontal = "M", vertical = "Y",
+                                      partial = TRUE)
+
 
 ## run tests
 
@@ -100,6 +105,63 @@ test_that("coef() method returns correct values of coefficients", {
 
 test_that("summary returns original object", {
   expect_identical(foo, bar)
+})
+
+test_that("object returned by setup_ellipse_plot() has correct structure", {
+
+  # check data frame for data to be plotted
+  expect_s3_class(ellipse_default$data, "data.frame")
+  expect_s3_class(ellipse_partial$data, "data.frame")
+  # check dimensions
+  expect_identical(dim(ellipse_default$data), c(as.integer(n), 3L))
+  expect_identical(dim(ellipse_partial$data), c(as.integer(n), 3L))
+  # check column names
+  column_names <- c("x", "y", "Weight")
+  expect_named(ellipse_default$data, column_names)
+  expect_named(ellipse_partial$data, column_names)
+
+  # check data frame for ellipse
+  expect_s3_class(ellipse_default$ellipse, "data.frame")
+  expect_s3_class(ellipse_partial$ellipse, "data.frame")
+  # check dimensions
+  expect_identical(ncol(ellipse_default$ellipse), 2L)
+  expect_gt(nrow(ellipse_default$ellipse), 0L)
+  expect_identical(ncol(ellipse_partial$ellipse), 2L)
+  expect_gt(nrow(ellipse_partial$ellipse), 0L)
+  # check column names
+  column_names <- c("x", "y")
+  expect_named(ellipse_default$ellipse, column_names)
+  expect_named(ellipse_partial$ellipse, column_names)
+
+  # check data frame for line representing the coefficient
+  expect_null(ellipse_default$line)
+  expect_s3_class(ellipse_partial$line, "data.frame")
+  # check dimensions
+  expect_identical(dim(ellipse_partial$line), c(1L, 2L))
+  # check column names
+  column_names <- c("intercept", "slope")
+  expect_named(ellipse_partial$line, column_names)
+  # check if intercept is 0 for partial residuals
+  expect_identical(ellipse_partial$line$intercept, 0)
+
+  # check if variables are passed correctly
+  expect_identical(ellipse_default$horizontal, "X")
+  expect_identical(ellipse_default$vertical, "M")
+  expect_identical(ellipse_partial$horizontal, "M")
+  expect_identical(ellipse_partial$vertical, "Y")
+
+  # check logical for partial residuals on the vertical axis
+  expect_false(ellipse_default$partial)
+  expect_true(ellipse_partial$partial)
+
+  # check logical for robust method
+  expect_true(ellipse_default$robust)
+  expect_true(ellipse_partial$robust)
+
+  # check logical for multiple methods
+  expect_false(ellipse_default$have_methods)
+  expect_false(ellipse_partial$have_methods)
+
 })
 
 

@@ -44,70 +44,20 @@ p_value(robust_boot)
 
 # let's have a closer look at the effect of x on m
 
-# function for weighted covariance matrix
-weighted_cov <- function(x, w, ...) {
-  # sweep out columnwise weighted means
-  center <- apply(x, 2, weighted.mean, w = w)
-  x <- sweep(x, 2, center, check.margin = FALSE)
-  # compute weighted crossproduct
-  cn <- colnames(x)
-  sapply(cn, function(j) sapply(cn, function(i) {
-    sum(x[, i] * x[, j] * w)
-  })) / (sum(w) - 1)
-}
+# extract information for diagnostic plot with tolerance ellipse
+boot_list <- list(Standard = standard_boot, Robust = robust_boot)
+ellipses <- setup_ellipse_plot(boot_list, horizontal = x, vertical = m)
 
-# function to compute an ellipse based on center and covariance matrix
-ellipse <- function(center, cov, level = 0.975, n = 100) {
-  # extract scales and correlation
-  scale <- sqrt(diag(cov))
-  r <- cov[1, 2] / prod(scale)
-  # compute ellipse
-  d <- acos(r)
-  a <- seq(0, 2 * pi, length.out = n)
-  q <- sqrt(qchisq(level, df = 2))
-  x <- q * scale[1] * cos(a + d/2) + center[1]
-  y <- q * scale[2] * cos(a - d/2) + center[2]
-  xy <- cbind(x, y)
-  # add names of variables and return ellipse
-  colnames(xy) <- names(center)
-  xy
-}
-
-# outliers from robust regression
-w <- weights(robust_boot$fit$fit_mx, type = "robustness")
-# means and covariance matrices
-standard_center <- colMeans(BSG2014[, c(x, m)])
-standard_cov <- cov(BSG2014[, c(x, m)])
-robust_center <- sapply(BSG2014[, c(x, m)], weighted.mean, w = w)
-# The weighted covariance matrix with weights from MM-regression needs to be
-# multiplied with a correction factor.  Otherwise the determinant (volume) of
-# the covariance matrix would be underestimated under the mediation model with
-# normally distributed errors, as observations are also partly downweighted in
-# that case.  Here this correction factor was simulated from 100 000 simulation
-# runs for a mediation model with parameter values drawn from the sampling
-# distributions of the coefficient estimators obtained in this example.
-robust_cov <- 1.039766 * weighted_cov(BSG2014[, c(x, m)], w = w)
-# compute tolerance ellipses
-standard_ellipse <- ellipse(standard_center, standard_cov, level = 0.975)
-robust_ellipse <- ellipse(robust_center, robust_cov, level = 0.975)
-ellipses <- rbind(data.frame(Method = "Standard", standard_ellipse),
-                  data.frame(Method = "Robust", robust_ellipse))
-# extract coefficients of regression lines
-standard_coef <- coef(standard_boot$fit$fit_mx)
-robust_coef <- coef(robust_boot$fit$fit_mx)
 # create plot
 colors <- c("#F8766D", "#00BFC4")
-BSG2014$Weight <- w
 ggplot() +
-  geom_path(aes_string(x = x, y = m, color = "Method"), data = ellipses) +
-  scale_color_manual(values = colors) +
-  geom_point(aes_string(x = x, y = m, fill = "Weight"), data = BSG2014,
+  geom_path(aes(x = x, y = y, color = Method), data = ellipses$ellipse) +
+  geom_point(aes(x = x, y = y, fill = Weight), data = ellipses$data,
              shape = 21, size = 3) +
-  scale_fill_gradient(low = "white", high = "black") +
-  geom_abline(intercept = standard_coef[1], slope = standard_coef[2],
-              color = colors[1]) +
-  geom_abline(intercept = robust_coef[1], slope = robust_coef[2],
-              color = colors[2]) +
+  geom_abline(aes(intercept = intercept, slope = slope, color = Method),
+              data = ellipses$line, show.legend = FALSE) +
+  scale_color_manual(values = colors) +
+  scale_fill_gradient(limits = 0:1, low = "white", high = "black") +
   labs(x = labs[x], y = labs[m]) + theme_bw()
 
 

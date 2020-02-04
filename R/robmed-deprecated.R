@@ -3,17 +3,29 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-#' Convert (robust) mediation analysis results into a data frame for plotting
+#' Deprecated functions in package \pkg{robmed}
 #'
-#' Supplement the estimated coefficients with other useful information for
-#' informative visualization of the (robust) mediation analysis results.  It is
-#' thereby possible to construct data frames for dot plots of selected
-#' coefficients, as well as density plots of the indirect effect.
+#' These functions are provided for compatibility with older versions only, and
+#' may be defunct as soon as the next release.
 #'
-#' @name fortify.test_mediation
+#' \code{fortify} supplements the estimated coefficients with other useful
+#' information for informative visualization of the (robust) mediation analysis
+#' results.  It is thereby possible to construct data frames for dot plots of
+#' selected effects, as well as density plots of the indirect effect.
+#' From version 0.6.0 onwards, it is recommended to use
+#' \code{\link{setup_ci_plot}}, \code{\link{setup_density_plot}}, or
+#' \code{\link{setup_ellipse_plot}} instead.
 #'
-#' @param model  an object inheriting from class \code{"\link{test_mediation}"}
-#' containing results from (robust) mediation analysis.
+#' \code{plot_mediation} produces a dot plot of selected effects in the
+#' mediation model, or a density plot of the indirect effect.  From
+#' version 0.6.0 onwards, it is recommended to use \code{\link{ci_plot}},
+#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}} instead.
+#'
+#' @name robmed-deprecated
+#'
+#' @param model,object  an object inheriting from class
+#' \code{"\link{test_mediation}"} containing results from
+#' (robust) mediation analysis, or a list of such objects.
 #' @param data  for the \code{"boot_test_mediation"} method, this is currently
 #' ignored.  For the \code{"sobel_test_mediation"} method, this is an optional
 #' numeric vector containing the \eqn{x}-values at which to evaluate the
@@ -23,41 +35,68 @@
 #' according to Sobel's formula.
 #' @param method  a character string specifying for which plot to construct the
 #' data frame.  Possible values are \code{"dot"} for a dot plot of selected
-#' coefficients, or \code{"density"} for a density plot of the indirect
-#' effect(s).
-#' @param parm  a character string specifying the coefficients to be included
+#' effects, or \code{"density"} for a density plot of the indirect effect(s).
+#' @param parm  a character string specifying the effects to be included
 #' in a dot plot.  The default is to include the direct and the indirect
 #' effect(s).
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test to be included in a dot plot.  The default is to include
 #' 95\% confidence intervals.
-#' @param \dots  additional arguments are currently ignored.
+#' @param mapping  an aesthetic mapping to override the default behavior (see
+#' \code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_}}).
+#' @param facets  a faceting formula to override the default behavior (only
+#' used in case of a dot plot).  If supplied, \code{\link[ggplot2]{facet_wrap}}
+#' or \code{\link[ggplot2]{facet_grid}} is called depending on whether the
+#' formula is one-sided or two-sided.
+#' @param \dots  additional arguments to be passed to and from methods.
 #'
-#' @return A data frame containing the necessary data for the selected plot, as
-#' well as additional information stored in attributes.
+#' @return
+#' \code{fortify} returns a data frame containing the necessary data for the
+#' selected plot, as well as additional information stored in attributes.
+#'
+#' \code{plot_mediation} returns an object of class \code{"ggplot"} (see
+#' \code{\link[ggplot2]{ggplot}}).
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{test_mediation}}, \code{\link{plot_mediation}}
+#' @seealso \code{\link{test_mediation}}, \code{\link{ci_plot}},
+#' \code{\link{density_plot}}, \code{\link{ellipse_plot}}
 #'
 #' @examples
 #' data("BSG2014")
 #'
 #' # run fast and robust bootstrap test
-#' test <- test_mediation(BSG2014,
-#'                        x = "ValueDiversity",
-#'                        y = "TeamCommitment",
-#'                        m = "TaskConflict")
+#' robust_boot <- test_mediation(BSG2014,
+#'                               x = "ValueDiversity",
+#'                               y = "TeamCommitment",
+#'                               m = "TaskConflict",
+#'                               robust = TRUE)
 #'
-#' # data for dot plot
-#' dot <- fortify(test, method = "dot")
+#' # create dot plot for robust bootstrap test
+#' plot_mediation(robust_boot, method = "dot")
+#' # equivalently
+#' dot <- fortify(robust_boot, method = "dot")
 #' plot_mediation(dot)
 #'
-#' # data for density plot
-#' density <- fortify(test, method = "density")
+#' # create density plot for robust bootstrap test
+#' plot_mediation(robust_boot, method = "density")
+#' # equivalently
+#' density <- fortify(robust_boot, method = "density")
 #' plot_mediation(density)
 #'
-#' @keywords utilities
+#' # run standard bootstrap test
+#' standard_boot <- test_mediation(BSG2014,
+#'                                 x = "ValueDiversity",
+#'                                 y = "TeamCommitment",
+#'                                 m = "TaskConflict",
+#'                                 robust = FALSE)
+#'
+#' # compare robust and standard tests
+#' tests <- list(Standard = standard_boot, Robust = robust_boot)
+#' plot_mediation(tests, method = "dot")
+#' plot_mediation(tests, method = "density")
+#'
+#' @keywords hplot
 
 NULL
 
@@ -68,7 +107,7 @@ NULL
 # For dotplots with multiple mediators, simply add more dots/errorbars in the
 # same plot
 
-#' @rdname fortify.test_mediation
+#' @rdname robmed-deprecated
 #' @method fortify boot_test_mediation
 #' @import ggplot2
 #' @export
@@ -139,7 +178,7 @@ fortify.boot_test_mediation <- function(model, data,
 }
 
 
-#' @rdname fortify.test_mediation
+#' @rdname robmed-deprecated
 #' @method fortify sobel_test_mediation
 #' @import ggplot2
 #' @export
@@ -196,7 +235,7 @@ fortify.sobel_test_mediation <- function(model, data,
 }
 
 
-#' @rdname fortify.test_mediation
+#' @rdname robmed-deprecated
 #' @method fortify list
 #' @import ggplot2
 #' @export
@@ -264,4 +303,111 @@ fortify.list <- function(model, data, ...) {
   # add additional information and return data frame
   attributes(data) <- c(attributes(data), info)
   data
+}
+
+
+#' @rdname robmed-deprecated
+#' @import ggplot2
+#' @export
+
+plot_mediation <- function(object, ...) UseMethod("plot_mediation")
+
+
+#' @rdname robmed-deprecated
+#' @method plot_mediation boot_test_mediation
+#' @export
+
+plot_mediation.boot_test_mediation <- function(object,
+                                               method = c("dot", "density"),
+                                               parm = NULL, ...) {
+  data <- fortify(object, method=method, parm=parm)
+  plot_mediation(data, ...)
+}
+
+
+#' @rdname robmed-deprecated
+#' @method plot_mediation sobel_test_mediation
+#' @export
+
+plot_mediation.sobel_test_mediation <- function(object, data,
+                                                method = c("dot", "density"),
+                                                parm = c("Direct", "ab"),
+                                                level = 0.95, ...) {
+  data <- fortify(object, data=data, method=method, parm=parm, level=level)
+  plot_mediation(data, ...)
+}
+
+
+#' @rdname robmed-deprecated
+#' @method plot_mediation list
+#' @export
+
+plot_mediation.list <- function(object, data, method = c("dot", "density"),
+                                parm = NULL, level = 0.95, ...) {
+  data <- fortify(object, data=data, method=method, parm=parm, level=level)
+  plot_mediation(data, ...)
+}
+
+
+#' @rdname robmed-deprecated
+#' @method plot_mediation default
+#' @export
+
+plot_mediation.default <- function(object, mapping = attr(object, "mapping"),
+                                   facets = attr(object, "facets"), ...) {
+  # create selected plot
+  if(attr(object, "method") == "dot") {
+    dot_plot_fortified(object, mapping, facets, ...)
+  } else density_plot_fortified(object, mapping, facets, ...)
+}
+
+
+## internal function for density plot (deprecated)
+density_plot_fortified <- function(data, mapping, facets, main = NULL,
+                                   xlab = NULL, ylab = NULL, ...) {
+  # define default title and axis labels
+  if(is.null(main)) main <- attr(data, "main")
+  if(is.null(xlab)) xlab <- "Indirect effect"
+  if(is.null(ylab)) ylab <- "Density"
+  # extract point estimate and confidence interval
+  ci <- attr(data, "ci")
+  if("Method" %in% names(data)) {
+    mapping_line <- aes_string(xintercept = "ab", color = "Method")
+    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
+                               ymin = -Inf, ymax = Inf,
+                               fill = "Method")
+  } else {
+    mapping_line <- aes_string(xintercept = "ab")
+    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
+                               ymin = -Inf, ymax = Inf)
+  }
+  # generate plot
+  geom <- attr(data, "geom")
+  p <- ggplot(data, mapping) + geom(...) +
+    # geom_vline(mapping_line, data = ci, ...) +
+    # geom_rect(mapping_rect, data = ci, color = NA, alpha = 0.2, ...) +
+    geom_indirect(mapping_line, data = ci, ...) +
+    geom_ci(mapping_rect, data = ci, ...) +
+    labs(title = main, x = xlab, y = ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2L) p <- p + facet_wrap(facets, scales = "free")
+    else p <- p + facet_grid(facets, scales = "free")
+  }
+  p
+}
+
+
+## internal function for dot plot (deprecated)
+dot_plot_fortified <- function(data, mapping, facets, main = NULL,
+                               xlab = NULL, ylab = NULL, ...) {
+  # generate plot
+  geom <- attr(data, "geom")
+  p <- ggplot(data, mapping) + geom(...) + labs(title=main, x=xlab, y=ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    else p <- p + facet_grid(facets)
+  }
+  p
 }

@@ -24,19 +24,24 @@ C2 <- rnorm(n)
 test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## run bootstrap test and compute summary
+level <- 0.9
 ctrl <- cov_control(prob = 0.9)
 set.seed(seed)
-boot <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "boot",
-                       R = R, level = 0.9, type = "bca", method = "covariance",
-                       robust = TRUE, control = ctrl)
+boot <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
+                       test = "boot", R = R, level = level, type = "bca",
+                       method = "covariance", robust = TRUE, control = ctrl)
 
 ## compute summary
 summary_boot <- summary(boot, other = "boot")
 summary_theory <- summary(boot, other = "theory")
 
 ## create data for plotting
-dot <- fortify(boot, method = "dot")
-density <- fortify(boot, method = "density")
+ci <- setup_ci_plot(boot, level = level)
+density <- setup_density_plot(boot, level = level)
+ellipse <- setup_ellipse_plot(boot)
+# deprecated:
+dot_deprecated <- fortify(boot, method = "dot")
+density_deprecated <- fortify(boot, method = "density")
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "Direct", "Total", "ab")
@@ -64,14 +69,14 @@ test_that("arguments are correctly passed", {
   # number of bootstrap replicates
   expect_identical(boot$R, as.integer(R))  # doesn't hold for too many outliers
   # confidence level
-  expect_identical(boot$level, 0.9)
+  expect_identical(boot$level, level)
   # type of confidence intervals
   expect_identical(boot$type, "bca")
   # variable names
   expect_identical(boot$fit$x, "X")
   expect_identical(boot$fit$y, "Y")
   expect_identical(boot$fit$m, "M1")
-  expect_null(boot$fit$covariates)
+  expect_identical(boot$fit$covariates, character())
   # robust fit and test
   expect_true(boot$fit$robust)
   expect_equal(boot$fit$control, ctrl)
@@ -254,27 +259,78 @@ test_that("effect summaries contain correct coefficient values", {
 
 })
 
+test_that("objects returned by setup_xxx_plot() have correct structure", {
+
+  ## ci plot
+  # check data frame for confidence interval
+  expect_s3_class(ci$ci, "data.frame")
+  # check dimensions
+  expect_identical(dim(ci$ci), c(2L, 4L))
+  # check column names
+  column_names <- c("Effect", "Estimate", "Lower", "Upper")
+  expect_named(ci$ci, column_names)
+  # check that direct effect and indirect effect are plotted by default
+  effect_names <- c("Direct", "ab")
+  expect_identical(ci$ci$Effect, factor(effect_names, levels = effect_names))
+  # check confidence level
+  expect_identical(ci$level, level)
+  # check logical for multiple methods
+  expect_false(ci$have_methods)
+
+  ## density plot
+  # check data frame for confidence interval
+  expect_s3_class(density$density, "data.frame")
+  # check dimensions
+  expect_identical(ncol(density$density), 2L)
+  expect_gt(nrow(density$density), 0L)
+  # check column names
+  column_names <- c("ab", "Density")
+  expect_named(density$density, column_names)
+  # check data frame confidence interval
+  expect_s3_class(density$ci, "data.frame")
+  # check dimensions
+  expect_identical(dim(density$ci), c(1L, 3L))
+  # check column names
+  column_names <- c("Estimate", "Lower", "Upper")
+  expect_named(density$ci, column_names)
+  # check type of test
+  expect_identical(density$test, "boot")
+  # check confidence level
+  expect_identical(density$level, level)
+  # check logical for multiple effects
+  expect_false(density$have_effect)
+  # check logical for multiple methods
+  expect_false(density$have_methods)
+
+  ## ellipse_plot
+  expect_identical(ellipse, setup_ellipse_plot(boot$fit))
+
+})
+
+
+## deprecated:
+
 test_that("data returned by fortify() has correct structure", {
 
   ## dot plot
   # check dimensions
-  expect_s3_class(dot, "data.frame")
-  expect_identical(dim(dot), c(2L, 4L))
+  expect_s3_class(dot_deprecated, "data.frame")
+  expect_identical(dim(dot_deprecated), c(2L, 4L))
   # check column names
   column_names <- c("Effect", "Point", "Lower", "Upper")
-  expect_named(dot, column_names)
+  expect_named(dot_deprecated, column_names)
   # check that direct effect and indirect effect are plotted by default
   effect_names <- c("Direct", "ab")
-  expect_identical(dot$Effect, factor(effect_names, levels = effect_names))
+  expect_identical(dot_deprecated$Effect, factor(effect_names, levels = effect_names))
 
   ## density plot
   # check dimensions
-  expect_s3_class(density, "data.frame")
-  expect_identical(ncol(density), 2L)
-  expect_gt(nrow(density), 0L)
+  expect_s3_class(density_deprecated, "data.frame")
+  expect_identical(ncol(density_deprecated), 2L)
+  expect_gt(nrow(density_deprecated), 0L)
   # check column names
   column_names <- c("ab", "Density")
-  expect_named(density, column_names)
+  expect_named(density_deprecated, column_names)
 
 })
 
@@ -284,31 +340,31 @@ test_that("data returned by fortify() has correct attributes", {
   # check aesthetic mapping
   mapping <- aes_string(x = "Effect", y = "Point",
                         ymin = "Lower", ymax = "Upper")
-  expect_equal(attr(dot, "mapping"), mapping)
+  expect_equal(attr(dot_deprecated, "mapping"), mapping)
   # check default geom()
-  expect_identical(attr(dot, "geom"), geom_pointrange)
+  expect_identical(attr(dot_deprecated, "geom"), geom_pointrange)
   # check facets
-  expect_null(attr(dot, "facets"))
+  expect_null(attr(dot_deprecated, "facets"))
   # check that method is stored correctly
-  expect_identical(attr(dot, "method"), "dot")
+  expect_identical(attr(dot_deprecated, "method"), "dot")
 
   ## density plot
   # check aesthetic mapping
   mapping <- aes_string(x = "ab", y = "Density")
-  expect_equal(attr(density, "mapping"), mapping)
+  expect_equal(attr(density_deprecated, "mapping"), mapping)
   # check default geom()
-  expect_equal(attr(density, "geom"), robmed:::geom_densityline)
+  expect_equal(attr(density_deprecated, "geom"), robmed:::geom_densityline)
   # check facets
-  expect_null(attr(density, "facets"))
+  expect_null(attr(density_deprecated, "facets"))
   # check title
-  expect_identical(attr(density, "main"), "Bootstrap distribution")
+  expect_identical(attr(density_deprecated, "main"), "Bootstrap distribution")
   # check confidence interval
-  ci <- attr(density, "ci")
+  ci <- attr(density_deprecated, "ci")
   expect_s3_class(ci, "data.frame")
   expect_identical(dim(ci), c(1L, 4L))
   expect_named(ci, c("ab", "Density", "Lower", "Upper"))
   # check that method is stored correctly
-  expect_identical(attr(density, "method"), "density")
+  expect_identical(attr(density_deprecated, "method"), "density")
 
 })
 
@@ -322,7 +378,7 @@ test_that("data returned by fortify() has correct attributes", {
 #   suppressWarnings(
 #     test_reg <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
 #                                covariates = c("C1", "C2"), test = "boot",
-#                                R = 500, level = 0.9, type = "perc",
+#                                R = 500, level = level, type = "perc",
 #                                method = "regression", robust = TRUE)
 #   )
 #
@@ -331,7 +387,7 @@ test_that("data returned by fortify() has correct attributes", {
 #   expect_warning(
 #     test_cov <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
 #                                covariates = c("C1", "C2"), test = "boot",
-#                                R = 500, level = 0.9, type = "perc",
+#                                R = 500, level = level, type = "perc",
 #                                method = "covariance", robust = TRUE)
 #   )
 #
@@ -340,14 +396,13 @@ test_that("data returned by fortify() has correct attributes", {
 #
 # })
 #
-#
 # test_that("multiple mediators not implemented", {
 #
 #   # run test with regression method
 #   set.seed(seed)
 #   suppressWarnings(
 #     test_reg <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-#                                test = "boot", R = 500, level = 0.9,
+#                                test = "boot", R = 500, level = level,
 #                                type = "perc", method = "regression",
 #                                robust = TRUE)
 #   )
@@ -356,7 +411,7 @@ test_that("data returned by fortify() has correct attributes", {
 #   set.seed(seed)
 #   expect_warning(
 #     test_cov <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-#                                test = "boot", R = 500, level = 0.9,
+#                                test = "boot", R = 500, level = level,
 #                                type = "perc", method = "covariance",
 #                                robust = TRUE)
 #   )

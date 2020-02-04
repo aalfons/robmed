@@ -99,6 +99,13 @@ test_that("summary returns original object", {
   expect_identical(foo, bar)
 })
 
+test_that("object returned by setup_ellipse_plot() has correct structure", {
+
+  # not meaningful for median regression
+  expect_error(setup_ellipse_plot(boot))
+
+})
+
 
 # fit mediation model through formula interface with data argument
 fit_f1 <- fit_mediation(Y ~ m(M) + X, data = test_data,
