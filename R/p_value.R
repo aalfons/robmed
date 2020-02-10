@@ -39,7 +39,7 @@
 #' @examples
 #' data("BSG2014")
 #'
-#' \dontrun{
+#' \donttest{
 #' # BCa intervals are recommended, but take a while to run
 #' test_bca <- test_mediation(BSG2014,
 #'                            x = "ValueDiversity",

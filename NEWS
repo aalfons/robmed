@@ -5,6 +5,8 @@ Changes in robmed version 0.6.0
     + fit_mediation() now checks for variable type rather than converting all
       variables to numeric.
 
+    + Renamed argument 'other' for type of confidence intervals to 'type'.
+
     + New plot function ellipse_plot() for a diagnostic plot with a tolerance
       ellipse.
 

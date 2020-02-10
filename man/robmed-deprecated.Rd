@@ -96,6 +96,7 @@ version 0.6.0 onwards, it is recommended to use \code{\link{ci_plot}},
 \code{\link{density_plot}}, or \code{\link{ellipse_plot}} instead.
 }
 \examples{
+\donttest{
 data("BSG2014")
 
 # run fast and robust bootstrap test
@@ -128,6 +129,7 @@ standard_boot <- test_mediation(BSG2014,
 tests <- list(Standard = standard_boot, Robust = robust_boot)
 plot_mediation(tests, method = "dot")
 plot_mediation(tests, method = "density")
+}
 
 }
 \seealso{

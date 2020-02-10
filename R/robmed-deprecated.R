@@ -63,6 +63,7 @@
 #' \code{\link{density_plot}}, \code{\link{ellipse_plot}}
 #'
 #' @examples
+#' \donttest{
 #' data("BSG2014")
 #'
 #' # run fast and robust bootstrap test
@@ -95,6 +96,7 @@
 #' tests <- list(Standard = standard_boot, Robust = robust_boot)
 #' plot_mediation(tests, method = "dot")
 #' plot_mediation(tests, method = "density")
+#' }
 #'
 #' @keywords hplot
 
