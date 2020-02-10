@@ -120,6 +120,7 @@ fortify.boot_test_mediation <- function(model, data,
   p_m <- length(model$fit$m)
   # construct data fram with relevant information
   if(method == "dot") {
+    .Deprecated("setup_ci_plot")
     if(is.null(parm)) {
       if(p_m == 1L) parm <- c("Direct", "ab")
       else parm <- c("Direct", paste("ab", names(model$ab), sep = "_"))
@@ -139,6 +140,7 @@ fortify.boot_test_mediation <- function(model, data,
                                         ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
+    .Deprecated("setup_density_plot")
     # extract point estimate and confidence interval
     ab <- model$ab
     ci <- model$ci
@@ -193,6 +195,7 @@ fortify.sobel_test_mediation <- function(model, data,
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # construct data fram with relevant information
   if(method == "dot") {
+    .Deprecated("setup_ci_plot")
     if(is.null(parm)) parm <- c("Direct", "ab")
     # extract point estimates
     coef <- coef(model, parm=parm)
@@ -209,6 +212,7 @@ fortify.sobel_test_mediation <- function(model, data,
                                         ymin="Lower", ymax="Upper")
     attr(data, "geom") <- geom_pointrange
   } else {
+    .Deprecated("setup_density_plot")
     # extract point estimate and standard error
     ab <- model$ab
     se <- model$se
@@ -357,8 +361,12 @@ plot_mediation.default <- function(object, mapping = attr(object, "mapping"),
                                    facets = attr(object, "facets"), ...) {
   # create selected plot
   if(attr(object, "method") == "dot") {
+    .Deprecated("ci_plot", old = "plot_mediation")
     dot_plot_fortified(object, mapping, facets, ...)
-  } else density_plot_fortified(object, mapping, facets, ...)
+  } else {
+    .Deprecated("density_plot", old = "plot_mediation")
+    density_plot_fortified(object, mapping, facets, ...)
+  }
 }
 
 
