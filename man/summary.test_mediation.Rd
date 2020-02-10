@@ -6,8 +6,8 @@
 \alias{summary.sobel_test_mediation}
 \title{Summary of results from (robust) mediation analysis}
 \usage{
-\method{summary}{boot_test_mediation}(object, other = c("boot",
-  "theory"), ...)
+\method{summary}{boot_test_mediation}(object, type = c("boot", "data"),
+  ...)
 
 \method{summary}{sobel_test_mediation}(object, ...)
 }
@@ -16,17 +16,17 @@
 \code{"\link{test_mediation}"} containing results from (robust) mediation
 analysis.}
 
-\item{other}{a character string specifying how to summarize the effects
+\item{type}{a character string specifying how to summarize the effects
 other than the indirect effect(s).  Possible values are \code{"boot"} (the
 default) to compute significance tests using the normal approximation of the
 bootstrap distribution (i.e., to assume a normal distribution of the
 corresponding effect with the standard deviation computed from the bootstrap
 replicates), or \code{"theory"} to compute significance tests via
-statistical theory (e.g., t-tests if the coefficients are estimated via
-regression).  Note that this is only relevant for mediation analysis via a
-bootstrap test, where significance of the indirect effect is always assessed
-via a percentile-based confidence interval due to the asymmetry of its
-distribution.}
+statistical theory based on the original data (e.g., t-tests if the
+coefficients are estimated via regression).  Note that this is only relevant
+for mediation analysis via a bootstrap test, where significance of the
+indirect effect is always assessed via a percentile-based confidence
+interval due to the asymmetry of its distribution.}
 
 \item{\dots}{additional arguments are currently ignored.}
 }

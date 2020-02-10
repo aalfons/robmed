@@ -31,7 +31,7 @@ robust_boot <- test_mediation(BSG2014, x = x, y = y, m = m, robust = TRUE)
 # The standard method of Preacher & Hayes (2004, 2008) uses normal theory
 # t-tests for the significance of effects other than the indirect effect.
 # Our method uses normal approximation bootstrap z-tests instead.
-summary(standard_boot, other = "theory")
+summary(standard_boot, type = "data")
 summary(robust_boot)
 
 # determine the smallest significance level alpha for which the

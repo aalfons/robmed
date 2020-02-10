@@ -32,8 +32,8 @@ boot <- test_mediation(test_data, x = "X", y = "Y", m = "M1",
                        method = "covariance", robust = TRUE, control = ctrl)
 
 ## compute summary
-summary_boot <- summary(boot, other = "boot")
-summary_theory <- summary(boot, other = "theory")
+summary_boot <- summary(boot, type = "boot")
+summary_data <- summary(boot, type = "data")
 
 ## create data for plotting
 ci <- setup_ci_plot(boot, level = level)
@@ -134,25 +134,25 @@ test_that("coef() method returns correct values of coefficients", {
 
 test_that("output of confint() method has correct attributes", {
 
-  ci_boot <- confint(boot, other = "boot")
-  ci_theory <- confint(boot, other = "theory")
+  ci_boot <- confint(boot, type = "boot")
+  ci_data <- confint(boot, type = "data")
   # bootstrapped confidence intervals
   expect_equal(dim(ci_boot), c(5L, 2L))
   expect_equal(rownames(ci_boot), coef_names)
   expect_equal(colnames(ci_boot), c("5 %", "95 %"))
   # confidence intervals based on theory (except for indirect effect)
-  expect_equal(dim(ci_theory), c(5L, 2L))
-  expect_equal(rownames(ci_theory), coef_names)
-  expect_equal(colnames(ci_theory), c("5 %", "95 %"))
+  expect_equal(dim(ci_data), c(5L, 2L))
+  expect_equal(rownames(ci_data), coef_names)
+  expect_equal(colnames(ci_data), c("5 %", "95 %"))
 
 })
 
 test_that("confint() method returns correct values of confidence intervals", {
 
   # bootstrapped confidence intervals
-  expect_equivalent(confint(boot, parm = "ab", other = "boot"), boot$ci)
+  expect_equivalent(confint(boot, parm = "ab", type = "boot"), boot$ci)
   # confidence intervals based on theory (except for indirect effect)
-  expect_equivalent(confint(boot, parm = "ab", other = "theory"), boot$ci)
+  expect_equivalent(confint(boot, parm = "ab", type = "data"), boot$ci)
 
 })
 
@@ -160,24 +160,24 @@ test_that("summary has correct structure", {
 
   # summary
   expect_s3_class(summary_boot, "summary_test_mediation")
-  expect_s3_class(summary_theory, "summary_test_mediation")
+  expect_s3_class(summary_data, "summary_test_mediation")
   # original output of test for indirect effect
   expect_identical(summary_boot$object, boot)
-  expect_identical(summary_theory$object, boot)
+  expect_identical(summary_data$object, boot)
   # summary of the model fit
   expect_s3_class(summary_boot$summary, "summary_cov_fit_mediation")
   expect_s3_class(summary_boot$summary, "summary_fit_mediation")
-  expect_s3_class(summary_theory$summary, "summary_cov_fit_mediation")
-  expect_s3_class(summary_theory$summary, "summary_fit_mediation")
+  expect_s3_class(summary_data$summary, "summary_cov_fit_mediation")
+  expect_s3_class(summary_data$summary, "summary_fit_mediation")
   # regression standard error for model y ~ m + x
   expect_null(summary_boot$summary$s)
-  expect_null(summary_theory$summary$s)
+  expect_null(summary_data$summary$s)
   # R-squared for model y ~ m + x
   expect_null(summary_boot$summary$R2)
-  expect_null(summary_theory$summary$R2)
+  expect_null(summary_data$summary$R2)
   # F-test for model y ~ m + x
   expect_null(summary_boot$summary$F_test)
-  expect_null(summary_theory$summary$F_test)
+  expect_null(summary_data$summary$F_test)
 
 })
 
@@ -185,19 +185,19 @@ test_that("attributes are correctly passed through summary", {
 
   # robustness
   expect_true(summary_boot$summary$robust)
-  expect_true(summary_theory$summary$robust)
+  expect_true(summary_data$summary$robust)
   # number of observations
   expect_identical(summary_boot$summary$n, as.integer(n))
-  expect_identical(summary_theory$summary$n, as.integer(n))
+  expect_identical(summary_data$summary$n, as.integer(n))
   # variable names
   expect_identical(summary_boot$summary$x, "X")
   expect_identical(summary_boot$summary$y, "Y")
   expect_identical(summary_boot$summary$m, "M1")
   expect_null(summary_boot$summary$covariates)
-  expect_identical(summary_theory$summary$x, "X")
-  expect_identical(summary_theory$summary$y, "Y")
-  expect_identical(summary_theory$summary$m, "M1")
-  expect_null(summary_theory$summary$covariates)
+  expect_identical(summary_data$summary$x, "X")
+  expect_identical(summary_data$summary$y, "Y")
+  expect_identical(summary_data$summary$m, "M1")
+  expect_null(summary_data$summary$covariates)
 
 })
 
@@ -207,35 +207,35 @@ test_that("effect summaries have correct names", {
   expect_identical(dim(summary_boot$summary$a), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$a), "X")
   expect_identical(colnames(summary_boot$summary$a)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$a), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$a), "X")
-  expect_identical(colnames(summary_theory$summary$a)[1], "Estimate")
+  expect_identical(dim(summary_data$summary$a), c(1L, 4L))
+  expect_identical(rownames(summary_data$summary$a), "X")
+  expect_identical(colnames(summary_data$summary$a)[1], "Estimate")
   # b path
   expect_identical(dim(summary_boot$summary$b), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$b), "M1")
   expect_identical(colnames(summary_boot$summary$b)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$b), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$b), "M1")
-  expect_identical(colnames(summary_theory$summary$b)[1], "Estimate")
+  expect_identical(dim(summary_data$summary$b), c(1L, 4L))
+  expect_identical(rownames(summary_data$summary$b), "M1")
+  expect_identical(colnames(summary_data$summary$b)[1], "Estimate")
   # direct effect
   expect_identical(dim(summary_boot$summary$direct), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$direct), "X")
   expect_identical(colnames(summary_boot$summary$direct)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$direct), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$direct), "X")
-  expect_identical(colnames(summary_theory$summary$direct)[1], "Estimate")
+  expect_identical(dim(summary_data$summary$direct), c(1L, 4L))
+  expect_identical(rownames(summary_data$summary$direct), "X")
+  expect_identical(colnames(summary_data$summary$direct)[1], "Estimate")
   # total effect
   expect_identical(dim(summary_boot$summary$total), c(1L, 5L))
   expect_identical(rownames(summary_boot$summary$total), "X")
   expect_identical(colnames(summary_boot$summary$total)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_theory$summary$total), c(1L, 4L))
-  expect_identical(rownames(summary_theory$summary$total), "X")
-  expect_identical(colnames(summary_theory$summary$total)[1], "Estimate")
+  expect_identical(dim(summary_data$summary$total), c(1L, 4L))
+  expect_identical(rownames(summary_data$summary$total), "X")
+  expect_identical(colnames(summary_data$summary$total)[1], "Estimate")
   # no model fits
   expect_null(summary_boot$summary$fit_mx)
   expect_null(summary_boot$summary$fit_ymx)
-  expect_null(summary_theory$summary$fit_mx)
-  expect_null(summary_theory$summary$fit_ymx)
+  expect_null(summary_data$summary$fit_mx)
+  expect_null(summary_data$summary$fit_ymx)
 
 })
 
@@ -246,10 +246,10 @@ test_that("effect summaries contain correct coefficient values", {
   expect_identical(summary_boot$summary$b["M1", "Data"], boot$fit$b)
   expect_identical(summary_boot$summary$direct["X", "Data"], boot$fit$direct)
   expect_identical(summary_boot$summary$total["X", "Data"], boot$fit$total)
-  expect_identical(summary_theory$summary$a["X", "Estimate"], boot$fit$a)
-  expect_identical(summary_theory$summary$b["M1", "Estimate"], boot$fit$b)
-  expect_identical(summary_theory$summary$direct["X", "Estimate"], boot$fit$direct)
-  expect_identical(summary_theory$summary$total["X", "Estimate"], boot$fit$total)
+  expect_identical(summary_data$summary$a["X", "Estimate"], boot$fit$a)
+  expect_identical(summary_data$summary$b["M1", "Estimate"], boot$fit$b)
+  expect_identical(summary_data$summary$direct["X", "Estimate"], boot$fit$direct)
+  expect_identical(summary_data$summary$total["X", "Estimate"], boot$fit$total)
 
   # bootstrapped effects
   expect_equal(summary_boot$summary$a["X", "Boot"], mean(boot$reps$t[, 3]))

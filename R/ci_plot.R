@@ -19,20 +19,19 @@
 #' @param parm  a character string specifying the effects to be included
 #' in the plot.  The default is to include the direct and the indirect
 #' effect(s).
-#' @param type  a character string specifying which point estiamates to plot:
-#' the means of the bootstrap distribution (\code{"boot"}; the default), or
-#' the estimates based on the full data set (\code{"data"}).  Note that this
-#' is only relevant for mediation analysis via a bootstrap test.
-#' @param other  a character string specifying how to summarize the effects
-#' other than the indirect effect(s).  Possible values are \code{"boot"} (the
-#' default) to compute significance tests using the normal approximation of the
-#' bootstrap distribution (i.e., to assume a normal distribution of the
-#' corresponding effect with the standard deviation computed from the bootstrap
-#' replicates), or \code{"theory"} to compute significance tests via
-#' statistical theory (e.g., t-tests if the coefficients are estimated via
+#' @param type  a character string specifying which point estiamates and
+#' confidence intervals to plot: those based on the bootstrap distribution
+#' (\code{"boot"}; the default), or those based on the original data
+#' (\code{"data"}).  If \code{"boot"}, the confidence intervals of effects
+#' other than the indirect effect(s) are computed using a normal approximation
+#' (i.e., assuming a normal distribution of the corresponding effect with the
+#' standard deviation computed from the bootstrap replicates).  If
+#' \code{"data"}, the confidence intervals of effects other than the indirect
+#' effect(s) are computed via statistical theory based on the original data
+#' (e.g., based on a t-distribution the coefficients are estimated via
 #' regression).  Note that this is only relevant for mediation analysis via a
-#' bootstrap test, where significance of the indirect effect is always assessed
-#' via a percentile-based confidence interval due to the asymmetry of its
+#' bootstrap test, where the confidence interval of the indirect effect is
+#' always computed via a percentile-based method due to the asymmetry of its
 #' distribution.
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test.  The default is to include 95\% confidence intervals.
@@ -108,10 +107,9 @@ ci_plot.default <- function(object, parm = NULL, ...) {
 
 ci_plot.boot_test_mediation <- function(object, parm = NULL,
                                         type = c("boot", "data"),
-                                        other = c("boot", "theory"),
                                         ...) {
   # extract information
-  setup <- setup_ci_plot(object, parm = parm, type = type, other = other, ...)
+  setup <- setup_ci_plot(object, parm = parm, type = type, ...)
   # call method for corresponding objects
   ci_plot(setup, ...)
 }
@@ -135,10 +133,9 @@ ci_plot.sobel_test_mediation <- function(object, parm = NULL,
 #' @export
 
 ci_plot.list <- function(object, parm = NULL, type = c("boot", "data"),
-                         other = c("boot", "theory"), level = 0.95, ...) {
+                         level = 0.95, ...) {
   # extract information
-  setup <- setup_ci_plot(object, parm = parm, type = type,
-                 other = other,  level = level, ...)
+  setup <- setup_ci_plot(object, parm = parm, type = type, level = level, ...)
   # call method for corresponding objects
   ci_plot(setup, ...)
 }

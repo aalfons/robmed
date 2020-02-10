@@ -20,17 +20,17 @@
 #' indirect effect is used.  For the other methods, the confidence level of
 #' the confidence intervals to be computed.  The default is to compute 95\%
 #' confidence intervals.
-#' @param other  a character string specifying how to compute the confidence
+#' @param type  a character string specifying how to compute the confidence
 #' interval of the effects other than the indirect effect(s).  Possible values
 #' are \code{"boot"} (the default) to compute bootstrap confidence intervals
 #' using the normal approximation (i.e., to assume a normal distribution of the
 #' corresponding effect with the standard deviation computed from the bootstrap
-#' replicates), or \code{"theory"} to compute confidence intervals via
-#' statistical theory (e.g., based on a t-distribution the coefficients are
-#' estimated via regression).  Note that this is only relevant for mediation
-#' analysis via a bootstrap test, where the confidence interval of the indirect
-#' effect is always computed via a percentile-based method due to the asymmetry
-#' of its distribution.
+#' replicates), or \code{"data"} to compute confidence intervals via
+#' statistical theory based on the original data (e.g., based on a
+#' t-distribution the coefficients are estimated via regression).  Note that
+#' this is only relevant for mediation analysis via a bootstrap test, where
+#' the confidence interval of the indirect effect is always computed via a
+#' percentile-based method due to the asymmetry of its distribution.
 #' @param \dots  additional arguments are currently ignored.
 #'
 #' @return A numeric matrix containing the requested confidence intervals.
@@ -49,7 +49,7 @@
 #'                               y = "TeamCommitment",
 #'                               m = "TaskConflict",
 #'                               robust = TRUE)
-#' confint(robust_boot, other = "boot")
+#' confint(robust_boot, type = "boot")
 #'
 #' # run standard bootstrap test
 #' standard_boot <- test_mediation(BSG2014,
@@ -57,7 +57,7 @@
 #'                                 y = "TeamCommitment",
 #'                                 m = "TaskConflict",
 #'                                 robust = FALSE)
-#' confint(standard_boot, other = "theory")
+#' confint(standard_boot, type = "data")
 #'
 #' @keywords utilities
 
@@ -70,12 +70,26 @@ NULL
 
 ## argument 'level' is ignored
 confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
-                                        other = c("boot", "theory"), ...) {
+                                        type = c("boot", "data"), ...) {
+  # for compatibility with previous versions
+  other <- list(...)$other
+  if (missing(type) && !is.null(other)) {
+    other <- match.arg(other, choices = c("boot", "theory"))
+    if (other == "boot") {
+      warning("Argument 'other = \"boot\"' is deprecated.\n",
+              "Use 'type = \"boot\"' instead.", call. = FALSE)
+      type <- "boot"
+    } else if (other == "theory") {
+      warning("Argument 'other = \"theory\"' is deprecated.\n",
+              "Use 'type = \"data\"' instead.", call. = FALSE)
+      type <- "data"
+    }
+  }
   # initializations
   p_m <- length(object$fit$m)
   # confidence interval of other effects
-  other <- match.arg(other)
-  if(other == "boot") {
+  type <- match.arg(type)
+  if(type == "boot") {
     ci <- get_confint(object$fit, level = object$level, boot = object$reps)
   } else ci <- get_confint(object$fit, level = object$level)
   # combine with confidence interval of indirect effect
