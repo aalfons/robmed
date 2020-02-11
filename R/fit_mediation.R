@@ -241,8 +241,8 @@ fit_mediation.formula <- function(formula, data, ...) {
 
 fit_mediation.default <- function(object, x, y, m, covariates = NULL,
                                   method = c("regression", "covariance"),
-                                  robust = TRUE, median = FALSE, control,
-                                  ...) {
+                                  robust = TRUE, median = FALSE,
+                                  control = NULL, ...) {
   ## initializations
   # prepare data set
   data <- as.data.frame(object)
@@ -317,112 +317,44 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     warning("covariance method not available with multiple mediators ",
             "or any covariates; using regression method")
   }
-  robust <- isTRUE(robust)
-  median <- isTRUE(median)
-  if (robust && missing(control)) {
-    if (method == "regression" && !median) control <- reg_control(...)
-    else control <- cov_control(...)
-  }
-  if (!robust || method != "regression") median <- FALSE
-  ## estimate effects
+  # regression method requires some more checks, covariance method is simpler
   if (method == "regression") {
-    reg_fit_mediation(x, y, m, covariates, data = data, robust = robust,
-                      median = median, control = control)
+    # check for robust method
+    if (is.logical(robust)) {
+      robust <- isTRUE(robust)
+      if (missing(median)) {
+        # only use this code in newer versions
+        if (robust) robust <- "MM"
+      } else {
+        # for compatibility with older versions
+        warning("Argument 'median' is deprecated.\n",
+                "Use 'robust = \"median\"' for median regression.",
+                call. = FALSE)
+        median <- isTRUE(median)
+        if (robust) {
+          robust <- if (median) "median" else "MM"
+        }
+        # 'median' should not be used anywhere else in the code
+      }
+    } else robust <- match.arg(robust, choices = c("MM", "median"))
+    if (robust == "MM") control <- reg_control(...)
+    # estimate effects
+    reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
+                      robust = robust, control = control)
   } else {
-    cov_fit_mediation(x, y, m, data = data, robust = robust, control = control)
+    # check for robust method
+    robust <- isTRUE(robust)
+    if (robust && is.null(control)) control <- cov_control(...)
+    # estimate effects
+    cov_fit_mediation(data, x = x, y = y, m = m, robust = robust,
+                      control = control)
   }
 }
 
 
 ## estimate the effects in a mediation model via regressions
-# reg_fit_mediation <- function(x, y, m, covariates = character(), data,
-#                               robust = TRUE, median = FALSE,
-#                               control = reg_control()) {
-#   # number of mediators
-#   p_m <- length(m)
-#   # construct formulas for regression models
-#   m_term <- paste(m, collapse = "+")
-#   covariate_term <- paste(c("", covariates), collapse = "+")
-#   f_mx <- paste(m, "~", x, covariate_term, sep = "")
-#   f_ymx <- as.formula(paste(y, "~", m_term, "+", x, covariate_term, sep = ""))
-#   # compute regression models
-#   if (robust) {
-#     # for the robust methods, the total effect is estimated as c' = ab + c
-#     # to satisfy this relationship
-#     # TODO: check if this makes sense for median regression
-#     # (what if, e.g., the conditional distribution is asymmetric)
-#     if (median) {
-#       # LAD-estimator for median regression
-#       if (p_m == 1L) {
-#         f_mx <- as.formula(f_mx)
-#         fit_mx <- rq(f_mx, data = data, tau = 0.5, model = FALSE)
-#       } else {
-#         fit_mx <- lapply(f_mx, function(f) {
-#           f_mx <- as.formula(f)
-#           rq(f_mx, data = data, tau = 0.5, model = FALSE)
-#         })
-#         names(fit_mx) <- m
-#       }
-#       fit_ymx <- rq(f_ymx, data = data, tau = 0.5, model = FALSE)
-#     } else {
-#       # MM-estimator for robust regression
-#       if (p_m == 1L) {
-#         f_mx <- as.formula(f_mx)
-#         fit_mx <- lmrob(f_mx, data = data, control = control,
-#                         model = FALSE, x = FALSE)
-#       } else {
-#         fit_mx <- lapply(f_mx, function(f) {
-#           f_mx <- as.formula(f)
-#           lmrob(f_mx, data = data, control = control,
-#                 model = FALSE, x = FALSE)
-#         })
-#         names(fit_mx) <- m
-#       }
-#       fit_ymx <- lmrob(f_ymx, data = data, control = control,
-#                        model = FALSE, x = FALSE)
-#     }
-#     # neither method fits the direct path
-#     fit_yx <- NULL
-#   } else {
-#     # for the standard method, there is not much additional cost in performing
-#     # the regression for the total effect
-#     if (p_m == 1L) {
-#       f_mx <- as.formula(f_mx)
-#       fit_mx <- lm(f_mx, data = data, model = FALSE)
-#     } else {
-#       fit_mx <- lapply(f_mx, function(f) {
-#         f_mx <- as.formula(f)
-#         lm(f_mx, data = data, model = FALSE)
-#       })
-#       names(fit_mx) <- m
-#     }
-#     fit_ymx <- lm(f_ymx, data = data, model = FALSE)
-#     f_yx <- as.formula(paste(y, "~", x, covariate_term, sep = ""))
-#     fit_yx <- lm(f_yx, data = data, model = FALSE)
-#   }
-#   # extract effects
-#   if (p_m == 1L) {
-#     a <- unname(coef(fit_mx)[2L])
-#     b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
-#   } else {
-#     a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
-#     b <- coef(fit_ymx)[1L + seq_len(p_m)]
-#   }
-#   direct <- unname(coef(fit_ymx)[2L + p_m])
-#   if (robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
-#   else total <- unname(coef(fit_yx)[2L])
-#   # return results
-#   result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
-#                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
-#                  covariates = covariates, data = data, robust = robust,
-#                  median = median)
-#   if(robust && !median) result$control <- control
-#   class(result) <- c("reg_fit_mediation", "fit_mediation")
-#   result
-# }
-reg_fit_mediation <- function(x, y, m, covariates = character(), data,
-                              robust = TRUE, median = FALSE,
-                              control = reg_control()) {
+reg_fit_mediation <- function(data, x, y, m, covariates = character(),
+                              robust = "MM", control = reg_control()) {
   # number of mediators
   p_m <- length(m)
   # construct predictor matrices for regression models
@@ -430,22 +362,13 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
   predictors_mx <- as.matrix(data[, c(x, covariates), drop = FALSE])
   predictors_ymx <- as.matrix(data[, c(m, x, covariates), drop = FALSE])
   # compute regression models
-  if (robust) {
+  have_robust <- is.character(robust)
+  if (have_robust) {
     # for the robust methods, the total effect is estimated as c' = ab + c
     # to satisfy this relationship
     # TODO: check if this makes sense for median regression
     # (what if, e.g., the conditional distribution is asymmetric)
-    if (median) {
-      # LAD-estimator for median regression
-      if (p_m == 1L) fit_mx <- rq_fit(predictors_mx, data[, m], tau = 0.5)
-      else {
-        fit_mx <- lapply(m, function(m_j) {
-          rq_fit(predictors_mx, data[, m_j], tau = 0.5)
-        })
-        names(fit_mx) <- m
-      }
-      fit_ymx <- rq_fit(predictors_ymx, data[, y], tau = 0.5)
-    } else {
+    if (robust == "MM") {
       # MM-estimator for robust regression
       if (p_m == 1L) {
         fit_mx <- lmrob_fit(predictors_mx, data[, m], control = control)
@@ -456,6 +379,19 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
         names(fit_mx) <- m
       }
       fit_ymx <- lmrob_fit(predictors_ymx, data[, y], control = control)
+    } else if (robust == "median") {
+      # LAD-estimator for median regression
+      if (p_m == 1L) fit_mx <- rq_fit(predictors_mx, data[, m], tau = 0.5)
+      else {
+        fit_mx <- lapply(m, function(m_j) {
+          rq_fit(predictors_mx, data[, m_j], tau = 0.5)
+        })
+        names(fit_mx) <- m
+      }
+      fit_ymx <- rq_fit(predictors_ymx, data[, y], tau = 0.5)
+    } else {
+      # shouldn't happen
+      stop(sprintf('robust method "%s" not implemented', robust))
     }
     # neither method fits the direct path
     fit_yx <- NULL
@@ -479,24 +415,23 @@ reg_fit_mediation <- function(x, y, m, covariates = character(), data,
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
   }
   direct <- unname(coef(fit_ymx)[2L + p_m])
-  if (robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+  if (have_robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
   else total <- unname(coef(fit_yx)[2L])
   # return results
   result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
-                 covariates = covariates, data = data, robust = robust,
-                 median = median)
-  if(robust && !median) result$control <- control
+                 covariates = covariates, data = data, robust = robust)
+  if(robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
 }
 
 
 ## estimate the effects in a mediation model via the covariance matrix
-cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
+cov_fit_mediation <- function(data, x, y, m, robust = TRUE,
                               control = cov_control()) {
   # compute scatter matrix (Huber M-estimator or MLE of covariance matrix)
-  cov <- if(robust) cov_Huber(data, control=control) else cov_ML(data)
+  cov <- if (robust) cov_Huber(data, control = control) else cov_ML(data)
   S <- cov$cov
   # compute coefficients of mediation model
   a <- S[m, x] / S[x, x]
@@ -505,12 +440,203 @@ cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
   direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
   total <- S[y, x] / S[x, x]
   # return results
-  result <- list(a=a, b=b, direct=direct, total=total, cov=cov, x=x, y=y, m=m,
-                 covariates = character(), data=data, robust=robust)
+  result <- list(a = a, b = b, direct = direct, total = total, cov = cov,
+                 x = x, y = y, m = m, covariates = character(), data = data,
+                 robust = robust)
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result
 }
+
+# fit_mediation.default <- function(object, x, y, m, covariates = NULL,
+#                                   method = c("regression", "covariance"),
+#                                   robust = TRUE, median = FALSE,
+#                                   control = NULL, ...) {
+#   ## initializations
+#   # prepare data set
+#   data <- as.data.frame(object)
+#   # check independent variable
+#   x <- data[, x, drop = FALSE]
+#   p_x <- ncol(x)
+#   if (p_x != 1L) stop("exactly one independent variable required")
+#   convert_x <- !is.numeric(x[, 1L])
+#   # check dependent variable
+#   y <- data[, y, drop = FALSE]
+#   p_y <- ncol(y)
+#   if (p_y != 1L) stop("exactly one dependent variable required")
+#   if (!is.numeric(y[, 1L])) {
+#     stop("currently only implemented for a numeric dependent variable")
+#   }
+#   # check hypothesized mediator variables
+#   m <- data[, m, drop = FALSE]
+#   p_m <- ncol(m)
+#   if (p_m == 0L) stop("at least one hypothesized mediator variable required")
+#   if (!all(sapply(m, is.numeric))) {
+#     stop("currently only implemented for numeric hypothesized mediators")
+#   }
+#   # extract covariates
+#   covariates <- data[, covariates, drop = FALSE]
+#   p_covariates <- ncol(covariates)
+#   have_covariates <- p_covariates > 0L
+#   convert_covariates <- have_covariates && !all(sapply(covariates, is.numeric))
+#   # reorder columns of data frame
+#   data <- cbind(x, y, m, covariates)
+#   # extract names
+#   cn <- names(data)
+#   x <- cn[1L]
+#   y <- cn[2L]
+#   m <- cn[2L + seq_len(p_m)]
+#   covariates <- cn[-(seq_len(2L + p_m))]
+#   # remove incomplete observations
+#   data <- data[complete.cases(data), ]
+#   # if necessary, convert non-numeric independent variable
+#   if (convert_x) {
+#     # construct variables for design matrix as usual
+#     x <- data[, x, drop = FALSE]
+#     x <- model.matrix(~ ., data = x)[, -1, drop = FALSE]
+#     # check if there is still only one variable
+#     p_x <- ncol(x)
+#     if (p_x != 1L) {
+#       stop("currently only implemented for a numeric ",
+#            "or binary independent variable")
+#     }
+#     # replace independent variable in data frame with converted one
+#     data <- cbind(x, data[, c(y, m, covariates), drop = FALSE])
+#     # update variable name
+#     x <- colnames(x)
+#   }
+#   # if necessary, convert non-numeric covariates
+#   if (convert_covariates) {
+#     # construct variables for design matrix as usual
+#     covariates <- data[, covariates, drop = FALSE]
+#     covariates <- model.matrix(~ ., data = covariates)[, -1, drop = FALSE]
+#     # replace covariates in data frame with converted ones
+#     data <- cbind(data[, c(x, y, m), drop = FALSE], covariates)
+#     # update number of covariates and variable names
+#     p_covariates <- ncol(covariates)
+#     covariates <- colnames(covariates)
+#   }
+#   # check if there are enough observations
+#   d <- dim(data)
+#   if (d[1L] <= d[2L]) stop("not enough observations")
+#   # check other arguments
+#   method <- match.arg(method)
+#   if ((p_m > 1L || have_covariates) && method == "covariance") {
+#     method <- "regression"
+#     warning("covariance method not available with multiple mediators ",
+#             "or any covariates; using regression method")
+#   }
+#   robust <- isTRUE(robust)
+#   median <- isTRUE(median)
+#   if (robust && is.null(control)) {
+#     if (method == "regression") {
+#       if (!median) control <- reg_control(...)
+#     } else control <- cov_control(...)
+#   }
+#   if (!robust || method != "regression") median <- FALSE
+#   ## estimate effects
+#   if (method == "regression") {
+#     reg_fit_mediation(x, y, m, covariates, data = data, robust = robust,
+#                       median = median, control = control)
+#   } else {
+#     cov_fit_mediation(x, y, m, data = data, robust = robust, control = control)
+#   }
+# }
+#
+#
+# ## estimate the effects in a mediation model via regressions
+# reg_fit_mediation <- function(x, y, m, covariates = character(), data,
+#                               robust = TRUE, median = FALSE,
+#                               control = reg_control()) {
+#   # number of mediators
+#   p_m <- length(m)
+#   # construct predictor matrices for regression models
+#   n <- nrow(data)
+#   predictors_mx <- as.matrix(data[, c(x, covariates), drop = FALSE])
+#   predictors_ymx <- as.matrix(data[, c(m, x, covariates), drop = FALSE])
+#   # compute regression models
+#   if (robust) {
+#     # for the robust methods, the total effect is estimated as c' = ab + c
+#     # to satisfy this relationship
+#     # TODO: check if this makes sense for median regression
+#     # (what if, e.g., the conditional distribution is asymmetric)
+#     if (median) {
+#       # LAD-estimator for median regression
+#       if (p_m == 1L) fit_mx <- rq_fit(predictors_mx, data[, m], tau = 0.5)
+#       else {
+#         fit_mx <- lapply(m, function(m_j) {
+#           rq_fit(predictors_mx, data[, m_j], tau = 0.5)
+#         })
+#         names(fit_mx) <- m
+#       }
+#       fit_ymx <- rq_fit(predictors_ymx, data[, y], tau = 0.5)
+#     } else {
+#       # MM-estimator for robust regression
+#       if (p_m == 1L) {
+#         fit_mx <- lmrob_fit(predictors_mx, data[, m], control = control)
+#       } else {
+#         fit_mx <- lapply(m, function(m_j) {
+#           lmrob_fit(predictors_mx, data[, m_j], control = control)
+#         })
+#         names(fit_mx) <- m
+#       }
+#       fit_ymx <- lmrob_fit(predictors_ymx, data[, y], control = control)
+#     }
+#     # neither method fits the direct path
+#     fit_yx <- NULL
+#   } else {
+#     # for the standard method, there is not much additional cost in performing
+#     # the regression for the total effect
+#     if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
+#     else {
+#       fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
+#       names(fit_mx) <- m
+#     }
+#     fit_ymx <- lm_fit(predictors_ymx, data[, y])
+#     fit_yx <- lm_fit(predictors_mx, data[, y])
+#   }
+#   # extract effects
+#   if (p_m == 1L) {
+#     a <- unname(coef(fit_mx)[2L])
+#     b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
+#   } else {
+#     a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+#     b <- coef(fit_ymx)[1L + seq_len(p_m)]
+#   }
+#   direct <- unname(coef(fit_ymx)[2L + p_m])
+#   if (robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+#   else total <- unname(coef(fit_yx)[2L])
+#   # return results
+#   result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
+#                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
+#                  covariates = covariates, data = data, robust = robust,
+#                  median = median)
+#   if(robust && !median) result$control <- control
+#   class(result) <- c("reg_fit_mediation", "fit_mediation")
+#   result
+# }
+#
+#
+# ## estimate the effects in a mediation model via the covariance matrix
+# cov_fit_mediation <- function(x, y, m, data, robust = TRUE,
+#                               control = cov_control()) {
+#   # compute scatter matrix (Huber M-estimator or MLE of covariance matrix)
+#   cov <- if(robust) cov_Huber(data, control = control) else cov_ML(data)
+#   S <- cov$cov
+#   # compute coefficients of mediation model
+#   a <- S[m, x] / S[x, x]
+#   det <- S[x, x] * S[m, m] - S[m, x]^2
+#   b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
+#   direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+#   total <- S[y, x] / S[x, x]
+#   # return results
+#   result <- list(a = a, b = b, direct = direct, total = total, cov = cov,
+#                  x = x, y = y, m = m, covariates = character(), data = data,
+#                  robust = robust)
+#   if(robust) result$control <- control
+#   class(result) <- c("cov_fit_mediation", "fit_mediation")
+#   result
+# }
 
 
 ## model fitting functions that make summary() work

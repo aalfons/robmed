@@ -8,14 +8,15 @@ print_info <- function(x, ...) UseMethod("print_info")
 
 # information to display for regression fits
 print_info.reg_fit_mediation <- function(x, ...) {
-  prefix <- if (x$robust && !x$median) "Robust mediation" else "Mediation"
-  postfix <- if (x$median) "via median regression" else "via regression"
+  prefix <- if (is_robust(x)) "Robust mediation" else "Mediation"
+  if (x$robust == "median") postfix <- "via median regression"
+  else postfix <- "via regression"
   cat(sprintf("%s model fit %s\n", prefix, postfix))
 }
 
 # information to display for covariance matrix fits
 print_info.cov_fit_mediation <- function(x, ...) {
-  prefix <- if (x$robust) "Robust mediation" else "Mediation"
+  prefix <- if (is_robust(x)) "Robust mediation" else "Mediation"
   cat(sprintf("%s model fit via covariance matrix\n", prefix))
 }
 

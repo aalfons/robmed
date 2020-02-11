@@ -15,7 +15,7 @@ fit_mediation(object, ...)
 
 \method{fit_mediation}{default}(object, x, y, m, covariates = NULL,
   method = c("regression", "covariance"), robust = TRUE,
-  median = FALSE, control, ...)
+  median = FALSE, control = NULL, ...)
 }
 \arguments{
 \item{object}{the first argument will determine the method of the generic
