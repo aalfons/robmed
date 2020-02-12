@@ -25,8 +25,9 @@ print_info.boot_test_mediation <- function(x, ...) {
   # type of test and model fit
   fit <- x$fit
   if (inherits(x$fit, "reg_fit_mediation")) {
-    prefix <- if (fit$robust && !fit$median) "Robust bootstrap" else "Bootstrap"
-    postfix <- if (fit$median) " via median regression" else " via regression"
+    prefix <- if (fit$robust == "MM") "Robust bootstrap" else "Bootstrap"
+    if (fit$robust == "median") postfix <- " via median regression"
+    else postfix <- " via regression"
   } else if (inherits(fit, "cov_fit_mediation")) {
     prefix <- if (fit$robust) "Robust bootstrap" else "Bootstrap"
     postfix <- " via covariance matrix"
@@ -47,8 +48,9 @@ print_info.sobel_test_mediation <- function(x, ...) {
   # type of test and model fit
   fit <- x$fit
   if (inherits(x$fit, "reg_fit_mediation")) {
-    prefix <- if (fit$robust && !fit$median) "Robust normal" else "Normal"
-    postfix <- if (fit$median) " via median regression" else " via regression"
+    prefix <- if (fit$robust == "MM") "Robust normal" else "Normal"
+    if (fit$robust == "median") postfix <- " via median regression"
+    else postfix <- " via regression"
   } else if (inherits(fit, "cov_fit_mediation")) {
     prefix <- if (fit$robust) "Robust normal" else "Normal"
     postfix <- " via covariance matrix"

@@ -187,8 +187,8 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   p_m <- length(m)
   covariates <- object$covariates
   p_covariates <- length(covariates)
+  have_robust <- is_robust(object)
   robust <- object$robust
-  median <- object$median
   have_boot <- !is.null(boot)
   # extract number of observations
   n <- nobs(object$fit_ymx)
@@ -215,7 +215,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   }
   ## compute summary of m ~ x + covariates
   # robust F test requires that response variable is stored in "lmrob" object
-  if (robust && !median) {
+  if (robust == "MM") {
     if (p_m == 1L) {
       object$fit_mx$response <- object$data[, object$m, drop = TRUE]
     } else {
@@ -248,7 +248,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   }
   ## compute summary of y ~ m + x + covariates
   # robust F test requires that response variable is stored in "lmrob" object
-  if (robust && !median) object$fit_ymx$response <- object$data[, object$y]
+  if (robust == "MM") object$fit_ymx$response <- object$data[, object$y]
   # compute summary of model
   summary_ymx <- get_summary(object$fit_ymx)
   # if bootstrap inference is requested, replace the usual coefficient matrix
@@ -263,7 +263,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   if (have_boot) {
     keep <- index_list$total
     total <- coefficients[keep, , drop = FALSE]
-  } else if (robust) {
+  } else if (have_robust) {
     # standard errors and t-test not available
     total <- matrix(c(object$total, rep.int(NA_real_, 3L)), nrow = 1L)
     dimnames(total) <- dimnames(direct)
@@ -275,7 +275,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   # return results
   result <- list(fit_mx = summary_mx, fit_ymx = summary_ymx, total = total,
                  direct = direct, x = x, y = y, m = m, covariates = covariates,
-                 n = n, robust = robust, median = median)
+                 n = n, robust = robust)
   class(result) <- c("summary_reg_fit_mediation", "summary_fit_mediation")
   result
 }
@@ -345,7 +345,8 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
                  b = coefficients[2, , drop = FALSE],
                  total = coefficients[4, , drop = FALSE],
                  direct = coefficients[3, , drop = FALSE],
-                 x = x, y = y, m = m, n = n, robust = object$robust)
+                 x = x, y = y, m = m, n = n,
+                 robust = object$robust)
   class(result) <- c("summary_cov_fit_mediation", "summary_fit_mediation")
   result
 }

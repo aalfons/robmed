@@ -138,7 +138,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
                                                  npoints = 100,
                                                  ...) {
   # initializations
-  if (object$robust && object$median) {
+  if (object$robust == "median") {
     # weights for weighted covariance matrix can be infinite for median
     # regression (if there is a residual that is exactly 0)
     stop("tolerance ellipse not meaningful for median regression")
@@ -175,7 +175,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   # other initializations
   partial <- isTRUE(partial)
   have_mx <- vertical %in% m && horizontal == x && length(covariates) == 0L
-  robust <- object$robust
+  robust <- object$robust == "MM"
   # extract model fit
   if (partial || have_mx || robust) {
     if (vertical %in% m) {
