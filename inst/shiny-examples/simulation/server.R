@@ -75,23 +75,27 @@ shinyServer(function(input, output) {
     suppressWarnings({
       if (input$standard) {
         standard_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                        test = "boot", R = 1000, robust = FALSE,
-                                        method = "regression")
+                                        test = "boot", R = 1000,
+                                        method = "regression",
+                                        robust = FALSE)
       }
       if (input$huberized) {
         huberized_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                         test = "boot", R = 1000, robust = TRUE,
-                                         method = "covariance")
+                                         test = "boot", R = 1000,
+                                         method = "covariance",
+                                         robust = TRUE)
       }
       if (input$median) {
         median_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                      test = "boot", R = 1000, robust = TRUE,
-                                      median = TRUE, method = "regression")
+                                      test = "boot", R = 1000,
+                                      method = "regression",
+                                      robust = "median")
       }
       if (input$robust) {
         robust_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                      test = "boot", R = 1000, robust = TRUE,
-                                      median = FALSE, method = "regression")
+                                      test = "boot", R = 1000,
+                                      method = "regression",
+                                      robust = "MM")
       }
     })
 
