@@ -335,7 +335,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
         # 'median' should not be used anywhere else in the code
       }
     } else robust <- match.arg(robust, choices = c("MM", "median"))
-    if (robust == "MM") control <- reg_control(...)
+    if (robust == "MM" && is.null(control)) control <- reg_control(...)
     # estimate effects
     reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
                       robust = robust, control = control)

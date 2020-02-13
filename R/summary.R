@@ -121,6 +121,9 @@ get_summary.NULL <- function(object, ...) NULL
 # dirty hack:
 get_summary.list <- function(object, ...) {
   lapply(object, function(x, ...) {
+    # FIXME: this throws error when MM-estimator doesn't converge
+    #        The reason is that the (unconverged) object has class "lmrob.S"
+    #        instead of class "lmrob".
     if (inherits(x, "lmrob")) get_summary.lmrob(x, ...)
     else if (inherits(x, "lm")) get_summary.lm(x, ...)
     else if (inherits(x, "rq")) get_summary.rq(x, ...)
