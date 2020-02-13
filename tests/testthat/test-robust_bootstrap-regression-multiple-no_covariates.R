@@ -38,8 +38,8 @@ ci <- setup_ci_plot(boot)
 density <- setup_density_plot(boot)
 ellipse <- setup_ellipse_plot(boot)
 # deprecated:
-dot_deprecated <- fortify(boot, method = "dot")
-density_deprecated <- fortify(boot, method = "density")
+dot_deprecated <- suppressWarnings(fortify(boot, method = "dot"))
+density_deprecated <- suppressWarnings(fortify(boot, method = "density"))
 
 ## stuff needed to check correctness
 indirect_names <- c("Total", "M1", "M2")
@@ -414,8 +414,7 @@ med <- m(M1, M2)
 set.seed(seed)
 boot_f3 <- test_mediation(Y ~ med + X, data = test_data,
                           test = "boot", R = R, level = 0.9, type = "bca",
-                          method = "regression", robust = TRUE, median = FALSE,
-                          control = ctrl)
+                          method = "regression", robust = TRUE, control = ctrl)
 
 
 test_that("formula interface works correctly", {

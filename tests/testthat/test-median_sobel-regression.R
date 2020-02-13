@@ -35,8 +35,8 @@ level <- 0.9
 ci <- setup_ci_plot(sobel, level = level)
 density <- setup_density_plot(sobel, level = level)
 # deprecated:
-dot_deprecated <- fortify(sobel, method = "dot")
-density_deprecated <- fortify(sobel, method = "density")
+dot_deprecated <- suppressWarnings(fortify(sobel, method = "dot"))
+density_deprecated <- suppressWarnings(fortify(sobel, method = "density"))
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "Direct", "Total", "ab")
