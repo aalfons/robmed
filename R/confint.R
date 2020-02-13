@@ -206,7 +206,7 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     confint_ymx <- confint(object$fit_ymx, parm = 1L + seq_len(p_m + 1L),
                            level = level)
     # compute confidence interval for total effect
-    if(object$robust) {
+    if(is_robust(object)) {
       # confidence interval not available
       confint_yx <- rep.int(NA_real_, 2L)
     } else {
