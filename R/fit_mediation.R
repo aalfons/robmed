@@ -107,6 +107,9 @@
 #' specifying the type of robust regressions.}
 #' \item{control}{a list of tuning parameters used (if applicable).}
 #'
+#' @note The formula interface is still experimental and may change in future
+#' versions.
+#'
 #' @author Andreas Alfons
 #'
 #' @references

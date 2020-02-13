@@ -27,6 +27,10 @@ these are used in a formula specifying a mediation model.
 These are essentially wrappers for \code{\link[base]{cbind}()} with a
 specific class prepended to the class(es) of the resulting object.
 }
+\note{
+The formula interface is still experimental and may change in future
+versions.
+}
 \examples{
 data("BSG2014")
 

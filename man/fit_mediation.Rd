@@ -131,6 +131,10 @@ estimated based on a Huber M-estimator of location and scatter.  Note that
 this covariance-based approach is less robust than the approach based on
 robust MM-regressions described above.
 }
+\note{
+The formula interface is still experimental and may change in future
+versions.
+}
 \examples{
 data("BSG2014")
 

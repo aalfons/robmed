@@ -182,6 +182,9 @@ analysis via regressions and the fast and robust bootstrap.
 For the fast and robust bootstrap, the simpler correction of
 Salibian-Barrera & Van Aelst (2008) is used rather than the originally
 proposed correction of Salibian-Barrera & Zamar (2002).
+
+The formula interface is still experimental and may change in future
+versions.
 }
 \examples{
 data("BSG2014")
