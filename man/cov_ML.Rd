@@ -40,7 +40,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 1--44.
 }
 \seealso{
-\code{\link{test_mediation}}, \code{\link{fit_mediation}}
+\code{\link{test_mediation}()}, \code{\link{fit_mediation}()}
 }
 \author{
 Andreas Alfons

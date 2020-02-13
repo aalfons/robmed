@@ -5,7 +5,7 @@
 
 #' Tuning parameters for MM-regression
 #'
-#' Obtain a list with tuning paramters for \code{\link[robustbase]{lmrob}}.
+#' Obtain a list with tuning paramters for \code{\link[robustbase]{lmrob}()}.
 #'
 #' @param efficiency  a numeric value giving the desired efficiency (defaults
 #' to 0.85 for 85\% efficiency).
@@ -17,14 +17,14 @@
 #' \code{\link{.Random.seed}}).
 #'
 #' @return A list of tuning parameters as returned by
-#' \code{\link[robustbase]{lmrob.control}}.
+#' \code{\link[robustbase]{lmrob.control}()}.
 #'
 #' @note  This is a simplified wrapper function for
-#' \code{\link[robustbase]{lmrob.control}}, as the latter requires detailed
+#' \code{\link[robustbase]{lmrob.control}()}, as the latter requires detailed
 #' knowledge of the MM-type regression algorithm.  Currently only 95\%, 90\%,
 #' 85\% (the default) and 80\% efficiency are supported.  For other values,
 #' please specify the corresponding tuning parameters in
-#' \code{\link[robustbase]{lmrob.control}} directly.
+#' \code{\link[robustbase]{lmrob.control}()} directly.
 #'
 #' @author Andreas Alfons
 #'
@@ -36,8 +36,8 @@
 #' Yohai, V.J. (1987) High breakdown-point and high efficiency estimates for
 #' regression. \emph{The Annals of Statistics}, \bold{15}(20), 642--656.
 #'
-#' @seealso \code{\link[robustbase]{lmrob}},
-#' \code{\link[robustbase]{lmrob.control}}
+#' @seealso \code{\link[robustbase]{lmrob}()},
+#' \code{\link[robustbase]{lmrob.control}()}
 #'
 #' @examples
 #' data("BSG2014")
@@ -93,7 +93,7 @@ reg_control <- function(efficiency = 0.85, max_iterations = 200,
 
 #' Tuning parameters for Huber M-estimation of location and scatter
 #'
-#' Obtain a list with tuning paramters for \code{\link{cov_Huber}}.
+#' Obtain a list with tuning paramters for \code{\link{cov_Huber}()}.
 #'
 #' @param prob  numeric; probability for the quantile of the
 #' \eqn{\chi^{2}}{chi-squared} distribution to be used as cutoff point in the
@@ -110,7 +110,7 @@ reg_control <- function(efficiency = 0.85, max_iterations = 200,
 #' @references
 #' Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 #'
-#' @seealso \code{\link{cov_Huber}}
+#' @seealso \code{\link{cov_Huber}()}
 #'
 #' @examples
 #' data("BSG2014")

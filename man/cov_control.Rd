@@ -21,7 +21,7 @@ convergence of the iteratively reweighted algorithm.}
 A list with components corresponding to the arguments.
 }
 \description{
-Obtain a list with tuning paramters for \code{\link{cov_Huber}}.
+Obtain a list with tuning paramters for \code{\link{cov_Huber}()}.
 }
 \examples{
 data("BSG2014")
@@ -41,7 +41,7 @@ summary(test)
 Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
 }
 \seealso{
-\code{\link{cov_Huber}}
+\code{\link{cov_Huber}()}
 }
 \author{
 Andreas Alfons

@@ -9,8 +9,8 @@
 #' Produce a dot plot with confidence intervals of selected effects from
 #' (robust) mediation analysis.
 #'
-#' Methods first call \code{\link{setup_ci_plot}} to extract all necessary
-#' information to produce the plot, then the \code{"\link{setup_ci_plot}"}
+#' Methods first call \code{\link{setup_ci_plot}()} to extract all necessary
+#' information to produce the plot, then the \code{"setup_ci_plot"}
 #' method is called to produce the plot.
 #'
 #' @param object  an object inheriting from class
@@ -36,19 +36,18 @@
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test.  The default is to include 95\% confidence intervals.
 #' Note that this is not used for bootstrap tests, as those require to specify
-#' the confidence level already in \code{\link{test_mediation}}.
+#' the confidence level already in \code{\link{test_mediation}()}.
 #' @param \dots  additional arguments to be passed down.
 #'
-#' @return An object of class \code{"ggplot"} (see
-#' \code{\link[ggplot2]{ggplot}}).
+#' @return An object of class \code{"\link[ggplot2]{ggplot}"}.
 #'
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{test_mediation}}, \code{\link{setup_ci_plot}}
+#' \code{\link{test_mediation}()}, \code{\link{setup_ci_plot}()}
 #'
-#' \code{\link{density_plot}}, \code{\link{ellipse_plot}},
-#' \code{\link{plot-methods}}
+#' \code{\link{density_plot}()}, \code{\link{ellipse_plot}()},
+#' \code{\link[=plot-methods]{plot}()}
 #'
 #' @examples
 #' data("BSG2014")

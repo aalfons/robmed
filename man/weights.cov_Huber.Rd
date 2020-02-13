@@ -47,7 +47,7 @@ mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 1--44.
 }
 \seealso{
-\code{\link{cov_Huber}}
+\code{\link{cov_Huber}()}
 }
 \author{
 Andreas Alfons

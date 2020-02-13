@@ -8,18 +8,18 @@
 #' These functions are provided for compatibility with older versions only, and
 #' may be defunct as soon as the next release.
 #'
-#' \code{fortify} supplements the estimated coefficients with other useful
+#' \code{fortify()} supplements the estimated coefficients with other useful
 #' information for informative visualization of the (robust) mediation analysis
 #' results.  It is thereby possible to construct data frames for dot plots of
 #' selected effects, as well as density plots of the indirect effect.
 #' From version 0.6.0 onwards, it is recommended to use
-#' \code{\link{setup_ci_plot}}, \code{\link{setup_density_plot}}, or
-#' \code{\link{setup_ellipse_plot}} instead.
+#' \code{\link{setup_ci_plot}()}, \code{\link{setup_density_plot}()}, or
+#' \code{\link{setup_ellipse_plot}()} instead.
 #'
-#' \code{plot_mediation} produces a dot plot of selected effects in the
+#' \code{plot_mediation()} produces a dot plot of selected effects in the
 #' mediation model, or a density plot of the indirect effect.  From
-#' version 0.6.0 onwards, it is recommended to use \code{\link{ci_plot}},
-#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}} instead.
+#' version 0.6.0 onwards, it is recommended to use \code{\link{ci_plot}()},
+#' \code{\link{density_plot}()}, or \code{\link{ellipse_plot}()} instead.
 #'
 #' @name robmed-deprecated
 #'
@@ -42,25 +42,25 @@
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test to be included in a dot plot.  The default is to include
 #' 95\% confidence intervals.
-#' @param mapping  an aesthetic mapping to override the default behavior (see
-#' \code{\link[ggplot2]{aes}} or \code{\link[ggplot2]{aes_}}).
-#' @param facets  a faceting formula to override the default behavior (only
-#' used in case of a dot plot).  If supplied, \code{\link[ggplot2]{facet_wrap}}
-#' or \code{\link[ggplot2]{facet_grid}} is called depending on whether the
-#' formula is one-sided or two-sided.
+#' @param mapping  an aesthetic mapping to override the default behavior
+#' (see \code{\link[ggplot2]{aes}()} or \code{\link[ggplot2]{aes_}()}).
+#' @param facets  a faceting formula to override the default behavior
+#' (only used in case of a dot plot).  If supplied,
+#' \code{\link[ggplot2]{facet_wrap}()} or \code{\link[ggplot2]{facet_grid}()}
+#' is called depending on whether the formula is one-sided or two-sided.
 #' @param \dots  additional arguments to be passed to and from methods.
 #'
 #' @return
-#' \code{fortify} returns a data frame containing the necessary data for the
+#' \code{fortify()} returns a data frame containing the necessary data for the
 #' selected plot, as well as additional information stored in attributes.
 #'
-#' \code{plot_mediation} returns an object of class \code{"ggplot"} (see
-#' \code{\link[ggplot2]{ggplot}}).
+#' \code{plot_mediation()} returns an object of class
+#' \code{"\link[ggplot2]{ggplot}"}.
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{test_mediation}}, \code{\link{ci_plot}},
-#' \code{\link{density_plot}}, \code{\link{ellipse_plot}}
+#' @seealso \code{\link{test_mediation}()}, \code{\link{ci_plot}()},
+#' \code{\link{density_plot}()}, \code{\link{ellipse_plot}()}
 #'
 #' @examples
 #' \donttest{

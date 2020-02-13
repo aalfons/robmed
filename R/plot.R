@@ -8,11 +8,11 @@
 #' Visualize results from (robust) mediation analysis.
 #'
 #' The \code{"\link{fit_mediation}"} method is a wrapper for
-#' \code{\link{ellipse_plot}}.
+#' \code{\link{ellipse_plot}()}.
 #'
-#' The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}},
-#' \code{\link{density_plot}}, or \code{\link{ellipse_plot}}, depending on
-#' the argument \code{which}.
+#' The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}()},
+#' \code{\link{density_plot}()}, or \code{\link{ellipse_plot}()}, depending
+#' on the argument \code{which}.
 #'
 #' @name plot-methods
 #'
@@ -21,22 +21,22 @@
 #' results from (robust) mediation analysis.
 #' @param which  a character string specifying which plot to produce.
 #' Possible values are \code{"ci"} for a dot plot of selected effects
-#' together with confidence intervals (see \code{\link{ci_plot}}),
+#' together with confidence intervals (see \code{\link{ci_plot}()}),
 #' \code{"density"} for a density plot of the indirect effect(s) (see
-#' \code{\link{density_plot}}), or \code{"ellipse"} for a diagnostic plot
+#' \code{\link{density_plot}()}), or \code{"ellipse"} for a diagnostic plot
 #' of the data together with a tolerance ellipse (see
-#' \code{\link{ellipse_plot}}).
+#' \code{\link{ellipse_plot}()}).
 #' @param \dots  additional arguments to be passed down.
 #'
-#' @return An object of class \code{"ggplot"} (see
-#' \code{\link[ggplot2]{ggplot}}).
+#' @return An object of class \code{"\link[ggplot2]{ggplot}"}.
 #'
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{fit_mediation}}, \code{\link{test_mediation}}
+#' \code{\link{fit_mediation}()}, \code{\link{test_mediation}()}
 #'
-#' \code{\link{ci_plot}}, \code{\link{density_plot}}, \code{\link{ellipse_plot}}
+#' \code{\link{ci_plot}()}, \code{\link{density_plot}()},
+#' \code{\link{ellipse_plot}()}
 #'
 #' @examples
 #' data("BSG2014")

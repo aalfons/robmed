@@ -14,7 +14,7 @@
 #' relevant.
 #'
 #' A line to visualize the corresponding regression coefficient is added if
-#' \code{partial} is \code{TRUE}, or in case of a simple mediation model
+#' \code{partial = TRUE}, or in case of a simple mediation model
 #' (without control variables) when the hypothesized mediator is plotted on
 #' the vertical axis and the independent variable is plotted on the horizontal
 #' axis.
@@ -24,9 +24,9 @@
 #' scale.  If a list of objects has been supplied and there are multiple
 #' objects from such robust methods, each method is placed in a separate panel.
 #'
-#' Methods first call \code{\link{setup_ellipse_plot}} to extract all necessary
-#' information to produce the plot, then the \code{"\link{setup_ellipse_plot}"}
-#' method is called to produce the plot.
+#' Methods first call \code{\link{setup_ellipse_plot}()} to extract all
+#' necessary information to produce the plot, then the
+#' \code{"setup_ellipse_plot"} method is called to produce the plot.
 #'
 #' @param object  an object inheriting from class \code{"\link{fit_mediation}"}
 #' or \code{"\link{test_mediation}"} containing results from (robust) mediation
@@ -56,16 +56,16 @@
 #' ellipse.  The default is to use 100 grid points.
 #' @param \dots  additional arguments to be passed down.
 #'
-#' @return An object of class \code{"ggplot"} (see
-#' \code{\link[ggplot2]{ggplot}}).
+#' @return An object of class \code{"\link[ggplot2]{ggplot}"}.
 #'
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{fit_mediation}}, \code{\link{test_mediation}},
-#' \code{\link{setup_ellipse_plot}}
+#' \code{\link{fit_mediation}()}, \code{\link{test_mediation}()},
+#' \code{\link{setup_ellipse_plot}()}
 #'
-#' \code{\link{ci_plot}}, \code{\link{density_plot}}, \code{\link{plot-methods}}
+#' \code{\link{ci_plot}()}, \code{\link{density_plot}()},
+#' \code{\link[=plot-methods]{plot}()}
 #'
 #' @examples
 #' data("BSG2014")

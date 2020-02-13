@@ -34,11 +34,10 @@ take 512 equally spaced points between the estimated indirect effect
 \item{level}{numeric;  the confidence level of the confidence intervals
 from Sobel's test.  The default is to include 95\% confidence intervals.
 Note that this is not used for bootstrap tests, as those require to specify
-the confidence level already in \code{\link{test_mediation}}.}
+the confidence level already in \code{\link{test_mediation}()}.}
 }
 \value{
-An object of class \code{"ggplot"} (see
-\code{\link[ggplot2]{ggplot}}).
+An object of class \code{"\link[ggplot2]{ggplot}"}.
 }
 \description{
 Produce a density plot of the indirect effect(s) from (robust) mediation
@@ -47,9 +46,9 @@ point estimate and a shaded area representing the confidence interval are
 drawn.
 }
 \details{
-Methods first call \code{\link{setup_density_plot}} to extract all necessary
-information to produce the plot, then the \code{"\link{setup_density_plot}"}
-method is called to produce the plot.
+Methods first call \code{\link{setup_density_plot}()} to extract all
+necessary information to produce the plot, then the
+\code{"setup_density_plot"} method is called to produce the plot.
 }
 \examples{
 data("BSG2014")
@@ -82,9 +81,10 @@ density_plot(tests) + theme_bw() +
 
 }
 \seealso{
-\code{\link{test_mediation}}, \code{\link{setup_density_plot}}
+\code{\link{test_mediation}()}, \code{\link{setup_density_plot}()}
 
-\code{\link{ci_plot}}, \code{\link{ellipse_plot}}, \code{\link{plot-methods}}
+\code{\link{ci_plot}()}, \code{\link{ellipse_plot}()},
+\code{\link[=plot-methods]{plot}()}
 }
 \author{
 Andreas Alfons

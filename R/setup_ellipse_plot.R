@@ -9,9 +9,10 @@
 #' Extract the relevant information for a diagnostic plot with a tolerance
 #' ellipse from results of (robust) mediation analysis.
 #'
-#' This function is used internally by \code{\link{ellipse_plot}}.  It may also
-#' be useful for users who want to produce a similar plot, but who want more
-#' control over what information to display or how to display that information.
+#' This function is used internally by \code{\link{ellipse_plot}()}.  It may
+#' also be useful for users who want to produce a similar plot, but who want
+#' more control over what information to display or how to display that
+#' information.
 #'
 #' @param object  an object inheriting from class \code{"\link{fit_mediation}"}
 #' or \code{"\link{test_mediation}"} containing results from (robust) mediation
@@ -61,10 +62,10 @@
 #' containing the intercept and slope, respectively, of the regression line to
 #' be plotted.  If  a list of objects has been supplied, there is also a column
 #' \code{Method}, which takes the names or indices of the list elements to
-#' indicate the different methods. This is only returned if \code{partial} is
-#' \code{TRUE}, or in case of a simple mediation model (without control
-#' variables) when the hypothesized mediator is plotted on the vertical axis
-#' and the independent variable is plotted on the horizontal axis.}
+#' indicate the different methods. This is only returned if
+#' \code{partial = TRUE}, or in case of a simple mediation model (without
+#' control variables) when the hypothesized mediator is plotted on the vertical
+#' axis and the independent variable is plotted on the horizontal axis.}
 #' \item{horizontal}{a character string giving the variable to be plotted on
 #' the horizontal axis.}
 #' \item{vertical}{a character string giving the variable to be plotted on the
@@ -82,8 +83,8 @@
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{fit_mediation}}, \code{\link{test_mediation}},
-#' \code{\link{ellipse_plot}}
+#' \code{\link{fit_mediation}()}, \code{\link{test_mediation}()},
+#' \code{\link{ellipse_plot}()}
 #'
 #' @examples
 #' data("BSG2014")

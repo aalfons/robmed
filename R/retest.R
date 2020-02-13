@@ -23,11 +23,11 @@
 #' @param \dots  additional arguments to be passed down to methods.
 #'
 #' @return An object of the same class as \code{object} with updated test
-#' results (see \code{\link{test_mediation}}).
+#' results (see \code{\link{test_mediation}()}).
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{test_mediation}}
+#' @seealso \code{\link{test_mediation}()}
 #'
 #' @examples
 #' data("BSG2014")

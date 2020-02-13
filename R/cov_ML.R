@@ -25,7 +25,7 @@
 #' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 #' 1--44.
 #'
-#' @seealso \code{\link{test_mediation}}, \code{\link{fit_mediation}}
+#' @seealso \code{\link{test_mediation}()}, \code{\link{fit_mediation}()}
 #'
 #' @examples
 #' data("BSG2014")

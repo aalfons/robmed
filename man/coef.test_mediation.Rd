@@ -51,8 +51,8 @@ coef(test, type = "boot")  # means of bootstrap replicates
 
 }
 \seealso{
-\code{\link{test_mediation}}, \code{\link{fit_mediation}},
-\code{\link[=confint.test_mediation]{confint}}
+\code{\link{test_mediation}()}, \code{\link{fit_mediation}()},
+\code{\link[=confint.test_mediation]{confint}()}
 }
 \author{
 Andreas Alfons

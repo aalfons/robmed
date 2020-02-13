@@ -22,18 +22,18 @@ convergence in various parts of the algorithm.}
 }
 \value{
 A list of tuning parameters as returned by
-\code{\link[robustbase]{lmrob.control}}.
+\code{\link[robustbase]{lmrob.control}()}.
 }
 \description{
-Obtain a list with tuning paramters for \code{\link[robustbase]{lmrob}}.
+Obtain a list with tuning paramters for \code{\link[robustbase]{lmrob}()}.
 }
 \note{
 This is a simplified wrapper function for
-\code{\link[robustbase]{lmrob.control}}, as the latter requires detailed
+\code{\link[robustbase]{lmrob.control}()}, as the latter requires detailed
 knowledge of the MM-type regression algorithm.  Currently only 95\%, 90\%,
 85\% (the default) and 80\% efficiency are supported.  For other values,
 please specify the corresponding tuning parameters in
-\code{\link[robustbase]{lmrob.control}} directly.
+\code{\link[robustbase]{lmrob.control}()} directly.
 }
 \examples{
 data("BSG2014")
@@ -57,8 +57,8 @@ Yohai, V.J. (1987) High breakdown-point and high efficiency estimates for
 regression. \emph{The Annals of Statistics}, \bold{15}(20), 642--656.
 }
 \seealso{
-\code{\link[robustbase]{lmrob}},
-\code{\link[robustbase]{lmrob.control}}
+\code{\link[robustbase]{lmrob}()},
+\code{\link[robustbase]{lmrob.control}()}
 }
 \author{
 Andreas Alfons

@@ -68,7 +68,7 @@ confint(standard_boot, type = "data")
 
 }
 \seealso{
-\code{\link{test_mediation}}, \code{\link[=coef.test_mediation]{coef}}
+\code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()}
 }
 \author{
 Andreas Alfons

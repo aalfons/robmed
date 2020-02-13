@@ -14,18 +14,18 @@ covariates(...)
 comma.}
 }
 \value{
-\code{m} returns an object of class \code{"parallel_mediators"} and
-\code{covariates} returns an object of class \code{"covariates"}.
+\code{m()} returns an object of class \code{"parallel_mediators"}
+and \code{covariates()} returns an object of class \code{"covariates"}.
 Typically, these inherit from class \code{"matrix"}.
 }
 \description{
-\code{m} creates an object of hypothesized mediators, while
-\code{covariates} creates an object of control variables.  Usually, these
-are used in a formula specifying a mediation model.
+\code{m()} creates an object of hypothesized mediators, while
+\code{covariates()} creates an object of control variables.  Usually,
+these are used in a formula specifying a mediation model.
 }
 \details{
-These are essentially wrappers for \code{\link[base]{cbind}} with a specific
-class prepended to the class(es) of the resulting object.
+These are essentially wrappers for \code{\link[base]{cbind}()} with a
+specific class prepended to the class(es) of the resulting object.
 }
 \examples{
 data("BSG2014")
@@ -41,7 +41,7 @@ fit_mediation(TeamCommitment ~ mediator + ValueDiversity,
 
 }
 \seealso{
-\code{\link{fit_mediation}}, \code{\link{test_mediation}}
+\code{\link{fit_mediation}()}, \code{\link{test_mediation}()}
 }
 \author{
 Andreas Alfons

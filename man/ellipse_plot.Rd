@@ -50,8 +50,7 @@ expected to contain 97.5\% of the observations.}
 ellipse.  The default is to use 100 grid points.}
 }
 \value{
-An object of class \code{"ggplot"} (see
-\code{\link[ggplot2]{ggplot}}).
+An object of class \code{"\link[ggplot2]{ggplot}"}.
 }
 \description{
 Produce a scatter plot of two variables used in (robust) mediation analysis
@@ -63,7 +62,7 @@ relevant.
 }
 \details{
 A line to visualize the corresponding regression coefficient is added if
-\code{partial} is \code{TRUE}, or in case of a simple mediation model
+\code{partial = TRUE}, or in case of a simple mediation model
 (without control variables) when the hypothesized mediator is plotted on
 the vertical axis and the independent variable is plotted on the horizontal
 axis.
@@ -73,9 +72,9 @@ data point, those weights are visualized by coloring the points on a grey
 scale.  If a list of objects has been supplied and there are multiple
 objects from such robust methods, each method is placed in a separate panel.
 
-Methods first call \code{\link{setup_ellipse_plot}} to extract all necessary
-information to produce the plot, then the \code{"\link{setup_ellipse_plot}"}
-method is called to produce the plot.
+Methods first call \code{\link{setup_ellipse_plot}()} to extract all
+necessary information to produce the plot, then the
+\code{"setup_ellipse_plot"} method is called to produce the plot.
 }
 \examples{
 data("BSG2014")
@@ -113,10 +112,11 @@ ellipse_plot(tests) + theme_bw() +
 
 }
 \seealso{
-\code{\link{fit_mediation}}, \code{\link{test_mediation}},
-\code{\link{setup_ellipse_plot}}
+\code{\link{fit_mediation}()}, \code{\link{test_mediation}()},
+\code{\link{setup_ellipse_plot}()}
 
-\code{\link{ci_plot}}, \code{\link{density_plot}}, \code{\link{plot-methods}}
+\code{\link{ci_plot}()}, \code{\link{density_plot}()},
+\code{\link[=plot-methods]{plot}()}
 }
 \author{
 Andreas Alfons

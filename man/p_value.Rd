@@ -13,8 +13,9 @@ p_value(object, ...)
 \method{p_value}{sobel_test_mediation}(object, ...)
 }
 \arguments{
-\item{object}{an object inheriting from class \code{test_mediation}
-containing results from (robust) mediation analysis.}
+\item{object}{an object inheriting from class
+\code{"\link{test_mediation}"} containing results
+from (robust) mediation analysis.}
 
 \item{\dots}{additional arguments are currently ignored.}
 
@@ -42,7 +43,7 @@ confidence intervals are computed via the bias-corrected and accelerated
 method (\code{"bca"}).
 
 For Sobel tests, the p-value is already stored in the object returned by
-\code{\link{test_mediation}} and simply extracted.
+\code{\link{test_mediation}()} and simply extracted.
 }
 \examples{
 data("BSG2014")
@@ -59,7 +60,7 @@ p_value(test_bca)
 
 }
 \seealso{
-\code{\link{test_mediation}}, \code{\link[boot]{boot.ci}}
+\code{\link{test_mediation}()}, \code{\link[boot]{boot.ci}()}
 }
 \author{
 Andreas Alfons

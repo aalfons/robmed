@@ -26,7 +26,7 @@ for mediation analysis.  Note that this function is intended for use in
 simulation studies, it is not expected to be called by the user.
 }
 \examples{
-\dontrun{
+\donttest{
 # control parameters
 n <- 100
 a <- b <- c <- 0.2
@@ -54,7 +54,7 @@ summary(robust_boot)
 
 }
 \seealso{
-\code{\link{test_mediation}}
+\code{\link{test_mediation}()}
 }
 \author{
 Andreas Alfons

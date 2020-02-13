@@ -9,9 +9,10 @@
 #' Extract the relevant information for a density plot of the indirect
 #' effect(s) from results of (robust) mediation analysis.
 #'
-#' This function is used internally by \code{\link{density_plot}}.  It may also
-#' be useful for users who want to produce a similar plot, but who want more
-#' control over what information to display or how to display that information.
+#' This function is used internally by \code{\link{density_plot}()}.  It may
+#' also be useful for users who want to produce a similar plot, but who want
+#' more control over what information to display or how to display that
+#' information.
 #'
 #' @param object  an object inheriting from class
 #' \code{"\link{test_mediation}"} containing results from
@@ -23,7 +24,7 @@
 #' @param level  numeric;  the confidence level of the confidence intervals
 #' from Sobel's test.  The default is to include 95\% confidence intervals.
 #' Note that this is not used for bootstrap tests, as those require to specify
-#' the confidence level already in \code{\link{test_mediation}}.
+#' the confidence level already in \code{\link{test_mediation}()}.
 #' @param \dots  additional arguments to be passed down.
 #'
 #' @return An object of class \code{"setup_density_plot"} with the following
@@ -59,7 +60,7 @@
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{test_mediation}}, \code{\link{density_plot}}
+#' \code{\link{test_mediation}()}, \code{\link{density_plot}()}
 #'
 #' @examples
 #' data("BSG2014")

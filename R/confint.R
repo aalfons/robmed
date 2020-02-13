@@ -38,7 +38,7 @@
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{test_mediation}}, \code{\link[=coef.test_mediation]{coef}}
+#' \code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()}
 #'
 #' @examples
 #' data("BSG2014")

@@ -46,7 +46,7 @@ distribution.}
 \item{level}{numeric;  the confidence level of the confidence intervals
 from Sobel's test.  The default is to include 95\% confidence intervals.
 Note that this is not used for bootstrap tests, as those require to specify
-the confidence level already in \code{\link{test_mediation}}.}
+the confidence level already in \code{\link{test_mediation}()}.}
 }
 \value{
 An object of class \code{"setup_ci_plot"} with the following
@@ -68,7 +68,7 @@ Extract the relevant information for a dot plot with confidence intervals of
 selected effects from (robust) mediation analysis.
 }
 \details{
-This function is used internally by \code{\link{ci_plot}}.  It may also
+This function is used internally by \code{\link{ci_plot}()}.  It may also
 be useful for users who want to produce a similar plot, but who want more
 control over what information to display or how to display that information.
 }
@@ -95,7 +95,7 @@ ggplot() +
 
 }
 \seealso{
-\code{\link{test_mediation}}, \code{\link{ci_plot}}
+\code{\link{test_mediation}()}, \code{\link{ci_plot}()}
 }
 \author{
 Andreas Alfons

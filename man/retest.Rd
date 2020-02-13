@@ -35,7 +35,7 @@ for the percentile bootstrap.}
 }
 \value{
 An object of the same class as \code{object} with updated test
-results (see \code{\link{test_mediation}}).
+results (see \code{\link{test_mediation}()}).
 }
 \description{
 Reperform a (fast and robust) bootstrap test or Sobel's test for the
@@ -56,7 +56,7 @@ retest(test, level = 0.975)
 
 }
 \seealso{
-\code{\link{test_mediation}}
+\code{\link{test_mediation}()}
 }
 \author{
 Andreas Alfons

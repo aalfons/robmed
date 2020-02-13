@@ -30,7 +30,7 @@
 #' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
 #' 1--44.
 #'
-#' @seealso \code{\link{cov_Huber}}
+#' @seealso \code{\link{cov_Huber}()}
 #'
 #' @examples
 #' data("BSG2014")

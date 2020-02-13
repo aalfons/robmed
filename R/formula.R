@@ -5,23 +5,23 @@
 
 #' Create an object of hypothesized mediators or control variables
 #'
-#' \code{m} creates an object of hypothesized mediators, while
-#' \code{covariates} creates an object of control variables.  Usually, these
-#' are used in a formula specifying a mediation model.
+#' \code{m()} creates an object of hypothesized mediators, while
+#' \code{covariates()} creates an object of control variables.  Usually,
+#' these are used in a formula specifying a mediation model.
 #'
-#' These are essentially wrappers for \code{\link[base]{cbind}} with a specific
-#' class prepended to the class(es) of the resulting object.
+#' These are essentially wrappers for \code{\link[base]{cbind}()} with a
+#' specific class prepended to the class(es) of the resulting object.
 #'
 #' @param \dots  variables are supplied as arguments, as usual separated by a
 #' comma.
 #'
-#' @return \code{m} returns an object of class \code{"parallel_mediators"} and
-#' \code{covariates} returns an object of class \code{"covariates"}.
+#' @return \code{m()} returns an object of class \code{"parallel_mediators"}
+#' and \code{covariates()} returns an object of class \code{"covariates"}.
 #' Typically, these inherit from class \code{"matrix"}.
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{fit_mediation}}, \code{\link{test_mediation}}
+#' @seealso \code{\link{fit_mediation}()}, \code{\link{test_mediation}()}
 #'
 #' @examples
 #' data("BSG2014")

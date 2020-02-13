@@ -23,10 +23,10 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{test_mediation}}
+#' @seealso \code{\link{test_mediation}()}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # control parameters
 #' n <- 100
 #' a <- b <- c <- 0.2

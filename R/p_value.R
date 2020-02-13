@@ -20,10 +20,11 @@
 #' method (\code{"bca"}).
 #'
 #' For Sobel tests, the p-value is already stored in the object returned by
-#' \code{\link{test_mediation}} and simply extracted.
+#' \code{\link{test_mediation}()} and simply extracted.
 #'
-#' @param object  an object inheriting from class \code{test_mediation}
-#' containing results from (robust) mediation analysis.
+#' @param object  an object inheriting from class
+#' \code{"\link{test_mediation}"} containing results
+#' from (robust) mediation analysis.
 #' @param digits  an integer determining the number of digits of the p-values
 #' to be computed.  The default is to compute 4 digits after the comma.
 #' @param \dots  additional arguments are currently ignored.
@@ -34,7 +35,7 @@
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{test_mediation}}, \code{\link[boot]{boot.ci}}
+#' \code{\link{test_mediation}()}, \code{\link[boot]{boot.ci}()}
 #'
 #' @examples
 #' data("BSG2014")
