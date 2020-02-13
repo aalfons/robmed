@@ -8,7 +8,9 @@ Changes in robmed version 0.6.0
     + fit_mediation() and test_mediation() now use 'robust = "median"' instead
       of argument 'median'.
 
-    + Renamed argument 'other' for type of confidence intervals to 'type'.
+    + Renamed argument 'other' for type of confidence intervals to 'type'
+      and also changed possible values to match argument for extracting
+      coefficients.
 
     + New plot function ellipse_plot() for a diagnostic plot with a tolerance
       ellipse.
