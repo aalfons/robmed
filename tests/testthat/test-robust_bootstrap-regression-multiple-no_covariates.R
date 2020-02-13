@@ -27,8 +27,7 @@ ctrl <- reg_control(efficiency = 0.95)
 set.seed(seed)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
                        test = "boot", R = R, level = level, type = "bca",
-                       method = "regression", robust = TRUE, median = FALSE,
-                       control = ctrl)
+                       method = "regression", robust = TRUE, control = ctrl)
 
 ## compute summary
 summary_boot <- summary(boot, type = "boot")
@@ -81,8 +80,7 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$m, c("M1", "M2"))
   expect_identical(boot$fit$covariates, character())
   # robust fit and test
-  expect_true(boot$fit$robust)
-  expect_false(boot$fit$median)
+  expect_identical(boot$fit$robust, "MM")
   expect_equal(boot$fit$control, ctrl)
 
 })
@@ -212,10 +210,8 @@ test_that("summary has correct structure", {
 test_that("attributes are correctly passed through summary", {
 
   # robustness
-  expect_true(summary_boot$summary$robust)
-  expect_false(summary_boot$summary$median)
-  expect_true(summary_data$summary$robust)
-  expect_false(summary_data$summary$median)
+  expect_identical(summary_boot$summary$robust, "MM")
+  expect_identical(summary_data$summary$robust, "MM")
   # number of observations
   expect_identical(summary_boot$summary$n, as.integer(n))
   expect_identical(summary_data$summary$n, as.integer(n))
@@ -407,14 +403,12 @@ test_that("data returned by fortify() has correct attributes", {
 set.seed(seed)
 boot_f1 <- test_mediation(Y ~ m(M1, M2) + X, data = test_data,
                           test = "boot", R = R, level = 0.9, type = "bca",
-                          method = "regression", robust = TRUE, median = FALSE,
-                          control = ctrl)
+                          method = "regression", robust = TRUE, control = ctrl)
 # run mediation analysis through formula interface without data argument
 set.seed(seed)
 boot_f2 <- test_mediation(Y ~ m(M1, M2) + X,
                           test = "boot", R = R, level = 0.9, type = "bca",
-                          method = "regression", robust = TRUE, median = FALSE,
-                          control = ctrl)
+                          method = "regression", robust = TRUE, control = ctrl)
 # define mediators outside formula
 med <- m(M1, M2)
 set.seed(seed)

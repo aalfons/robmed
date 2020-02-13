@@ -25,7 +25,7 @@ test_data <- data.frame(X, Y, M1, M2, C1, C2)
 ## fit mediation model and compute summary
 foo <- fit_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
                      covariates = c("C1", "C2"), method = "regression",
-                     robust = TRUE, median = TRUE)
+                     robust = "median")
 bar <- summary(foo)
 
 
@@ -55,8 +55,7 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$m, c("M1", "M2"))
   expect_identical(foo$covariates, c("C1", "C2"))
   # robust fit
-  expect_true(foo$robust)
-  expect_true(foo$median)
+  expect_identical(foo$robust, "median")
   expect_null(foo$control)
 
 })
@@ -122,15 +121,15 @@ test_that("object returned by setup_ellipse_plot() has correct structure", {
 # fit mediation model through formula interface with data argument
 fit_f1 <- fit_mediation(Y ~ m(M1, M2) + X + covariates(C1, C2),
                         data = test_data, method = "regression",
-                        robust = TRUE, median = TRUE)
+                        robust = "median")
 # fit mediation model through formula interface without data argument
 fit_f2 <- fit_mediation(Y ~ m(M1, M2) + X + covariates(C1, C2),
-                        method = "regression", robust = TRUE, median = TRUE)
+                        method = "regression", robust = "median")
 # define mediators and covariates outside formula
 med <- m(M1, M2)
 cov <- covariates(C1, C2)
 fit_f3 <- fit_mediation(Y ~ med + X + cov, data = test_data,
-                        method = "regression", robust = TRUE, median = TRUE)
+                        method = "regression", robust = "median")
 
 
 test_that("formula interface works correctly", {

@@ -25,7 +25,7 @@ test_data <- data.frame(X, Y, M1, M2, C1, C2)
 
 ## run bootstrap test
 sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "sobel",
-                        method = "regression", robust = TRUE, median = TRUE)
+                        method = "regression", robust = "median")
 
 ## compute summary
 summary_sobel <- summary(sobel)
@@ -75,8 +75,7 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$m, "M1")
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
-  expect_true(sobel$fit$robust)
-  expect_true(sobel$fit$median)
+  expect_identical(sobel$fit$robust, "median")
   expect_null(sobel$fit$control)
 
 })
@@ -158,8 +157,7 @@ test_that("summary has correct structure", {
 test_that("attributes are correctly passed through summary", {
 
   # robustness
-  expect_true(summary_sobel$summary$robust)
-  expect_true(summary_sobel$summary$median)
+  expect_identical(summary_sobel$summary$robust, "median")
   # number of observations
   expect_identical(summary_sobel$summary$n, as.integer(n))
   # variable names
@@ -312,14 +310,14 @@ test_that("data returned by fortify() has correct attributes", {
 
 # run mediation analysis through formula interface with data argument
 sobel_f1 <- test_mediation(Y ~ m(M1) + X, data = test_data, test = "sobel",
-                           method = "regression", robust = TRUE, median = TRUE)
+                           method = "regression", robust = "median")
 # run mediation analysis through formula interface without data argument
 sobel_f2 <- test_mediation(Y ~ m(M1) + X, test = "sobel",
-                           method = "regression", robust = TRUE, median = TRUE)
+                           method = "regression", robust = "median")
 # define mediator outside formula
 med <- m(M1)
 sobel_f3 <- test_mediation(Y ~ med + X, data = test_data, test = "sobel",
-                           method = "regression", robust = TRUE, median = TRUE)
+                           method = "regression", robust = "median")
 
 
 test_that("formula interface works correctly", {

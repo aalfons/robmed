@@ -27,8 +27,7 @@ test_data <- data.frame(X, Y, M1, M2, C1, C2)
 ctrl <- reg_control(efficiency = 0.95)
 set.seed(seed)
 sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "sobel",
-                        method = "regression", robust = TRUE, median = FALSE,
-                        control = ctrl)
+                        method = "regression", robust = TRUE, control = ctrl)
 
 ## compute summary
 summary_sobel <- summary(sobel)
@@ -79,8 +78,7 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$m, "M1")
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
-  expect_true(sobel$fit$robust)
-  expect_false(sobel$fit$median)
+  expect_identical(sobel$fit$robust, "MM")
   expect_equal(sobel$fit$control, ctrl)
 
 })
@@ -168,8 +166,7 @@ test_that("summary has correct structure", {
 test_that("attributes are correctly passed through summary", {
 
   # robustness
-  expect_true(summary_sobel$summary$robust)
-  expect_false(summary_sobel$summary$median)
+  expect_identical(summary_sobel$summary$robust, "MM")
   # number of observations
   expect_identical(summary_sobel$summary$n, as.integer(n))
   # variable names
@@ -324,18 +321,18 @@ test_that("data returned by fortify() has correct attributes", {
 set.seed(seed)
 sobel_f1 <- test_mediation(Y ~ m(M1) + X, data = test_data, test = "sobel",
                            method = "regression", robust = TRUE,
-                           median = FALSE, control = ctrl)
+                           control = ctrl)
 # run mediation analysis through formula interface without data argument
 set.seed(seed)
 sobel_f2 <- test_mediation(Y ~ m(M1) + X, test = "sobel",
                            method = "regression", robust = TRUE,
-                           median = FALSE, control = ctrl)
+                           control = ctrl)
 # define mediator outside formula
 med <- m(M1)
 set.seed(seed)
 sobel_f3 <- test_mediation(Y ~ med + X, data = test_data, test = "sobel",
                            method = "regression", robust = TRUE,
-                           median = FALSE, control = ctrl)
+                           control = ctrl)
 
 
 test_that("formula interface works correctly", {

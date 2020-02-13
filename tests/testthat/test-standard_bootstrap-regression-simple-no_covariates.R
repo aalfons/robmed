@@ -77,7 +77,6 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$covariates, character())
   # nonrobust fit and test
   expect_false(boot$fit$robust)
-  expect_false(boot$fit$median)
   expect_null(boot$fit$control)
 
 })
@@ -200,9 +199,7 @@ test_that("attributes are correctly passed through summary", {
 
   # robustness
   expect_false(summary_boot$summary$robust)
-  expect_false(summary_boot$summary$median)
   expect_false(summary_data$summary$robust)
-  expect_false(summary_data$summary$median)
   # number of observations
   expect_identical(summary_boot$summary$n, as.integer(n))
   expect_identical(summary_data$summary$n, as.integer(n))

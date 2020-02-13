@@ -77,7 +77,6 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
   expect_false(sobel$fit$robust)
-  expect_false(sobel$fit$median)
   expect_null(sobel$fit$control)
 
 })
@@ -166,7 +165,6 @@ test_that("attributes are correctly passed through summary", {
 
   # robustness
   expect_false(summary_sobel$summary$robust)
-  expect_false(summary_sobel$summary$median)
   # number of observations
   expect_identical(summary_sobel$summary$n, as.integer(n))
   # variable names
