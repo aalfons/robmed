@@ -37,9 +37,6 @@ level <- 0.9
 ci <- setup_ci_plot(sobel, level = level)
 density <- setup_density_plot(sobel, level = level)
 ellipse <- setup_ellipse_plot(sobel)
-# deprecated:
-dot_deprecated <- suppressWarnings(fortify(sobel, method = "dot"))
-density_deprecated <- suppressWarnings(fortify(sobel, method = "density"))
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "Direct", "Total", "ab")
@@ -252,67 +249,6 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
 
   ## ellipse_plot
   expect_identical(ellipse, setup_ellipse_plot(sobel$fit))
-
-})
-
-
-## deprecated:
-
-test_that("data returned by fortify() has correct structure", {
-
-  ## dot plot
-  # check dimensions
-  expect_s3_class(dot_deprecated, "data.frame")
-  expect_identical(dim(dot_deprecated), c(2L, 4L))
-  # check column names
-  column_names <- c("Effect", "Point", "Lower", "Upper")
-  expect_named(dot_deprecated, column_names)
-  # check that direct effect and indirect effect are plotted by default
-  effect_names <- c("Direct", "ab")
-  expect_identical(dot_deprecated$Effect, factor(effect_names, levels = effect_names))
-
-  ## density plot
-  # check dimensions
-  expect_s3_class(density_deprecated, "data.frame")
-  expect_identical(ncol(density_deprecated), 2L)
-  expect_gt(nrow(density_deprecated), 0L)
-  # check column names
-  column_names <- c("ab", "Density")
-  expect_named(density_deprecated, column_names)
-
-})
-
-test_that("data returned by fortify() has correct attributes", {
-
-  ## dot plot
-  # check aesthetic mapping
-  mapping <- aes_string(x = "Effect", y = "Point",
-                        ymin = "Lower", ymax = "Upper")
-  expect_equal(attr(dot_deprecated, "mapping"), mapping)
-  # check default geom()
-  expect_identical(attr(dot_deprecated, "geom"), geom_pointrange)
-  # check facets
-  expect_null(attr(dot_deprecated, "facets"))
-  # check that method is stored correctly
-  expect_identical(attr(dot_deprecated, "method"), "dot")
-
-  ## density plot
-  # check aesthetic mapping
-  mapping <- aes_string(x = "ab", y = "Density")
-  expect_equal(attr(density_deprecated, "mapping"), mapping)
-  # check default geom()
-  expect_equal(attr(density_deprecated, "geom"), robmed:::geom_densityline)
-  # check facets
-  expect_null(attr(density_deprecated, "facets"))
-  # check title
-  expect_identical(attr(density_deprecated, "main"), "Assumed normal distribution")
-  # check confidence interval
-  ci <- attr(density_deprecated, "ci")
-  expect_s3_class(ci, "data.frame")
-  expect_identical(dim(ci), c(1L, 4L))
-  expect_named(ci, c("ab", "Density", "Lower", "Upper"))
-  # check that method is stored correctly
-  expect_identical(attr(density_deprecated, "method"), "density")
 
 })
 
