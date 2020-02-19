@@ -15,7 +15,7 @@ fit_mediation(object, ...)
 
 \method{fit_mediation}{default}(object, x, y, m, covariates = NULL,
   method = c("regression", "covariance"), robust = TRUE,
-  median = FALSE, control = NULL, ...)
+  control = NULL, ...)
 }
 \arguments{
 \item{object}{the first argument will determine the method of the generic
@@ -60,9 +60,6 @@ specified or if control variables are supplied.}
 (\code{method = "regression"}), this can also be a character string, with
 \code{"MM"} specifying the MM-estimator of regression, and \code{"median"}
 specifying median regression.}
-
-\item{median}{deprecated.  This argument will be removed in future
-versions.  Use \code{robust = "median"} for median regression.}
 
 \item{control}{a list of tuning parameters for the corresponding robust
 method.  For robust regression (\code{method = "regression"}, and

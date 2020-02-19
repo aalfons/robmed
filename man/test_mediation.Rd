@@ -15,20 +15,19 @@ test_mediation(object, ...)
 \method{test_mediation}{formula}(formula, data, test = c("boot",
   "sobel"), alternative = c("twosided", "less", "greater"), R = 5000,
   level = 0.95, type = c("bca", "perc"), method = c("regression",
-  "covariance"), robust = TRUE, median = FALSE, control = NULL, ...)
+  "covariance"), robust = TRUE, control = NULL, ...)
 
 \method{test_mediation}{default}(object, x, y, m, covariates = NULL,
   test = c("boot", "sobel"), alternative = c("twosided", "less",
   "greater"), R = 5000, level = 0.95, type = c("bca", "perc"),
   method = c("regression", "covariance"), robust = TRUE,
-  median = FALSE, control = NULL, ...)
+  control = NULL, ...)
 
 \method{test_mediation}{fit_mediation}(object, test = c("boot", "sobel"),
   alternative = c("twosided", "less", "greater"), R = 5000,
   level = 0.95, type = c("bca", "perc"), ...)
 
-robmed(..., test = "boot", method = "regression", robust = TRUE,
-  median = FALSE)
+robmed(..., test = "boot", method = "regression", robust = TRUE)
 }
 \arguments{
 \item{object}{the first argument will determine the method of the generic
@@ -81,9 +80,6 @@ specified or if control variables are supplied.}
 (\code{method = "regression"}), this can also be a character string, with
 \code{"MM"} specifying the MM-estimator of regression, and \code{"median"}
 specifying median regression.}
-
-\item{median}{deprecated.  This argument will be removed in future
-versions.  Use \code{robust = "median"} for median regression.}
 
 \item{control}{a list of tuning parameters for the corresponding robust
 method.  For robust regression (\code{method = "regression"}, and
