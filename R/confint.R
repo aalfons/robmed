@@ -71,20 +71,6 @@ NULL
 ## argument 'level' is ignored
 confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
                                         type = c("boot", "data"), ...) {
-  # for compatibility with previous versions
-  other <- list(...)$other
-  if (missing(type) && !is.null(other)) {
-    other <- match.arg(other, choices = c("boot", "theory"))
-    if (other == "boot") {
-      warning("Argument 'other = \"boot\"' is deprecated.\n",
-              "Use 'type = \"boot\"' instead.", call. = FALSE)
-      type <- "boot"
-    } else if (other == "theory") {
-      warning("Argument 'other = \"theory\"' is deprecated.\n",
-              "Use 'type = \"data\"' instead.", call. = FALSE)
-      type <- "data"
-    }
-  }
   # initializations
   p_m <- length(object$fit$m)
   # confidence interval of other effects

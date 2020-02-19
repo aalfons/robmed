@@ -67,20 +67,6 @@ NULL
 #' @export
 
 summary.boot_test_mediation <- function(object, type = c("boot", "data"), ...) {
-  # for compatibility with previous versions
-  other <- list(...)$other
-  if (missing(type) && !is.null(other)) {
-    other <- match.arg(other, choices = c("boot", "theory"))
-    if (other == "boot") {
-      warning("Argument 'other = \"boot\"' is deprecated.\n",
-              "Use 'type = \"boot\"' instead.", call. = FALSE)
-      type <- "boot"
-    } else if (other == "theory") {
-      warning("Argument 'other = \"theory\"' is deprecated.\n",
-              "Use 'type = \"data\"' instead.", call. = FALSE)
-      type <- "data"
-    }
-  }
   # get significance of effects and summary of model fit
   # component 'boot' only exists for bootstrap test, otherwise NULL
   type <- match.arg(type)
