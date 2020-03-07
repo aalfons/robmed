@@ -240,7 +240,8 @@ fit_mediation.formula <- function(formula, data, ...) {
 
 fit_mediation.default <- function(object, x, y, m, covariates = NULL,
                                   method = c("regression", "covariance"),
-                                  robust = TRUE, control = NULL, ...) {
+                                  robust = TRUE, family = "gaussian",
+                                  control = NULL, ...) {
   ## initializations
   # prepare data set
   data <- as.data.frame(object)
@@ -323,9 +324,15 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
       if (robust) robust <- "MM"
     } else robust <- match.arg(robust, choices = c("MM", "median"))
     if (robust == "MM" && is.null(control)) control <- reg_control(...)
+    # check error distribution
+    if (is.character(robust)) family <- "gaussian"
+    else {
+      families <- c("gaussian", "student", "skewnormal", "skewt")
+      family <- match.arg(family, choices = families)
+    }
     # estimate effects
     reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
-                      robust = robust, control = control)
+                      robust = robust, family = family, control = control)
   } else {
     # check for robust method
     robust <- isTRUE(robust)
@@ -339,7 +346,8 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
 
 ## estimate the effects in a mediation model via regressions
 reg_fit_mediation <- function(data, x, y, m, covariates = character(),
-                              robust = "MM", control = reg_control()) {
+                              robust = "MM", family = "gaussian",
+                              control = reg_control()) {
   # number of mediators
   p_m <- length(m)
   # construct predictor matrices for regression models
@@ -381,15 +389,43 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     # neither method fits the direct path
     fit_yx <- NULL
   } else {
-    # for the standard method, there is not much additional cost in performing
-    # the regression for the total effect
-    if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
-    else {
-      fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
-      names(fit_mx) <- m
+    if (family == "gaussian") {
+      # for the standard method, there is not much additional cost in
+      # performing the regression for the total effect
+      if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
+      else {
+        fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
+        names(fit_mx) <- m
+      }
+      fit_ymx <- lm_fit(predictors_ymx, data[, y])
+      fit_yx <- lm_fit(predictors_mx, data[, y])
+    } else {
+      # define parameters as required for package 'sn'
+      if (family == "student") {
+        selm_family <- "ST"
+        selm_param <- list(alpha = 0)  # no skewness
+      } else {
+        selm_family <- if (family == "skewnormal") "SN" else "ST"
+        selm_param <- list()
+      }
+      # perform regression with skew-elliptical errors
+      if (p_m == 1L) {
+        fit_mx <- selm_fit(predictors_mx, data[, m], family = selm_family,
+                           fixed.param = selm_param)
+      } else {
+        fit_mx <- lapply(m, function(m_j) {
+          selm_fit(predictors_mx, data[, m_j], family = selm_family,
+                   fixed.param = selm_param)
+        })
+        names(fit_mx) <- m
+      }
+      # relationship ab + direct = total doesn't hold, so we need to perform
+      # the regression for the total effect
+      fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_family,
+                          fixed.param = selm_param)
+      fit_yx <- selm_fit(predictors_mx, data[, y], family = selm_family,
+                         fixed.param = selm_param)
     }
-    fit_ymx <- lm_fit(predictors_ymx, data[, y])
-    fit_yx <- lm_fit(predictors_mx, data[, y])
   }
   # extract effects
   if (p_m == 1L) {
@@ -405,7 +441,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   # return results
   result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
-                 covariates = covariates, data = data, robust = robust)
+                 covariates = covariates, data = data, robust = robust,
+                 family = family)
   if(robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
