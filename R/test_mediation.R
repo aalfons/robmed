@@ -367,7 +367,7 @@ boot_test_mediation <- function(fit,
           w_m_i <- w_m[i]
           w_y_i <- w_y[i]
           # check whether there are enough observations with nonzero weights
-          if(sum(w_m_i > 0) <= 2 || sum(w_y_i > 0) <= 3) return(NA)
+          if(sum(w_m_i > 0) <= 2 || sum(w_y_i > 0) <= 3) return(NA_real_)
           # compute coefficients from weighted regression m ~ x + covariates
           weighted_x_i <- w_m_i * z_i[, c(1L, 2L, j_covariates)]
           weighted_m_i <- w_m_i * z_i[, 4L]
