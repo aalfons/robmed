@@ -224,14 +224,16 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                                    R = 5000, level = 0.95,
                                    type = c("bca", "perc"),
                                    method = c("regression", "covariance"),
-                                   robust = TRUE, control = NULL, ...) {
+                                   robust = TRUE, family = "gaussian",
+                                   control = NULL, ...) {
   ## fit mediation model
   if (missing(data)) {
     fit <- fit_mediation(formula, method = method, robust = robust,
-                         control = control)
+                         family = family, control = control)
   } else {
     fit <- fit_mediation(formula, data = data, method = method,
-                         robust = robust, control = control)
+                         robust = robust, family = family,
+                         control = control)
   }
   ## call method for fitted model
   test_mediation(fit, test = test, alternative = alternative,
@@ -249,10 +251,12 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    R = 5000, level = 0.95,
                                    type = c("bca", "perc"),
                                    method = c("regression", "covariance"),
-                                   robust = TRUE, control = NULL, ...) {
+                                   robust = TRUE, family = "gaussian",
+                                   control = NULL, ...) {
   ## fit mediation model
   fit <- fit_mediation(object, x = x, y = y, m = m, covariates = covariates,
-                       method = method, robust = robust, control = control)
+                       method = method, robust = robust, family = family,
+                       control = control)
   ## call method for fitted model
   test_mediation(fit, test = test, alternative = alternative,
                  R = R, level = level, type = type, ...)
@@ -323,6 +327,7 @@ boot_test_mediation <- function(fit,
 
     # perform (fast and robust) bootstrap
     robust <- fit$robust
+    family <- fit$family
     if (robust == "MM") {
 
       # This implementation uses the simpler approximation of
@@ -506,7 +511,7 @@ boot_test_mediation <- function(fit,
       bootstrap <- local_boot(z, median_bootstrap, R = R, ...)
       R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
 
-    } else {
+    } else if (family == "gaussian") {
 
       # define function for standard bootstrap mediation test
       if (p_m == 1L)  {
@@ -562,6 +567,120 @@ boot_test_mediation <- function(fit,
       # perform standard bootstrap
       bootstrap <- local_boot(z, standard_bootstrap, R = R, ...)
       R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+
+    } else {
+
+      # obtain parameters as required for package 'sn'
+      selm_args <- get_selm_args(family)
+      control <- list(method = "MLE")
+      # define function for bootstrap with skew-elliptical errors
+      if (p_m == 1L)  {
+        # use values from full sample as starting values for optimization
+        if (family == "skewnormal") {
+          # starting values in centered parametrization
+          start <- list(mx = fit$fit_mx@param$cp, ymx = fit$fit_ymx@param$cp,
+                        yx = fit$fit_yx@param$cp)
+        } else {
+          # starting values in direct parametrization
+          start <- list(mx = fit$fit_mx@param$dp, ymx = fit$fit_ymx@param$dp,
+                        yx = fit$fit_yx@param$dp)
+        }
+        # only one mediator
+        selm_bootstrap <- function(z, i, family, start, fixed.param, control) {
+          # extract bootstrap sample from the data
+          z_i <- z[i, , drop = FALSE]
+          # skew-t distribution can be unstable on bootstrap samples
+          tryCatch({
+            # compute coefficients from regression m ~ x + covariates
+            x_i <- z_i[, c(1L, 2L, j_covariates)]
+            m_i <- z_i[, 4L]
+            fit_mx_i <- selm.fit(x_i, m_i, family = family,
+                                 start = start$mx,
+                                 fixed.param = fixed.param,
+                                 selm.control = control)
+            coef_mx_i <- unname(get_coef(fit_mx_i$param))
+            # compute coefficients from regression y ~ m + x + covariates
+            mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
+            y_i <- z_i[, 3L]
+            fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
+                                  start = start$ymx,
+                                  fixed.param = fixed.param,
+                                  selm.control = control)
+            coef_ymx_i <- unname(get_coef(fit_ymx_i$param))
+            # compute coefficients from regression y ~ x + covariates
+            fit_yx_i <- selm.fit(x_i, y_i, family = family,
+                                 start = start$yx,
+                                 fixed.param = fixed.param,
+                                 selm.control = control)
+            coef_yx_i <- unname(get_coef(fit_yx_i$param))
+            # compute effects
+            a <- coef_mx_i[2L]
+            b <- coef_ymx_i[2L]
+            ab <- a * b
+            total <- coef_yx_i[2L]
+            # return effects
+            c(ab, coef_mx_i, coef_ymx_i, total)
+          }, error = function(condition) NA_real_)
+        }
+      } else{
+        # use values from full sample as starting values for optimization
+        if (family == "skewnormal") {
+          # starting values in centered parametrization
+          start <- list(mx = lapply(fit$fit_mx, function(x) x@param$cp),
+                        ymx = fit$fit_ymx@param$cp, yx = fit$fit_yx@param$cp)
+        } else {
+          # starting values in direct parametrization
+          start <- list(mx = lapply(fit$fit_mx, function(x) x@param$dp),
+                        ymx = fit$fit_ymx@param$dp, yx = fit$fit_yx@param$dp)
+        }
+        # multiple mediators
+        selm_bootstrap <- function(z, i, family, start, fixed.param, control) {
+          # extract bootstrap sample from the data
+          z_i <- z[i, , drop = FALSE]
+          # skew-t distribution can be unstable on bootstrap samples
+          tryCatch({
+            # compute coefficients from regressions m ~ x + covariates
+            x_i <- z_i[, c(1L, 2L, j_covariates)]
+            coef_mx_i <- mapply(function(j, start) {
+              m_i <- z_i[, j]
+              fit_mx_i <- selm.fit(x_i, m_i, family = family,
+                                   start = start,
+                                   fixed.param = fixed.param,
+                                   selm.control = control)
+              get_coef(fit_mx_i$param)
+            }, j = j_m, start = start$mx)
+            # compute coefficients from regression y ~ m + x + covariates
+            mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
+            y_i <- z_i[, 3L]
+            fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
+                                  start = start$ymx,
+                                  fixed.param = fixed.param,
+                                  selm.control = control)
+            coef_ymx_i <- get_coef(fit_ymx_i$param)
+            # compute coefficients from regression y ~ x + covariates
+            fit_yx_i <- selm.fit(x_i, y_i, family = family,
+                                 start = start$yx,
+                                 fixed.param = fixed.param,
+                                 selm.control = control)
+            coef_yx_i <- get_coef(fit_yx_i$param)
+            # compute effects
+            a <- unname(coef_mx_i[2L, ])
+            b <- unname(coef_ymx_i[1L + seq_len(p_m)])
+            direct <- unname(coef_ymx_i[2L + p_m])
+            ab <- a * b
+            sum_ab <- sum(ab)
+            total <- unname(coef_yx_i[2L])
+            # return effects
+            c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
+          }, error = function(condition) NA_real_)
+        }
+      }
+      # perform bootstrap with skew-elliptical errors
+      bootstrap <- local_boot(z, selm_bootstrap, R = R,
+                              family = selm_args$family, start = start,
+                              fixed.param = selm_args$fixed.param,
+                              control = control, ...)
+      R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
 
     }
 

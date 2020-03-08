@@ -388,44 +388,36 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     }
     # neither method fits the direct path
     fit_yx <- NULL
-  } else {
-    if (family == "gaussian") {
-      # for the standard method, there is not much additional cost in
-      # performing the regression for the total effect
-      if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
-      else {
-        fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
-        names(fit_mx) <- m
-      }
-      fit_ymx <- lm_fit(predictors_ymx, data[, y])
-      fit_yx <- lm_fit(predictors_mx, data[, y])
-    } else {
-      # define parameters as required for package 'sn'
-      if (family == "student") {
-        selm_family <- "ST"
-        selm_param <- list(alpha = 0)  # no skewness
-      } else {
-        selm_family <- if (family == "skewnormal") "SN" else "ST"
-        selm_param <- list()
-      }
-      # perform regression with skew-elliptical errors
-      if (p_m == 1L) {
-        fit_mx <- selm_fit(predictors_mx, data[, m], family = selm_family,
-                           fixed.param = selm_param)
-      } else {
-        fit_mx <- lapply(m, function(m_j) {
-          selm_fit(predictors_mx, data[, m_j], family = selm_family,
-                   fixed.param = selm_param)
-        })
-        names(fit_mx) <- m
-      }
-      # relationship ab + direct = total doesn't hold, so we need to perform
-      # the regression for the total effect
-      fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_family,
-                          fixed.param = selm_param)
-      fit_yx <- selm_fit(predictors_mx, data[, y], family = selm_family,
-                         fixed.param = selm_param)
+  } else if (family == "gaussian") {
+    # for the standard method, there is not much additional cost in
+    # performing the regression for the total effect
+    if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
+    else {
+      fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
+      names(fit_mx) <- m
     }
+    fit_ymx <- lm_fit(predictors_ymx, data[, y])
+    fit_yx <- lm_fit(predictors_mx, data[, y])
+  } else {
+    # obtain parameters as required for package 'sn'
+    selm_args <- get_selm_args(family)
+    # perform regression with skew-elliptical errors
+    if (p_m == 1L) {
+      fit_mx <- selm_fit(predictors_mx, data[, m], family = selm_args$family,
+                         fixed.param = selm_args$fixed.param)
+    } else {
+      fit_mx <- lapply(m, function(m_j) {
+        selm_fit(predictors_mx, data[, m_j], family = selm_args$family,
+                 fixed.param = selm_args$fixed.param)
+      })
+      names(fit_mx) <- m
+    }
+    # relationship ab + direct = total doesn't hold, so we need to perform
+    # the regression for the total effect
+    fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_args$family,
+                        fixed.param = selm_args$fixed.param)
+    fit_yx <- selm_fit(predictors_mx, data[, y], family = selm_args$family,
+                       fixed.param = selm_args$fixed.param)
   }
   # extract effects
   if (p_m == 1L) {

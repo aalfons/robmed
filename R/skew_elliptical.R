@@ -28,12 +28,33 @@ selm_fit <- function(x, y, intercept = TRUE, family = "ST",
 }
 
 
+## function to convert 'family' argument to arguments as in package 'sn'
+get_selm_args <- function(family = "student") {
+  # convert argument
+  if (family == "student") {
+    family <- "ST"
+    fixed.param <- list(alpha = 0)  # no skewness
+  } else {
+    family <- if (family == "skewnormal") "SN" else "ST"
+    fixed.param <- list()
+    # fixed.param <- if (family == "skewt") list(nu = 3) else list()
+  }
+  # return list of arguments
+  list(family = family, fixed.param = fixed.param)
+}
+
+
+## function to extract regression coefficients from 'selm' objects
+get_coef <- function(param) {
+  coefficients <- param$dp
+  keep <- setdiff(names(coefficients), c("omega", "alpha", "nu"))
+  coefficients[keep]
+}
+
 ## define a coef() method as the one from package 'sn' in some cases doesn't
 ## actually return the regression coefficients (and also returns additional
 ## parameters)
 #' @importFrom methods setMethod
 setMethod("coef", "selm", function(object, ...) {
-  coefficients <- object@param$dp
-  keep <- setdiff(names(coefficients), c("omega", "alpha", "nu"))
-  coefficients[keep]
+  get_coef(object@param)
 })
