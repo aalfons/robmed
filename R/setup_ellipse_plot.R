@@ -139,10 +139,14 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
                                                  npoints = 100,
                                                  ...) {
   # initializations
-  if (object$robust == "median") {
+  have_robust <- is_robust(object)
+  if (have_robust && object$robust == "median") {
     # weights for weighted covariance matrix can be infinite for median
     # regression (if there is a residual that is exactly 0)
     stop("tolerance ellipse not meaningful for median regression")
+  }
+  if (!have_robust && object$family != "gaussian") {
+    stop("tolerance ellipse only implemented for normal distribution")
   }
   # extract variable names
   x <- object$x
