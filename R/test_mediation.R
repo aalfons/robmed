@@ -418,13 +418,15 @@ boot_test_mediation <- function(fit,
           w_m_i <- w_m[i, , drop = FALSE]
           w_y_i <- w_y[i]
           # check whether there are enough observations with nonzero weights
-          if(any(colSums(w_m_i > 0) <= 2) || sum(w_y_i > 0) <= 3) return(NA)
+          if(any(colSums(w_m_i > 0) <= 2) || sum(w_y_i > 0) <= 3) {
+            return(NA_real_)
+          }
           # compute coefficients from weighted regression m ~ x + covariates
           coef_m_i <- lapply(fit$m, function(m, x_i) {
             w_i <- w_m_i[, m]
             weighted_x_i <- w_i * x_i
             weighted_m_i <- w_i * z_i[, m]
-            coef_m_i <- solve(crossprod(weighted_x_i)) %*%
+            solve(crossprod(weighted_x_i)) %*%
               crossprod(weighted_x_i, weighted_m_i)
           }, x_i = z_i[, c(1L, 2L, j_covariates)])
           # compute coefficients from weighted regression y ~ m + x + covariates
@@ -487,10 +489,9 @@ boot_test_mediation <- function(fit,
           z_i <- z[i, , drop = FALSE]
           # compute coefficients from regressions m ~ x + covariates
           x_i <- z_i[, c(1L, 2L, j_covariates)]
-          m_i <- z_i[, j_m]
           coef_m_i <- sapply(j_m, function(j) {
             m_i <- z_i[, j]
-            coef_m_i <- rq.fit(x_i, m_i, tau = 0.5)$coefficients
+            rq.fit(x_i, m_i, tau = 0.5)$coefficients
           })
           # compute coefficients from regression y ~ m + x + covariates
           mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
@@ -543,11 +544,11 @@ boot_test_mediation <- function(fit,
           z_i <- z[i, , drop = FALSE]
           # compute coefficients from regressions m ~ x + covariates
           x_i <- z_i[, c(1L, 2L, j_covariates)]
-          m_i <- z_i[, j_m]
           # coef_m_i <- sapply(j_m, function(j) {
           #   m_i <- z_i[, j]
           #   coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
           # })
+          m_i <- z_i[, j_m]
           coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
           # compute coefficients from regression y ~ m + x + covariates
           mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
