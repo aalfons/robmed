@@ -579,12 +579,12 @@ boot_test_mediation <- function(fit,
         # use values from full sample as starting values for optimization
         if (family == "skewnormal") {
           # starting values in centered parametrization
-          start <- list(mx = fit$fit_mx@param$cp, ymx = fit$fit_ymx@param$cp,
-                        yx = fit$fit_yx@param$cp)
+          start <- list(mx = get_cp(fit$fit_mx), ymx = get_cp(fit$fit_ymx),
+                        yx = get_cp(fit$fit_yx))
         } else {
           # starting values in direct parametrization
-          start <- list(mx = fit$fit_mx@param$dp, ymx = fit$fit_ymx@param$dp,
-                        yx = fit$fit_yx@param$dp)
+          start <- list(mx = get_dp(fit$fit_mx), ymx = get_dp(fit$fit_ymx),
+                        yx = get_dp(fit$fit_yx))
         }
         # only one mediator
         selm_bootstrap <- function(z, i, family, start, fixed.param, control) {
@@ -627,12 +627,14 @@ boot_test_mediation <- function(fit,
         # use values from full sample as starting values for optimization
         if (family == "skewnormal") {
           # starting values in centered parametrization
-          start <- list(mx = lapply(fit$fit_mx, function(x) x@param$cp),
-                        ymx = fit$fit_ymx@param$cp, yx = fit$fit_yx@param$cp)
+          start <- list(mx = lapply(fit$fit_mx, get_cp),
+                        ymx = get_cp(fit$fit_ymx),
+                        yx = get_cp(fit$fit_yx))
         } else {
           # starting values in direct parametrization
-          start <- list(mx = lapply(fit$fit_mx, function(x) x@param$dp),
-                        ymx = fit$fit_ymx@param$dp, yx = fit$fit_yx@param$dp)
+          start <- list(mx = lapply(fit$fit_mx, get_dp),
+                        ymx = get_dp(fit$fit_ymx),
+                        yx = get_dp(fit$fit_yx))
         }
         # multiple mediators
         selm_bootstrap <- function(z, i, family, start, fixed.param, control) {

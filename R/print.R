@@ -10,7 +10,12 @@ print_info <- function(x, ...) UseMethod("print_info")
 print_info.reg_fit_mediation <- function(x, ...) {
   prefix <- if (is_robust(x)) "Robust mediation" else "Mediation"
   if (x$robust == "median") postfix <- "via median regression"
-  else postfix <- "via regression"
+  else {
+    errors <- switch(x$family, student = " with t errors",
+                     skewnormal = " with skew-normal errors",
+                     skewt = " with skew-t errors")
+    postfix <- paste0("via regression", errors)
+  }
   cat(sprintf("%s model fit %s\n", prefix, postfix))
 }
 
@@ -27,7 +32,12 @@ print_info.boot_test_mediation <- function(x, ...) {
   if (inherits(x$fit, "reg_fit_mediation")) {
     prefix <- if (fit$robust == "MM") "Robust bootstrap" else "Bootstrap"
     if (fit$robust == "median") postfix <- " via median regression"
-    else postfix <- " via regression"
+    else {
+      errors <- switch(fit$family, student = " with t errors",
+                       skewnormal = " with skew-normal errors",
+                       skewt = " with skew-t errors")
+      postfix <- paste0(" via regression", errors)
+    }
   } else if (inherits(fit, "cov_fit_mediation")) {
     prefix <- if (fit$robust) "Robust bootstrap" else "Bootstrap"
     postfix <- " via covariance matrix"
@@ -50,7 +60,12 @@ print_info.sobel_test_mediation <- function(x, ...) {
   if (inherits(x$fit, "reg_fit_mediation")) {
     prefix <- if (fit$robust == "MM") "Robust normal" else "Normal"
     if (fit$robust == "median") postfix <- " via median regression"
-    else postfix <- " via regression"
+    else {
+      errors <- switch(fit$family, student = " with t errors",
+                       skewnormal = " with skew-normal errors",
+                       skewt = " with skew-t errors")
+      postfix <- paste0(" via regression", errors)
+    }
   } else if (inherits(fit, "cov_fit_mediation")) {
     prefix <- if (fit$robust) "Robust normal" else "Normal"
     postfix <- " via covariance matrix"
