@@ -95,7 +95,23 @@ get_summary.selm <- function(object, ...) {
   # split up in regression coefficients and parameters of error distribution
   keep <- 1:object$size["p"]
   coefficients <- param_table[keep, , drop = FALSE]
+  # parameters <- param_table[-keep, 1:2, drop = FALSE]
   parameters <- param_table[-keep, , drop = FALSE]
+  # for degrees of freedom, test if 1/nu > 0 rather than nu = 0
+  which <- grep("nu", rownames(parameters))
+  if (length(which) > 0) {
+    nu <- parameters[which, 1]
+    se <- parameters[which, 2]
+    nu_inv <- 1 / nu
+    se_inv <- nu_inv^2 * se
+    z_inv <- nu_inv / se_inv
+    p_inv <- p_value_z(z_inv, alternative = "greater")
+    # define extra parameter matrix for degrees of freedom
+    dn <- list("nu   ", c("Estimate", "Std. Error", "z value", "Pr(>z)"))
+    nu <- matrix(c(nu, se, z_inv, p_inv), nrow = 1, ncol = 4, dimnames = dn)
+    # return list instead of parameter matrix
+    parameters <- list(other = parameters[-which,], nu = nu)
+  }
   # return results
   result <- list(coefficients = coefficients, parameters = parameters)
   class(result) <- "summary_selm"
@@ -108,11 +124,21 @@ print.summary_selm <- function(x, digits = max(3, getOption("digits")-3),
                                signif.legend = signif.stars, ...) {
   # print coefficient matrix
   cat("Coefficients:\n")
+  # printCoefmat(x$coefficients, digits = digits, signif.stars = signif.stars,
+  #              signif.legend = signif.legend, ...)
   printCoefmat(x$coefficients, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   cat("\nParameters of error distribution:\n")
-  printCoefmat(x$parameters, digits = digits, signif.stars = signif.stars,
-               signif.legend = signif.legend, ...)
+  # print(x$parameters, digits = digits, ...)
+  if (is.list(x$parameters)) {
+    print(x$parameters$other, digits = digits, signif.stars = signif.stars,
+          signif.legend = FALSE, ...)
+    print(x$parameters$nu, digits = digits, signif.stars = signif.stars,
+          signif.legend = signif.legend, ...)
+  } else {
+    print(x$parameters, digits = digits, signif.stars = signif.stars,
+          signif.legend = signif.legend, ...)
+  }
   # return object invisibly
   invisible(x)
 }
