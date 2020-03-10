@@ -599,7 +599,7 @@ boot_test_mediation <- function(fit,
                                  start = start$mx,
                                  fixed.param = fixed.param,
                                  selm.control = control)
-            coef_mx_i <- unname(get_coef(fit_mx_i$param))
+            coef_mx_i <- unname(get_coef(fit_mx_i$param, family))
             # compute coefficients from regression y ~ m + x + covariates
             mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
             y_i <- z_i[, 3L]
@@ -607,13 +607,13 @@ boot_test_mediation <- function(fit,
                                   start = start$ymx,
                                   fixed.param = fixed.param,
                                   selm.control = control)
-            coef_ymx_i <- unname(get_coef(fit_ymx_i$param))
+            coef_ymx_i <- unname(get_coef(fit_ymx_i$param, family))
             # compute coefficients from regression y ~ x + covariates
             fit_yx_i <- selm.fit(x_i, y_i, family = family,
                                  start = start$yx,
                                  fixed.param = fixed.param,
                                  selm.control = control)
-            coef_yx_i <- unname(get_coef(fit_yx_i$param))
+            coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
             # compute effects
             a <- coef_mx_i[2L]
             b <- coef_ymx_i[2L]
@@ -650,7 +650,7 @@ boot_test_mediation <- function(fit,
                                    start = start,
                                    fixed.param = fixed.param,
                                    selm.control = control)
-              get_coef(fit_mx_i$param)
+              get_coef(fit_mx_i$param, family)
             }, j = j_m, start = start$mx)
             # compute coefficients from regression y ~ m + x + covariates
             mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
@@ -659,13 +659,13 @@ boot_test_mediation <- function(fit,
                                   start = start$ymx,
                                   fixed.param = fixed.param,
                                   selm.control = control)
-            coef_ymx_i <- get_coef(fit_ymx_i$param)
+            coef_ymx_i <- get_coef(fit_ymx_i$param, family)
             # compute coefficients from regression y ~ x + covariates
             fit_yx_i <- selm.fit(x_i, y_i, family = family,
                                  start = start$yx,
                                  fixed.param = fixed.param,
                                  selm.control = control)
-            coef_yx_i <- get_coef(fit_yx_i$param)
+            coef_yx_i <- get_coef(fit_yx_i$param, family)
             # compute effects
             a <- unname(coef_mx_i[2L, ])
             b <- unname(coef_ymx_i[1L + seq_len(p_m)])

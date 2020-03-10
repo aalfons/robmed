@@ -10,13 +10,11 @@
 \usage{
 \method{autoplot}{fit_mediation}(object, ...)
 
-\method{autoplot}{test_mediation}(object, which = c("ci", "density",
-  "ellipse"), ...)
+\method{autoplot}{test_mediation}(object, which = c("ci", "density", "ellipse"), ...)
 
 \method{plot}{fit_mediation}(x, ...)
 
-\method{plot}{test_mediation}(x, which = c("ci", "density", "ellipse"),
-  ...)
+\method{plot}{test_mediation}(x, which = c("ci", "density", "ellipse"), ...)
 }
 \arguments{
 \item{object, x}{an object inheriting from class

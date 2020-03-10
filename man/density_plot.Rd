@@ -12,8 +12,7 @@ density_plot(object, ...)
 
 \method{density_plot}{default}(object, ...)
 
-\method{density_plot}{sobel_test_mediation}(object, grid = NULL,
-  level = 0.95, ...)
+\method{density_plot}{sobel_test_mediation}(object, grid = NULL, level = 0.95, ...)
 
 \method{density_plot}{list}(object, grid = NULL, level = 0.95, ...)
 

@@ -11,8 +11,7 @@ setup_density_plot(object, ...)
 
 \method{setup_density_plot}{boot_test_mediation}(object, ...)
 
-\method{setup_density_plot}{sobel_test_mediation}(object, grid = NULL,
-  level = 0.95, ...)
+\method{setup_density_plot}{sobel_test_mediation}(object, grid = NULL, level = 0.95, ...)
 
 \method{setup_density_plot}{list}(object, ...)
 }

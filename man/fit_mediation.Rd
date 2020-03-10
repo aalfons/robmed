@@ -13,9 +13,18 @@ fit_mediation(object, ...)
 
 \method{fit_mediation}{formula}(formula, data, ...)
 
-\method{fit_mediation}{default}(object, x, y, m, covariates = NULL,
-  method = c("regression", "covariance"), robust = TRUE,
-  family = "gaussian", control = NULL, ...)
+\method{fit_mediation}{default}(
+  object,
+  x,
+  y,
+  m,
+  covariates = NULL,
+  method = c("regression", "covariance"),
+  robust = TRUE,
+  family = "gaussian",
+  control = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{the first argument will determine the method of the generic

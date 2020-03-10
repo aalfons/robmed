@@ -13,14 +13,11 @@ ci_plot(object, ...)
 
 \method{ci_plot}{default}(object, parm = NULL, ...)
 
-\method{ci_plot}{boot_test_mediation}(object, parm = NULL,
-  type = c("boot", "data"), ...)
+\method{ci_plot}{boot_test_mediation}(object, parm = NULL, type = c("boot", "data"), ...)
 
-\method{ci_plot}{sobel_test_mediation}(object, parm = NULL,
-  level = 0.95, ...)
+\method{ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, ...)
 
-\method{ci_plot}{list}(object, parm = NULL, type = c("boot", "data"),
-  level = 0.95, ...)
+\method{ci_plot}{list}(object, parm = NULL, type = c("boot", "data"), level = 0.95, ...)
 
 \method{ci_plot}{setup_ci_plot}(object, ...)
 }

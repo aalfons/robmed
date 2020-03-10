@@ -9,11 +9,9 @@
 \usage{
 setup_ci_plot(object, ...)
 
-\method{setup_ci_plot}{boot_test_mediation}(object, parm = NULL,
-  type = c("boot", "data"), ...)
+\method{setup_ci_plot}{boot_test_mediation}(object, parm = NULL, type = c("boot", "data"), ...)
 
-\method{setup_ci_plot}{sobel_test_mediation}(object, parm = NULL,
-  level = 0.95, ...)
+\method{setup_ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, ...)
 
 \method{setup_ci_plot}{list}(object, ...)
 }
