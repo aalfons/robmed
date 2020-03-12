@@ -241,7 +241,7 @@ fit_mediation.formula <- function(formula, data, ...) {
 fit_mediation.default <- function(object, x, y, m, covariates = NULL,
                                   method = c("regression", "covariance"),
                                   robust = TRUE, family = "gaussian",
-                                  control = NULL, ...) {
+                                  total_model = TRUE, control = NULL, ...) {
   ## initializations
   # prepare data set
   data <- as.data.frame(object)
@@ -329,10 +329,12 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     else {
       families <- c("gaussian", "student", "skewnormal", "skewt", "select")
       family <- match.arg(family, choices = families)
+      total_model <- isTRUE(total_model)
     }
     # estimate effects
     reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
-                      robust = robust, family = family, control = control)
+                      robust = robust, family = family, total_model = total_model,
+                      control = control)
   } else {
     # check for robust method
     robust <- isTRUE(robust)
@@ -347,7 +349,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
 ## estimate the effects in a mediation model via regressions
 reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                               robust = "MM", family = "gaussian",
-                              control = reg_control()) {
+                              total_model = TRUE, control = reg_control()) {
   # number of mediators
   p_m <- length(m)
   # construct predictor matrices for regression models
@@ -397,7 +399,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       names(fit_mx) <- m
     }
     fit_ymx <- lm_fit(predictors_ymx, data[, y])
-    fit_yx <- lm_fit(predictors_mx, data[, y])
+    fit_yx <- if (total_model) lm_fit(predictors_mx, data[, y])
   } else if (family == "select") {
     # select among normal, skew-normal, t and skew-t errors
     if (p_m == 1L) fit_mx <- lmselect_fit(predictors_mx, data[, m])
@@ -408,7 +410,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       names(fit_mx) <- m
     }
     fit_ymx <- lmselect_fit(predictors_ymx, data[, y])
-    fit_yx <- lmselect_fit(predictors_mx, data[, y])
+    fit_yx <- if (total_model) lmselect_fit(predictors_mx, data[, y])
   } else {
     # obtain parameters as required for package 'sn'
     selm_args <- get_selm_args(family)
@@ -427,8 +429,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     # the regression for the total effect
     fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_args$family,
                         fixed.param = selm_args$fixed.param)
-    fit_yx <- selm_fit(predictors_mx, data[, y], family = selm_args$family,
-                       fixed.param = selm_args$fixed.param)
+    fit_yx <- if (total_model) {
+      selm_fit(predictors_mx, data[, y], family = selm_args$family,
+               fixed.param = selm_args$fixed.param)
+    }
   }
   # extract effects
   if (p_m == 1L) {
@@ -439,8 +443,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
   }
   direct <- unname(coef(fit_ymx)[2L + p_m])
-  if (have_robust) total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
-  else total <- unname(coef(fit_yx)[2L])
+  if (have_robust || (family == "gaussian" && !total_model)) {
+    total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+  } else if (total_model) total <- unname(coef(fit_yx)[2L])
+  else total <- NA_real_
   # return results
   result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
                  fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,

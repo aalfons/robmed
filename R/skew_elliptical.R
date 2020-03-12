@@ -50,7 +50,8 @@ get_selm_args <- function(family = "student") {
 
 ## convert from class structure as in package 'sn'
 get_family <- function(family, param) {
-  if (family == "SN") "skewnormal"
+  if (is.null(family) && is.null(param)) "gaussian"
+  else if (family == "SN") "skewnormal"
   else if (family == "ST") {
     fixed <- param$fixed
     alpha <- fixed$alpha
@@ -251,14 +252,18 @@ lmselect_fit <- function(x, y, intercept = TRUE) {
       bic <- bic_skewt
       fit <- fit_skewt
     }
-  }
+  } else fit_skewt <- NULL
+  # add starting values for bootstrap
+  fit$start <- list(skewnormal = get_cp(fit_skewnormal),
+                    student = get_dp(fit_student),
+                    skewt = get_dp(fit_skewt))
   # return best model fit according to BIC
   fit
 }
 
 ## regression with selecting family of error distribution via BIC
 ## (this is a more barebones version to be used within bootstrap)
-lmselect_boot <- function(x, y, control = list(method = "MLE")) {
+lmselect_boot <- function(x, y, start = NULL, control = list(method = "MLE")) {
   # initializations
   d <- dim(x)
   n <- d[1]
@@ -274,14 +279,16 @@ lmselect_boot <- function(x, y, control = list(method = "MLE")) {
   bic <- bic_gaussian
   coefficients <- coef_gaussian
   # fit model with skew-normal errors and check if it fits better
-  fit_skewnormal <- selm.fit(x, y, family = "SN", selm.control = control)
+  fit_skewnormal <- selm.fit(x, y, family = "SN", start = start$skewnormal,
+                             selm.control = control)
   bic_skewnormal <- -2 * fit_skewnormal$logL + (p + 2) * log_n
   if (bic_skewnormal < bic) {
     bic <- bic_skewnormal
     coefficients <- get_coef(fit_skewnormal$param, family = "SN")
   }
   # fit model with t errors and check if it fits better
-  fit_student <- selm.fit(x, y, family = "ST", fixed.param = list(alpha = 0),
+  fit_student <- selm.fit(x, y, family = "ST", start = start$student,
+                          fixed.param = list(alpha = 0),
                           selm.control = control)
   bic_student <- -2 * fit_student$logL + (p + 2) * log_n
   if (bic_student < bic) {
@@ -291,7 +298,8 @@ lmselect_boot <- function(x, y, control = list(method = "MLE")) {
   # fit model with skew-t errors only if both skew-normal and t distribution
   # are an improvement to normal errors
   if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
-    fit_skewt <- selm.fit(x, y, family = "ST", selm.control = control)
+    fit_skewt <- selm.fit(x, y, family = "ST", start = start$skewt,
+                          selm.control = control)
     bic_skewt <- -2 * fit_skewt$logL + (p + 3) * log_n
     if (bic_skewt < bic) {
       bic <- bic_skewt

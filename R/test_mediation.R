@@ -225,14 +225,16 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                                    type = c("bca", "perc"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
-                                   control = NULL, ...) {
+                                   total_model = TRUE, control = NULL, ...) {
   ## fit mediation model
   if (missing(data)) {
     fit <- fit_mediation(formula, method = method, robust = robust,
-                         family = family, control = control)
+                         family = family, total_model = total_model,
+                         control = control)
   } else {
     fit <- fit_mediation(formula, data = data, method = method,
                          robust = robust, family = family,
+                         total_model = total_model,
                          control = control)
   }
   ## call method for fitted model
@@ -252,11 +254,11 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    type = c("bca", "perc"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
-                                   control = NULL, ...) {
+                                   total_model = TRUE, control = NULL, ...) {
   ## fit mediation model
   fit <- fit_mediation(object, x = x, y = y, m = m, covariates = covariates,
                        method = method, robust = robust, family = family,
-                       control = control)
+                       total_model = total_model, control = control)
   ## call method for fitted model
   test_mediation(fit, test = test, alternative = alternative,
                  R = R, level = level, type = type, ...)
@@ -571,11 +573,17 @@ boot_test_mediation <- function(fit,
 
     } else if (family == "select") {
 
+      # check whether to compute total effect
+      total_model <- !is.null(fit$fit_yx)
+      # obtain parameters as required for package 'sn'
+      control <- list(method = "MLE")
       # select among normal, skew-normal, t and skew-t errors
       if (p_m == 1) {
-        control <- list(method = "MLE")
+        # use values from full sample as starting values for optimization
+        start <- list(mx = fit$fit_mx$start, ymx = fit$fit_ymx$start,
+                      yx = fit$fit_yx$start)
         # only one mediator
-        select_bootstrap <- function(z, i, control) {
+        select_bootstrap <- function(z, i, start, control, total_model) {
           # extract bootstrap sample from the data
           z_i <- z[i, , drop = FALSE]
           # skew-t distribution can be unstable on bootstrap samples
@@ -583,18 +591,23 @@ boot_test_mediation <- function(fit,
             # compute coefficients from regression m ~ x + covariates
             x_i <- z_i[, c(1L, 2L, j_covariates)]
             m_i <- z_i[, 4L]
-            coef_mx_i <- lmselect_boot(x_i, m_i, control = control)
+            coef_mx_i <- lmselect_boot(x_i, m_i, start = start$mx,
+                                       control = control)
             # compute coefficients from regression y ~ m + x + covariates
             mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
             y_i <- z_i[, 3L]
-            coef_ymx_i <- lmselect_boot(mx_i, y_i, control = control)
+            coef_ymx_i <- lmselect_boot(mx_i, y_i, start = start$ymx,
+                                        control = control)
             # compute coefficients from regression y ~ x + covariates
-            coef_yx_i <- lmselect_boot(x_i, y_i, control = control)
-            # compute effects
+            if (total_model) {
+              coef_yx_i <- lmselect_boot(x_i, y_i, start = start$yx,
+                                         control = control)
+              total <- coef_yx_i[2L]
+            } else total <- NA_real_
+            # compute indirect effect
             a <- coef_mx_i[2L]
             b <- coef_ymx_i[2L]
             ab <- a * b
-            total <- coef_yx_i[2L]
             # return effects
             c(ab, coef_mx_i, coef_ymx_i, total)
           }, error = function(condition) NA_real_)
@@ -604,12 +617,15 @@ boot_test_mediation <- function(fit,
         stop("not yet implemented")
       }
       # perform bootstrap with selection of error distribution
-      bootstrap <- local_boot(z, select_bootstrap, R = R,
-                              control = control, ...)
+      bootstrap <- local_boot(z, select_bootstrap, R = R, start = start,
+                              control = control, total_model = total_model,
+                              ...)
       R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
 
     } else {
 
+      # check whether to compute total effect
+      total_model <- !is.null(fit$fit_yx)
       # obtain parameters as required for package 'sn'
       selm_args <- get_selm_args(family)
       control <- list(method = "MLE")
@@ -626,7 +642,8 @@ boot_test_mediation <- function(fit,
                         yx = get_dp(fit$fit_yx))
         }
         # only one mediator
-        selm_bootstrap <- function(z, i, family, start, fixed.param, control) {
+        selm_bootstrap <- function(z, i, family, start, fixed.param,
+                                   control, total_model) {
           # extract bootstrap sample from the data
           z_i <- z[i, , drop = FALSE]
           # skew-t distribution can be unstable on bootstrap samples
@@ -648,16 +665,18 @@ boot_test_mediation <- function(fit,
                                   selm.control = control)
             coef_ymx_i <- unname(get_coef(fit_ymx_i$param, family))
             # compute coefficients from regression y ~ x + covariates
-            fit_yx_i <- selm.fit(x_i, y_i, family = family,
-                                 start = start$yx,
-                                 fixed.param = fixed.param,
-                                 selm.control = control)
-            coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
-            # compute effects
+            if (total_model) {
+              fit_yx_i <- selm.fit(x_i, y_i, family = family,
+                                   start = start$yx,
+                                   fixed.param = fixed.param,
+                                   selm.control = control)
+              coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
+              total <- coef_yx_i[2L]
+            } else total <- NA_real_
+            # compute indirect effect
             a <- coef_mx_i[2L]
             b <- coef_ymx_i[2L]
             ab <- a * b
-            total <- coef_yx_i[2L]
             # return effects
             c(ab, coef_mx_i, coef_ymx_i, total)
           }, error = function(condition) NA_real_)
@@ -676,7 +695,8 @@ boot_test_mediation <- function(fit,
                         yx = get_dp(fit$fit_yx))
         }
         # multiple mediators
-        selm_bootstrap <- function(z, i, family, start, fixed.param, control) {
+        selm_bootstrap <- function(z, i, family, start, fixed.param,
+                                   control, total_model) {
           # extract bootstrap sample from the data
           z_i <- z[i, , drop = FALSE]
           # skew-t distribution can be unstable on bootstrap samples
@@ -700,18 +720,20 @@ boot_test_mediation <- function(fit,
                                   selm.control = control)
             coef_ymx_i <- get_coef(fit_ymx_i$param, family)
             # compute coefficients from regression y ~ x + covariates
-            fit_yx_i <- selm.fit(x_i, y_i, family = family,
-                                 start = start$yx,
-                                 fixed.param = fixed.param,
-                                 selm.control = control)
-            coef_yx_i <- get_coef(fit_yx_i$param, family)
-            # compute effects
+            if (total_model) {
+              fit_yx_i <- selm.fit(x_i, y_i, family = family,
+                                   start = start$yx,
+                                   fixed.param = fixed.param,
+                                   selm.control = control)
+              coef_yx_i <- get_coef(fit_yx_i$param, family)
+              total <- unname(coef_yx_i[2L])
+            } else total <- NA_real_
+            # compute indirect effects
             a <- unname(coef_mx_i[2L, ])
             b <- unname(coef_ymx_i[1L + seq_len(p_m)])
             direct <- unname(coef_ymx_i[2L + p_m])
             ab <- a * b
             sum_ab <- sum(ab)
-            total <- unname(coef_yx_i[2L])
             # return effects
             c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
           }, error = function(condition) NA_real_)
@@ -721,7 +743,8 @@ boot_test_mediation <- function(fit,
       bootstrap <- local_boot(z, selm_bootstrap, R = R,
                               family = selm_args$family, start = start,
                               fixed.param = selm_args$fixed.param,
-                              control = control, ...)
+                              control = control, total_model = total_model,
+                              ...)
       R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
 
     }

@@ -23,6 +23,7 @@ test_mediation(object, ...)
   method = c("regression", "covariance"),
   robust = TRUE,
   family = "gaussian",
+  total_model = TRUE,
   control = NULL,
   ...
 )
@@ -41,6 +42,7 @@ test_mediation(object, ...)
   method = c("regression", "covariance"),
   robust = TRUE,
   family = "gaussian",
+  total_model = TRUE,
   control = NULL,
   ...
 )
