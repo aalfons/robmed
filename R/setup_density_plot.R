@@ -108,7 +108,9 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
     # information on indirect effects
     effects <- names(ab)
     # construct data frame containing bootstrap density
-    pdf_list <- lapply(seq_len(1L+p_m), function(j) density(object$reps$t[, j]))
+    pdf_list <- lapply(seq_len(1L+p_m), function(j) {
+      density(object$reps$t[, j], na.rm = TRUE)
+    })
     density_list <- mapply(function(pdf, effect) {
       data.frame(Effect = effect, ab = pdf$x, Density = pdf$y)
     }, pdf = pdf_list, effect = effects, SIMPLIFY = FALSE, USE.NAMES = FALSE)
@@ -118,7 +120,7 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
                      Lower = unname(ci[, 1L]), Upper = unname(ci[, 2L]))
   } else {
     # construct data frame containing bootstrap density
-    pdf <- density(object$reps$t[, 1L])
+    pdf <- density(object$reps$t[, 1L], na.rm = TRUE)
     density <- data.frame(ab = pdf$x, Density = pdf$y)
     # construct data frame containing confidence interval
     ci <- data.frame(Estimate = ab, Lower = ci[1L], Upper = ci[2L])
