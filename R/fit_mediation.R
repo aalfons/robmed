@@ -327,7 +327,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     # check error distribution
     if (is.character(robust)) family <- "gaussian"
     else {
-      families <- c("gaussian", "student", "skewnormal", "skewt")
+      families <- c("gaussian", "student", "skewnormal", "skewt", "select")
       family <- match.arg(family, choices = families)
     }
     # estimate effects
@@ -398,6 +398,17 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     }
     fit_ymx <- lm_fit(predictors_ymx, data[, y])
     fit_yx <- lm_fit(predictors_mx, data[, y])
+  } else if (family == "select") {
+    # select among normal, skew-normal, t and skew-t errors
+    if (p_m == 1L) fit_mx <- lmselect_fit(predictors_mx, data[, m])
+    else {
+      fit_mx <- lapply(m, function(m_j) {
+        lmselect_fit(predictors_mx, data[, m_j])
+      })
+      names(fit_mx) <- m
+    }
+    fit_ymx <- lmselect_fit(predictors_ymx, data[, y])
+    fit_yx <- lmselect_fit(predictors_mx, data[, y])
   } else {
     # obtain parameters as required for package 'sn'
     selm_args <- get_selm_args(family)

@@ -569,6 +569,45 @@ boot_test_mediation <- function(fit,
       bootstrap <- local_boot(z, standard_bootstrap, R = R, ...)
       R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
 
+    } else if (family == "select") {
+
+      # select among normal, skew-normal, t and skew-t errors
+      if (p_m == 1) {
+        control <- list(method = "MLE")
+        # only one mediator
+        select_bootstrap <- function(z, i, control) {
+          # extract bootstrap sample from the data
+          z_i <- z[i, , drop = FALSE]
+          # skew-t distribution can be unstable on bootstrap samples
+          tryCatch({
+            # compute coefficients from regression m ~ x + covariates
+            x_i <- z_i[, c(1L, 2L, j_covariates)]
+            m_i <- z_i[, 4L]
+            coef_mx_i <- lmselect_boot(x_i, m_i, control = control)
+            # compute coefficients from regression y ~ m + x + covariates
+            mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
+            y_i <- z_i[, 3L]
+            coef_ymx_i <- lmselect_boot(mx_i, y_i, control = control)
+            # compute coefficients from regression y ~ x + covariates
+            coef_yx_i <- lmselect_boot(x_i, y_i, control = control)
+            # compute effects
+            a <- coef_mx_i[2L]
+            b <- coef_ymx_i[2L]
+            ab <- a * b
+            total <- coef_yx_i[2L]
+            # return effects
+            c(ab, coef_mx_i, coef_ymx_i, total)
+          }, error = function(condition) NA_real_)
+        }
+      } else {
+        # multiple mediators
+        stop("not yet implemented")
+      }
+      # perform bootstrap with selection of error distribution
+      bootstrap <- local_boot(z, select_bootstrap, R = R,
+                              control = control, ...)
+      R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+
     } else {
 
       # obtain parameters as required for package 'sn'

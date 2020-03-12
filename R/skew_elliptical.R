@@ -9,8 +9,6 @@
 ## @importFrom methods new
 selm_fit <- function(x, y, intercept = TRUE, family = "ST",
                      fixed.param = list()) {
-  # # selm.fit() requires matrix of predictors, not data frame
-  # x <- as.matrix(x)
   # selm.fit() always requires constant for intercept, so argument is ignored
   n <- nrow(x)
   x <- cbind("(Intercept)" = rep.int(1, n), x)
@@ -215,4 +213,91 @@ logLik.lmse <- function(object, ....) {
   attr(logL, "df") <- unname(object$size["n.param"])
   class(logL) <- "logLik"
   logL
+}
+
+
+## regression with selecting family of error distribution via BIC
+## selm.fit() always requires constant for intercept, so argument is ignored
+#' @importFrom sn selm.fit
+## @importFrom methods new
+lmselect_fit <- function(x, y, intercept = TRUE) {
+  # selm.fit() always requires constant for intercept, so argument is ignored
+  # fit model with normal errors
+  fit_gaussian <- lm_fit(x, y)
+  bic_gaussian <- BIC(fit_gaussian)
+  # start with model for normal errors
+  bic <- bic_gaussian
+  fit <- fit_gaussian
+  # fit model with skew-normal errors and check if it fits better
+  fit_skewnormal <- selm_fit(x, y, family = "SN")
+  bic_skewnormal <- BIC(fit_skewnormal)
+  if (bic_skewnormal < bic) {
+    bic <- bic_skewnormal
+    fit <- fit_skewnormal
+  }
+  # fit model with t errors and check if it fits better
+  fit_student <- selm_fit(x, y, family = "ST", fixed.param = list(alpha = 0))
+  bic_student <- BIC(fit_student)
+  if (bic_student < bic) {
+    bic <- bic_student
+    fit <- fit_student
+  }
+  # fit model with skew-t errors only if both skew-normal and t distribution
+  # are an improvement to normal errors
+  if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
+    fit_skewt <- selm_fit(x, y, family = "ST")
+    bic_skewt <- BIC(fit_skewt)
+    if (bic_skewt < bic) {
+      bic <- bic_skewt
+      fit <- fit_skewt
+    }
+  }
+  # return best model fit according to BIC
+  fit
+}
+
+## regression with selecting family of error distribution via BIC
+## (this is a more barebones version to be used within bootstrap)
+lmselect_boot <- function(x, y, control = list(method = "MLE")) {
+  # initializations
+  d <- dim(x)
+  n <- d[1]
+  log_n <- log(n)
+  p <- d[2]
+  # fit model with normal errors
+  coef_gaussian <- drop(solve(crossprod(x)) %*% crossprod(x, y))
+  # compute BIC
+  residuals <- y - x %*% coef_gaussian
+  sigma2 <- sum(residuals^2) / n
+  bic_gaussian <- n * (log(2 * pi) + 1 + log(sigma2)) + (p + 1) * log_n
+  # start with model for normal errors
+  bic <- bic_gaussian
+  coefficients <- coef_gaussian
+  # fit model with skew-normal errors and check if it fits better
+  fit_skewnormal <- selm.fit(x, y, family = "SN", selm.control = control)
+  bic_skewnormal <- -2 * fit_skewnormal$logL + (p + 2) * log_n
+  if (bic_skewnormal < bic) {
+    bic <- bic_skewnormal
+    coefficients <- get_coef(fit_skewnormal$param, family = "SN")
+  }
+  # fit model with t errors and check if it fits better
+  fit_student <- selm.fit(x, y, family = "ST", fixed.param = list(alpha = 0),
+                          selm.control = control)
+  bic_student <- -2 * fit_student$logL + (p + 2) * log_n
+  if (bic_student < bic) {
+    bic <- bic_student
+    coefficients <- get_coef(fit_student$param, family = "ST")
+  }
+  # fit model with skew-t errors only if both skew-normal and t distribution
+  # are an improvement to normal errors
+  if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
+    fit_skewt <- selm.fit(x, y, family = "ST", selm.control = control)
+    bic_skewt <- -2 * fit_skewt$logL + (p + 3) * log_n
+    if (bic_skewt < bic) {
+      bic <- bic_skewt
+      coefficients <- get_coef(fit_skewt$param, family = "ST")
+    }
+  }
+  # return best model fit according to BIC
+  unname(coefficients)
 }

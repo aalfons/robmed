@@ -13,7 +13,8 @@ print_info.reg_fit_mediation <- function(x, ...) {
   else {
     errors <- switch(x$family, student = " with t errors",
                      skewnormal = " with skew-normal errors",
-                     skewt = " with skew-t errors")
+                     skewt = " with skew-t errors",
+                     select = " with selection of error distribution")
     postfix <- paste0("via regression", errors)
   }
   cat(sprintf("%s model fit %s\n", prefix, postfix))
@@ -35,7 +36,8 @@ print_info.boot_test_mediation <- function(x, ...) {
     else {
       errors <- switch(fit$family, student = " with t errors",
                        skewnormal = " with skew-normal errors",
-                       skewt = " with skew-t errors")
+                       skewt = " with skew-t errors",
+                       select = "\nError distribution is selected via BIC")
       postfix <- paste0(" via regression", errors)
     }
   } else if (inherits(fit, "cov_fit_mediation")) {
