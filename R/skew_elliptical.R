@@ -109,11 +109,18 @@ get_summary.lmse <- function(object, ...) {
                   fitted.values.dp = object$fitted.values.dp,
                   control = object$control, input = object$control,
                   opt.method = object$opt.method)
-  # use summary methods from package 'sn'
+  # extract some relevant information
   family <- get_family(object$family, object$param)
   have_student <- family == "student"
+  missing_cp <- is.null(object$param$cp)
+  # use summary methods from package 'sn'
   if (have_student) summary <- summary(objectS4, param.type = "DP")
-  else summary <- summary(objectS4, param.type = "CP")
+  else if (missing_cp) {
+    # sometimes the centered parametrization of the skew-t distribution
+    # doesn't exist (this is a hack to make Sobel test work; it may not be
+    # fully justified, but it only affects the intercept)
+    summary <- summary(objectS4, param.type = "pseudo-CP")
+  } else summary <- summary(objectS4, param.type = "CP")
   # extract coefficients
   param_table <- summary@param.table
   # change column names to be consistent with other models
@@ -230,15 +237,22 @@ lmselect_fit <- function(x, y, intercept = TRUE) {
   bic <- bic_gaussian
   fit <- fit_gaussian
   # fit model with skew-normal errors and check if it fits better
-  fit_skewnormal <- selm_fit(x, y, family = "SN")
-  bic_skewnormal <- BIC(fit_skewnormal)
+  # fit_skewnormal <- selm_fit(x, y, family = "SN")
+  # bic_skewnormal <- BIC(fit_skewnormal)
+  fit_skewnormal <- tryCatch(selm_fit(x, y, family = "SN"),
+                             error = function(condition) NULL)
+  bic_skewnormal <- if (is.null(fit_skewnormal)) Inf else BIC(fit_skewnormal)
   if (bic_skewnormal < bic) {
     bic <- bic_skewnormal
     fit <- fit_skewnormal
   }
   # fit model with t errors and check if it fits better
-  fit_student <- selm_fit(x, y, family = "ST", fixed.param = list(alpha = 0))
-  bic_student <- BIC(fit_student)
+  # fit_student <- selm_fit(x, y, family = "ST", fixed.param = list(alpha = 0))
+  # bic_student <- BIC(fit_student)
+  fit_student <- tryCatch(selm_fit(x, y, family = "ST",
+                                   fixed.param = list(alpha = 0)),
+                          error = function(condition) NULL)
+  bic_student <- if (is.null(fit_student)) Inf else BIC(fit_student)
   if (bic_student < bic) {
     bic <- bic_student
     fit <- fit_student
@@ -246,8 +260,11 @@ lmselect_fit <- function(x, y, intercept = TRUE) {
   # fit model with skew-t errors only if both skew-normal and t distribution
   # are an improvement to normal errors
   if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
-    fit_skewt <- selm_fit(x, y, family = "ST")
-    bic_skewt <- BIC(fit_skewt)
+    # fit_skewt <- selm_fit(x, y, family = "ST")
+    # bic_skewt <- BIC(fit_skewt)
+    fit_skewt <- tryCatch(selm_fit(x, y, family = "ST"),
+                          error = function(condition) NULL)
+    bic_skewt <- if (is.null(fit_skewt)) Inf else BIC(fit_skewt)
     if (bic_skewt < bic) {
       bic <- bic_skewt
       fit <- fit_skewt
@@ -279,18 +296,30 @@ lmselect_boot <- function(x, y, start = NULL, control = list(method = "MLE")) {
   bic <- bic_gaussian
   coefficients <- coef_gaussian
   # fit model with skew-normal errors and check if it fits better
-  fit_skewnormal <- selm.fit(x, y, family = "SN", start = start$skewnormal,
-                             selm.control = control)
-  bic_skewnormal <- -2 * fit_skewnormal$logL + (p + 2) * log_n
+  # fit_skewnormal <- selm.fit(x, y, family = "SN", start = start$skewnormal,
+  #                            selm.control = control)
+  # bic_skewnormal <- -2 * fit_skewnormal$logL + (p + 2) * log_n
+  fit_skewnormal <- tryCatch(selm.fit(x, y, family = "SN",
+                                      start = start$skewnormal,
+                                      selm.control = control),
+                             error = function(condition) NULL)
+  if (is.null(fit_skewnormal)) bic_skewnormal <- Inf
+  else bic_skewnormal <- -2 * fit_skewnormal$logL + (p + 2) * log_n
   if (bic_skewnormal < bic) {
     bic <- bic_skewnormal
     coefficients <- get_coef(fit_skewnormal$param, family = "SN")
   }
   # fit model with t errors and check if it fits better
-  fit_student <- selm.fit(x, y, family = "ST", start = start$student,
-                          fixed.param = list(alpha = 0),
-                          selm.control = control)
-  bic_student <- -2 * fit_student$logL + (p + 2) * log_n
+  # fit_student <- selm.fit(x, y, family = "ST", start = start$student,
+  #                         fixed.param = list(alpha = 0),
+  #                         selm.control = control)
+  # bic_student <- -2 * fit_student$logL + (p + 2) * log_n
+  fit_student <- tryCatch(selm.fit(x, y, family = "ST", start = start$student,
+                                   fixed.param = list(alpha = 0),
+                                   selm.control = control),
+                          error = function(condition) NULL)
+  if (is.null(fit_student)) bic_student <- Inf
+  else bic_student <- -2 * fit_student$logL + (p + 2) * log_n
   if (bic_student < bic) {
     bic <- bic_student
     coefficients <- get_coef(fit_student$param, family = "ST")
@@ -298,9 +327,14 @@ lmselect_boot <- function(x, y, start = NULL, control = list(method = "MLE")) {
   # fit model with skew-t errors only if both skew-normal and t distribution
   # are an improvement to normal errors
   if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
-    fit_skewt <- selm.fit(x, y, family = "ST", start = start$skewt,
-                          selm.control = control)
-    bic_skewt <- -2 * fit_skewt$logL + (p + 3) * log_n
+    # fit_skewt <- selm.fit(x, y, family = "ST", start = start$skewt,
+    #                       selm.control = control)
+    # bic_skewt <- -2 * fit_skewt$logL + (p + 3) * log_n
+    fit_skewt <- tryCatch(selm.fit(x, y, family = "ST", start = start$skewt,
+                                   selm.control = control),
+                          error = function(condition) NULL)
+    if (is.null(fit_skewt)) bic_skewt <- Inf
+    else bic_skewt <- -2 * fit_skewt$logL + (p + 3) * log_n
     if (bic_skewt < bic) {
       bic <- bic_skewt
       coefficients <- get_coef(fit_skewt$param, family = "ST")
