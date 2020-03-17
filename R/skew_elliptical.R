@@ -216,7 +216,7 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
 
 ## function to extract log-likelihood (necessary to compute AIC/BIC)
 #' @export
-logLik.lmse <- function(object, ....) {
+logLik.lmse <- function(object, ...) {
   logL <- object$logL
   attr(logL, "df") <- unname(object$size["n.param"])
   class(logL) <- "logLik"
