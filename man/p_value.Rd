@@ -8,42 +8,58 @@
 \usage{
 p_value(object, ...)
 
-\method{p_value}{boot_test_mediation}(object, digits = 4L, ...)
+\method{p_value}{boot_test_mediation}(object, parm = NULL, type = c("boot", "data"), digits = 4L, ...)
 
-\method{p_value}{sobel_test_mediation}(object, ...)
+\method{p_value}{sobel_test_mediation}(object, parm = NULL, ...)
 }
 \arguments{
 \item{object}{an object inheriting from class
 \code{"\link{test_mediation}"} containing results
 from (robust) mediation analysis.}
 
-\item{\dots}{additional arguments are currently ignored.}
+\item{\dots}{for the generic function, additional arguments to be passed
+down to methods.  For the methods, additional arguments are currently
+ignored.}
 
-\item{digits}{an integer determining the number of digits of the p-values
-to be computed.  The default is to compute 4 digits after the comma.}
+\item{parm}{an integer, character or logical vector specifying the
+coefficients for which to extract or compute p-values, or
+\code{NULL} to extract or compute p-values for all coefficients.}
+
+\item{type}{a character string specifying how to compute the p-values of
+the effects other than the indirect effect(s).  Possible values are
+\code{"boot"} (the default) to compute bootstrap p-values using the normal
+approximation (i.e., to assume a normal distribution of the corresponding
+effect with the standard deviation computed from the bootstrap replicates),
+or \code{"data"} to compute p-values via statistical theory based on the
+original data (e.g., based on a t-distribution the coefficients are
+estimated via regression).  Note that this is only relevant for mediation
+analysis via a bootstrap test, where the p-value of the indirect effect is
+always computed as described in \sQuote{Details}.}
+
+\item{digits}{an integer determining how many digits to compute for the
+p-values of the indirect effects (see \sQuote{Details}).  The default is to
+compute 4 digits after the comma.}
 }
 \value{
-A numeric vector containing the p-values for the indirect
-effect(s).
+A numeric vector containing the requested p-values.
 }
 \description{
 Estimate or extract the p-values for indirect effects in (robust) mediation
 analysis.
 }
 \details{
-For bootstrap tests, the p-value is estimated as the smallest significance
-level \eqn{\alpha}{alpha} for which the
+For bootstrap tests, the p-value of the indirect effect is estimated as the
+smallest significance level \eqn{\alpha}{alpha} for which the
 \eqn{(1 - \alpha) * 100\%}{(1 - alpha) * 100\%} confidence interval obtained
-from the bootstrapped distribution of the indirect effect does not contain
-0.
+from the bootstrapped distribution does not contain 0.
 
 This is a simple implementation, where each digit after the comma is
 determined via a grid search.  Hence computation time can be long if
 confidence intervals are computed via the bias-corrected and accelerated
 method (\code{"bca"}).
 
-For Sobel tests, the p-value is already stored in the object returned by
-\code{\link{test_mediation}()} and simply extracted.
+For Sobel tests, the p-value of the indirect effect is already stored in the
+object returned by \code{\link{test_mediation}()} and is simply extracted.
 }
 \examples{
 data("BSG2014")
@@ -60,7 +76,8 @@ p_value(test_bca)
 
 }
 \seealso{
-\code{\link{test_mediation}()}, \code{\link[boot]{boot.ci}()}
+\code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()},
+\code{\link[=confint.test_mediation]{confint}()}
 }
 \author{
 Andreas Alfons

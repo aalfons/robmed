@@ -38,7 +38,8 @@
 #' @author Andreas Alfons
 #'
 #' @seealso
-#' \code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()}
+#' \code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()},
+#' \code{\link{p_value}()}, \code{\link[boot]{boot.ci}()}
 #'
 #' @examples
 #' data("BSG2014")
@@ -71,7 +72,7 @@ NULL
 ## argument 'level' is ignored
 confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
                                         type = c("boot", "data"), ...) {
-  # initializations
+  # number of hypothesized mediators
   p_m <- length(object$fit$m)
   # confidence interval of other effects
   type <- match.arg(type)
@@ -116,7 +117,6 @@ confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
 # there is no confint() method for median regression results
 #' @export
 confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
-
   # compute the usual summary and extract coefficient matrix
   summary <- summary(object, se = "iid")
   coef_mat <- coef(summary)
@@ -125,7 +125,7 @@ confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
   coef <- coef_mat[, 1L]
   se <- coef_mat[, 2L]
   # check parameters to extract
-  if (missing(parm)) parm <- coef_names
+  if (missing(parm) || is.null(parm)) parm <- coef_names
   else if (is.numeric(parm)) parm <- coef_names[parm]
   # significance level and quantile of the t distribution
   a <- (1 - level) / 2

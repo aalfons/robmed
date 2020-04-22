@@ -8,11 +8,15 @@
 \usage{
 retest(object, ...)
 
-\method{retest}{boot_test_mediation}(object, alternative = c("twosided",
-  "less", "greater"), level = 0.95, type = c("bca", "perc"), ...)
+\method{retest}{boot_test_mediation}(
+  object,
+  alternative = c("twosided", "less", "greater"),
+  level = 0.95,
+  type = c("bca", "perc"),
+  ...
+)
 
-\method{retest}{sobel_test_mediation}(object, alternative = c("twosided",
-  "less", "greater"), ...)
+\method{retest}{sobel_test_mediation}(object, alternative = c("twosided", "less", "greater"), ...)
 }
 \arguments{
 \item{object}{an object inheriting from class

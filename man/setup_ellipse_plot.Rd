@@ -12,13 +12,25 @@ setup_ellipse_plot(object, ...)
 
 \method{setup_ellipse_plot}{test_mediation}(object, ...)
 
-\method{setup_ellipse_plot}{reg_fit_mediation}(object, horizontal = NULL,
-  vertical = NULL, partial = FALSE, level = 0.975, npoints = 100,
-  ...)
+\method{setup_ellipse_plot}{reg_fit_mediation}(
+  object,
+  horizontal = NULL,
+  vertical = NULL,
+  partial = FALSE,
+  level = 0.975,
+  npoints = 100,
+  ...
+)
 
-\method{setup_ellipse_plot}{cov_fit_mediation}(object, horizontal = NULL,
-  vertical = NULL, partial = FALSE, level = 0.975, npoints = 100,
-  ...)
+\method{setup_ellipse_plot}{cov_fit_mediation}(
+  object,
+  horizontal = NULL,
+  vertical = NULL,
+  partial = FALSE,
+  level = 0.975,
+  npoints = 100,
+  ...
+)
 
 \method{setup_ellipse_plot}{list}(object, ...)
 }

@@ -4,8 +4,7 @@
 \alias{reg_control}
 \title{Tuning parameters for MM-regression}
 \usage{
-reg_control(efficiency = 0.85, max_iterations = 200, tol = 1e-07,
-  seed = NULL)
+reg_control(efficiency = 0.85, max_iterations = 200, tol = 1e-07, seed = NULL)
 }
 \arguments{
 \item{efficiency}{a numeric value giving the desired efficiency (defaults

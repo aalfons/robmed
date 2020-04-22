@@ -6,8 +6,7 @@
 \alias{summary.sobel_test_mediation}
 \title{Summary of results from (robust) mediation analysis}
 \usage{
-\method{summary}{boot_test_mediation}(object, type = c("boot", "data"),
-  ...)
+\method{summary}{boot_test_mediation}(object, type = c("boot", "data"), ...)
 
 \method{summary}{sobel_test_mediation}(object, ...)
 }

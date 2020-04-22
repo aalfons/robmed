@@ -2,6 +2,9 @@ Changes in robmed version 0.7.0
 
     + Removed deprecated functions and arguments.
 
+    + p_value() is now in line with coef() and confint() in terms of usage and
+      functionality.
+
 
 
 Changes in robmed version 0.6.0

@@ -6,11 +6,9 @@
 \alias{confint.sobel_test_mediation}
 \title{Confidence intervals for (robust) mediation analysis}
 \usage{
-\method{confint}{boot_test_mediation}(object, parm = NULL,
-  level = NULL, type = c("boot", "data"), ...)
+\method{confint}{boot_test_mediation}(object, parm = NULL, level = NULL, type = c("boot", "data"), ...)
 
-\method{confint}{sobel_test_mediation}(object, parm = NULL,
-  level = 0.95, ...)
+\method{confint}{sobel_test_mediation}(object, parm = NULL, level = 0.95, ...)
 }
 \arguments{
 \item{object}{an object inheriting from class \code{"\link{test_mediation}"}
@@ -68,7 +66,8 @@ confint(standard_boot, type = "data")
 
 }
 \seealso{
-\code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()}
+\code{\link{test_mediation}()}, \code{\link[=coef.test_mediation]{coef}()},
+\code{\link{p_value}()}, \code{\link[boot]{boot.ci}()}
 }
 \author{
 Andreas Alfons

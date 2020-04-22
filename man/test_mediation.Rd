@@ -12,20 +12,46 @@
 \usage{
 test_mediation(object, ...)
 
-\method{test_mediation}{formula}(formula, data, test = c("boot",
-  "sobel"), alternative = c("twosided", "less", "greater"), R = 5000,
-  level = 0.95, type = c("bca", "perc"), method = c("regression",
-  "covariance"), robust = TRUE, control = NULL, ...)
+\method{test_mediation}{formula}(
+  formula,
+  data,
+  test = c("boot", "sobel"),
+  alternative = c("twosided", "less", "greater"),
+  R = 5000,
+  level = 0.95,
+  type = c("bca", "perc"),
+  method = c("regression", "covariance"),
+  robust = TRUE,
+  control = NULL,
+  ...
+)
 
-\method{test_mediation}{default}(object, x, y, m, covariates = NULL,
-  test = c("boot", "sobel"), alternative = c("twosided", "less",
-  "greater"), R = 5000, level = 0.95, type = c("bca", "perc"),
-  method = c("regression", "covariance"), robust = TRUE,
-  control = NULL, ...)
+\method{test_mediation}{default}(
+  object,
+  x,
+  y,
+  m,
+  covariates = NULL,
+  test = c("boot", "sobel"),
+  alternative = c("twosided", "less", "greater"),
+  R = 5000,
+  level = 0.95,
+  type = c("bca", "perc"),
+  method = c("regression", "covariance"),
+  robust = TRUE,
+  control = NULL,
+  ...
+)
 
-\method{test_mediation}{fit_mediation}(object, test = c("boot", "sobel"),
-  alternative = c("twosided", "less", "greater"), R = 5000,
-  level = 0.95, type = c("bca", "perc"), ...)
+\method{test_mediation}{fit_mediation}(
+  object,
+  test = c("boot", "sobel"),
+  alternative = c("twosided", "less", "greater"),
+  R = 5000,
+  level = 0.95,
+  type = c("bca", "perc"),
+  ...
+)
 
 robmed(..., test = "boot", method = "regression", robust = TRUE)
 }

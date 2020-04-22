@@ -2,7 +2,7 @@ Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
 Version: 0.7.0
-Date: 2020-02-19
+Date: 2020-04-22
 Depends:
     R (>= 3.2.0),
     ggplot2 (>= 0.9.3),
@@ -25,4 +25,4 @@ Authors@R: c(person("Andreas", "Alfons", email = "alfons@ese.eur.nl",
 Author: Andreas Alfons [aut, cre]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2

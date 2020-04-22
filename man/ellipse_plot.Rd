@@ -8,9 +8,15 @@
 \usage{
 ellipse_plot(object, ...)
 
-\method{ellipse_plot}{default}(object, horizontal = NULL,
-  vertical = NULL, partial = FALSE, level = 0.975, npoints = 100,
-  ...)
+\method{ellipse_plot}{default}(
+  object,
+  horizontal = NULL,
+  vertical = NULL,
+  partial = FALSE,
+  level = 0.975,
+  npoints = 100,
+  ...
+)
 
 \method{ellipse_plot}{setup_ellipse_plot}(object, ...)
 }
