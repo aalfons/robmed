@@ -113,7 +113,7 @@ get_summary.lmse <- function(object, ...) {
   family <- get_family(object$family, object$param)
   have_student <- family == "student"
   missing_cp <- is.null(object$param$cp)
-  # use summary methods from package 'sn'
+  # use summary method from package 'sn'
   if (have_student) summary <- summary(objectS4, param.type = "DP")
   else if (missing_cp) {
     # sometimes the centered parametrization of the skew-t distribution
@@ -186,7 +186,7 @@ nobs.lmse <- function(object, ...) unname(object$size["n.obs"])
 
 ## extract confidence intervals from regression with skew-elliptical errors
 #' @importFrom methods new
-#' @importFrom sn confint
+#' @importFrom sn summary
 #' @export
 confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
   # construct S4 object as in package 'sn'
@@ -197,20 +197,92 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
                   fitted.values.dp = object$fitted.values.dp,
                   control = object$control, input = object$control,
                   opt.method = object$opt.method)
-  # use summary methods from package 'sn'
+  # # use confint method from package 'sn'
+  # family <- get_family(object$family, object$param)
+  # have_student <- family == "student"
+  # if (have_student) ci <- confint(objectS4, level = level, param.type = "DP")
+  # else ci <- confint(objectS4, level = level, param.type = "CP")
+  # # extract confidence intervals for regression coefficients
+  # keep <- 1:object$size["p"]
+  # ci <- ci[keep, , drop = FALSE]
+  # coef_names <- rownames(ci)
+  # extract some relevant information
   family <- get_family(object$family, object$param)
   have_student <- family == "student"
-  if (have_student) ci <- confint(objectS4, level = level, param.type = "DP")
-  else ci <- confint(objectS4, level = level, param.type = "CP")
-  # extract confidence intervals for regression coefficients
+  missing_cp <- is.null(object$param$cp)
+  # use summary method from package 'sn'
+  if (have_student) summary <- summary(objectS4, param.type = "DP")
+  else if (missing_cp) {
+    # sometimes the centered parametrization of the skew-t distribution
+    # doesn't exist (this is a hack to make Sobel test work; it may not be
+    # fully justified, but it only affects the intercept)
+    summary <- summary(objectS4, param.type = "pseudo-CP")
+  } else summary <- summary(objectS4, param.type = "CP")
+  # extract coefficients
+  param_table <- summary@param.table
+  # split up in regression coefficients and parameters of error distribution
   keep <- 1:object$size["p"]
-  ci <- ci[keep, , drop = FALSE]
-  coef_names <- rownames(ci)
+  coef_mat <- param_table[keep, , drop = FALSE]
+  coef_names <- rownames(coef_mat)
+  # extract estimates and standard errors
+  estimates <- coef_mat[, 1]
+  se <- coef_mat[, 2]
+  # compute confidence intervals and combine into one matrix
+  ci <- mapply(confint_z, mean = estimates, sd = se,
+               MoreArgs = list(level = level),
+               SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  ci <- do.call(rbind, ci)
+  # add row and column names
+  alpha <- 1 - level
+  cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
+  dimnames(ci) <- list(coef_names, cn)
   # check parameters to extract
   if (missing(parm)) parm <- coef_names
   else if (is.numeric(parm)) parm <- coef_names[parm]
   # return confidence interval
   ci[parm, , drop = FALSE]
+}
+
+
+## extract confidence intervals from regression with skew-elliptical errors
+#' @importFrom methods new
+#' @importFrom sn summary
+#' @export
+p_value.lmse <- function(object, parm = NULL, ...) {
+  # construct S4 object as in package 'sn'
+  objectS4 <- new("selm", call = call("selm"), family = object$family,
+                  logL = object$logL, method = object$method,
+                  param = object$param, param.var = object$param.var,
+                  size = object$size, residuals.dp = object$residuals.dp,
+                  fitted.values.dp = object$fitted.values.dp,
+                  control = object$control, input = object$control,
+                  opt.method = object$opt.method)
+  # extract some relevant information
+  family <- get_family(object$family, object$param)
+  have_student <- family == "student"
+  missing_cp <- is.null(object$param$cp)
+  # use summary method from package 'sn'
+  if (have_student) summary <- summary(objectS4, param.type = "DP")
+  else if (missing_cp) {
+    # sometimes the centered parametrization of the skew-t distribution
+    # doesn't exist (this is a hack to make Sobel test work; it may not be
+    # fully justified, but it only affects the intercept)
+    summary <- summary(objectS4, param.type = "pseudo-CP")
+  } else summary <- summary(objectS4, param.type = "CP")
+  # extract coefficients
+  param_table <- summary@param.table
+  # split up in regression coefficients and parameters of error distribution
+  keep <- 1:object$size["p"]
+  coef_mat <- param_table[keep, , drop = FALSE]
+  coef_names <- rownames(coef_mat)
+  # extract p-values
+  p_values <- coef_mat[, 4L]
+  if (is.null(names(p_values))) names(p_values) <- coef_names
+  # check parameters to extract
+  if (missing(parm) || is.null(parm)) parm <- coef_names
+  else if (is.numeric(parm)) parm <- coef_names[parm]
+  # extract p-values of selected parameters
+  p_values[parm]
 }
 
 
