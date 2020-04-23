@@ -4,7 +4,7 @@
 \alias{confint.test_mediation}
 \alias{confint.boot_test_mediation}
 \alias{confint.sobel_test_mediation}
-\title{Confidence intervals for (robust) mediation analysis}
+\title{Confidence intervals from (robust) mediation analysis}
 \usage{
 \method{confint}{boot_test_mediation}(object, parm = NULL, level = NULL, type = c("boot", "data"), ...)
 
@@ -42,7 +42,7 @@ percentile-based method due to the asymmetry of its distribution.}
 A numeric matrix containing the requested confidence intervals.
 }
 \description{
-Extract or compute confidence intervals for coefficients from (robust)
+Extract or compute confidence intervals for effects in (robust)
 mediation analysis.
 }
 \examples{

@@ -3,9 +3,9 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-#' Confidence intervals for (robust) mediation analysis
+#' Confidence intervals from (robust) mediation analysis
 #'
-#' Extract or compute confidence intervals for coefficients from (robust)
+#' Extract or compute confidence intervals for effects in (robust)
 #' mediation analysis.
 #'
 #' @name confint.test_mediation
