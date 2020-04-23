@@ -156,12 +156,12 @@ ellipse_plot.setup_ellipse_plot <- function(object, ...) {
   } else aes_data <- aes_string(x = "x", y = "y")
   # create plot
   p <- ggplot() +
-    geom_ellipse(aes_ellipse, data = object$ellipse, ...) +
-    geom_scatter(aes_data, data = object$data, ...)
+    geom_path_ellipse(aes_ellipse, data = object$ellipse, ...) +
+    geom_point_data(aes_data, data = object$data, ...)
   # add line representing (partial) effect
   if (have_line) {
     p <- p +
-      geom_effect(aes_line, data = object$line, ...)
+      geom_abline_effect(aes_line, data = object$line, ...)
   }
   # add nice labels
   if (object$partial) ylab <- paste("Partial residuals of", object$vertical)
@@ -179,7 +179,7 @@ ellipse_plot.setup_ellipse_plot <- function(object, ...) {
 
 
 ## custom geom for data: avoid passing unknown argument 'linetype'
-geom_scatter <- function(..., linetype, lty, lwd) {
+geom_point_data <- function(..., linetype, lty, lwd) {
   # extract argument names
   arguments <- list(...)
   argument_names <- names(arguments)
@@ -205,9 +205,10 @@ geom_scatter <- function(..., linetype, lty, lwd) {
 }
 
 ## custom geom for ellipse: avoid passing unknown argument 'fill'
-geom_ellipse <- function(..., fill, bg, shape, pch, cex) geom_path(...)
+geom_path_ellipse <- function(..., fill, bg, shape, pch, cex) geom_path(...)
 
 ## custom geom for (partial) effect: avoid passing unknown argument 'fill'
-geom_effect <- function(..., fill, bg, shape, pch, cex, show.legend = FALSE) {
+geom_abline_effect <- function(..., fill, bg, shape, pch, cex,
+                               show.legend = FALSE) {
   geom_abline(..., show.legend = show.legend)
 }

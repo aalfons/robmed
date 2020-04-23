@@ -13,11 +13,26 @@ ci_plot(object, ...)
 
 \method{ci_plot}{default}(object, parm = NULL, ...)
 
-\method{ci_plot}{boot_test_mediation}(object, parm = NULL, type = c("boot", "data"), ...)
+\method{ci_plot}{boot_test_mediation}(
+  object,
+  parm = NULL,
+  type = c("boot", "data"),
+  p_value = FALSE,
+  digits = 4L,
+  ...
+)
 
-\method{ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, ...)
+\method{ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, p_value = FALSE, ...)
 
-\method{ci_plot}{list}(object, parm = NULL, type = c("boot", "data"), level = 0.95, ...)
+\method{ci_plot}{list}(
+  object,
+  parm = NULL,
+  type = c("boot", "data"),
+  level = 0.95,
+  p_value = FALSE,
+  digits = 4L,
+  ...
+)
 
 \method{ci_plot}{setup_ci_plot}(object, ...)
 }
@@ -47,6 +62,15 @@ bootstrap test, where the confidence interval of the indirect effect is
 always computed via a percentile-based method due to the asymmetry of its
 distribution.}
 
+\item{p_value}{a logical indicating whether to include dot plots of the
+p-values in addition to those with confidence intervals.  The default is
+\code{FALSE}.}
+
+\item{digits}{an integer determining how many digits to compute for
+bootstrap p-values of the indirect effects (see \code{\link{p_value}()}).
+The default is to compute 4 digits after the comma.  This is only relevant
+if \code{p_value = TRUE}.}
+
 \item{level}{numeric;  the confidence level of the confidence intervals
 from Sobel's test.  The default is to include 95\% confidence intervals.
 Note that this is not used for bootstrap tests, as those require to specify
@@ -57,7 +81,8 @@ An object of class \code{"\link[ggplot2]{ggplot}"}.
 }
 \description{
 Produce a dot plot with confidence intervals of selected effects from
-(robust) mediation analysis.
+(robust) mediation analysis.  In addition to confidence intervals, p-values
+of the selected effects can be plotted as well.
 }
 \details{
 Methods first call \code{\link{setup_ci_plot}()} to extract all necessary
