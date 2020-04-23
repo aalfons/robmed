@@ -121,15 +121,15 @@ density_plot.setup_density_plot <- function(object, ...) {
   # confidence interval
   if(object$have_methods) {
     mapping_density <- aes_string(x = "ab", y = "Density", color = "Method")
-    mapping_line <- aes_string(xintercept = "Estimate", color = "Method")
-    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
-                               ymin = -Inf, ymax = Inf,
-                               fill = "Method")
+    mapping_estimate <- aes_string(xintercept = "Estimate", color = "Method")
+    mapping_ci <- aes_string(xmin = "Lower", xmax = "Upper",
+                             ymin = -Inf, ymax = Inf,
+                             fill = "Method")
   } else {
     mapping_density <- aes_string(x = "ab", y = "Density")
-    mapping_line <- aes_string(xintercept = "Estimate")
-    mapping_rect <- aes_string(xmin = "Lower", xmax = "Upper",
-                               ymin = -Inf, ymax = Inf)
+    mapping_estimate <- aes_string(xintercept = "Estimate")
+    mapping_ci <- aes_string(xmin = "Lower", xmax = "Upper",
+                             ymin = -Inf, ymax = Inf)
   }
   # define default title
   if (all(object$test == "boot")) title <- "Bootstrap distribution"
@@ -137,9 +137,9 @@ density_plot.setup_density_plot <- function(object, ...) {
   else title <- NULL
   # generate plot
   p <- ggplot() +
-    geom_densityline(mapping_density, data = object$density, ...) +
-    geom_indirect(mapping_line, data = object$ci, ...) +
-    geom_ci(mapping_rect, data = object$ci, ...) +
+    geom_density_indirect(mapping_density, data = object$density, ...) +
+    geom_vline_indirect(mapping_estimate, data = object$ci, ...) +
+    geom_rect_ci(mapping_ci, data = object$ci, ...) +
     labs(title = title, x = "Indirect effect", y = "Density")
   # split plot into different panels in case of multiple indirect effects
   if(object$have_effects) p <- p + facet_wrap(~ Effect, scales = "free")
@@ -152,7 +152,7 @@ density_plot.setup_density_plot <- function(object, ...) {
 #  1) always use stat = "identity" because the density is already estimated
 #  2) do not allow for a fill color because a filled rectangle is used to
 #     display the confidence interval
-geom_densityline <- function(..., stat, fill, bg, alpha) {
+geom_density_indirect <- function(..., stat, fill, bg, alpha) {
   geom_density(..., stat = "identity")
 }
 
@@ -160,11 +160,11 @@ geom_densityline <- function(..., stat, fill, bg, alpha) {
 #  1) avoid passing argument 'alpha' to ensure that line is of the same style
 #     as lines of density
 #  2) avoid passing unknown argument 'fill'
-geom_indirect <- function(..., fill, bg, alpha) geom_vline(...)
+geom_vline_indirect <- function(..., fill, bg, alpha) geom_vline(...)
 
 ## custom geom for confidence intervals to be used in density plot:
 #  fix transparant rectangle without edges and avoid duplication of arguments
-geom_ci <- function(...) {
+geom_rect_ci <- function(...) {
   # extract argument names
   arguments <- list(...)
   argument_names <- names(arguments)

@@ -25,7 +25,7 @@
 #' @author Andreas Alfons
 #'
 #' @seealso \code{\link{test_mediation}()}, \code{\link{fit_mediation}()},
-#' \code{\link[=confint.test_mediation]{confint}()}
+#' \code{\link[=confint.test_mediation]{confint}()}, \code{\link{p_value}()}
 #'
 #' @examples
 #' data("BSG2014")

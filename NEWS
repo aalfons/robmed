@@ -2,6 +2,13 @@ Changes in robmed version 0.7.0
 
     + Removed deprecated functions and arguments.
 
+    + p_value() now offers functionality in line with coef() and confint(),
+      but default behavior is kept for back-compatibility with previous
+      versions.
+
+    + setup_ci_plot() and ci_plot() now allow to include information on
+      p-values in addition to confidence intervals.
+
 
 
 Changes in robmed version 0.6.0

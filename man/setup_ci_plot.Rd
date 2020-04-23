@@ -9,9 +9,16 @@
 \usage{
 setup_ci_plot(object, ...)
 
-\method{setup_ci_plot}{boot_test_mediation}(object, parm = NULL, type = c("boot", "data"), ...)
+\method{setup_ci_plot}{boot_test_mediation}(
+  object,
+  parm = NULL,
+  type = c("boot", "data"),
+  p_value = FALSE,
+  digits = 4L,
+  ...
+)
 
-\method{setup_ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, ...)
+\method{setup_ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, p_value = FALSE, ...)
 
 \method{setup_ci_plot}{list}(object, ...)
 }
@@ -41,6 +48,15 @@ bootstrap test, where the confidence interval of the indirect effect is
 always computed via a percentile-based method due to the asymmetry of its
 distribution.}
 
+\item{p_value}{a logical indicating whether to include information on the
+p-values in addition to the confidence intervals.  The default is
+\code{FALSE}.}
+
+\item{digits}{an integer determining how many digits to compute for
+bootstrap p-values of the indirect effects (see \code{\link{p_value}()}).
+The default is to compute 4 digits after the comma.  This is only relevant
+if \code{p_value = TRUE}.}
+
 \item{level}{numeric;  the confidence level of the confidence intervals
 from Sobel's test.  The default is to include 95\% confidence intervals.
 Note that this is not used for bootstrap tests, as those require to specify
@@ -52,9 +68,18 @@ components:
 \item{ci}{a data frame consisting of column \code{Effect} indicating the
 different effects, column \code{Estimate} containing the point estimates,
 column \code{Lower} for the lower confidence limit, and column \code{Upper}
-for the upper confidence limit.  If a list of \code{"\link{test_mediation}"}
+for the upper confidence limit.  If argument \code{p_value = TRUE}, there is
+an additional column \code{Label} which gives the default facet label for
+the confidence intervals. If a list of \code{"\link{test_mediation}"}
 objects has been supplied, there is also a column \code{Method}, which takes
 the names or indices of the list elements to indicate the different methods.}
+\item{p_value}{a data frame consisting of column \code{Label} which gives
+the default facet label for the p-values, column \code{Effect} indicating
+the different effects, and column \code{Value} containing the p-values.  If
+a list of \code{"\link{test_mediation}"} objects has been supplied, there is
+also a column \code{Method}, which takes the names or indices of the list
+elements to indicate the different methods.  This is only returned if
+argument \code{p_value = TRUE}.}
 \item{level}{numeric; the confidence level used for the confidence intervals
 of the indirect effect(s).}
 \item{have_methods}{a logical indicating whether a list of
@@ -63,7 +88,8 @@ the data frame in the \code{ci} component contains a column \code{Method}.}
 }
 \description{
 Extract the relevant information for a dot plot with confidence intervals of
-selected effects from (robust) mediation analysis.
+selected effects from (robust) mediation analysis.  Information on p-values
+of the selected effects can be included in addition to confidence intervals.
 }
 \details{
 This function is used internally by \code{\link{ci_plot}()}.  It may also
