@@ -5,11 +5,13 @@
 
 ## summary of a mediation model fit based on a scatter matrix
 ## (currently doesn't do anything)
+#' @method summary cov_fit_mediation
 #' @export
 summary.cov_fit_mediation <- function(object, ...) object
 
 ## summary of a mediation model fit based on regression
 ## (currently doesn't do anything)
+#' @method summary reg_fit_mediation
 #' @export
 summary.reg_fit_mediation <- function(object, ...) object
 
