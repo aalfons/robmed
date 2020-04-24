@@ -180,7 +180,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   p_covariates <- length(covariates)
   have_robust <- is_robust(object)
   robust <- object$robust
-  total_model <- !is.null(object$fit_yx)
+  have_fit_yx <- !is.null(object$fit_yx)
   have_boot <- !is.null(boot)
   # extract number of observations
   n <- nobs(object$fit_ymx)
@@ -255,7 +255,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   if (have_boot) {
     keep <- index_list$total
     total <- coefficients[keep, , drop = FALSE]
-  } else if (total_model) {
+  } else if (have_fit_yx) {
     # compute summary of y ~ x + covariates and extract summary of total effect
     summary_yx <- get_summary(object$fit_yx)
     total <- coef(summary_yx)[2L, , drop = FALSE]

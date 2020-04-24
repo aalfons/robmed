@@ -22,7 +22,7 @@ fit_mediation(object, ...)
   method = c("regression", "covariance"),
   robust = TRUE,
   family = "gaussian",
-  total_model = TRUE,
+  fit_yx = TRUE,
   control = NULL,
   ...
 )
@@ -71,6 +71,20 @@ specified or if control variables are supplied.}
 \code{"MM"} specifying the MM-estimator of regression, and \code{"median"}
 specifying median regression.}
 
+\item{family}{a character string specifying the error distribution to be
+used in maximum likelihood estimation of regression models.  Possible values
+are \code{"gaussian"} for a normal distribution (the default),
+\code{skewnormal} for a skew-normal distribution, \code{"student"} for
+Student's t distribution, \code{"skew-t"} for a skew-t distribution, or
+\code{"select"} to select among these four distributions via BIC (see
+\sQuote{Details}).  This is only relevant if \code{method = "regression"}
+and \code{robust = FALSE}.}
+
+\item{fit_yx}{a logical indicating whether to fit the regression model
+\code{y ~ x + covariates} to estimate the total effect (the default is
+\code{TRUE}).  This is only relevant if \code{method = "regression"} and
+\code{robust = FALSE}.}
+
 \item{control}{a list of tuning parameters for the corresponding robust
 method.  For robust regression (\code{method = "regression"}, and
 \code{robust = TRUE} or \code{robust = "MM"}), a list of tuning
@@ -94,19 +108,19 @@ effect of the proposed mediator variables on the dependent variable.}
 independent variable on the dependent variable.}
 \item{total}{numeric; the point estimate of the total effect of the
 independent variable on the dependent variable.}
-\item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"} or
-\code{"\link[stats]{lm}"} containing the estimation results from the
-regression of the proposed mediator variable on the independent variable, or
-a list of such objects in case of more than one hypothesized mediator
-(only \code{"reg_fit_mediation"}).}
-\item{fit_ymx}{an object of class \code{"\link[robustbase]{lmrob}"} or
-\code{"\link[stats]{lm}"} containing the estimation results from the
-regression of the dependent variable on the proposed mediator and
+\item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"},
+\code{"\link[stats]{lm}"} or \code{"lmse"} containing the estimation results
+from the regression of the proposed mediator variable on the independent
+variable, or a list of such objects in case of more than one hypothesized
+mediator (only \code{"reg_fit_mediation"}).}
+\item{fit_ymx}{an object of class \code{"\link[robustbase]{lmrob}"},
+\code{"\link[stats]{lm}"} or \code{"lmse"} containing the estimation results
+from the regression of the dependent variable on the proposed mediator and
 independent variables (only \code{"reg_fit_mediation"}).}
-\item{fit_yx}{an object of class \code{"\link[stats]{lm}"} containing the
-estimation results from the regression of the dependent variable on the
-independent variable (only \code{"reg_fit_mediation"} and if \code{robust}
-is \code{FALSE}).}
+\item{fit_yx}{an object of class \code{"\link[stats]{lm}"} or \code{"lmse"}
+containing the estimation results from the regression of the dependent
+variable on the independent variable (only \code{"reg_fit_mediation"} and
+if \code{robust = FALSE}).}
 \item{cov}{an object of class \code{"\link{cov_Huber}"} or
 \code{"\link{cov_ML}"} containing the covariance matrix estimates
 (only \code{"cov_fit_mediation"}).}
@@ -132,6 +146,22 @@ With \code{method = "regression"} and \code{robust = "median"}, the effects
 are estimated via median regressions with \code{\link[quantreg]{rq}()}.
 Unlike the robust MM-regressions above, median regressions are not robust
 against outliers in the explanatory variables.
+
+With \code{method = "regression"}, \code{robust = FALSE} and
+\code{family = "select"}, the error distribution to be used in maximum
+likelihood estimation of the regression models is selected via BIC.  The
+following error distributions are included in the selection procedure: a
+normal distribution, a skew-normal distribution, Student's t distribution,
+and a skew-t distribution.  Note that the parameters of those distributions
+are estimated as well.  The skew-normal and skew-t distributions thereby
+use a centered parametrization such that the residuals are (approximately)
+centered around 0.  Moreover, the skew-t distribution is only evaluated in
+the selection procedure if both the skew-normal and Student's t distribution
+yield an improvement in BIC over the normal distribution.  Otherwise the
+estimation with a skew-t error distribution can be unstable.  Furthermore,
+this saves a considerable amount of computation time in a bootstrap test,
+as estimation with those error distributions is orders of magnitude slower
+than any other estimation procedure in package \pkg{robmed}.
 
 With \code{method = "covariance"} and \code{robust = TRUE}, the effects are
 estimated based on a Huber M-estimator of location and scatter.  Note that
@@ -171,6 +201,10 @@ Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2018) A robust bootstrap test
 for mediation analysis.  \emph{ERIM Report Series in Management}, Erasmus
 Research Institute of Management.  URL
 \url{https://hdl.handle.net/1765/109594}.
+
+Azzalini, A. and Arellano-Valle, R. B. (2013) Maximum penalized likelihood
+estimation for skew-normal and skew-t distributions.  \emph{Journal of
+Statistical Planning and Inference}, \bold{143}(2), 419--433.
 
 Yuan, Y. and MacKinnon, D.P. (2014) Robust mediation analysis based on
 median regression. \emph{Psychological Methods}, \bold{19}(1),
