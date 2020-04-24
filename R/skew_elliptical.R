@@ -16,14 +16,17 @@ selm_fit <- function(x, y, intercept = TRUE, family = "ST",
   control <- list(method = "MLE")
   fit <- selm.fit(x, y, family = family, fixed.param = fixed.param,
                   selm.control = control)
+  # -----
   # # return model fit as object of S4 class "selm"
   # new("selm", call = call("selm"), family = family, logL = fit$logL,
   #     method = control$method, param = fit$param, param.var = fit$param.var,
   #     size = fit$size, residuals.dp = fit$resid.dp,
   #     fitted.values.dp = fit$fitted.dp, control = list(), input = list(),
   #     opt.method = fit$opt.method)
-  # return model fit as an S3 clone of S4 class "selm"
-  # (called "lmse" to avoid conflicts with package 'sn')
+  # -----
+  # S4 classes lead to problems with the S3 generics that are used throughout
+  # the package, therefore a similar S3 class is defined instead (called "lmse"
+  # to avoid naming conflicts with package 'sn')
   out <- list(call = NULL, family = family, logL = fit$logL,
               method = control$method, param = fit$param,
               param.var = fit$param.var, size = fit$size,
@@ -31,6 +34,7 @@ selm_fit <- function(x, y, intercept = TRUE, family = "ST",
               control = list(), input = list(), opt.method = fit$opt.method)
   class(out) <- "lmse"
   out
+  # -----
 }
 
 
@@ -129,22 +133,6 @@ get_summary.lmse <- function(object, ...) {
   keep <- 1:object$size["p"]
   coefficients <- param_table[keep, , drop = FALSE]
   parameters <- param_table[-keep, 1:2, drop = FALSE]
-  # parameters <- param_table[-keep, , drop = FALSE]
-  # # for degrees of freedom, test if 1/nu > 0 rather than nu = 0
-  # if (have_student) {
-  #   which <- which(rownames(parameters) == "nu")
-  #   nu <- parameters[which, 1]
-  #   se <- parameters[which, 2]
-  #   nu_inv <- 1 / nu
-  #   se_inv <- nu_inv^2 * se
-  #   z_inv <- nu_inv / se_inv
-  #   p_inv <- p_value_z(z_inv, alternative = "greater")
-  #   # define extra parameter matrix for degrees of freedom
-  #   dn <- list("nu   ", c("Estimate", "Std. Error", "z value", "Pr(>z)"))
-  #   nu <- matrix(c(nu, se, z_inv, p_inv), nrow = 1, ncol = 4, dimnames = dn)
-  #   # return list instead of parameter matrix
-  #   parameters <- list(other = parameters[-which,], nu = nu)
-  # }
   # return results
   result <- list(coefficients = coefficients, parameters = parameters)
   class(result) <- "summary_lmse"
@@ -159,20 +147,9 @@ print.summary_lmse <- function(x, digits = max(3, getOption("digits")-3),
   cat("Coefficients:\n")
   printCoefmat(x$coefficients, digits = digits, signif.stars = signif.stars,
                signif.legend = signif.legend, ...)
-  # printCoefmat(x$coefficients, digits = digits, signif.stars = signif.stars,
-  #              signif.legend = FALSE, ...)
   # print information on other parameters
   cat("\nParameters of error distribution:\n")
   print(x$parameters, digits = digits, ...)
-  # if (is.list(x$parameters)) {
-  #   print(x$parameters$other, digits = digits, signif.stars = signif.stars,
-  #         signif.legend = FALSE, ...)
-  #   print(x$parameters$nu, digits = digits, signif.stars = signif.stars,
-  #         signif.legend = signif.legend, ...)
-  # } else {
-  #   print(x$parameters, digits = digits, signif.stars = signif.stars,
-  #         signif.legend = signif.legend, ...)
-  # }
   # return object invisibly
   invisible(x)
 }
@@ -197,6 +174,7 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
                   fitted.values.dp = object$fitted.values.dp,
                   control = object$control, input = object$control,
                   opt.method = object$opt.method)
+  # -----
   # # use confint method from package 'sn'
   # family <- get_family(object$family, object$param)
   # have_student <- family == "student"
@@ -206,6 +184,11 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
   # keep <- 1:object$size["p"]
   # ci <- ci[keep, , drop = FALSE]
   # coef_names <- rownames(ci)
+  # -----
+  # The confint() method from package 'sn' gives errors with the makeshift S4
+  # object created above.  Therefore the confidence intervals are computed
+  # based on the standard errors from the summary() method.
+  # -----
   # extract some relevant information
   family <- get_family(object$family, object$param)
   have_student <- family == "student"
@@ -236,6 +219,7 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
   alpha <- 1 - level
   cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
   dimnames(ci) <- list(coef_names, cn)
+  # -----
   # check parameters to extract
   if (missing(parm)) parm <- coef_names
   else if (is.numeric(parm)) parm <- coef_names[parm]
@@ -309,8 +293,6 @@ lmselect_fit <- function(x, y, intercept = TRUE) {
   bic <- bic_gaussian
   fit <- fit_gaussian
   # fit model with skew-normal errors and check if it fits better
-  # fit_skewnormal <- selm_fit(x, y, family = "SN")
-  # bic_skewnormal <- BIC(fit_skewnormal)
   fit_skewnormal <- tryCatch(selm_fit(x, y, family = "SN"),
                              error = function(condition) NULL)
   bic_skewnormal <- if (is.null(fit_skewnormal)) Inf else BIC(fit_skewnormal)
@@ -319,8 +301,6 @@ lmselect_fit <- function(x, y, intercept = TRUE) {
     fit <- fit_skewnormal
   }
   # fit model with t errors and check if it fits better
-  # fit_student <- selm_fit(x, y, family = "ST", fixed.param = list(alpha = 0))
-  # bic_student <- BIC(fit_student)
   fit_student <- tryCatch(selm_fit(x, y, family = "ST",
                                    fixed.param = list(alpha = 0)),
                           error = function(condition) NULL)
@@ -332,8 +312,6 @@ lmselect_fit <- function(x, y, intercept = TRUE) {
   # fit model with skew-t errors only if both skew-normal and t distribution
   # are an improvement to normal errors
   if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
-    # fit_skewt <- selm_fit(x, y, family = "ST")
-    # bic_skewt <- BIC(fit_skewt)
     fit_skewt <- tryCatch(selm_fit(x, y, family = "ST"),
                           error = function(condition) NULL)
     bic_skewt <- if (is.null(fit_skewt)) Inf else BIC(fit_skewt)
@@ -368,9 +346,6 @@ lmselect_boot <- function(x, y, start = NULL, control = list(method = "MLE")) {
   bic <- bic_gaussian
   coefficients <- coef_gaussian
   # fit model with skew-normal errors and check if it fits better
-  # fit_skewnormal <- selm.fit(x, y, family = "SN", start = start$skewnormal,
-  #                            selm.control = control)
-  # bic_skewnormal <- -2 * fit_skewnormal$logL + (p + 2) * log_n
   fit_skewnormal <- tryCatch(selm.fit(x, y, family = "SN",
                                       start = start$skewnormal,
                                       selm.control = control),
@@ -382,10 +357,6 @@ lmselect_boot <- function(x, y, start = NULL, control = list(method = "MLE")) {
     coefficients <- get_coef(fit_skewnormal$param, family = "SN")
   }
   # fit model with t errors and check if it fits better
-  # fit_student <- selm.fit(x, y, family = "ST", start = start$student,
-  #                         fixed.param = list(alpha = 0),
-  #                         selm.control = control)
-  # bic_student <- -2 * fit_student$logL + (p + 2) * log_n
   fit_student <- tryCatch(selm.fit(x, y, family = "ST", start = start$student,
                                    fixed.param = list(alpha = 0),
                                    selm.control = control),
@@ -399,9 +370,6 @@ lmselect_boot <- function(x, y, start = NULL, control = list(method = "MLE")) {
   # fit model with skew-t errors only if both skew-normal and t distribution
   # are an improvement to normal errors
   if (bic_skewnormal < bic_gaussian && bic_student < bic_gaussian) {
-    # fit_skewt <- selm.fit(x, y, family = "ST", start = start$skewt,
-    #                       selm.control = control)
-    # bic_skewt <- -2 * fit_skewt$logL + (p + 3) * log_n
     fit_skewt <- tryCatch(selm.fit(x, y, family = "ST", start = start$skewt,
                                    selm.control = control),
                           error = function(condition) NULL)
