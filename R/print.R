@@ -198,8 +198,17 @@ print.summary_lmrob <- function(x, digits = max(3, getOption("digits")-3),
                                 signif.stars = getOption("show.signif.stars"),
                                 signif.legend = signif.stars, ...) {
   # print coefficient matrix
-  # TODO: check if algorithm converged and give information accordingly
-  cat("Coefficients:\n")
+  # check if algorithm converged and print information accordingly
+  if (x$algorithm$converged) cat("Coefficients:\n")
+  else if (x$s$value == 0) cat("Exact fit detected\n\nCoefficients:\n")
+  else {
+    cat("Algorithm did not converge\n\n")
+    if (x$algorithm$method == "S") {
+      cat("Coefficients of the *initial* S-estimator:\n")
+    } else {
+      cat(sprintf("Coefficients of the %s-estimator:\n", x$algorithm$method))
+    }
+  }
   printCoefmat(x$coefficients, digits = digits, signif.stars = signif.stars,
                signif.legend = signif.legend, ...)
   # print model summary
