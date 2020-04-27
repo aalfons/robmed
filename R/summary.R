@@ -150,8 +150,14 @@ get_summary.lmrob <- function(object, ...) {
   R2 <- list(R2 = summary$r.squared, adj_R2 = summary$adj.r.squared)
   # compute robust F-test for robust fit
   F_test <- rob_F_test(object)
+  # detected outliers
+  robustness_weights <- summary$rweights
+  threshold <- summary$control$eps.outlier
+  outliers <- list(rweights = robustness_weights, threshold = threshold,
+                   indices = which(unname(robustness_weights) < threshold))
   # return results
-  result <- list(coefficients = coefficients, s = s, R2 = R2, F_test = F_test)
+  result <- list(coefficients = coefficients, s = s, R2 = R2,
+                 F_test = F_test, outliers = outliers)
   class(result) <- "summary_lmrob"
   result
 }
