@@ -143,8 +143,12 @@ get_summary.lm <- function(object, ...) {
 # for a robust linear model: return coefficient matrix, robust regression
 # standard error, robust R^2 and robust F-test
 get_summary.lmrob <- function(object, ...) {
-  # compute the usual summary and extract coefficient matrix
+  # compute the usual summary
   summary <- summary(object)
+  # extract information on algorithm
+  algorithm <- list(converged = summary$converged,
+                    method = summary$control$method)
+  # extract coefficient matrix
   coefficients <- coef(summary)
   # reformat residual standard error
   s <- list(value = summary$sigma, df = summary$df[2L])
@@ -152,8 +156,14 @@ get_summary.lmrob <- function(object, ...) {
   R2 <- list(R2 = summary$r.squared, adj_R2 = summary$adj.r.squared)
   # compute robust F-test for robust fit
   F_test <- rob_F_test(object)
+  # detected outliers
+  robustness_weights <- summary$rweights
+  threshold <- summary$control$eps.outlier
+  outliers <- list(rweights = robustness_weights, threshold = threshold,
+                   indices = which(unname(robustness_weights) < threshold))
   # return results
-  result <- list(coefficients = coefficients, s = s, R2 = R2, F_test = F_test)
+  result <- list(algorithm = algorithm, coefficients = coefficients, s = s,
+                 R2 = R2, F_test = F_test, outliers = outliers)
   class(result) <- "summary_lmrob"
   result
 }

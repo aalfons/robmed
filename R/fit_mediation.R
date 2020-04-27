@@ -171,7 +171,7 @@
 #' # formula interface
 #' set.seed(seed)
 #' fit1 <- fit_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
-#'                       BSG2014)
+#'                       data = BSG2014)
 #' test1 <- test_mediation(fit1)
 #' summary(test1)
 #'

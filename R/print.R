@@ -215,7 +215,17 @@ print.summary_lmrob <- function(x, digits = max(3, getOption("digits")-3),
                                 signif.stars = getOption("show.signif.stars"),
                                 signif.legend = signif.stars, ...) {
   # print coefficient matrix
-  cat("Coefficients:\n")
+  # check if algorithm converged and print information accordingly
+  if (x$algorithm$converged) cat("Coefficients:\n")
+  else if (x$s$value == 0) cat("Exact fit detected\n\nCoefficients:\n")
+  else {
+    cat("Algorithm did not converge\n\n")
+    if (x$algorithm$method == "S") {
+      cat("Coefficients of the *initial* S-estimator:\n")
+    } else {
+      cat(sprintf("Coefficients of the %s-estimator:\n", x$algorithm$method))
+    }
+  }
   printCoefmat(x$coefficients, digits = digits, signif.stars = signif.stars,
                signif.legend = signif.legend, ...)
   # print model summary
@@ -227,6 +237,35 @@ print.summary_lmrob <- function(x, digits = max(3, getOption("digits")-3),
   cat("Robust F-statistic: ", formatC(x$F_test$statistic, digits = digits),
       " on ", x$F_test$df[1], " and ", x$F_test$df[2], " DF,  p-value: ",
       format.pval(x$F_test$p_value, digits = digits), "\n", sep = "")
+  # print information on robustness weights
+  cat("\nRobustness weights:\n")
+  indices <- x$outliers$indices
+  n_outliers <- length(indices)
+  if (n_outliers == 0) {
+    # print that there is no clear outlier and minimum robustness weight
+    cat("No observations are clear outliers with weight < ",
+        formatC(x$outliers$threshold, digits = max(2, digits-3), width = 1),
+        ". The minimum weight is ",
+        formatC(min(x$outliers$rweights), digits = max(2, digits-3), width = 1),
+        ".\n", sep = "")
+  } else if (n_outliers == 1) {
+    # robustness weight of clear outlier
+    outlier_weight <- x$outliers$rweights[indices]
+    # print information on clear outliers
+    cat("Observation ", indices, " is a clear outlier with weight ",
+        formatC(outlier_weight, digits = max(2, digits-3), width = 1),
+        # " < ",
+        # formatC(x$outliers$threshold, digits = max(2, digits-3), width = 1),
+        "\n", sep = "")
+  } else {
+    # largest weight still below the outlier threshold
+    max_outlier_weight <- max(x$outliers$rweights[indices])
+    # print information on outliers
+    cat(n_outliers, " observations are clear outliers with weight <= ",
+        formatC(max_outlier_weight, digits = max(2, digits-3), width = 1),
+        ":\n", sep = "")
+    print(indices)
+  }
   # return object invisibly
   invisible(x)
 }
