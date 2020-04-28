@@ -159,8 +159,8 @@ get_summary.lmrob <- function(object, ...) {
   # detected outliers
   robustness_weights <- summary$rweights
   threshold <- summary$control$eps.outlier
-  outliers <- list(rweights = robustness_weights, threshold = threshold,
-                   indices = which(unname(robustness_weights) < threshold))
+  outliers <- list(indices = which(unname(robustness_weights) < threshold),
+                   rweights = robustness_weights, threshold = threshold)
   # return results
   result <- list(algorithm = algorithm, coefficients = coefficients, s = s,
                  R2 = R2, F_test = F_test, outliers = outliers)
