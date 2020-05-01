@@ -121,15 +121,22 @@ test_that("coef() method returns correct values of coefficients", {
                     colMeans(boot$reps$t[, c(5, 7)]))
   expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "boot"),
                     colMeans(boot$reps$t[, 9:10]))
-  expect_equivalent(coef(boot, parm = "Direct", type = "boot"), mean(boot$reps$t[, 11]))
-  expect_equivalent(coef(boot, parm = "Total", type = "boot"), mean(boot$reps$t[, 12]))
-  expect_equivalent(coef(boot, parm = ab_names, type = "boot"), boot$ab)
+  expect_equivalent(coef(boot, parm = "Direct", type = "boot"),
+                    mean(boot$reps$t[, 11]))
+  expect_equivalent(coef(boot, parm = "Total", type = "boot"),
+                    mean(boot$reps$t[, 12]))
+  expect_equivalent(coef(boot, parm = ab_names, type = "boot"),
+                    boot$ab)
 
   # effects computed on original sample
-  expect_equivalent(coef(boot, parm = c("a_M1", "a_M2"), type = "data"), boot$fit$a)
-  expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "data"), boot$fit$b)
-  expect_equivalent(coef(boot, parm = "Direct", type = "data"), boot$fit$direct)
-  expect_equivalent(coef(boot, parm = "Total", type = "data"), boot$fit$total)
+  expect_equivalent(coef(boot, parm = c("a_M1", "a_M2"), type = "data"),
+                    boot$fit$a)
+  expect_equivalent(coef(boot, parm = c("b_M1", "b_M2"), type = "data"),
+                    boot$fit$b)
+  expect_equivalent(coef(boot, parm = "Direct", type = "data"),
+                    boot$fit$direct)
+  expect_equivalent(coef(boot, parm = "Total", type = "data"),
+                    boot$fit$total)
   ab_data <- boot$fit$a * boot$fit$b
   expect_equivalent(coef(boot, parm = ab_names, type = "data"),
                     c(sum(ab_data), ab_data))
@@ -180,6 +187,19 @@ test_that("summary has correct structure", {
   expect_s3_class(summary_boot$summary$fit_mx[[2]], "summary_lmrob")
   # summary for model y ~ m + x
   expect_s3_class(summary_boot$summary$fit_ymx, "summary_lmrob")
+  # information on covergence in model y ~ m + x
+  expect_type(summary_boot$summary$fit_ymx$algorithm, "list")
+  expect_named(summary_boot$summary$fit_ymx$algorithm, c("converged", "method"))
+  expect_identical(summary_boot$summary$fit_ymx$algorithm$converged,
+                   boot$fit$fit_ymx$converged)
+  expect_identical(summary_boot$summary$fit_ymx$algorithm$method,
+                   boot$fit$fit_ymx$control$method)
+  expect_type(summary_data$summary$fit_ymx$algorithm, "list")
+  expect_named(summary_data$summary$fit_ymx$algorithm, c("converged", "method"))
+  expect_identical(summary_data$summary$fit_ymx$algorithm$converged,
+                   boot$fit$fit_ymx$converged)
+  expect_identical(summary_data$summary$fit_ymx$algorithm$method,
+                   boot$fit$fit_ymx$control$method)
   # regression standard error for model y ~ m + x
   expect_type(summary_boot$summary$fit_ymx$s, "list")
   expect_named(summary_boot$summary$fit_ymx$s, c("value", "df"))
@@ -192,15 +212,35 @@ test_that("summary has correct structure", {
   expect_named(summary_data$summary$fit_ymx$R2, c("R2", "adj_R2"))
   # F-test for model y ~ m + x
   expect_type(summary_boot$summary$fit_ymx$F_test, "list")
-  expect_named(summary_boot$summary$fit_ymx$F_test, c("statistic", "df", "p_value"))
+  expect_named(summary_boot$summary$fit_ymx$F_test,
+               c("statistic", "df", "p_value"))
   df_test_boot <- summary_boot$summary$fit_ymx$F_test$df
   expect_identical(df_test_boot[1], 3)
   expect_identical(df_test_boot[2], Inf)
   expect_type(summary_data$summary$fit_ymx$F_test, "list")
-  expect_named(summary_data$summary$fit_ymx$F_test, c("statistic", "df", "p_value"))
+  expect_named(summary_data$summary$fit_ymx$F_test,
+               c("statistic", "df", "p_value"))
   df_test_data <- summary_data$summary$fit_ymx$F_test$df
   expect_identical(df_test_data[1], 3)
   expect_identical(df_test_data[2], Inf)
+  # information on outliers in model y ~ m + x
+  summary_ymx <- summary(boot$fit$fit_ymx)
+  expect_type(summary_boot$summary$fit_ymx$outliers, "list")
+  expect_named(summary_boot$summary$fit_ymx$outliers,
+               c("indices", "weights", "threshold"))
+  expect_type(summary_boot$summary$fit_ymx$outliers$indices, "integer")
+  expect_identical(summary_boot$summary$fit_ymx$outliers$weights,
+                   weights(boot$fit$fit_ymx, type = "robustness"))
+  expect_identical(summary_boot$summary$fit_ymx$outliers$threshold,
+                   summary_ymx$control$eps.outlier)
+  expect_type(summary_data$summary$fit_ymx$outliers, "list")
+  expect_named(summary_data$summary$fit_ymx$outliers,
+               c("indices", "weights", "threshold"))
+  expect_type(summary_data$summary$fit_ymx$outliers$indices, "integer")
+  expect_identical(summary_data$summary$fit_ymx$outliers$weights,
+                   weights(boot$fit$fit_ymx, type = "robustness"))
+  expect_identical(summary_data$summary$fit_ymx$outliers$threshold,
+                   summary_ymx$control$eps.outlier)
 
 })
 
@@ -227,62 +267,107 @@ test_that("attributes are correctly passed through summary", {
 test_that("effect summaries have correct names", {
 
   # a path
-  expect_identical(dim(summary_boot$summary$fit_mx[[1]]$coefficients), c(2L, 5L))
-  expect_identical(rownames(summary_boot$summary$fit_mx[[1]]$coefficients), mx_names)
-  expect_identical(colnames(summary_boot$summary$fit_mx[[1]]$coefficients)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_boot$summary$fit_mx[[2]]$coefficients), c(2L, 5L))
-  expect_identical(rownames(summary_boot$summary$fit_mx[[2]]$coefficients), mx_names)
-  expect_identical(colnames(summary_boot$summary$fit_mx[[2]]$coefficients)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_data$summary$fit_mx[[1]]$coefficients), c(2L, 4L))
-  expect_identical(rownames(summary_data$summary$fit_mx[[1]]$coefficients), mx_names)
-  expect_identical(colnames(summary_data$summary$fit_mx[[1]]$coefficients)[1], "Estimate")
-  expect_identical(dim(summary_data$summary$fit_mx[[2]]$coefficients), c(2L, 4L))
-  expect_identical(rownames(summary_data$summary$fit_mx[[2]]$coefficients), mx_names)
-  expect_identical(colnames(summary_data$summary$fit_mx[[2]]$coefficients)[1], "Estimate")
+  expect_identical(dim(summary_boot$summary$fit_mx[[1]]$coefficients),
+                   c(2L, 5L))
+  expect_identical(rownames(summary_boot$summary$fit_mx[[1]]$coefficients),
+                   mx_names)
+  expect_identical(colnames(summary_boot$summary$fit_mx[[1]]$coefficients)[1:2],
+                   c("Data", "Boot"))
+  expect_identical(dim(summary_boot$summary$fit_mx[[2]]$coefficients),
+                   c(2L, 5L))
+  expect_identical(rownames(summary_boot$summary$fit_mx[[2]]$coefficients),
+                   mx_names)
+  expect_identical(colnames(summary_boot$summary$fit_mx[[2]]$coefficients)[1:2],
+                   c("Data", "Boot"))
+  expect_identical(dim(summary_data$summary$fit_mx[[1]]$coefficients),
+                   c(2L, 4L))
+  expect_identical(rownames(summary_data$summary$fit_mx[[1]]$coefficients),
+                   mx_names)
+  expect_identical(colnames(summary_data$summary$fit_mx[[1]]$coefficients)[1],
+                   "Estimate")
+  expect_identical(dim(summary_data$summary$fit_mx[[2]]$coefficients),
+                   c(2L, 4L))
+  expect_identical(rownames(summary_data$summary$fit_mx[[2]]$coefficients),
+                   mx_names)
+  expect_identical(colnames(summary_data$summary$fit_mx[[2]]$coefficients)[1],
+                   "Estimate")
   # b path
-  expect_identical(dim(summary_boot$summary$fit_ymx$coefficients), c(4L, 5L))
-  expect_identical(rownames(summary_boot$summary$fit_ymx$coefficient), ymx_names)
-  expect_identical(colnames(summary_boot$summary$fit_ymx$coefficient)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_data$summary$fit_ymx$coefficient), c(4L, 4L))
-  expect_identical(rownames(summary_data$summary$fit_ymx$coefficient), ymx_names)
-  expect_identical(colnames(summary_data$summary$fit_ymx$coefficient)[1], "Estimate")
+  expect_identical(dim(summary_boot$summary$fit_ymx$coefficients),
+                   c(4L, 5L))
+  expect_identical(rownames(summary_boot$summary$fit_ymx$coefficient),
+                   ymx_names)
+  expect_identical(colnames(summary_boot$summary$fit_ymx$coefficient)[1:2],
+                   c("Data", "Boot"))
+  expect_identical(dim(summary_data$summary$fit_ymx$coefficient),
+                   c(4L, 4L))
+  expect_identical(rownames(summary_data$summary$fit_ymx$coefficient),
+                   ymx_names)
+  expect_identical(colnames(summary_data$summary$fit_ymx$coefficient)[1],
+                   "Estimate")
   # direct effect
-  expect_identical(dim(summary_boot$summary$direct), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$direct), "X")
-  expect_identical(colnames(summary_boot$summary$direct)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_data$summary$direct), c(1L, 4L))
-  expect_identical(rownames(summary_data$summary$direct), "X")
-  expect_identical(colnames(summary_data$summary$direct)[1], "Estimate")
+  expect_identical(dim(summary_boot$summary$direct),
+                   c(1L, 5L))
+  expect_identical(rownames(summary_boot$summary$direct),
+                   "X")
+  expect_identical(colnames(summary_boot$summary$direct)[1:2],
+                   c("Data", "Boot"))
+  expect_identical(dim(summary_data$summary$direct),
+                   c(1L, 4L))
+  expect_identical(rownames(summary_data$summary$direct),
+                   "X")
+  expect_identical(colnames(summary_data$summary$direct)[1],
+                   "Estimate")
   # total effect
-  expect_identical(dim(summary_boot$summary$total), c(1L, 5L))
-  expect_identical(rownames(summary_boot$summary$total), "X")
-  expect_identical(colnames(summary_boot$summary$total)[1:2], c("Data", "Boot"))
-  expect_identical(dim(summary_data$summary$total), c(1L, 4L))
-  expect_identical(rownames(summary_data$summary$total), "X")
-  expect_identical(colnames(summary_data$summary$total)[1], "Estimate")
+  expect_identical(dim(summary_boot$summary$total),
+                   c(1L, 5L))
+  expect_identical(rownames(summary_boot$summary$total),
+                   "X")
+  expect_identical(colnames(summary_boot$summary$total)[1:2],
+                   c("Data", "Boot"))
+  expect_identical(dim(summary_data$summary$total),
+                   c(1L, 4L))
+  expect_identical(rownames(summary_data$summary$total),
+                   "X")
+  expect_identical(colnames(summary_data$summary$total)[1],
+                   "Estimate")
 
 })
 
 test_that("effect summaries contain correct coefficient values", {
 
   # effects computed on original sample
-  expect_equivalent(summary_boot$summary$fit_mx[[1]]$coefficients[2, "Data"], boot$fit$a[1])
-  expect_equivalent(summary_boot$summary$fit_mx[[2]]$coefficients[2, "Data"], boot$fit$a[2])
-  expect_identical(summary_boot$summary$fit_ymx$coefficients[2:3, "Data"], boot$fit$b)
-  expect_identical(summary_boot$summary$direct["X", "Data"], boot$fit$direct)
-  expect_identical(summary_boot$summary$total["X", "Data"], boot$fit$total)
-  expect_equivalent(summary_data$summary$fit_mx[[1]]$coefficients[2, "Estimate"], boot$fit$a[1])
-  expect_equivalent(summary_data$summary$fit_mx[[2]]$coefficients[2, "Estimate"], boot$fit$a[2])
-  expect_identical(summary_data$summary$fit_ymx$coefficients[2:3, "Estimate"], boot$fit$b)
-  expect_identical(summary_data$summary$direct["X", "Estimate"], boot$fit$direct)
-  expect_identical(summary_data$summary$total["X", "Estimate"], boot$fit$total)
+  expect_equivalent(summary_boot$summary$fit_mx[[1]]$coefficients[2, "Data"],
+                    boot$fit$a[1])
+  expect_equivalent(summary_boot$summary$fit_mx[[2]]$coefficients[2, "Data"],
+                    boot$fit$a[2])
+  expect_identical(summary_boot$summary$fit_ymx$coefficients[2:3, "Data"],
+                   boot$fit$b)
+  expect_identical(summary_boot$summary$direct["X", "Data"],
+                   boot$fit$direct)
+  expect_identical(summary_boot$summary$total["X", "Data"],
+                   boot$fit$total)
+  expect_equivalent(summary_data$summary$fit_mx[[1]]$coefficients[2, "Estimate"],
+                    boot$fit$a[1])
+  expect_equivalent(summary_data$summary$fit_mx[[2]]$coefficients[2, "Estimate"],
+                    boot$fit$a[2])
+  expect_identical(summary_data$summary$fit_ymx$coefficients[2:3, "Estimate"],
+                   boot$fit$b)
+  expect_identical(summary_data$summary$direct["X", "Estimate"],
+                   boot$fit$direct)
+  expect_identical(summary_data$summary$total["X", "Estimate"],
+                   boot$fit$total)
 
   # bootstrapped effects
-  expect_equivalent(summary_boot$summary$fit_mx[[1]]$coefficients[2, "Boot"], mean(boot$reps$t[, 5]))
-  expect_equivalent(summary_boot$summary$fit_mx[[2]]$coefficients[2, "Boot"], mean(boot$reps$t[, 7]))
-  expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2:3, "Boot"], colMeans(boot$reps$t[, 9:10]))
-  expect_equal(summary_boot$summary$direct["X", "Boot"], mean(boot$reps$t[, 11]))
-  expect_equal(summary_boot$summary$total["X", "Boot"], mean(boot$reps$t[, 12]))
+  expect_equivalent(summary_boot$summary$fit_mx[[1]]$coefficients[2, "Boot"],
+                    mean(boot$reps$t[, 5]))
+  expect_equivalent(summary_boot$summary$fit_mx[[2]]$coefficients[2, "Boot"],
+                    mean(boot$reps$t[, 7]))
+  expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2:3, "Boot"],
+                    colMeans(boot$reps$t[, 9:10]))
+  expect_equal(summary_boot$summary$direct["X", "Boot"],
+               mean(boot$reps$t[, 11]))
+  expect_equal(summary_boot$summary$total["X", "Boot"],
+               mean(boot$reps$t[, 12]))
 
 })
 

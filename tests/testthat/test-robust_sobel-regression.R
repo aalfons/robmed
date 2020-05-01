@@ -145,6 +145,14 @@ test_that("summary has correct structure", {
   expect_s3_class(summary_sobel$summary$fit_mx, "summary_lmrob")
   # summary for model y ~ m + x
   expect_s3_class(summary_sobel$summary$fit_ymx, "summary_lmrob")
+  # information on covergence in model y ~ m + x
+  expect_type(summary_sobel$summary$fit_ymx$algorithm, "list")
+  expect_named(summary_sobel$summary$fit_ymx$algorithm,
+               c("converged", "method"))
+  expect_identical(summary_sobel$summary$fit_ymx$algorithm$converged,
+                   sobel$fit$fit_ymx$converged)
+  expect_identical(summary_sobel$summary$fit_ymx$algorithm$method,
+                   sobel$fit$fit_ymx$control$method)
   # regression standard error for model y ~ m + x
   expect_type(summary_sobel$summary$fit_ymx$s, "list")
   expect_named(summary_sobel$summary$fit_ymx$s, c("value", "df"))
@@ -153,10 +161,20 @@ test_that("summary has correct structure", {
   expect_named(summary_sobel$summary$fit_ymx$R2, c("R2", "adj_R2"))
   # F-test for model y ~ m + x
   expect_type(summary_sobel$summary$fit_ymx$F_test, "list")
-  expect_named(summary_sobel$summary$fit_ymx$F_test, c("statistic", "df", "p_value"))
+  expect_named(summary_sobel$summary$fit_ymx$F_test,
+               c("statistic", "df", "p_value"))
   df_test <- summary_sobel$summary$fit_ymx$F_test$df
   expect_identical(df_test[1], 2)
   expect_identical(df_test[2], Inf)
+  # information on outliers in model y ~ m + x
+  expect_type(summary_sobel$summary$fit_ymx$outliers, "list")
+  expect_named(summary_sobel$summary$fit_ymx$outliers,
+               c("indices", "weights", "threshold"))
+  expect_type(summary_sobel$summary$fit_ymx$outliers$indices, "integer")
+  expect_identical(summary_sobel$summary$fit_ymx$outliers$weights,
+                   weights(sobel$fit$fit_ymx, type = "robustness"))
+  expect_identical(summary_sobel$summary$fit_ymx$outliers$threshold,
+                   summary(sobel$fit$fit_ymx)$control$eps.outlier)
 
 })
 
@@ -177,30 +195,46 @@ test_that("attributes are correctly passed through summary", {
 test_that("effect summaries have correct names", {
 
   # a path
-  expect_identical(dim(summary_sobel$summary$fit_mx$coefficients), c(2L, 4L))
-  expect_identical(rownames(summary_sobel$summary$fit_mx$coefficients), mx_names)
-  expect_identical(colnames(summary_sobel$summary$fit_mx$coefficients)[1], "Estimate")
+  expect_identical(dim(summary_sobel$summary$fit_mx$coefficients),
+                   c(2L, 4L))
+  expect_identical(rownames(summary_sobel$summary$fit_mx$coefficients),
+                   mx_names)
+  expect_identical(colnames(summary_sobel$summary$fit_mx$coefficients)[1],
+                   "Estimate")
   # b path
-  expect_identical(dim(summary_sobel$summary$fit_ymx$coefficients), c(3L, 4L))
-  expect_identical(rownames(summary_sobel$summary$fit_ymx$coefficient), ymx_names)
-  expect_identical(colnames(summary_sobel$summary$fit_ymx$coefficient)[1], "Estimate")
+  expect_identical(dim(summary_sobel$summary$fit_ymx$coefficients),
+                   c(3L, 4L))
+  expect_identical(rownames(summary_sobel$summary$fit_ymx$coefficient),
+                   ymx_names)
+  expect_identical(colnames(summary_sobel$summary$fit_ymx$coefficient)[1],
+                   "Estimate")
   # direct effect
-  expect_identical(dim(summary_sobel$summary$direct), c(1L, 4L))
-  expect_identical(rownames(summary_sobel$summary$direct), "X")
-  expect_identical(colnames(summary_sobel$summary$direct)[1], "Estimate")
+  expect_identical(dim(summary_sobel$summary$direct),
+                   c(1L, 4L))
+  expect_identical(rownames(summary_sobel$summary$direct),
+                   "X")
+  expect_identical(colnames(summary_sobel$summary$direct)[1],
+                   "Estimate")
   # total effect
-  expect_identical(dim(summary_sobel$summary$total), c(1L, 4L))
-  expect_identical(rownames(summary_sobel$summary$total), "X")
-  expect_identical(colnames(summary_sobel$summary$total)[1], "Estimate")
+  expect_identical(dim(summary_sobel$summary$total),
+                   c(1L, 4L))
+  expect_identical(rownames(summary_sobel$summary$total),
+                   "X")
+  expect_identical(colnames(summary_sobel$summary$total)[1],
+                   "Estimate")
 
 })
 
 test_that("effect summaries contain correct coefficient values", {
 
-  expect_identical(summary_sobel$summary$fit_mx$coefficients["X", "Estimate"], sobel$fit$a)
-  expect_identical(summary_sobel$summary$fit_ymx$coefficients["M1", "Estimate"], sobel$fit$b)
-  expect_identical(summary_sobel$summary$direct["X", "Estimate"], sobel$fit$direct)
-  expect_identical(summary_sobel$summary$total["X", "Estimate"], sobel$fit$total)
+  expect_identical(summary_sobel$summary$fit_mx$coefficients["X", "Estimate"],
+                   sobel$fit$a)
+  expect_identical(summary_sobel$summary$fit_ymx$coefficients["M1", "Estimate"],
+                   sobel$fit$b)
+  expect_identical(summary_sobel$summary$direct["X", "Estimate"],
+                   sobel$fit$direct)
+  expect_identical(summary_sobel$summary$total["X", "Estimate"],
+                   sobel$fit$total)
 
 })
 
