@@ -55,6 +55,7 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$covariates, character())
   # robust fit
   expect_false(foo$robust)
+  expect_identical(foo$family, "gaussian")
   expect_null(foo$control)
 
 })

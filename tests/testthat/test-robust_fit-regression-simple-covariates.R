@@ -44,7 +44,7 @@ test_that("output has correct structure", {
   # individual regressions
   expect_s3_class(foo$fit_mx, "lmrob")
   expect_s3_class(foo$fit_ymx, "lmrob")
-  expect_null(foo$fit$fit_yx)
+  expect_null(foo$fit_yx)
 
 })
 
@@ -57,6 +57,7 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$covariates, c("C1", "C2"))
   # robust fit
   expect_identical(foo$robust, "MM")
+  expect_identical(foo$family, "gaussian")
   expect_equal(foo$control, reg_control(max_iterations = 500))
 
 })
