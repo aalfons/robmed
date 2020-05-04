@@ -104,7 +104,7 @@ test_that("summary returns original object", {
 test_that("object returned by setup_ellipse_plot() has correct structure", {
 
   # not meaningful for median regression
-  expect_error(setup_ellipse_plot(boot))
+  expect_error(setup_ellipse_plot(foo))
 
 })
 
