@@ -77,6 +77,7 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
   expect_identical(sobel$fit$robust, "median")
+  expect_identical(sobel$fit$family, "gaussian")
   expect_null(sobel$fit$control)
 
 })
@@ -283,7 +284,7 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   expect_false(density$have_methods)
 
   ## ellipse_plot
-  expect_error(setup_ellipse_plot(boot))
+  expect_error(setup_ellipse_plot(sobel))
 
 })
 

@@ -83,6 +83,7 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$covariates, character())
   # robust fit and test
   expect_identical(boot$fit$robust, "MM")
+  expect_identical(boot$fit$family, "gaussian")
   expect_equal(boot$fit$control, ctrl)
 
 })
@@ -398,7 +399,7 @@ test_that("arguments of retest() are correctly passed", {
   # alternative hypothesis
   expect_identical(boot_less$alternative, "less")
   expect_identical(boot_greater$alternative, "greater")
-  expect_identical(boot_perc$alternative, boot$alternative)
+  expect_identical(boot_perc$alternative, "twosided")
   # confidence level
   expect_identical(boot_less$level, level[2])
   expect_identical(boot_greater$level, level[2])

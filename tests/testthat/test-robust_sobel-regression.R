@@ -80,6 +80,7 @@ test_that("arguments are correctly passed", {
   expect_identical(sobel$fit$covariates, character())
   # robust fit and test
   expect_identical(sobel$fit$robust, "MM")
+  expect_identical(sobel$fit$family, "gaussian")
   expect_equal(sobel$fit$control, ctrl)
 
 })
