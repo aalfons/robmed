@@ -32,6 +32,10 @@ sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M1", test = "sobel",
 ## compute summary
 summary_sobel <- summary(sobel)
 
+## retest with different parameters
+sobel_less <- retest(sobel, alternative = "less")
+sobel_greater <- retest(sobel, alternative = "greater")
+
 ## create data for plotting
 level <- 0.9
 ci <- setup_ci_plot(sobel, level = level)
@@ -235,6 +239,46 @@ test_that("effect summaries contain correct coefficient values", {
                    sobel$fit$direct)
   expect_identical(summary_sobel$summary$total["X", "Estimate"],
                    sobel$fit$total)
+
+})
+
+test_that("output of retest() has correct structure", {
+
+  # Sobel test
+  expect_identical(class(sobel_less), class(sobel))
+  expect_identical(class(sobel_greater), class(sobel))
+  # regression fit
+  expect_identical(sobel_less$fit, sobel$fit)
+  expect_identical(sobel_greater$fit, sobel$fit)
+
+})
+
+test_that("arguments of retest() are correctly passed", {
+
+  # alternative hypothesis
+  expect_identical(sobel_less$alternative, "less")
+  expect_identical(sobel_greater$alternative, "greater")
+  # indirect effect
+  expect_identical(sobel_less$ab, sobel$ab)
+  expect_identical(sobel_greater$ab, sobel$ab)
+  # standard error
+  expect_identical(sobel_less$se, sobel$se)
+  expect_identical(sobel_greater$se, sobel$se)
+  # test statistic
+  expect_identical(sobel_less$statistic, sobel$statistic)
+  expect_identical(sobel_greater$statistic, sobel$statistic)
+  # p-value
+  expect_equal(sobel_less$p_value, 1-sobel$p_value/2)
+  expect_equal(sobel_greater$p_value, sobel$p_value/2)
+
+})
+
+test_that("output of p_value() method has correct attributes", {
+
+  p_data <- p_value(sobel, parm = NULL)
+  expect_length(p_data, 5L)
+  expect_named(p_data, coef_names)
+  expect_equivalent(p_data["ab"], sobel$p_value)
 
 })
 
