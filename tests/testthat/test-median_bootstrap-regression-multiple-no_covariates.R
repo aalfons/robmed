@@ -23,14 +23,19 @@ test_data <- data.frame(X, Y, M1, M2)
 
 ## run bootstrap test
 set.seed(seed)
-level <- 0.9
+level <- c(0.9, 0.95)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = c("M1", "M2"),
-                       test = "boot", R = R, level = level, type = "bca",
+                       test = "boot", R = R, level = level[1], type = "bca",
                        method = "regression", robust = "median")
 
 ## compute summary
 summary_boot <- summary(boot, type = "boot")
 summary_data <- summary(boot, type = "data")
+
+## retest with different parameters
+boot_less <- retest(boot, alternative = "less", level = level[2])
+boot_greater <- retest(boot, alternative = "greater", level = level[2])
+boot_perc <- retest(boot, type = "perc", level = level[2])
 
 ## create data for plotting
 ci <- setup_ci_plot(boot)
@@ -66,7 +71,7 @@ test_that("arguments are correctly passed", {
   # number of bootstrap replicates
   expect_identical(boot$R, as.integer(R))  # doesn't hold for too many outliers
   # confidence level
-  expect_identical(boot$level, level)
+  expect_identical(boot$level, level[1])
   # type of confidence intervals
   expect_identical(boot$type, "bca")
   # variable names
@@ -272,6 +277,76 @@ test_that("effect summaries contain correct coefficient values", {
 
 })
 
+test_that("output of retest() has correct structure", {
+
+  # bootstrap test
+  expect_identical(class(boot_less), class(boot))
+  expect_identical(class(boot_greater), class(boot))
+  expect_identical(class(boot_perc), class(boot))
+  # regression fit
+  expect_identical(boot_less$fit, boot$fit)
+  expect_identical(boot_greater$fit, boot$fit)
+  expect_identical(boot_perc$fit, boot$fit)
+  # bootstrap replicates
+  expect_identical(boot_less$reps, boot$reps)
+  expect_identical(boot_greater$reps, boot$reps)
+  expect_identical(boot_perc$reps, boot$reps)
+
+})
+
+test_that("arguments of retest() are correctly passed", {
+
+  # alternative hypothesis
+  expect_identical(boot_less$alternative, "less")
+  expect_identical(boot_greater$alternative, "greater")
+  expect_identical(boot_perc$alternative, boot$alternative)
+  # confidence level
+  expect_identical(boot_less$level, level[2])
+  expect_identical(boot_greater$level, level[2])
+  expect_identical(boot_perc$level, level[2])
+  # type of confidence intervals
+  expect_identical(boot_less$type, "bca")
+  expect_identical(boot_greater$type, "bca")
+  expect_identical(boot_perc$type, "perc")
+  # multiple indirect effects
+  expect_identical(boot_less$ab, boot$ab)
+  expect_identical(boot_greater$ab, boot$ab)
+  expect_identical(boot_perc$ab, boot$ab)
+  # multiple confidence intervals for alternative = "less"
+  expect_identical(dim(boot_less$ci), dim(boot$ci))
+  expect_identical(rownames(boot_less$ci), rownames(boot$ci))
+  expect_equivalent(boot_less$ci[, 1], rep(-Inf, 3))
+  expect_equal(boot_less$ci[, 2], boot$ci[, 2])
+  expect_identical(colnames(confint(boot_less)), c("Lower", "Upper"))
+  # multiple confidence intervals for alternative = "greater"
+  expect_identical(dim(boot_greater$ci), dim(boot$ci))
+  expect_identical(rownames(boot_greater$ci), rownames(boot$ci))
+  expect_equal(boot_greater$ci[, 1], boot$ci[, 1])
+  expect_equivalent(boot_greater$ci[, 2], rep(Inf, 3))
+  expect_identical(colnames(confint(boot_greater)), c("Lower", "Upper"))
+  # multiple confidence intervals for type = "perc"
+  expect_identical(dim(boot_perc$ci), dim(boot$ci))
+  expect_identical(rownames(boot_perc$ci), rownames(boot$ci))
+
+})
+
+test_that("output of p_value() method has correct attributes", {
+
+  p_boot <- p_value(boot_perc, type = "boot")
+  digits <- 3
+  p_boot <- p_value(boot_perc, type = "boot", digits = digits)
+  p_data <- p_value(boot_perc, type = "data", digits = digits)
+  # bootstrapped effects
+  expect_length(p_boot, 9L)
+  expect_named(p_boot, coef_names)
+  expect_equal(p_boot[ab_names], round(p_boot[ab_names], digits = digits))
+  # effects computed on original sample
+  expect_length(p_data, 9L)
+  expect_named(p_data, coef_names)
+  expect_equal(p_data[ab_names], round(p_data[ab_names], digits = digits))
+
+})
+
 test_that("objects returned by setup_xxx_plot() have correct structure", {
 
   ## ci plot
@@ -286,7 +361,7 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   effect_names <- c("Direct", ab_names)
   expect_identical(ci$ci$Effect, factor(effect_names, levels = effect_names))
   # check confidence level
-  expect_identical(ci$level, level)
+  expect_identical(ci$level, level[1])
   # check logical for multiple methods
   expect_false(ci$have_methods)
 
@@ -309,7 +384,7 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   # check type of test
   expect_identical(density$test, "boot")
   # check confidence level
-  expect_identical(density$level, level)
+  expect_identical(density$level, level[1])
   # check logical for multiple effects
   expect_true(density$have_effect)
   # check logical for multiple methods
