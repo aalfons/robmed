@@ -158,7 +158,7 @@ print.summary_lmse <- function(x, digits = max(3, getOption("digits")-3),
 ## extract number of observations from regression with skew-elliptical errors
 #' @export
 #' @import stats
-nobs.lmse <- function(object, ...) unname(object$size["n.obs"])
+nobs.lmse <- function(object, ...) as.integer(object$size["n.obs"])
 
 
 ## extract confidence intervals from regression with skew-elliptical errors
