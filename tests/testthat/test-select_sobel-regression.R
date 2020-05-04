@@ -1,4 +1,4 @@
-context("Sobel test: median regression")
+context("Sobel test: regression with skewed errors")
 
 
 ## load package

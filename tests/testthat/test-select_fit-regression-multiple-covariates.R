@@ -1,4 +1,4 @@
-context("median regression fit: multiple mediators, covariates")
+context("regression fit with skewed errors: multiple mediators, covariates")
 
 
 ## load package
