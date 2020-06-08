@@ -150,7 +150,12 @@ test_that("summary has correct structure", {
   # summary for model y ~ m + x
   expect_s3_class(summary_sobel$summary$fit_ymx, "summary_lmse")
   # parameters of skew-elliptical distribution
-  expect_identical(class(summary_sobel$summary$fit_ymx$parameters), "matrix")
+  # -----
+  # R version 4.0.1 now uses class "matrix" as a subclass of "array"
+  # expect_identical(class(summary_sobel$summary$fit_ymx$parameters), "matrix")
+  # -----
+  expect_true("matrix" %in% class(summary_sobel$summary$fit_ymx$parameters))
+  # -----
   expect_identical(nrow(summary_sobel$summary$fit_ymx$parameters), 2L)
   expect_identical(colnames(summary_sobel$summary$fit_ymx$parameters),
                    c("Estimate", "Std. Error"))
