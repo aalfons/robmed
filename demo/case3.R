@@ -38,8 +38,8 @@ summary(robust_boot)
 
 # determine the smallest significance level alpha for which the
 # (1 - alpha) * 100% confidence interval contains does not contain 0
-p_value(standard_boot)
-p_value(robust_boot)
+p_value(standard_boot, parm = "ab")
+p_value(robust_boot, parm = "ab")
 
 
 # let's have a closer look at the effect of x on m
@@ -89,4 +89,4 @@ plot(BSG2014[, c(bc_x, bc_y, bc_m)], labels = gsub(" ", "\n", labs),
 set.seed(seed)
 bc_boot <- test_mediation(BSG2014, x = bc_x, y = bc_y, m = bc_m, robust = FALSE)
 summary(bc_boot, type = "data")
-p_value(bc_boot)
+p_value(bc_boot, parm = "ab")

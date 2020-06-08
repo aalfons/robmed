@@ -36,5 +36,5 @@ summary(robust_boot)
 
 # determine the smallest significance level alpha for which the
 # (1 - alpha) * 100% confidence interval contains does not contain 0
-p_value(standard_boot)
-p_value(robust_boot)
+p_value(standard_boot, parm = "ab")
+p_value(robust_boot, parm = "ab")
