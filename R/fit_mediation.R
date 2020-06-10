@@ -273,7 +273,8 @@ fit_mediation.formula <- function(formula, data, ...) {
 fit_mediation.default <- function(object, x, y, m, covariates = NULL,
                                   method = c("regression", "covariance"),
                                   robust = TRUE, family = "gaussian",
-                                  fit_yx = TRUE, control = NULL, ...) {
+                                  partial = TRUE, fit_yx = TRUE,
+                                  control = NULL, ...) {
   ## initializations
   # prepare data set
   data <- as.data.frame(object)
@@ -356,17 +357,19 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
       if (robust) robust <- "MM"
     } else robust <- match.arg(robust, choices = c("MM", "median"))
     if (robust == "MM" && is.null(control)) control <- reg_control(...)
+    # check whether to fit partial or full mediation model
+    partial <- isTRUE(partial)
     # check error distribution
     if (is.character(robust)) family <- "gaussian"
     else {
       families <- c("gaussian", "student", "skewnormal", "skewt", "select")
       family <- match.arg(family, choices = families)
-      fit_yx <- isTRUE(fit_yx)
+      fit_yx <- if (partial) isTRUE(fit_yx) else TRUE
     }
     # estimate effects
     reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
-                      robust = robust, family = family, fit_yx = fit_yx,
-                      control = control)
+                      robust = robust, family = family, partial = partial,
+                      fit_yx = fit_yx, control = control)
   } else {
     # check for robust method
     robust <- isTRUE(robust)
@@ -381,13 +384,16 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
 ## estimate the effects in a mediation model via regressions
 reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                               robust = "MM", family = "gaussian",
-                              fit_yx = TRUE, control = reg_control()) {
+                              partial = TRUE, fit_yx = TRUE,
+                              control = reg_control()) {
   # number of mediators
   p_m <- length(m)
   # construct predictor matrices for regression models
   n <- nrow(data)
   predictors_mx <- as.matrix(data[, c(x, covariates), drop = FALSE])
-  predictors_ymx <- as.matrix(data[, c(m, x, covariates), drop = FALSE])
+  if (partial) {
+    predictors_ymx <- as.matrix(data[, c(m, x, covariates), drop = FALSE])
+  } else predictors_ym <- as.matrix(data[, c(m, covariates), drop = FALSE])
   # other initializations
   have_robust <- is.character(robust)
   estimate_yx <- fit_yx  # avoid name conflicts
@@ -407,7 +413,13 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
         })
         names(fit_mx) <- m
       }
-      fit_ymx <- lmrob_fit(predictors_ymx, data[, y], control = control)
+      if (partial) {
+        fit_ymx <- lmrob_fit(predictors_ymx, data[, y], control = control)
+        fit_yx <- NULL
+      } else {
+        fit_ym <- lmrob_fit(predictors_ym, data[, y], control = control)
+        fit_yx <- lmrob_fit(predictors_mx, data[, y], control = control)
+      }
     } else if (robust == "median") {
       # LAD-estimator for median regression
       if (p_m == 1L) fit_mx <- rq_fit(predictors_mx, data[, m], tau = 0.5)
@@ -417,13 +429,17 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
         })
         names(fit_mx) <- m
       }
-      fit_ymx <- rq_fit(predictors_ymx, data[, y], tau = 0.5)
+      if (partial) {
+        fit_ymx <- rq_fit(predictors_ymx, data[, y], tau = 0.5)
+        fit_yx <- NULL
+      } else {
+        fit_ym <- rq_fit(predictors_ym, data[, y], tau = 0.5)
+        fit_yx <- rq_fit(predictors_mx, data[, y], tau = 0.5)
+      }
     } else {
       # shouldn't happen
       stop(sprintf('robust method "%s" not implemented', robust))
     }
-    # neither method fits the direct path
-    fit_yx <- NULL
   } else if (family == "gaussian") {
     # for the standard method, there is not much additional cost in
     # performing the regression for the total effect
@@ -432,8 +448,13 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
       names(fit_mx) <- m
     }
-    fit_ymx <- lm_fit(predictors_ymx, data[, y])
-    fit_yx <- if (estimate_yx) lm_fit(predictors_mx, data[, y])
+    if (partial) {
+      fit_ymx <- lm_fit(predictors_ymx, data[, y])
+      fit_yx <- if (estimate_yx) lm_fit(predictors_mx, data[, y])
+    } else {
+      fit_ym <- lm_fit(predictors_ym, data[, y])
+      fit_yx <- lm_fit(predictors_mx, data[, y])
+    }
   } else if (family == "select") {
     # select among normal, skew-normal, t and skew-t errors
     if (p_m == 1L) fit_mx <- lmselect_fit(predictors_mx, data[, m])
@@ -443,8 +464,13 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       })
       names(fit_mx) <- m
     }
-    fit_ymx <- lmselect_fit(predictors_ymx, data[, y])
-    fit_yx <- if (estimate_yx) lmselect_fit(predictors_mx, data[, y])
+    if (partial) {
+      fit_ymx <- lmselect_fit(predictors_ymx, data[, y])
+      fit_yx <- if (estimate_yx) lmselect_fit(predictors_mx, data[, y])
+    } else {
+      fit_ym <- lmselect_fit(predictors_ym, data[, y])
+      fit_yx <- lmselect_fit(predictors_mx, data[, y])
+    }
   } else {
     # obtain parameters as required for package 'sn'
     selm_args <- get_selm_args(family)
@@ -459,33 +485,61 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       })
       names(fit_mx) <- m
     }
-    # relationship ab + direct = total doesn't hold, so we need to perform
-    # the regression for the total effect
-    fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_args$family,
-                        fixed.param = selm_args$fixed.param)
-    fit_yx <- if (estimate_yx) {
-      selm_fit(predictors_mx, data[, y], family = selm_args$family,
-               fixed.param = selm_args$fixed.param)
+    if (partial) {
+      # relationship ab + direct = total doesn't hold, so we need to perform
+      # the regression for the total effect
+      fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_args$family,
+                          fixed.param = selm_args$fixed.param)
+      fit_yx <- if (estimate_yx) {
+        selm_fit(predictors_mx, data[, y], family = selm_args$family,
+                 fixed.param = selm_args$fixed.param)
+      }
+    } else {
+      fit_ym <- selm_fit(predictors_ym, data[, y], family = selm_args$family,
+                         fixed.param = selm_args$fixed.param)
+      fit_yx <- selm_fit(predictors_mx, data[, y], family = selm_args$family,
+                         fixed.param = selm_args$fixed.param)
     }
   }
-  # extract effects
-  if (p_m == 1L) {
-    a <- unname(coef(fit_mx)[2L])
-    b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
+  # extract effects and construct return object
+  if (partial) {
+    # extract a and b
+    if (p_m == 1L) {
+      a <- unname(coef(fit_mx)[2L])
+      b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
+    } else {
+      a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+      b <- coef(fit_ymx)[1L + seq_len(p_m)]
+    }
+    # extract direct and total effect
+    direct <- unname(coef(fit_ymx)[2L + p_m])
+    if (have_robust || (family == "gaussian" && !estimate_yx)) {
+      total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+    } else if (estimate_yx) total <- unname(coef(fit_yx)[2L])
+    else total <- NA_real_
+    # construct return object
+    result <- list(a = a, b = b, direct = direct, total = total,
+                   fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
+                   x = x, y = y, m = m, covariates = covariates, data = data,
+                   robust = robust, family = family, partial = partial)
   } else {
-    a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
-    b <- coef(fit_ymx)[1L + seq_len(p_m)]
+    # extract a and b
+    if (p_m == 1L) {
+      a <- unname(coef(fit_mx)[2L])
+      b <- unname(coef(fit_ym)[1L + seq_len(p_m)])
+    } else {
+      a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+      b <- coef(fit_ym)[1L + seq_len(p_m)]
+    }
+    # extract total effect
+    total <- unname(coef(fit_yx)[2L])
+    # construct return object
+    result <- list(a = a, b = b, total = total, fit_mx = fit_mx,
+                   fit_ym = fit_ym, fit_yx = fit_yx, x = x, y = y, m = m,
+                   covariates = covariates, data = data, robust = robust,
+                   family = family, partial = partial)
   }
-  direct <- unname(coef(fit_ymx)[2L + p_m])
-  if (have_robust || (family == "gaussian" && !estimate_yx)) {
-    total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
-  } else if (estimate_yx) total <- unname(coef(fit_yx)[2L])
-  else total <- NA_real_
   # return results
-  result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
-                 fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
-                 covariates = covariates, data = data, robust = robust,
-                 family = family)
   if(robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result

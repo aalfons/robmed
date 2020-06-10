@@ -105,7 +105,7 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 coef.fit_mediation <- function(object, parm = NULL, ...) {
   # extract effects
   coef <- c(object$a, object$b, object$direct, object$total)
-  names(coef) <- get_effect_names(object$m)
+  names(coef) <- get_effect_names(object$m, partial = object$partial)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
   coef
@@ -113,7 +113,10 @@ coef.fit_mediation <- function(object, parm = NULL, ...) {
 
 
 # utility function to get names of coefficients
-get_effect_names <- function(m, sep = "_") {
-  if(length(m) == 1L) c("a", "b", "Direct", "Total")
-  else c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
+get_effect_names <- function(m, sep = "_", partial = TRUE) {
+  if(length(m) == 1L) c("a", "b", if (partial) "Direct", "Total")
+  else {
+    c(paste("a", m, sep = sep), paste("b", m, sep = sep),
+      if (partial) "Direct", "Total")
+  }
 }
