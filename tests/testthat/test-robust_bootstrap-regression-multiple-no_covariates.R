@@ -40,6 +40,7 @@ boot_perc <- retest(boot, type = "perc", level = level[2])
 
 ## create data for plotting
 ci <- setup_ci_plot(boot)
+ci_perc <- setup_ci_plot(boot_perc, p_value = TRUE)
 density <- setup_density_plot(boot)
 ellipse <- setup_ellipse_plot(boot)
 
@@ -448,17 +449,43 @@ test_that("output of p_value() method has correct attributes", {
 
 test_that("objects returned by setup_xxx_plot() have correct structure", {
 
-  ## ci plot
+  ## ci plot without p-value
   # check data frame for confidence interval
   expect_s3_class(ci$ci, "data.frame")
   # check dimensions
   expect_identical(dim(ci$ci), c(4L, 4L))
   # check column names
-  column_names <- c("Effect", "Estimate", "Lower", "Upper")
-  expect_named(ci$ci, column_names)
+  expect_named(ci$ci, c("Effect", "Estimate", "Lower", "Upper"))
   # check that direct effect and indirect effect are plotted by default
   effect_names <- c("Direct", ab_names)
-  expect_identical(ci$ci$Effect, factor(effect_names, levels = effect_names))
+  effect_factor <- factor(effect_names, levels = effect_names)
+  expect_identical(ci$ci$Effect, effect_factor)
+  # check confidence level
+  expect_identical(ci$level, level[1])
+  # check logical for multiple methods
+  expect_false(ci$have_methods)
+
+  ## ci plot with p-value
+  # check data frame for confidence interval and p-value
+  expect_s3_class(ci_perc$ci, "data.frame")
+  expect_s3_class(ci_perc$p_value, "data.frame")
+  # check dimensions
+  expect_identical(dim(ci_perc$ci), c(4L, 5L))
+  expect_identical(dim(ci_perc$p_value), c(4L, 3L))
+  # check column names
+  expect_named(ci_perc$ci, c("Label", "Effect", "Estimate", "Lower", "Upper"))
+  expect_named(ci_perc$p_value, c("Label", "Effect", "Value"))
+  # check that labels are correct
+  label_names <- c("Confidence interval", "p-Value")
+  expect_identical(ci_perc$ci$Label,
+                   factor(rep.int(label_names[1], 4), levels = label_names))
+  expect_identical(ci_perc$p_value$Label,
+                   factor(rep.int(label_names[2], 4), levels = label_names))
+  # check that direct effect and indirect effect are plotted by default
+  effect_names <- c("Direct", ab_names)
+  effect_factor <- factor(effect_names, levels = effect_names)
+  expect_identical(ci_perc$ci$Effect, effect_factor)
+  expect_identical(ci_perc$p_value$Effect, effect_factor)
   # check confidence level
   expect_identical(ci$level, level[1])
   # check logical for multiple methods
@@ -471,15 +498,13 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   expect_identical(ncol(density$density), 3L)
   expect_gt(nrow(density$density), 0L)
   # check column names
-  column_names <- c("Effect", "ab", "Density")
-  expect_named(density$density, column_names)
+  expect_named(density$density, c("Effect", "ab", "Density"))
   # check data frame confidence interval
   expect_s3_class(density$ci, "data.frame")
   # check dimensions
   expect_identical(dim(density$ci), c(3L, 4L))
   # check column names
-  column_names <- c("Effect", "Estimate", "Lower", "Upper")
-  expect_named(density$ci, column_names)
+  expect_named(density$ci, c("Effect", "Estimate", "Lower", "Upper"))
   # check type of test
   expect_identical(density$test, "boot")
   # check confidence level
