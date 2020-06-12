@@ -1,6 +1,9 @@
-Changes in robmed version 0.7.1
+Changes in robmed version 0.8.0
+
+    + Changes in class structure regarding how effects are stored.
 
     + Added more unit tests.
+
 
 
 Changes in robmed version 0.7.0
