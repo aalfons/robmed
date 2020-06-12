@@ -90,7 +90,7 @@ summary.sobel_test_mediation <- function(object, ...) {
   # component 'se' only exists for Sobel test, otherwise NULL
   summary <- get_summary(object$fit)
   # construct return object
-  result <- list(object=object, summary=summary)
+  result <- list(object = object, summary = summary)
   class(result) <- "summary_test_mediation"
   result
 }

@@ -341,7 +341,8 @@ boot_test_mediation <- function(fit,
                                 ...) {
 
   # initializations
-  p_m <- length(fit$m)  # number of mediators
+  p_m <- length(fit$m)                    # number of mediators
+  p_covariates <- length(fit$covariates)  # number of covariates
 
   # check whether we have a regression fit or a covariance fit
   if (inherits(fit, "reg_fit_mediation")) {
