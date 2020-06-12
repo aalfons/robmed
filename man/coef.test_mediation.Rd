@@ -25,7 +25,7 @@ coefficients to be extracted, or \code{NULL} to extract all coefficients.}
 
 \item{type}{a character string specifying whether to extract the means
 of the bootstrap distribution (\code{"boot"}; the default), or the
-coefficient estimates based on the full data set (\code{"data"}).}
+coefficient estimates based on the original data set (\code{"data"}).}
 }
 \value{
 A numeric vector containing the requested coefficients.

@@ -108,6 +108,8 @@ effect of the proposed mediator variables on the dependent variable.}
 independent variable on the dependent variable.}
 \item{total}{numeric; the point estimate of the total effect of the
 independent variable on the dependent variable.}
+\item{ab}{a numeric vector containing the point estimates of the indirect
+effects.}
 \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"},
 \code{"\link[stats]{lm}"} or \code{"lmse"} containing the estimation results
 from the regression of the proposed mediator variable on the independent

@@ -153,8 +153,20 @@ An object inheriting from class \code{"test_mediation"} (class
 \code{"boot_test_mediation"} if \code{test = "boot"} or
 \code{"sobel_test_mediation"} if \code{test = "sobel"}) with the
 following components:
-\item{ab}{a numeric vector containing the point estimates of the indirect
-effects.}
+\item{a}{a numeric vector containing the bootstrap point estimates of the
+effect of the independent variable on the proposed mediator variables (only
+\code{"boot_test_mediation"}).}
+\item{b}{a numeric vector containing the bootstrap point estimates of the
+direct effect of the proposed mediator variables on the dependent variable
+(only \code{"boot_test_mediation"}).}
+\item{direct}{numeric; the bootstrap point estimate of the direct effect
+of the independent variable on the dependent variable (only
+\code{"boot_test_mediation"}).}
+\item{total}{numeric; the bootstrap point estimate of the total effect
+of the independent variable on the dependent variable (only
+\code{"boot_test_mediation"}).}
+\item{ab}{a numeric vector containing the bootstrap point estimates of the
+indirect effects (only \code{"boot_test_mediation"}).}
 \item{ci}{a numeric vector of length two or a matrix of two columns
 containing the bootstrap confidence intervals for the indirect effects
 (only \code{"boot_test_mediation"}).}
@@ -175,8 +187,8 @@ interval (only \code{"boot_test_mediation"}).}
 \item{type}{a character string specifying the type of bootstrap
 confidence interval (only \code{"boot_test_mediation"}).}
 \item{fit}{an object inheriting from class
-\code{"\link{fit_mediation}"} containing the estimation results for the
-direct effect and the total effect in the mediation model.}
+\code{"\link{fit_mediation}"} containing the estimation results of the
+mediation model on the original data.}
 }
 \description{
 Perform (robust) mediation analysis via a (fast and robust) bootstrap test

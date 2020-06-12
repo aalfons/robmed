@@ -108,6 +108,8 @@
 #' independent variable on the dependent variable.}
 #' \item{total}{numeric; the point estimate of the total effect of the
 #' independent variable on the dependent variable.}
+#' \item{ab}{a numeric vector containing the point estimates of the indirect
+#' effects.}
 #' \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"},
 #' \code{"\link[stats]{lm}"} or \code{"lmse"} containing the estimation results
 #' from the regression of the proposed mediator variable on the independent
@@ -357,8 +359,10 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     } else robust <- match.arg(robust, choices = c("MM", "median"))
     if (robust == "MM" && is.null(control)) control <- reg_control(...)
     # check error distribution
-    if (is.character(robust)) family <- "gaussian"
-    else {
+    if (is.character(robust)) {
+      family <- "gaussian"
+      fit_yx <- FALSE  # this is actually ignored for robust estimation
+    } else {
       families <- c("gaussian", "student", "skewnormal", "skewt", "select")
       family <- match.arg(family, choices = families)
       fit_yx <- isTRUE(fit_yx)
@@ -395,8 +399,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   if (have_robust) {
     # for the robust methods, the total effect is estimated as c' = ab + c
     # to satisfy this relationship
-    # TODO: check if this makes sense for median regression
-    # (what if, e.g., the conditional distribution is asymmetric)
+    # (For median regression, I believe this only makes sense if the
+    # conditional distribution is symmetric.  This is ok, because the robust
+    # methods assume a normal distribution, which is reflected by setting
+    # family = "gaussian".)
     if (robust == "MM") {
       # MM-estimator for robust regression
       if (p_m == 1L) {
@@ -425,8 +431,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     # neither method fits the direct path
     fit_yx <- NULL
   } else if (family == "gaussian") {
-    # for the standard method, there is not much additional cost in
-    # performing the regression for the total effect
+    # For OLS, there is not much additional cost in performing the regression
+    # for the total effect.  But it is up to the user whether this is done.
     if (p_m == 1L) fit_mx <- lm_fit(predictors_mx, data[, m])
     else {
       fit_mx <- lapply(m, function(m_j) lm_fit(predictors_mx, data[, m_j]))
@@ -459,8 +465,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       })
       names(fit_mx) <- m
     }
-    # relationship ab + direct = total doesn't hold, so we need to perform
-    # the regression for the total effect
+    # The relationship ab + direct = total doesn't hold, so we need to
+    # perform the regression for the total effect.  But it is up to the
+    # user whether this is done, which can save computation time if the
+    # user is not interested in the total effect.
     fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_args$family,
                         fixed.param = selm_args$fixed.param)
     fit_yx <- if (estimate_yx) {
@@ -468,7 +476,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                fixed.param = selm_args$fixed.param)
     }
   }
-  # extract effects
+  # extract effects a and b
   if (p_m == 1L) {
     a <- unname(coef(fit_mx)[2L])
     b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
@@ -476,16 +484,20 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
   }
+  # compute indirect effect(s)
+  ab <- a * b
+  if (p_m > 1L) ab <- c(Total = sum(ab), ab)
+  # extract direct and total effect
   direct <- unname(coef(fit_ymx)[2L + p_m])
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
-    total <- if(p_m == 1L) a*b + direct else sum(a*b) + direct
+    total <- if(p_m == 1L) ab + direct else ab["Total"] + direct
   } else if (estimate_yx) total <- unname(coef(fit_yx)[2L])
   else total <- NA_real_
   # return results
-  result <- list(a = a, b = b, direct = direct, total = total, fit_mx = fit_mx,
-                 fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
-                 covariates = covariates, data = data, robust = robust,
-                 family = family)
+  result <- list(a = a, b = b, direct = direct, total = total, ab = ab,
+                 fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
+                 x = x, y = y, m = m, covariates = covariates, data = data,
+                 robust = robust, family = family)
   if(robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
@@ -505,9 +517,9 @@ cov_fit_mediation <- function(data, x, y, m, robust = TRUE,
   direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
   total <- S[y, x] / S[x, x]
   # return results
-  result <- list(a = a, b = b, direct = direct, total = total, cov = cov,
-                 x = x, y = y, m = m, covariates = character(), data = data,
-                 robust = robust)
+  result <- list(a = a, b = b, direct = direct, total = total, ab = a * b,
+                 cov = cov, x = x, y = y, m = m, covariates = character(),
+                 data = data, robust = robust)
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result

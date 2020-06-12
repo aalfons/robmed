@@ -15,7 +15,7 @@
 #' model fit.
 #' @param type  a character string specifying whether to extract the means
 #' of the bootstrap distribution (\code{"boot"}; the default), or the
-#' coefficient estimates based on the full data set (\code{"data"}).
+#' coefficient estimates based on the original data set (\code{"data"}).
 #' @param parm  an integer, character or logical vector specifying the
 #' coefficients to be extracted, or \code{NULL} to extract all coefficients.
 #' @param \dots  additional arguments are currently ignored.
@@ -47,13 +47,7 @@
 #' @export
 
 coef.test_mediation <- function(object, parm = NULL, ...) {
-  # extract effects (including indirect effect)
-  ab <- object$ab
-  names(ab) <- if(length(ab) == 1L) "ab" else paste("ab", names(ab), sep = "_")
-  coef <- c(coef(object$fit), ab)
-  # if requested, take subset of effects
-  if(!is.null(parm))  coef <- coef[parm]
-  coef
+  coef(object$fit, parm = parm, ...)
 }
 
 #' @rdname coef.test_mediation
@@ -67,33 +61,13 @@ coef.boot_test_mediation <- function(object, parm = NULL,
   type <- match.arg(type)
   # extract effects (including indirect effect)
   if(type == "boot") {
-    # number of mediators and covariates
-    p_m <- length(object$fit$m)
-    p_covariates <- length(object$fit$covariates)
-    # get indices of columns of bootstrap replicates that that correspond to
-    # the respective models
-    index_list <- get_index_list(p_m, p_covariates)
-    # the a path is the second coefficient in the model m ~ x + covariates
-    if (p_m == 1L) keep_mx <- index_list$fit_mx[2L]
-    else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
-    # keep b and c coefficients of model y ~ m + x + covariates
-    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1)]
-    # index of total effect is stored separately in this list
-    keep <- c(keep_mx, keep_ymx, index_list$total)
-    # compute means of bootstrap replicates
-    coef <- colMeans(object$reps$t[, keep], na.rm = TRUE)
-    names(coef) <- get_effect_names(object$fit$m)
-    ab <- object$ab
-  } else {
-    coef <- coef(object$fit)
-    ab <- object$fit$a * object$fit$b
-    if(length(ab) > 1L) ab <- c(Total = sum(ab), ab)
-  }
-  # set names and combine coefficients with indirect effect
-  names(ab) <- if(length(ab) == 1L) "ab" else paste("ab", names(ab), sep = "_")
-  coef <- c(coef, ab)
-  # if requested, take subset of effects
-  if(!is.null(parm))  coef <- coef[parm]
+    # construct vector of bootstrap estimates
+    coef <- c(object$a, object$b, object$direct, object$total, object$ab)
+    names(coef) <- get_effect_names(object$fit$m, indirect = TRUE)
+    # if requested, take subset of effects
+    if(!is.null(parm))  coef <- coef[parm]
+  } else coef <- coef(object$fit, parm = parm, ...)
+  # return effects
   coef
 }
 
@@ -104,8 +78,8 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 
 coef.fit_mediation <- function(object, parm = NULL, ...) {
   # extract effects
-  coef <- c(object$a, object$b, object$direct, object$total)
-  names(coef) <- get_effect_names(object$m)
+  coef <- c(object$a, object$b, object$direct, object$total, object$ab)
+  names(coef) <- get_effect_names(object$m, indirect = TRUE)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
   coef
@@ -113,7 +87,10 @@ coef.fit_mediation <- function(object, parm = NULL, ...) {
 
 
 # utility function to get names of coefficients
-get_effect_names <- function(m, sep = "_") {
-  if(length(m) == 1L) c("a", "b", "Direct", "Total")
-  else c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
+get_effect_names <- function(m, sep = "_", indirect = FALSE) {
+  if(length(m) == 1L) c("a", "b", "Direct", "Total", if (indirect) "ab")
+  else {
+    c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total",
+      if (indirect) paste("ab", c("Total", m), sep = sep))
+  }
 }
