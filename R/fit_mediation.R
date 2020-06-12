@@ -490,7 +490,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   # extract direct and total effect
   direct <- unname(coef(fit_ymx)[2L + p_m])
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
-    total <- if(p_m == 1L) ab + direct else ab["Total"] + direct
+    total <- if(p_m == 1L) ab + direct else unname(ab["Total"]) + direct
   } else if (estimate_yx) total <- unname(coef(fit_yx)[2L])
   else total <- NA_real_
   # return results
