@@ -68,6 +68,7 @@ test_that("dimensions are correct", {
   expect_length(foo$b, 1L)
   expect_length(foo$direct, 1L)
   expect_length(foo$total, 1L)
+  expect_length(foo$ab, 1L)
   # dimensions of data
   expect_identical(dim(foo$data), c(as.integer(n), 3L))
 
@@ -76,14 +77,15 @@ test_that("dimensions are correct", {
 test_that("values of coefficients are correct", {
 
   expect_equivalent(foo$total, foo$a * foo$b + foo$direct)
+  expect_equivalent(foo$ab, foo$a * foo$b)
 
 })
 
 test_that("output of coef() method has correct attributes", {
 
   coefficients <- coef(foo)
-  expect_length(coefficients, 4L)
-  expect_named(coefficients, c("a", "b", "Direct", "Total"))
+  expect_length(coefficients, 5L)
+  expect_named(coefficients, c("a", "b", "Direct", "Total", "ab"))
 
 })
 
@@ -93,6 +95,7 @@ test_that("coef() method returns correct values of coefficients", {
   expect_equivalent(coef(foo, parm = "b"), foo$b)
   expect_equivalent(coef(foo, parm = "Direct"), foo$direct)
   expect_equivalent(coef(foo, parm = "Total"), foo$total)
+  expect_equivalent(coef(foo, parm = "ab"), foo$ab)
 
 })
 

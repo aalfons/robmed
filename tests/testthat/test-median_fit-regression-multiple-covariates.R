@@ -68,6 +68,7 @@ test_that("dimensions are correct", {
   expect_length(foo$b, 2L)
   expect_length(foo$direct, 1L)
   expect_length(foo$total, 1L)
+  expect_length(foo$ab, 3L)
   # individual regressions
   expect_length(coef(foo$fit_mx$M1), 4L)
   expect_length(coef(foo$fit_mx$M2), 4L)
@@ -79,20 +80,30 @@ test_that("dimensions are correct", {
 
 test_that("values of coefficients are correct", {
 
-  a <- c(coef(foo$fit_mx$M1)["X"], coef(foo$fit_mx$M2)["X"])
-  expect_equivalent(foo$a, a)
-  expect_named(foo$a, c("M1", "M2"))
-  expect_equal(foo$b, coef(foo$fit_ymx)[c("M1", "M2")])  # also checks names
-  expect_equivalent(foo$direct, coef(foo$fit_ymx)["X"])
-  expect_equivalent(foo$total, sum(foo$a * foo$b) + foo$direct)
+  # extract correct values
+  a <- c(M1 = unname(coef(foo$fit_mx$M1)["X"]),
+         M2 = unname(coef(foo$fit_mx$M2)["X"]))
+  b <- coef(foo$fit_ymx)[c("M1", "M2")]
+  direct <- coef(foo$fit_ymx)["X"]
+  ab <- a * b
+  sum_ab <- sum(ab)
+  ab <- c(Total = sum_ab, ab)
+  # compare with stored values
+  expect_equal(foo$a, a)
+  expect_equal(foo$b, b)
+  expect_equivalent(foo$direct, direct)
+  expect_equivalent(foo$total, sum_ab + direct)
+  expect_equal(foo$ab, ab)
 
 })
 
 test_that("output of coef() method has correct attributes", {
 
   coefficients <- coef(foo)
-  expect_length(coefficients, 6L)
-  expect_named(coefficients, c("a_M1", "a_M2", "b_M1", "b_M2", "Direct", "Total"))
+  expect_length(coefficients, 9L)
+  expect_named(coefficients,
+               c("a_M1", "a_M2", "b_M1", "b_M2", "Direct", "Total",
+                 "ab_Total", "ab_M1", "ab_M2"))
 
 })
 
@@ -104,6 +115,9 @@ test_that("coef() method returns correct values of coefficients", {
   expect_equivalent(coef(foo, parm = "b_M2"), foo$b["M2"])
   expect_equivalent(coef(foo, parm = "Direct"), foo$direct)
   expect_equivalent(coef(foo, parm = "Total"), foo$total)
+  expect_equivalent(coef(foo, parm = "ab_Total"), foo$ab["Total"])
+  expect_equivalent(coef(foo, parm = "ab_M1"), foo$ab["M1"])
+  expect_equivalent(coef(foo, parm = "ab_M2"), foo$ab["M2"])
 
 })
 
