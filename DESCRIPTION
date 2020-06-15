@@ -12,7 +12,8 @@ Imports:
     methods,
     quantreg (>= 5.36),
     shiny (>= 1.1.0),
-    sn (>= 1.5-4)
+    sn (>= 1.5-4),
+    utils
 Suggests:
     MASS,
     dplyr,

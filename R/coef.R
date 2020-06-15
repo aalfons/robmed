@@ -58,12 +58,18 @@ coef.boot_test_mediation <- function(object, parm = NULL,
                                      type = c("boot", "data"),
                                      ...) {
   # initializations
+  m <- object$fit$m
+  p_m <- length(m)
   type <- match.arg(type)
   # extract effects (including indirect effect)
   if(type == "boot") {
     # construct vector of bootstrap estimates
-    coef <- c(object$a, object$b, object$direct, object$total, object$ab)
-    names(coef) <- get_effect_names(object$fit$m, indirect = TRUE)
+    ab <- object$ab
+    coef <- c(object$a, object$b, object$direct, object$total, ab)
+    # add coefficient names
+    if (p_m == 1L) indirect_names <- "ab"
+    else indirect_names <- paste("ab", names(ab), sep = "_")
+    names(coef) <- c(get_effect_names(m), indirect_names)
     # if requested, take subset of effects
     if(!is.null(parm))  coef <- coef[parm]
   } else coef <- coef(object$fit, parm = parm, ...)
@@ -77,9 +83,16 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 #' @export
 
 coef.fit_mediation <- function(object, parm = NULL, ...) {
+  # initializations
+  m <- object$m
+  p_m <- length(m)
   # extract effects
-  coef <- c(object$a, object$b, object$direct, object$total, object$ab)
-  names(coef) <- get_effect_names(object$m, indirect = TRUE)
+  ab <- object$ab
+  coef <- c(object$a, object$b, object$direct, object$total, ab)
+  # add coefficient names
+  if (p_m == 1L) indirect_names <- "ab"
+  else indirect_names <- paste("ab", names(ab), sep = "_")
+  names(coef) <- c(get_effect_names(m), indirect_names)
   # if requested, take subset of effects
   if(!is.null(parm))  coef <- coef[parm]
   coef
@@ -87,10 +100,7 @@ coef.fit_mediation <- function(object, parm = NULL, ...) {
 
 
 # utility function to get names of coefficients
-get_effect_names <- function(m, sep = "_", indirect = FALSE) {
-  if(length(m) == 1L) c("a", "b", "Direct", "Total", if (indirect) "ab")
-  else {
-    c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total",
-      if (indirect) paste("ab", c("Total", m), sep = sep))
-  }
+get_effect_names <- function(m, sep = "_") {
+  if(length(m) == 1L) c("a", "b", "Direct", "Total")
+  else c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
 }

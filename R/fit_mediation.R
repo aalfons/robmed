@@ -191,6 +191,7 @@
 #' @import boot
 #' @import robustbase
 #' @importFrom quantreg rq.fit
+#' @importFrom utils combn
 #' @export
 
 fit_mediation <- function(object, ...) UseMethod("fit_mediation")
@@ -275,7 +276,8 @@ fit_mediation.formula <- function(formula, data, ...) {
 fit_mediation.default <- function(object, x, y, m, covariates = NULL,
                                   method = c("regression", "covariance"),
                                   robust = TRUE, family = "gaussian",
-                                  fit_yx = TRUE, control = NULL, ...) {
+                                  contrast = FALSE, fit_yx = TRUE,
+                                  control = NULL, ...) {
   ## initializations
   # prepare data set
   data <- as.data.frame(object)
@@ -367,10 +369,16 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
       family <- match.arg(family, choices = families)
       fit_yx <- isTRUE(fit_yx)
     }
+    # check whether to compute differences of indirect effect(s)
+    if (p_m == 1L) contrast <- FALSE
+    else if (is.logical(contrast)) {
+      contrast <- isTRUE(contrast)
+      if (contrast) contrast <- "original"
+    } else contrast <- match.arg(contrast, choices = c("original", "absolute"))
     # estimate effects
     reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
-                      robust = robust, family = family, fit_yx = fit_yx,
-                      control = control)
+                      robust = robust, family = family, contrast = contrast,
+                      fit_yx = fit_yx, control = control)
   } else {
     # check for robust method
     robust <- isTRUE(robust)
@@ -385,7 +393,8 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
 ## estimate the effects in a mediation model via regressions
 reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                               robust = "MM", family = "gaussian",
-                              fit_yx = TRUE, control = reg_control()) {
+                              contrast = FALSE, fit_yx = TRUE,
+                              control = reg_control()) {
   # number of mediators
   p_m <- length(m)
   # construct predictor matrices for regression models
@@ -486,7 +495,32 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   }
   # compute indirect effect(s)
   ab <- a * b
-  if (p_m > 1L) ab <- c(Total = sum(ab), ab)
+  if (p_m > 1L) {
+    # if requested, compute contrasts
+    if (is.character(contrast)) {
+      # all combinations of hypothesized mediators
+      combinations <- combn(m, 2, simplify = FALSE)
+      # compute contrasts
+      if (contrast == "original") {
+        # compute differences of indirect effects
+        contrasts <- sapply(combinations, function(indices) {
+          ab[indices[1]] - ab[indices[2]]
+        })
+      } else if (contrast == "absolute") {
+        # compute differences of absolute values of indirect effects
+        contrasts <- sapply(combinations, function(indices) {
+          abs(ab[indices[1]]) - abs(ab[indices[2]])
+        })
+      } else {
+        # shouldn't happen
+        stop(sprintf("%s contrasts not implemented", contrast))
+      }
+      # add names for contrasts
+      names(contrasts) <- paste0("Contrast", seq_along(combinations))
+    } else contrasts <- NULL
+    # combine total indirect effects, individual indirect effects, and contrasts
+    ab <- c(Total = sum(ab), ab, contrasts)
+  }
   # extract direct and total effect
   direct <- unname(coef(fit_ymx)[2L + p_m])
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
@@ -497,7 +531,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   result <- list(a = a, b = b, direct = direct, total = total, ab = ab,
                  fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
                  x = x, y = y, m = m, covariates = covariates, data = data,
-                 robust = robust, family = family)
+                 robust = robust, family = family, contrast = contrast)
   if(robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
