@@ -59,8 +59,6 @@ test_that("output has correct structure", {
   # regression fit
   expect_s3_class(sobel$fit, "reg_fit_mediation")
   expect_s3_class(sobel$fit, "fit_mediation")
-  # indirect effect
-  expect_is(sobel$ab, "numeric")
   # standard error
   expect_is(sobel$se, "numeric")
   # test statistic
@@ -88,8 +86,6 @@ test_that("arguments are correctly passed", {
 
 test_that("dimensions are correct", {
 
-  # indirect effect
-  expect_length(sobel$ab, 1L)
   # standard error
   expect_length(sobel$se, 1L)
   # test statistic
@@ -99,23 +95,9 @@ test_that("dimensions are correct", {
 
 })
 
-test_that("values of coefficients are correct", {
-
-  expect_equivalent(sobel$ab, sobel$fit$a * sobel$fit$b)
-
-})
-
-test_that("output of coef() method has correct attributes", {
-
-  coef_sobel <- coef(sobel)
-  expect_length(coef_sobel, 5L)
-  expect_named(coef_sobel, coef_names)
-
-})
-
 test_that("coef() method returns correct values of coefficients", {
 
-  expect_equivalent(coef(sobel, parm = "ab"), sobel$ab)
+  expect_identical(coef(sobel), coef(sobel$fit))
 
 })
 
@@ -257,12 +239,6 @@ test_that("output of retest() has correct structure", {
 
 test_that("arguments of retest() are correctly passed", {
 
-  # alternative hypothesis
-  expect_identical(sobel_less$alternative, "less")
-  expect_identical(sobel_greater$alternative, "greater")
-  # indirect effect
-  expect_identical(sobel_less$ab, sobel$ab)
-  expect_identical(sobel_greater$ab, sobel$ab)
   # standard error
   expect_identical(sobel_less$se, sobel$se)
   expect_identical(sobel_greater$se, sobel$se)
@@ -272,6 +248,12 @@ test_that("arguments of retest() are correctly passed", {
   # p-value
   expect_equal(sobel_less$p_value, 1-sobel$p_value/2)
   expect_equal(sobel_greater$p_value, sobel$p_value/2)
+  # alternative hypothesis
+  expect_identical(sobel_less$alternative, "less")
+  expect_identical(sobel_greater$alternative, "greater")
+  # mediation model fit
+  expect_identical(sobel_less$fit, sobel$fit)
+  expect_identical(sobel_greater$fit, sobel$fit)
 
 })
 
