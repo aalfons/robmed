@@ -143,7 +143,7 @@ setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
   level <- rep(as.numeric(level), length.out = 1)
   if (is.na(level) || level < 0 || level > 1) level <- formals()$level
   # extract point estimate and standard error
-  ab <- object$ab
+  ab <- object$fit$ab
   se <- object$se
   # construct data frame containing x- and y-values for the density
   if (is.null(grid)) {

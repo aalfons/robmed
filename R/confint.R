@@ -100,16 +100,16 @@ confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
 confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
                                          ...) {
   # initializations
-  level <- rep(as.numeric(level), length.out=1)
+  level <- rep(as.numeric(level), length.out = 1)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # confidence interval of indirect effect
-  ci <- confint_z(object$ab, object$se, level=level,
-                  alternative=object$alternative)
+  ci <- confint_z(object$fit$ab, object$se, level = level,
+                  alternative = object$alternative)
   # combine with confidence intervalse of other effects
-  ci <- rbind(get_confint(object$fit, level=level), ab=ci)
+  ci <- rbind(get_confint(object$fit, level = level), ab = ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
-  if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
+  if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
   ci
 }
 
@@ -156,23 +156,23 @@ get_confint.cov_fit_mediation <- function(object, parm = NULL, level = 0.95,
     estimates <- c(object$a, object$b, object$direct, object$total)
     # compute standard errors
     summary <- get_summary(object)
-    se <- c(summary$a[1,2], summary$b[1,2], summary$direct[1,2],
-            summary$total[1,2])
+    se <- c(summary$a[1, 2], summary$b[1, 2], summary$direct[1, 2],
+            summary$total[1, 2])
   } else {
     # compute means and standard errors from bootstrap replicates
     keep <- c(3L, 5L:7L)
-    estimates <- colMeans(boot$t[, keep], na.rm=TRUE)
-    se <- apply(boot$t[, keep], 2, sd, na.rm=TRUE)
+    estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
+    se <- apply(boot$t[, keep], 2, sd, na.rm = TRUE)
   }
   # compute confidence intervals and combine into one matrix
   ci <- rbind(confint_z(estimates[1], se[1], level=level),
               confint_z(estimates[2], se[2], level=level),
               confint_z(estimates[3], se[3], level=level),
               confint_z(estimates[4], se[4], level=level))
-  cn <- paste(format(100 * c(alpha/2, 1-alpha/2), trim=TRUE), "%")
+  cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
   dimnames(ci) <- list(c("a", "b", "Direct", "Total"), cn)
   # if requested, take subset of effects
-  if(!is.null(parm)) ci <- ci[parm, , drop=FALSE]
+  if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
   ci
 }
 
@@ -208,10 +208,10 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     p_covariates <- length(object$fit$covariates)
     index_list <- get_index_list(p_m, p_covariates)
     # the a path is the second coefficient in the model m ~ x + covariates
-    if (p_m == 1) keep_mx <- index_list$fit_mx[2L]
+    if (p_m == 1L) keep_mx <- index_list$fit_mx[2L]
     else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
     # keep b and c coefficients of model y ~ m + x + covariates
-    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1)]
+    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1L)]
     # index of total effect is stored separately in this list
     keep <- c(keep_mx, keep_ymx, index_list$total)
     # compute means and standard errors from bootstrap replicates
