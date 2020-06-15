@@ -403,6 +403,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   predictors_ymx <- as.matrix(data[, c(m, x, covariates), drop = FALSE])
   # other initializations
   have_robust <- is.character(robust)
+  have_contrast <- is.character(contrast)
   estimate_yx <- fit_yx  # avoid name conflicts
   # compute regression models
   if (have_robust) {
@@ -497,29 +498,9 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   ab <- a * b
   if (p_m > 1L) {
     # if requested, compute contrasts
-    if (is.character(contrast)) {
-      # all combinations of hypothesized mediators
-      combinations <- combn(m, 2, simplify = FALSE)
-      # compute contrasts
-      if (contrast == "original") {
-        # compute differences of indirect effects
-        contrasts <- sapply(combinations, function(indices) {
-          ab[indices[1]] - ab[indices[2]]
-        })
-      } else if (contrast == "absolute") {
-        # compute differences of absolute values of indirect effects
-        contrasts <- sapply(combinations, function(indices) {
-          abs(ab[indices[1]]) - abs(ab[indices[2]])
-        })
-      } else {
-        # shouldn't happen
-        stop(sprintf("%s contrasts not implemented", contrast))
-      }
-      # add names for contrasts
-      names(contrasts) <- paste0("Contrast", seq_along(combinations))
-    } else contrasts <- NULL
+    contrasts <- if (have_contrast) get_contrasts(ab, type = contrast)
     # combine total indirect effects, individual indirect effects, and contrasts
-    ab <- c(Total = sum(ab), ab, contrasts)
+    ab <- c(Total = sum(ab), ab, contrasts$values)
   }
   # extract direct and total effect
   direct <- unname(coef(fit_ymx)[2L + p_m])
@@ -532,7 +513,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                  fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
                  x = x, y = y, m = m, covariates = covariates, data = data,
                  robust = robust, family = family, contrast = contrast)
-  if(robust == "MM") result$control <- control
+  if (have_contrast) result$contrast_info <- contrasts$info  # TODO: maybe the information should be computed in print method?
+  if (robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
 }
@@ -635,4 +617,47 @@ rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
   # add the class and return the model fit
   class(fit) <- "rq"
   fit
+}
+
+
+## obtains contrasts of estimates and information on how they are computed
+get_contrasts <- function(estimates, type = "original") {
+  # list of all combinations
+  combinations <- combn(names(estimates), 2, simplify = FALSE)
+  # names to be used for contrasts
+  n_contrasts <- length(combinations)
+  contrast_names <- "Contrast"
+  if (n_contrasts > 1) {
+    contrast_names <- paste0("Contrast", seq_len(n_contrasts))
+  }
+  # obtain values of contrasts
+  if (type == "original") {
+    # compute differences of indirect effects
+    contrast_values <- sapply(combinations, function(names) {
+      estimates[names[1]] - estimates[names[2]]
+    })
+    # obtain information on contrasts
+    contrast_definition <- sapply(combinations, function(names) {
+      paste(paste("ab", names, sep = "_"), collapse = " - ")
+    })
+  } else if (type == "absolute") {
+    # compute differences of absolute values of indirect effects
+    contrast_values <- sapply(combinations, function(names) {
+      abs(estimates[names[1]]) - abs(estimates[names[2]])
+    })
+    # obtain information on contrasts
+    contrast_definition <- sapply(combinations, function(names) {
+      paste(paste0("|ab_", names, "|"), collapse = " - ")
+    })
+  } else {
+    # shouldn't happen
+    stop(sprintf("%s contrasts not implemented", contrast))
+  }
+  # add names to contrasts
+  names(contrast_values) <- contrast_names
+  # construct data frame for information on contrasts
+  contrast_info <- data.frame(Label = contrast_names,
+                              Definition = contrast_definition)
+  # return results
+  list(values = contrast_values, info = contrast_info)
 }
