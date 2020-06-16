@@ -651,7 +651,7 @@ get_contrasts <- function(estimates, type = "original") {
     })
   } else {
     # shouldn't happen
-    stop(sprintf("%s contrasts not implemented", contrast))
+    stop(sprintf("%s contrasts not implemented", type))
   }
   # add names to contrasts
   names(contrast_values) <- contrast_names

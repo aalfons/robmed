@@ -253,16 +253,18 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                                    type = c("bca", "perc"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
-                                   fit_yx = TRUE, control = NULL, ...) {
+                                   contrast = FALSE, fit_yx = TRUE,
+                                   control = NULL, ...) {
   ## fit mediation model
   if (missing(data)) {
     fit <- fit_mediation(formula, method = method, robust = robust,
-                         family = family, fit_yx = fit_yx,
-                         control = control)
+                         family = family, contrast = contrast,
+                         fit_yx = fit_yx, control = control)
   } else {
     fit <- fit_mediation(formula, data = data, method = method,
                          robust = robust, family = family,
-                         fit_yx = fit_yx, control = control)
+                         contrast = contrast, fit_yx = fit_yx,
+                         control = control)
   }
   ## call method for fitted model
   test_mediation(fit, test = test, alternative = alternative,
@@ -281,11 +283,12 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    type = c("bca", "perc"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
-                                   fit_yx = TRUE, control = NULL, ...) {
+                                   contrast = FALSE, fit_yx = TRUE,
+                                   control = NULL, ...) {
   ## fit mediation model
   fit <- fit_mediation(object, x = x, y = y, m = m, covariates = covariates,
                        method = method, robust = robust, family = family,
-                       fit_yx = fit_yx, control = control)
+                       contrast = contrast, fit_yx = fit_yx, control = control)
   ## call method for fitted model
   test_mediation(fit, test = test, alternative = alternative,
                  R = R, level = level, type = type, ...)
@@ -341,8 +344,10 @@ boot_test_mediation <- function(fit,
                                 ...) {
 
   # initializations
-  p_m <- length(fit$m)                    # number of mediators
-  p_covariates <- length(fit$covariates)  # number of covariates
+  p_m <- length(fit$m)                     # number of mediators
+  p_covariates <- length(fit$covariates)   # number of covariates
+  contrast <- fit$contrast                 # only implemented for regression fit
+  have_contrast <- is.character(contrast)  # but this always works
 
   # check whether we have a regression fit or a covariance fit
   if (inherits(fit, "reg_fit_mediation")) {
@@ -845,6 +850,48 @@ boot_test_mediation <- function(fit,
               alternative = alternative, type = type)
     })
     ci <- do.call(rbind, ci)
+    # if requested, compute contrasts of indirect effects
+    if (have_contrast) {
+      # list of all combinations of indices of the relevant indirect effects
+      combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
+      # compute bootstrap estimates of the contrasts and prepare the "boot"
+      # object for the calculation of the confidence intervals
+      contrast_bootstrap <- bootstrap
+      if (contrast == "original") {
+        contrasts <- sapply(combinations, function(indices) {
+          ab[indices[1]] - ab[indices[2]]
+        })
+        contrast_bootstrap$t0 <- sapply(combinations, function(indices, t0) {
+          t0[indices[1]] - t0[indices[2]]
+        }, t0 = bootstrap$t0)
+        contrast_bootstrap$t <- sapply(combinations, function(indices, t) {
+          t[, indices[1]] - t[, indices[2]]
+        }, t = bootstrap$t)
+      } else if (contrast == "absolute") {
+        contrasts <- sapply(combinations, function(indices) {
+          abs(ab[indices[1]]) - abs(ab[indices[2]])
+        })
+        contrast_bootstrap$t0 <- sapply(combinations, function(indices, t0) {
+          abs(t0[indices[1]]) - abs(t0[indices[2]])
+        }, t0 = bootstrap$t0)
+        contrast_bootstrap$t <- sapply(combinations, function(indices, t) {
+          abs(t[, indices[1]]) - abs(t[, indices[2]])
+        }, t = bootstrap$t)
+      } else {
+        # shouldn't happen
+        stop(sprintf("%s contrasts not implemented", contrast))
+      }
+      # compute confidence intervals of contrasts
+      contrast_ci <- lapply(seq_along(combinations), function(j) {
+        confint(contrast_bootstrap, parm = j, level = level,
+                alternative = alternative, type = type)
+      })
+      contrast_ci <- do.call(rbind, contrast_ci)
+      # add contrasts to results for the indirect effects
+      ab <- c(ab, contrasts)
+      ci <- rbind(ci, contrast_ci)
+    }
+    # add names for indirect effects and confidence intervals
     names(ab) <- rownames(ci) <- names(fit$ab)
   }
 
