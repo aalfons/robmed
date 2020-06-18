@@ -854,35 +854,17 @@ boot_test_mediation <- function(fit,
     if (have_contrast) {
       # list of all combinations of indices of the relevant indirect effects
       combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
-      # compute bootstrap estimates of the contrasts and prepare the "boot"
-      # object for the calculation of the confidence intervals
+      # compute bootstrap estimates of the contrasts
+      contrasts <- get_contrasts(ab, combinations, type = contrast)
+      # prepare "boot" object for the calculation of the confidence intervals
       contrast_bootstrap <- bootstrap
-      if (contrast == "original") {
-        contrasts <- sapply(combinations, function(indices) {
-          ab[indices[1]] - ab[indices[2]]
-        })
-        contrast_bootstrap$t0 <- sapply(combinations, function(indices, t0) {
-          t0[indices[1]] - t0[indices[2]]
-        }, t0 = bootstrap$t0)
-        contrast_bootstrap$t <- sapply(combinations, function(indices, t) {
-          t[, indices[1]] - t[, indices[2]]
-        }, t = bootstrap$t)
-      } else if (contrast == "absolute") {
-        contrasts <- sapply(combinations, function(indices) {
-          abs(ab[indices[1]]) - abs(ab[indices[2]])
-        })
-        contrast_bootstrap$t0 <- sapply(combinations, function(indices, t0) {
-          abs(t0[indices[1]]) - abs(t0[indices[2]])
-        }, t0 = bootstrap$t0)
-        contrast_bootstrap$t <- sapply(combinations, function(indices, t) {
-          abs(t[, indices[1]]) - abs(t[, indices[2]])
-        }, t = bootstrap$t)
-      } else {
-        # shouldn't happen
-        stop(sprintf("%s contrasts not implemented", contrast))
-      }
+      contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,
+                                             type = contrast)
+      contrast_bootstrap$t <- get_contrasts(bootstrap$t, combinations,
+                                            type = contrast)
       # compute confidence intervals of contrasts
-      contrast_ci <- lapply(seq_along(combinations), function(j) {
+      indices_contrasts <- seq_along(combinations)
+      contrast_ci <- lapply(indices_contrasts, function(j) {
         confint(contrast_bootstrap, parm = j, level = level,
                 alternative = alternative, type = type)
       })
@@ -996,4 +978,62 @@ get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
   # return list of indices
   list(ab = indices_ab, fit_mx = indices_mx, fit_ymx = indices_ymx,
        total = index_total)
+}
+
+
+## internal functions to compute contrasts
+
+# compute contrasts
+get_contrasts <- function(x, combinations = NULL, type = "original") {
+  # compute combinations if not supplied
+  if (is.null(combinations)) {
+    indices <- get_contrast_indices(x)
+    combinations <- combn(indices, 2, simplify = FALSE)
+  }
+  # define function to compute contrasts
+  if (type == "original") fun <- get_original_contrast
+  else if (type == "absolute") fun <- get_absolute_contrast
+  else stop(sprintf("%s contrasts not implemented", type))
+  # compute contrasts
+  sapply(combinations, fun, x = x)
+}
+
+# obtain indices to be used for computing contrasts
+get_contrast_indices <- function(x) {
+  if (is.matrix(x) || is.data.frame(x)) seq_len(ncol(x))
+  else seq_along(x)
+}
+
+# obtain names for contrasts
+get_contrast_names <- function(n) {
+  if (n > 1) paste0("Contrast", seq_len(n))
+  else "Contrast"
+}
+
+# compute contrasts as differences of values
+get_original_contrast <- function(j, x) {
+  if (is.matrix(x) || is.data.frame(x)) x[, j[1]] - x[, j[2]]
+  else x[j[1]] - x[j[2]]
+}
+
+# compute contrasts as differences of absolute values
+get_absolute_contrast <- function(j, x) {
+  if (is.matrix(x) || is.data.frame(x)) abs(x[, j[1]]) - abs(x[, j[2]])
+  else abs(x[j[1]]) - abs(x[j[2]])
+}
+
+# obtain information on how contrasts are computed
+get_contrast_info <- function(names, type = "original") {
+  # compute combinations of names
+  combinations <- combn(names, 2, simplify = FALSE)
+  n_contrasts <- length(combinations)
+  # obtain information on contrasts
+  if (type == "original") {
+    fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
+  } else if (type == "absolute") {
+    fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")
+  } else stop(sprintf("%s contrasts not implemented", type))
+  # return information on contrasts
+  data.frame(Label = get_contrast_names(n_contrasts),
+             Definition = sapply(combinations, fun))
 }
