@@ -1023,10 +1023,13 @@ get_absolute_contrast <- function(j, x) {
 }
 
 # obtain information on how contrasts are computed
-get_contrast_info <- function(names, type = "original") {
+get_contrast_info <- function(names, type = "original", prefix = FALSE) {
   # compute combinations of names
   combinations <- combn(names, 2, simplify = FALSE)
   n_contrasts <- length(combinations)
+  # obtain labels for contrasts
+  labels <- get_contrast_names(n_contrasts)
+  if (prefix) labels <- paste("ab", labels, sep = "_")
   # obtain information on contrasts
   if (type == "original") {
     fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
@@ -1034,6 +1037,5 @@ get_contrast_info <- function(names, type = "original") {
     fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")
   } else stop(sprintf("%s contrasts not implemented", type))
   # return information on contrasts
-  data.frame(Label = get_contrast_names(n_contrasts),
-             Definition = sapply(combinations, fun))
+  data.frame(Label = labels, Definition = sapply(combinations, fun))
 }

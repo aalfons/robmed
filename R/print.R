@@ -112,6 +112,9 @@ print.fit_mediation <- function(x, info = TRUE, ...) {
   # print estimated effects
   cat("\nEffects:\n")
   print(coef(x), ...)
+  # print information on how contrasts are computed
+  # (if there are no contrasts, nothing is printed)
+  print_contrast_info(x, prefix = TRUE)
   # return object invisibly
   invisible(x)
 }
@@ -150,6 +153,7 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   # initializations
   m <- x$fit$m
   p_m <- length(m)
+  # print indirect effects
   plural <- if (p_m == 1L) "" else "s"
   cat(sprintf("\nIndirect effect%s of x on y:\n", plural))
   # extract indirect effect
@@ -160,6 +164,9 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   colnames(ci) <- c("Lower", "Upper")
   # combine and print
   print(cbind(ab, ci), digits = digits, ...)
+  # print information on how contrasts are computed
+  # (if there are no contrasts, nothing is printed)
+  print_contrast_info(x$fit)
   # print additional information
   cat("---\nLevel of confidence: ", format(100 * x$level), " %\n", sep = "")
   cat(sprintf("\nNumber of bootstrap replicates: %d\n", x$R))
@@ -403,6 +410,24 @@ print.summary_test_mediation <- function(x, digits = max(3, getOption("digits")-
   if(isTRUE(signif.stars) && isTRUE(signif.legend)) print_legend()
   # return object invisibly
   invisible(x)
+}
+
+## internal function to print information on contrast definitions
+# This now expects an object of class "fit_mediation".  In future versions,
+# this could also be turned into a generic function if necessary.
+print_contrast_info <- function(x, prefix = FALSE, ...) {
+  # initializations
+  m <- x$m
+  p_m <- length(m)
+  contrast <- x$contrast                   # only implemented for regression fit
+  have_contrast <- is.character(contrast)  # but this always works
+  # if applicable, print indirect effect contrast definitions
+  if (have_contrast) {
+    plural <- if (p_m > 2L) "s" else ""
+    cat(sprintf("\nIndirect effect contrast definition%s:\n", plural))
+    contrast_info <- get_contrast_info(m, type = contrast, prefix = prefix)
+    print(contrast_info, row.names = FALSE)
+  }
 }
 
 ## internal function to print legend for significance stars
