@@ -4,6 +4,10 @@ Changes in robmed version 0.8.0
 
     + Added more unit tests.
 
+    + Bugfix in setup_density_plot(): in case of multiple indirect effects, the
+      column "Effect" of the data frames is now a factor to preserve the order
+      in the plot.
+
 
 
 Changes in robmed version 0.7.0

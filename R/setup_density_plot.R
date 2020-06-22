@@ -100,17 +100,31 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
   # initialization
   p_m <- length(object$fit$m)
   have_effects <- p_m > 1L
+  contrast <- object$fit$contrast          # only implemented for regression fit
+  have_contrast <- is.character(contrast)  # but this always works
   # extract point estimate and confidence interval
   ab <- object$ab
   ci <- object$ci
   # extract information to be plotted
   if (have_effects) {
     # information on indirect effects
-    effects <- names(ab)
-    # construct data frame containing bootstrap density
-    pdf_list <- lapply(seq_len(1L+p_m), function(j) {
-      density(object$reps$t[, j], na.rm = TRUE)
-    })
+    effect_labels <- names(ab)
+    effects <- factor(effect_labels, levels = effect_labels)
+    # compute bootstrap densities
+    indices <- seq_len(1L+p_m)
+    pdf_list <- lapply(indices, function(j, x) density(x[, j], na.rm = TRUE),
+                       x = object$reps$t)
+    # add densities of contrasts (if applicable)
+    if (have_contrast) {
+      bootstrap_contrasts <- get_contrasts(object$reps$t[, indices[-1]],
+                                           type = contrast)
+      n_contrasts <- ncol(bootstrap_contrasts)
+      bootstrap_pdf_list <- lapply(seq_len(n_contrasts),
+                                   function(j, x) density(x[, j], na.rm = TRUE),
+                                   x = bootstrap_contrasts)
+      pdf_list <- c(pdf_list, bootstrap_pdf_list)
+    }
+    # construct data frame containing bootstrap densities
     density_list <- mapply(function(pdf, effect) {
       data.frame(Effect = effect, ab = pdf$x, Density = pdf$y)
     }, pdf = pdf_list, effect = effects, SIMPLIFY = FALSE, USE.NAMES = FALSE)
