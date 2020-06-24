@@ -8,6 +8,9 @@ Changes in robmed version 0.8.0
       column "Effect" of the data frames is now a factor to preserve the order
       in the plot.
 
+    + retest() now uses values of original object as defaults for arguments
+      that are not supplied.
+
 
 
 Changes in robmed version 0.7.0
