@@ -854,14 +854,16 @@ boot_test_mediation <- function(fit,
     if (have_contrast) {
       # list of all combinations of indices of the relevant indirect effects
       combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
-      # compute bootstrap estimates of the contrasts
-      contrasts <- get_contrasts(ab, combinations, type = contrast)
+      # # compute bootstrap estimates of the contrasts
+      # contrasts <- get_contrasts(ab, combinations, type = contrast)
       # prepare "boot" object for the calculation of the confidence intervals
       contrast_bootstrap <- bootstrap
       contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,
                                              type = contrast)
       contrast_bootstrap$t <- get_contrasts(bootstrap$t, combinations,
                                             type = contrast)
+      # compute bootstrap estimates of the contrasts
+      contrasts <- colMeans(contrast_bootstrap$t, na.rm = TRUE)
       # compute confidence intervals of contrasts
       indices_contrasts <- seq_along(combinations)
       contrast_ci <- lapply(indices_contrasts, function(j) {
