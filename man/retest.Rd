@@ -20,24 +20,39 @@ analysis.}
 \item{\dots}{additional arguments to be passed down to methods.}
 
 \item{alternative}{a character string specifying the alternative hypothesis
-in the test for the indirect effect.  Possible values are \code{"twosided"}
-(the default), \code{"less"} or \code{"greater"}.}
+in the test for the indirect effect.  Possible values are \code{"twosided"},
+\code{"less"} or \code{"greater"}.}
 
 \item{level}{numeric; the confidence level of the confidence interval in
-the bootstrap test.  The default is to compute a 95\% confidence interval.}
+the bootstrap test.}
 
 \item{type}{a character string specifying the type of confidence interval
-to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
-default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
-for the percentile bootstrap.}
+to be computed in the bootstrap test.  Possible values are \code{"bca"} for
+the bias-corrected and accelerated bootstrap, or \code{"perc"} for the
+percentile bootstrap.}
+
+\item{contrast}{a logical indicating whether to compute pairwise contrasts
+of the indirect effects.  This can also be a character string, with
+\code{"estimates"} for computing the differences of the indirect effects
+(such that it is tested whether two indirect effects are equal), and
+\code{"absolute"} for computing the differences of the absolute values of
+the indirect effects (such that it is tested whether two indirect effects
+are equal in magnitude).  This is only relevant for models with multiple
+hypothesized mediators, which are currently only implemented for bootstrap
+tests and estimation via regressions.}
 }
 \value{
 An object of the same class as \code{object} with updated test
 results (see \code{\link{test_mediation}()}).
 }
 \description{
-Reperform a (fast and robust) bootstrap test or Sobel's test for the
+Re-perform a (fast and robust) bootstrap test or Sobel's test for the
 indirect effect(s) based on results from (robust) mediation analysis.
+}
+\note{
+From version 0.8.0 onwards, the behavior of this function changed.
+For arguments that are not supplied, the corresponding values of
+\code{object} are now used as defaults.
 }
 \examples{
 data("BSG2014")

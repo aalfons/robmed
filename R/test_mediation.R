@@ -99,6 +99,16 @@
 #' \code{"select"} to select among these four distributions via BIC (see
 #' \code{\link{fit_mediation}()} for details).  This is only relevant if
 #' \code{method = "regression"} and \code{robust = FALSE}.
+#' @param contrast  a logical indicating whether to compute pairwise contrasts
+#' of the indirect effects (defaults to \code{FALSE}).  This can also be a
+#' character string, with \code{"estimates"} for computing the differences
+#' of the indirect effects (such that it is tested whether two indirect effects
+#' are equal), and \code{"absolute"} for computing the differences
+#' of the absolute values of the indirect effects (such that it is tested
+#' whether two indirect effects are equal in magnitude).  This is only relevant
+#' for models with multiple hypothesized mediators, which are currently only
+#' implemented for bootstrap tests and estimation via regressions
+#' (\code{test = "boot"} and \code{method = "regression"}).
 #' @param fit_yx  a logical indicating whether to fit the regression model
 #' \code{y ~ x + covariates} to estimate the total effect (the default is
 #' \code{TRUE}).  This is only relevant if \code{method = "regression"} and
@@ -986,14 +996,14 @@ get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
 ## internal functions to compute contrasts
 
 # compute contrasts
-get_contrasts <- function(x, combinations = NULL, type = "original") {
+get_contrasts <- function(x, combinations = NULL, type = "estimates") {
   # compute combinations if not supplied
   if (is.null(combinations)) {
     indices <- get_contrast_indices(x)
     combinations <- combn(indices, 2, simplify = FALSE)
   }
   # define function to compute contrasts
-  if (type == "original") fun <- get_original_contrast
+  if (type == "estimates") fun <- get_original_contrast
   else if (type == "absolute") fun <- get_absolute_contrast
   else stop(sprintf("%s contrasts not implemented", type))
   # compute contrasts
@@ -1025,7 +1035,7 @@ get_absolute_contrast <- function(j, x) {
 }
 
 # obtain information on how contrasts are computed
-get_contrast_info <- function(names, type = "original", prefix = FALSE) {
+get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
   # compute combinations of names
   combinations <- combn(names, 2, simplify = FALSE)
   n_contrasts <- length(combinations)
@@ -1033,7 +1043,7 @@ get_contrast_info <- function(names, type = "original", prefix = FALSE) {
   labels <- get_contrast_names(n_contrasts)
   if (prefix) labels <- paste("ab", labels, sep = "_")
   # obtain information on contrasts
-  if (type == "original") {
+  if (type == "estimates") {
     fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
   } else if (type == "absolute") {
     fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")

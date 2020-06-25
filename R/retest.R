@@ -5,25 +5,38 @@
 
 #' Retest for mediation
 #'
-#' Reperform a (fast and robust) bootstrap test or Sobel's test for the
+#' Re-perform a (fast and robust) bootstrap test or Sobel's test for the
 #' indirect effect(s) based on results from (robust) mediation analysis.
 #'
 #' @param object  an object inheriting from class
 #' \code{"\link{test_mediation}"} containing results from (robust) mediation
 #' analysis.
 #' @param alternative  a character string specifying the alternative hypothesis
-#' in the test for the indirect effect.  Possible values are \code{"twosided"}
-#' (the default), \code{"less"} or \code{"greater"}.
+#' in the test for the indirect effect.  Possible values are \code{"twosided"},
+#' \code{"less"} or \code{"greater"}.
 #' @param level  numeric; the confidence level of the confidence interval in
-#' the bootstrap test.  The default is to compute a 95\% confidence interval.
+#' the bootstrap test.
 #' @param type  a character string specifying the type of confidence interval
-#' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
-#' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
-#' for the percentile bootstrap.
+#' to be computed in the bootstrap test.  Possible values are \code{"bca"} for
+#' the bias-corrected and accelerated bootstrap, or \code{"perc"} for the
+#' percentile bootstrap.
+#' @param contrast  a logical indicating whether to compute pairwise contrasts
+#' of the indirect effects.  This can also be a character string, with
+#' \code{"estimates"} for computing the differences of the indirect effects
+#' (such that it is tested whether two indirect effects are equal), and
+#' \code{"absolute"} for computing the differences of the absolute values of
+#' the indirect effects (such that it is tested whether two indirect effects
+#' are equal in magnitude).  This is only relevant for models with multiple
+#' hypothesized mediators, which are currently only implemented for bootstrap
+#' tests and estimation via regressions.
 #' @param \dots  additional arguments to be passed down to methods.
 #'
 #' @return An object of the same class as \code{object} with updated test
 #' results (see \code{\link{test_mediation}()}).
+#'
+#' @note From version 0.8.0 onwards, the behavior of this function changed.
+#' For arguments that are not supplied, the corresponding values of
+#' \code{object} are now used as defaults.
 #'
 #' @author Andreas Alfons
 #'
@@ -82,9 +95,9 @@ retest.boot_test_mediation <- function(object, alternative, level,
       if (p_m == 1L) contrast <- FALSE
       else if (is.logical(contrast)) {
         contrast <- isTRUE(contrast)
-        if (contrast) contrast <- "original"
+        if (contrast) contrast <- "estimates"
       } else {
-        contrast <- match.arg(contrast, choices = c("original", "absolute"))
+        contrast <- match.arg(contrast, choices = c("estimates", "absolute"))
       }
     }
     have_contrast <- is.character(contrast)

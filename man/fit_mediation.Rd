@@ -81,6 +81,14 @@ Student's t distribution, \code{"skew-t"} for a skew-t distribution, or
 \sQuote{Details}).  This is only relevant if \code{method = "regression"}
 and \code{robust = FALSE}.}
 
+\item{contrast}{a logical indicating whether to compute pairwise contrasts
+of the indirect effects (defaults to \code{FALSE}).  This can also be a
+character string, with \code{"estimates"} for computing the differences
+of the indirect effects, and \code{"absolute"} for computing the differences
+of the absolute values of the indirect effects.  This is only relevant for
+models with multiple hypothesized mediators, which are currently only
+implemented for estimation via regressions (\code{method = "regression"}).}
+
 \item{fit_yx}{a logical indicating whether to fit the regression model
 \code{y ~ x + covariates} to estimate the total effect (the default is
 \code{TRUE}).  This is only relevant if \code{method = "regression"} and
@@ -134,6 +142,10 @@ proposed mediator variables, as well as covariates.}
 \item{robust}{either a logical indicating whether the effects were estimated
 robustly, or one of the character strings \code{"MM"} and \code{"median"}
 specifying the type of robust regressions.}
+\item{contrast}{either a logical indicating whether contrasts of the
+indirect effects were computed, or one of the character strings
+\code{"estimates"} and \code{"absolute"} specifying the type of contrasts
+of the indirect effects (only \code{"reg_fit_mediation"}).}
 \item{control}{a list of tuning parameters used (if applicable).}
 }
 \description{

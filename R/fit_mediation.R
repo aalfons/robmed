@@ -79,6 +79,13 @@
 #' \code{"select"} to select among these four distributions via BIC (see
 #' \sQuote{Details}).  This is only relevant if \code{method = "regression"}
 #' and \code{robust = FALSE}.
+#' @param contrast  a logical indicating whether to compute pairwise contrasts
+#' of the indirect effects (defaults to \code{FALSE}).  This can also be a
+#' character string, with \code{"estimates"} for computing the differences
+#' of the indirect effects, and \code{"absolute"} for computing the differences
+#' of the absolute values of the indirect effects.  This is only relevant for
+#' models with multiple hypothesized mediators, which are currently only
+#' implemented for estimation via regressions (\code{method = "regression"}).
 #' @param fit_yx  a logical indicating whether to fit the regression model
 #' \code{y ~ x + covariates} to estimate the total effect (the default is
 #' \code{TRUE}).  This is only relevant if \code{method = "regression"} and
@@ -133,6 +140,10 @@
 #' \item{robust}{either a logical indicating whether the effects were estimated
 #' robustly, or one of the character strings \code{"MM"} and \code{"median"}
 #' specifying the type of robust regressions.}
+#' \item{contrast}{either a logical indicating whether contrasts of the
+#' indirect effects were computed, or one of the character strings
+#' \code{"estimates"} and \code{"absolute"} specifying the type of contrasts
+#' of the indirect effects (only \code{"reg_fit_mediation"}).}
 #' \item{control}{a list of tuning parameters used (if applicable).}
 #'
 #' @note The formula interface is still experimental and may change in future
@@ -373,8 +384,8 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     if (p_m == 1L) contrast <- FALSE
     else if (is.logical(contrast)) {
       contrast <- isTRUE(contrast)
-      if (contrast) contrast <- "original"
-    } else contrast <- match.arg(contrast, choices = c("original", "absolute"))
+      if (contrast) contrast <- "estimates"
+    } else contrast <- match.arg(contrast, choices = c("estimates", "absolute"))
     # estimate effects
     reg_fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
                       robust = robust, family = family, contrast = contrast,

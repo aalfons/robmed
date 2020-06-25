@@ -122,6 +122,17 @@ Student's t distribution, \code{"skew-t"} for a skew-t distribution, or
 \code{\link{fit_mediation}()} for details).  This is only relevant if
 \code{method = "regression"} and \code{robust = FALSE}.}
 
+\item{contrast}{a logical indicating whether to compute pairwise contrasts
+of the indirect effects (defaults to \code{FALSE}).  This can also be a
+character string, with \code{"estimates"} for computing the differences
+of the indirect effects (such that it is tested whether two indirect effects
+are equal), and \code{"absolute"} for computing the differences
+of the absolute values of the indirect effects (such that it is tested
+whether two indirect effects are equal in magnitude).  This is only relevant
+for models with multiple hypothesized mediators, which are currently only
+implemented for bootstrap tests and estimation via regressions
+(\code{test = "boot"} and \code{method = "regression"}).}
+
 \item{fit_yx}{a logical indicating whether to fit the regression model
 \code{y ~ x + covariates} to estimate the total effect (the default is
 \code{TRUE}).  This is only relevant if \code{method = "regression"} and

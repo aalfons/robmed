@@ -45,7 +45,7 @@ rob_F_test.lmrob <- function(object, ...) {
   # check if Tukey bisquare loss function is used, otherwise return NULL
   control <- object$control
   if (control$psi != "bisquare" || is.null(control$efficiency)) return()
-  # extract the full model and fit the null model
+  # extract the response variable and fit the null model
   y <- object$response
   x_null <- matrix(1, nrow = length(y), ncol = 1)
   fit_null <- lmrob.fit(x_null, y, control = control)
