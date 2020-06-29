@@ -103,11 +103,13 @@ p_value.boot_test_mediation <- function(object, digits = 4L, parm = NULL,
                                         type = c("boot", "data"), ...) {
   # number of hypothesized mediators
   p_m <- length(object$fit$m)
+  contrast <- object$fit$contrast          # only implemented for regression fit
+  have_contrast <- is.character(contrast)  # but this always works
   # old behavior by default if new arguments are missing
   if (missing(parm) && missing(type)) {
     warning("default behavior will change in a future version, see the ",
             sQuote("Note"), " section of the help file")
-    if (p_m == 1) {
+    if (p_m == 1L) {
       # only one mediator
       alpha <- p_value(object$reps, parm = 1L, digits = digits,
               alternative = object$alternative,
@@ -131,7 +133,7 @@ p_value.boot_test_mediation <- function(object, digits = 4L, parm = NULL,
     } else p_values <- get_p_value(object$fit)
     # add temporary NA's for p-values of indirect effect,
     # as those take longer to compute
-    if (p_m == 1) {
+    if (p_m == 1L) {
       # only one mediator
       indirect_names <- "ab"
       alpha <- NA_real_
@@ -143,20 +145,40 @@ p_value.boot_test_mediation <- function(object, digits = 4L, parm = NULL,
     names(alpha) <- indirect_names
     p_values <- c(p_values, alpha)
     # if requested, take subset of effects
-    if(!is.null(parm)) {
+    if(is.null(parm)) {
+      # p-values of all indirect effects need to be computed
+      which_names <- indirect_names
+      which_indices <- seq_along(which_names)
+    } else {
+      # take subset of p-values
       p_values <- p_values[parm]
       # check which p-values of indirect effects need to be computed
       which_names <- grep("ab", names(p_values), value = TRUE)
       which_indices <- match(which_names, indirect_names, nomatch = integer())
-    } else {
-      which_names <- indirect_names
-      which_indices <- seq_along(which_names)
+    }
+    # preparations to modify bootstrap object if contrasts are requested
+    n_ab <- 1L + p_m
+    bootstrap <- object$reps
+    # if contrasts are requested, modify bootstrap object to contain only
+    # indirect effects and contrasts such that 'which_indices' correctly
+    # describes the columns containing the bootstrap replicates
+    if (have_contrast && any(which_indices > n_ab)) {
+      # list of all combinations of indices of the relevant indirect effects
+      indices_ab <- seq_len(n_ab)
+      combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
+      # modify bootstrap object to add contrasts
+      bootstrap$t0 <- c(bootstrap$t0[indices_ab],
+                        get_contrasts(bootstrap$t0, combinations,
+                                      type = contrast))
+      bootstrap$t <- cbind(bootstrap$t[, indices_ab],
+                           get_contrasts(bootstrap$t, combinations,
+                                         type = contrast))
     }
     # compute p-value of requested indirect effects as the smallest significance
     # level where 0 is not in the confidence interval
     if (length(which_names) > 0) {
       p_values[which_names] <- sapply(which_indices, function(j) {
-        p_value(object$reps, parm = j, digits = digits,
+        p_value(bootstrap, parm = j, digits = digits,
                 alternative = object$alternative,
                 type = object$type)
       })
