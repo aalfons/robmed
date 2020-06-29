@@ -330,7 +330,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   if (convert_x) {
     # construct variables for design matrix as usual
     x <- data[, x, drop = FALSE]
-    x <- model.matrix(~ ., data = x)[, -1, drop = FALSE]
+    x <- model.matrix(~ ., data = x)[, -1L, drop = FALSE]
     # check if there is still only one variable
     p_x <- ncol(x)
     if (p_x != 1L) {
@@ -346,7 +346,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   if (convert_covariates) {
     # construct variables for design matrix as usual
     covariates <- data[, covariates, drop = FALSE]
-    covariates <- model.matrix(~ ., data = covariates)[, -1, drop = FALSE]
+    covariates <- model.matrix(~ ., data = covariates)[, -1L, drop = FALSE]
     # replace covariates in data frame with converted ones
     data <- cbind(data[, c(x, y, m), drop = FALSE], covariates)
     # update number of covariates and variable names

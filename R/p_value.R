@@ -165,7 +165,7 @@ p_value.boot_test_mediation <- function(object, digits = 4L, parm = NULL,
     if (have_contrast && any(which_indices > n_ab)) {
       # list of all combinations of indices of the relevant indirect effects
       indices_ab <- seq_len(n_ab)
-      combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
+      combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
       # modify bootstrap object to add contrasts
       bootstrap$t0 <- c(bootstrap$t0[indices_ab],
                         get_contrasts(bootstrap$t0, combinations,

@@ -131,7 +131,7 @@ retest.boot_test_mediation <- function(object, alternative, level,
       # if requested, compute contrasts of indirect effects
       if (have_contrast) {
         # list of all combinations of indices of the relevant indirect effects
-        combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
+        combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
         # prepare "boot" object for the calculation of the confidence intervals
         contrast_bootstrap <- bootstrap
         contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,

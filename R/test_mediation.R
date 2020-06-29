@@ -863,7 +863,7 @@ boot_test_mediation <- function(fit,
     # if requested, compute contrasts of indirect effects
     if (have_contrast) {
       # list of all combinations of indices of the relevant indirect effects
-      combinations <- combn(indices_ab[-1], 2, simplify = FALSE)
+      combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
       # # compute bootstrap estimates of the contrasts
       # contrasts <- get_contrasts(ab, combinations, type = contrast)
       # prepare "boot" object for the calculation of the confidence intervals

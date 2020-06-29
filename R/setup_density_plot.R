@@ -116,7 +116,7 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
                        x = object$reps$t)
     # add densities of contrasts (if applicable)
     if (have_contrast) {
-      bootstrap_contrasts <- get_contrasts(object$reps$t[, indices[-1]],
+      bootstrap_contrasts <- get_contrasts(object$reps$t[, indices[-1L]],
                                            type = contrast)
       n_contrasts <- ncol(bootstrap_contrasts)
       bootstrap_pdf_list <- lapply(seq_len(n_contrasts),
