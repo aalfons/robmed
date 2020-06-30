@@ -8,7 +8,7 @@
 \usage{
 p_value(object, ...)
 
-\method{p_value}{boot_test_mediation}(object, digits = 4L, parm = NULL, type = c("boot", "data"), ...)
+\method{p_value}{boot_test_mediation}(object, parm = NULL, type = c("boot", "data"), digits = 4L, ...)
 
 \method{p_value}{sobel_test_mediation}(object, parm = NULL, ...)
 }
@@ -20,10 +20,6 @@ from (robust) mediation analysis.}
 \item{\dots}{for the generic function, additional arguments to be passed
 down to methods.  For the methods, additional arguments are currently
 ignored.}
-
-\item{digits}{an integer determining how many digits to compute for the
-p-values of the indirect effects (see \sQuote{Details}).  The default is to
-compute 4 digits after the comma.}
 
 \item{parm}{an integer, character or logical vector specifying the
 coefficients for which to extract or compute p-values, or
@@ -39,6 +35,10 @@ original data (e.g., based on a t-distribution the coefficients are
 estimated via regression).  Note that this is only relevant for mediation
 analysis via a bootstrap test, where the p-value of the indirect effect is
 always computed as described in \sQuote{Details}.}
+
+\item{digits}{an integer determining how many digits to compute for the
+p-values of the indirect effects (see \sQuote{Details}).  The default is to
+compute 4 digits after the comma.}
 }
 \value{
 A numeric vector containing the requested p-values.
@@ -60,29 +60,6 @@ method (\code{"bca"}).
 
 For Sobel tests, the p-value of the indirect effect is already stored in the
 object returned by \code{\link{test_mediation}()} and is simply extracted.
-}
-\note{
-In version 0.7.0, functionality has been extended to be in line with the
-\code{\link[=coef.test_mediation]{coef}()} and
-\code{\link[=confint.test_mediation]{confint}()} methods.  However, the old
-default behavior was kept for back-compatibility with previous versions.
-That is, if the new arguments \code{parm} and \code{type} are missing, only
-the p-values of the indirect effect will be returned, as in previous
-versions.
-
-In a future version, possibly even the next version, the default behavior
-will change such that the p-values of all effects in the mediation model
-will be returned, similar to the behavior of
-\code{\link[=coef.test_mediation]{coef}()} and
-\code{\link[=confint.test_mediation]{confint}()}.
-
-In addition, the \code{digits} argument of the \code{"boot_test_mediation"}
-method will be moved from the second position to the fourth.  It was kept
-at the second position for back-compatibility, but it will be moved to the
-fourth position such that the function interface is in line with
-\code{\link[=coef.test_mediation]{coef}()} and
-\code{\link[=confint.test_mediation]{confint}()}. In the mean time, it is
-recommended to always use argument names in scripts.
 }
 \examples{
 data("BSG2014")

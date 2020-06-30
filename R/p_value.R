@@ -46,29 +46,6 @@
 #'
 #' @return A numeric vector containing the requested p-values.
 #'
-#' @note
-#' In version 0.7.0, functionality has been extended to be in line with the
-#' \code{\link[=coef.test_mediation]{coef}()} and
-#' \code{\link[=confint.test_mediation]{confint}()} methods.  However, the old
-#' default behavior was kept for back-compatibility with previous versions.
-#' That is, if the new arguments \code{parm} and \code{type} are missing, only
-#' the p-values of the indirect effect will be returned, as in previous
-#' versions.
-#'
-#' In a future version, possibly even the next version, the default behavior
-#' will change such that the p-values of all effects in the mediation model
-#' will be returned, similar to the behavior of
-#' \code{\link[=coef.test_mediation]{coef}()} and
-#' \code{\link[=confint.test_mediation]{confint}()}.
-#'
-#' In addition, the \code{digits} argument of the \code{"boot_test_mediation"}
-#' method will be moved from the second position to the fourth.  It was kept
-#' at the second position for back-compatibility, but it will be moved to the
-#' fourth position such that the function interface is in line with
-#' \code{\link[=coef.test_mediation]{coef}()} and
-#' \code{\link[=confint.test_mediation]{confint}()}. In the mean time, it is
-#' recommended to always use argument names in scripts.
-#'
 #' @author Andreas Alfons
 #'
 #' @seealso
@@ -99,70 +76,49 @@ p_value <- function(object, ...) UseMethod("p_value")
 #' @method p_value boot_test_mediation
 #' @export
 
-p_value.boot_test_mediation <- function(object, digits = 4L, parm = NULL,
-                                        type = c("boot", "data"), ...) {
+p_value.boot_test_mediation <- function(object, parm = NULL,
+                                        type = c("boot", "data"),
+                                        digits = 4L, ...) {
   # number of hypothesized mediators
   p_m <- length(object$fit$m)
-  # old behavior by default if new arguments are missing
-  if (missing(parm) && missing(type)) {
-    warning("default behavior will change in a future version, see the ",
-            sQuote("Note"), " section of the help file")
-    if (p_m == 1) {
-      # only one mediator
-      alpha <- p_value(object$reps, parm = 1L, digits = digits,
+  # p-values of other effects
+  type <- match.arg(type)
+  if(type == "boot") {
+    p_values <- get_p_value(object$fit, boot = object$reps)
+  } else p_values <- get_p_value(object$fit)
+  # add temporary NA's for p-values of indirect effect,
+  # as those take longer to compute
+  if (p_m == 1) {
+    # only one mediator
+    indirect_names <- "ab"
+    alpha <- NA_real_
+  } else {
+    # multiple mediators
+    indirect_names <- paste("ab", rownames(object$ci), sep = "_")
+    alpha <- rep.int(NA_real_, nrow(object$ci))
+  }
+  names(alpha) <- indirect_names
+  p_values <- c(p_values, alpha)
+  # if requested, take subset of effects
+  if(!is.null(parm)) {
+    p_values <- p_values[parm]
+    # check which p-values of indirect effects need to be computed
+    which_names <- grep("ab", names(p_values), value = TRUE)
+    which_indices <- match(which_names, indirect_names, nomatch = integer())
+  } else {
+    which_names <- indirect_names
+    which_indices <- seq_along(which_names)
+  }
+  # compute p-value of requested indirect effects as the smallest significance
+  # level where 0 is not in the confidence interval
+  if (length(which_names) > 0) {
+    p_values[which_names] <- sapply(which_indices, function(j) {
+      p_value(object$reps, parm = j, digits = digits,
               alternative = object$alternative,
               type = object$type)
-    } else {
-      rn <- rownames(object$ci)
-      alpha <- sapply(seq_along(rn), function(j) {
-        p_value(object$reps, parm = j, digits = digits,
-                alternative = object$alternative,
-                type = object$type)
-      })
-      names(alpha) <- rn
-    }
-    # smallest significance level where 0 is not in the confidence interval
-    alpha
-  } else {
-    # p-values of other effects
-    type <- match.arg(type)
-    if(type == "boot") {
-      p_values <- get_p_value(object$fit, boot = object$reps)
-    } else p_values <- get_p_value(object$fit)
-    # add temporary NA's for p-values of indirect effect,
-    # as those take longer to compute
-    if (p_m == 1) {
-      # only one mediator
-      indirect_names <- "ab"
-      alpha <- NA_real_
-    } else {
-      # multiple mediators
-      indirect_names <- paste("ab", rownames(object$ci), sep = "_")
-      alpha <- rep.int(NA_real_, nrow(object$ci))
-    }
-    names(alpha) <- indirect_names
-    p_values <- c(p_values, alpha)
-    # if requested, take subset of effects
-    if(!is.null(parm)) {
-      p_values <- p_values[parm]
-      # check which p-values of indirect effects need to be computed
-      which_names <- grep("ab", names(p_values), value = TRUE)
-      which_indices <- match(which_names, indirect_names, nomatch = integer())
-    } else {
-      which_names <- indirect_names
-      which_indices <- seq_along(which_names)
-    }
-    # compute p-value of requested indirect effects as the smallest significance
-    # level where 0 is not in the confidence interval
-    if (length(which_names) > 0) {
-      p_values[which_names] <- sapply(which_indices, function(j) {
-        p_value(object$reps, parm = j, digits = digits,
-                alternative = object$alternative,
-                type = object$type)
-      })
-    }
-    p_values
+    })
   }
+  p_values
 }
 
 # p_value.boot_test_mediation <- function(object, digits = 4L, ...) {
