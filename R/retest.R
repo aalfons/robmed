@@ -71,7 +71,6 @@ retest.boot_test_mediation <- function(object, alternative, level,
   # initializations
   m <- object$fit$m
   p_m <- length(m)
-  have_covariance <- inherits(object$fit, "cov_fit_mediation")
   # check alternative hypothesis
   if (missing(alternative)) alternative <- object$alternative
   else {
@@ -100,12 +99,12 @@ retest.boot_test_mediation <- function(object, alternative, level,
         contrast <- match.arg(contrast, choices = c("estimates", "absolute"))
       }
     }
+    had_contrast <- is.character(object$fit$contrast)
     have_contrast <- is.character(contrast)
     update_contrast <- contrast != object$fit$contrast
   } else if (inherits(object$fit, "cov_fit_mediation")) {
     # covariance model fit (only implemented for a simple mediation model)
-    have_contrast <- FALSE
-    update_contrast <- FALSE
+    had_contrast <- have_contrast <- update_contrast <- FALSE
   } else stop("not implemented for this type of model fit")
   # check for any new arguments
   update_alternative <- alternative != object$alternative
@@ -139,7 +138,8 @@ retest.boot_test_mediation <- function(object, alternative, level,
         contrast_bootstrap$t <- get_contrasts(bootstrap$t, combinations,
                                               type = contrast)
         # compute confidence intervals of contrasts
-        indices_contrasts <- seq_along(combinations)
+        n_contrasts <- length(combinations)
+        indices_contrasts <- seq_len(n_contrasts)
         contrast_ci <- lapply(indices_contrasts, function(j) {
           confint(contrast_bootstrap, parm = j, level = level,
                   alternative = alternative, type = type)
@@ -148,7 +148,11 @@ retest.boot_test_mediation <- function(object, alternative, level,
         # combine confidence intervals of indirect effects and contrasts
         ci <- rbind(ci, contrast_ci)
         # add rownames to conficence intervals
-        rownames(ci) <- rownames(object$ci)
+        indirect_names <- rownames(object$ci)
+        if (!had_contrast) {
+          indirect_names <- c(indirect_names, get_contrast_names(n_contrasts))
+        }
+        rownames(ci) <- indirect_names
         # compute estimates of the contrasts
         if (update_contrast) {
           # compute bootstrap estimates
@@ -159,7 +163,7 @@ retest.boot_test_mediation <- function(object, alternative, level,
           contrasts_ab <- get_contrasts(ab_data, combinations, type = contrast)
           ab_data <- c(ab_data, contrasts_ab)
           # add names
-          names(ab_boot) <- names(ab_data) <- names(object$ab)
+          names(ab_boot) <- names(ab_data) <- indirect_names
         }
       } else if (update_contrast) {
         ## the new object doesn't have contrasts, but the old object did
