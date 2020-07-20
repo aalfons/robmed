@@ -29,6 +29,10 @@
 #' are equal in magnitude).  This is only relevant for models with multiple
 #' hypothesized mediators, which are currently only implemented for bootstrap
 #' tests and estimation via regressions.
+#' @param order  a character string specifying the order of approximation of
+#' the standard error in the Sobel test.  Possible values are \code{"first"}
+#' for a first-order approximation, and \code{"second"} for a second-order
+#' approximation.
 #' @param \dots  additional arguments to be passed down to methods.
 #'
 #' @return An object of the same class as \code{object} with updated test
@@ -198,17 +202,24 @@ retest.boot_test_mediation <- function(object, alternative, level,
 #' @method retest sobel_test_mediation
 #' @export
 
-retest.sobel_test_mediation <- function(object, alternative, ...) {
+retest.sobel_test_mediation <- function(object, alternative, order, ...) {
   # initializations
-  if (missing(alternative)) update <- FALSE
+  if (missing(alternative)) alternative <- object$alternative
   else {
     alternative <- match.arg(alternative,
                              choices = c("twosided", "less", "greater"))
-    update <- alternative != object$alternative
   }
+  if (missing(order)) order <- object$order
+  else order <- match.arg(order, choices = c("first", "second"))
+  print(order)
+  print(object$order)
   # reperform test if necessary
-  if (update) {
-    # recompute confidence interval and modify object
+  if (order != object$order) {
+    # entire test needs to be re-run (standard error and test statistic change)
+    object <- sobel_test_mediation(object$fit, alternative = alternative,
+                                   order = order)
+  } else if (alternative != object$alternative) {
+    # only recompute p-value and modify object (test statistic is unchanged)
     object$p_value <- p_value_z(object$statistic, alternative = alternative)
     object$alternative <- alternative
   } else warning("no new argument values; returning original object")

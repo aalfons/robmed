@@ -10,7 +10,7 @@ retest(object, ...)
 
 \method{retest}{boot_test_mediation}(object, alternative, level, type, contrast, ...)
 
-\method{retest}{sobel_test_mediation}(object, alternative, ...)
+\method{retest}{sobel_test_mediation}(object, alternative, order, ...)
 }
 \arguments{
 \item{object}{an object inheriting from class
@@ -40,6 +40,11 @@ the indirect effects (such that it is tested whether two indirect effects
 are equal in magnitude).  This is only relevant for models with multiple
 hypothesized mediators, which are currently only implemented for bootstrap
 tests and estimation via regressions.}
+
+\item{order}{a character string specifying the order of approximation of
+the standard error in the Sobel test.  Possible values are \code{"first"}
+for a first-order approximation, and \code{"second"} for a second-order
+approximation.}
 }
 \value{
 An object of the same class as \code{object} with updated test
