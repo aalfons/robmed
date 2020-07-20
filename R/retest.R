@@ -20,6 +20,10 @@
 #' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
 #' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 #' for the percentile bootstrap.
+#' @param order  a character string specifying the order of approximation of
+#' the standard error in the Sobel test.  Possible values are \code{"first"}
+#' (the default) for a first-order approximation, and \code{"second"} (the
+#' default) for a second-order approximation.
 #' @param \dots  additional arguments to be passed down to methods.
 #'
 #' @return An object of the same class as \code{object} with updated test
@@ -94,12 +98,15 @@ retest.boot_test_mediation <- function(object,
 
 retest.sobel_test_mediation <- function(object,
                                         alternative = c("twosided", "less", "greater"),
+                                        order = c("first", "second"),
                                         ...) {
   # initializations
   alternative <- match.arg(alternative)
-  # recompute confidence interval and modify object
-  object$p_value <- p_value_z(object$statistic, alternative=alternative)
-  object$alternative <- alternative
-  # return modified object
-  object
+  order <- match.arg(order)
+  # # recompute confidence interval and modify object
+  # object$p_value <- p_value_z(object$statistic, alternative=alternative)
+  # object$alternative <- alternative
+  # # return modified object
+  # object
+  sobel_test_mediation(object$fit, alternative = alternative, order = order)
 }

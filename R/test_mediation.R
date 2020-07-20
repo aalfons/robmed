@@ -80,6 +80,10 @@
 #' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
 #' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 #' for the percentile bootstrap.
+#' @param order  a character string specifying the order of approximation of
+#' the standard error in the Sobel test.  Possible values are \code{"first"}
+#' (the default) for a first-order approximation, and \code{"second"} (the
+#' default) for a second-order approximation.
 #' @param method  a character string specifying the method of estimation for
 #' the mediation model.  Possible values are \code{"regression"} (the default)
 #' to estimate the effects via regressions, or \code{"covariance"} to estimate
@@ -251,6 +255,7 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                                    alternative = c("twosided", "less", "greater"),
                                    R = 5000, level = 0.95,
                                    type = c("bca", "perc"),
+                                   order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
                                    fit_yx = TRUE, control = NULL, ...) {
@@ -265,8 +270,8 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                          fit_yx = fit_yx, control = control)
   }
   ## call method for fitted model
-  test_mediation(fit, test = test, alternative = alternative,
-                 R = R, level = level, type = type, ...)
+  test_mediation(fit, test = test, alternative = alternative, R = R,
+                 level = level, type = type, order = order, ...)
 }
 
 
@@ -279,6 +284,7 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    alternative = c("twosided", "less", "greater"),
                                    R = 5000, level = 0.95,
                                    type = c("bca", "perc"),
+                                   order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
                                    fit_yx = TRUE, control = NULL, ...) {
@@ -287,8 +293,8 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
                        method = method, robust = robust, family = family,
                        fit_yx = fit_yx, control = control)
   ## call method for fitted model
-  test_mediation(fit, test = test, alternative = alternative,
-                 R = R, level = level, type = type, ...)
+  test_mediation(fit, test = test, alternative = alternative, R = R,
+                 level = level, type = type, order = order, ...)
 }
 
 
@@ -300,6 +306,7 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
                                          alternative = c("twosided", "less", "greater"),
                                          R = 5000, level = 0.95,
                                          type = c("bca", "perc"),
+                                         order = c("first", "second"),
                                          ...) {
   ## initializations
   test <- match.arg(test)
@@ -320,8 +327,10 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
     boot_test_mediation(object, alternative = alternative, R = R,
                         level = level, type = type, ...)
   } else if (test == "sobel") {
+    # further inizializations
+    order <- match.arg(order)
     # perform Sobel test
-    sobel_test_mediation(object, alternative = alternative)
+    sobel_test_mediation(object, alternative = alternative, order = order)
   } else stop("test not implemented")
 }
 
@@ -861,7 +870,7 @@ boot_test_mediation <- function(fit,
 ## internal function for sobel test
 sobel_test_mediation <- function(fit,
                                  alternative = c("twosided", "less", "greater"),
-                                 ...) {
+                                 order = c("first", "second"), ...) {
   # extract coefficients
   a <- fit$a
   b <- fit$b
@@ -876,7 +885,8 @@ sobel_test_mediation <- function(fit,
     sb <- summary$b[, 2L]
   } else stop("not implemented for this type of model fit")
   # compute test statistic and p-Value
-  se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
+  if (order == "first") se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
+  else se <- sqrt(b^2 * sa^2 + a^2 * sb^2 + sa^2 * sb^2)
   z <- ab / se
   p_value <- p_value_z(z, alternative = alternative)
   # construct return item

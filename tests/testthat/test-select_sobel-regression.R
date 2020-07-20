@@ -35,6 +35,7 @@ summary_sobel <- summary(sobel)
 ## retest with different parameters
 sobel_less <- retest(sobel, alternative = "less")
 sobel_greater <- retest(sobel, alternative = "greater")
+sobel_second <- retest(sobel, order = "second")
 
 ## create data for plotting
 level <- 0.9
@@ -210,9 +211,11 @@ test_that("output of retest() has correct structure", {
   # Sobel test
   expect_identical(class(sobel_less), class(sobel))
   expect_identical(class(sobel_greater), class(sobel))
-  # regression fit
+  expect_identical(class(sobel_second), class(sobel))
+  # mediation model fit
   expect_identical(sobel_less$fit, sobel$fit)
   expect_identical(sobel_greater$fit, sobel$fit)
+  expect_identical(sobel_second$fit, sobel$fit)
 
 })
 
@@ -221,18 +224,19 @@ test_that("arguments of retest() are correctly passed", {
   # standard error
   expect_identical(sobel_less$se, sobel$se)
   expect_identical(sobel_greater$se, sobel$se)
+  expect_true(sobel_second$se > sobel$se)
   # test statistic
   expect_identical(sobel_less$statistic, sobel$statistic)
   expect_identical(sobel_greater$statistic, sobel$statistic)
+  expect_true(abs(sobel_second$statistic) < abs(sobel$statistic))
   # p-value
   expect_equal(sobel_less$p_value, sobel$p_value/2)
   expect_equal(sobel_greater$p_value, 1-sobel$p_value/2)
+  expect_true(sobel_second$p_value > sobel$p_value)
   # alternative hypothesis
   expect_identical(sobel_less$alternative, "less")
   expect_identical(sobel_greater$alternative, "greater")
-  # mediation model fit
-  expect_identical(sobel_less$fit, sobel$fit)
-  expect_identical(sobel_greater$fit, sobel$fit)
+  expect_identical(sobel_second$alternative, sobel$alternative)
 
 })
 

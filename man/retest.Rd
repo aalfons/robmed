@@ -16,7 +16,12 @@ retest(object, ...)
   ...
 )
 
-\method{retest}{sobel_test_mediation}(object, alternative = c("twosided", "less", "greater"), ...)
+\method{retest}{sobel_test_mediation}(
+  object,
+  alternative = c("twosided", "less", "greater"),
+  order = c("first", "second"),
+  ...
+)
 }
 \arguments{
 \item{object}{an object inheriting from class
@@ -36,6 +41,11 @@ the bootstrap test.  The default is to compute a 95\% confidence interval.}
 to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
 default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 for the percentile bootstrap.}
+
+\item{order}{a character string specifying the order of approximation of
+the standard error in the Sobel test.  Possible values are \code{"first"}
+(the default) for a first-order approximation, and \code{"second"} (the
+default) for a second-order approximation.}
 }
 \value{
 An object of the same class as \code{object} with updated test

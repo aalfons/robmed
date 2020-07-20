@@ -20,6 +20,7 @@ test_mediation(object, ...)
   R = 5000,
   level = 0.95,
   type = c("bca", "perc"),
+  order = c("first", "second"),
   method = c("regression", "covariance"),
   robust = TRUE,
   family = "gaussian",
@@ -39,6 +40,7 @@ test_mediation(object, ...)
   R = 5000,
   level = 0.95,
   type = c("bca", "perc"),
+  order = c("first", "second"),
   method = c("regression", "covariance"),
   robust = TRUE,
   family = "gaussian",
@@ -54,6 +56,7 @@ test_mediation(object, ...)
   R = 5000,
   level = 0.95,
   type = c("bca", "perc"),
+  order = c("first", "second"),
   ...
 )
 
@@ -97,6 +100,11 @@ the bootstrap test.  The default is to compute a 95\% confidence interval.}
 to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
 default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 for the percentile bootstrap.}
+
+\item{order}{a character string specifying the order of approximation of
+the standard error in the Sobel test.  Possible values are \code{"first"}
+(the default) for a first-order approximation, and \code{"second"} (the
+default) for a second-order approximation.}
 
 \item{method}{a character string specifying the method of estimation for
 the mediation model.  Possible values are \code{"regression"} (the default)
