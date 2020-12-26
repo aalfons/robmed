@@ -8,28 +8,29 @@
 \alias{plot.test_mediation}
 \title{Plot (robust) mediation analysis results}
 \usage{
-\method{autoplot}{fit_mediation}(object, ...)
+\method{autoplot}{fit_mediation}(object, which = c("ellipse", "weight"), ...)
 
-\method{autoplot}{test_mediation}(object, which = c("ci", "density", "ellipse"), ...)
+\method{autoplot}{test_mediation}(object, which = c("ci", "density", "ellipse", "weight"), ...)
 
-\method{plot}{fit_mediation}(x, ...)
+\method{plot}{fit_mediation}(x, which = c("ellipse", "weight"), ...)
 
-\method{plot}{test_mediation}(x, which = c("ci", "density", "ellipse"), ...)
+\method{plot}{test_mediation}(x, which = c("ci", "density", "ellipse", "weight"), ...)
 }
 \arguments{
 \item{object, x}{an object inheriting from class
 \code{"\link{fit_mediation}"} or \code{"\link{test_mediation}"} containing
 results from (robust) mediation analysis.}
 
-\item{\dots}{additional arguments to be passed down.}
-
 \item{which}{a character string specifying which plot to produce.
 Possible values are \code{"ci"} for a dot plot of selected effects
 together with confidence intervals (see \code{\link{ci_plot}()}),
 \code{"density"} for a density plot of the indirect effect(s) (see
-\code{\link{density_plot}()}), or \code{"ellipse"} for a diagnostic plot
+\code{\link{density_plot}()}), \code{"ellipse"} for a diagnostic plot
 of the data together with a tolerance ellipse (see
-\code{\link{ellipse_plot}()}).}
+\code{\link{ellipse_plot}()}), and \code{"weight"} for a diagnostic plot
+of robust regression weights (see \code{\link{weight_plot}()}).}
+
+\item{\dots}{additional arguments to be passed down.}
 }
 \value{
 An object of class \code{"\link[ggplot2]{ggplot}"}.
@@ -38,12 +39,12 @@ An object of class \code{"\link[ggplot2]{ggplot}"}.
 Visualize results from (robust) mediation analysis.
 }
 \details{
-The \code{"\link{fit_mediation}"} method is a wrapper for
-\code{\link{ellipse_plot}()}.
+The \code{"\link{fit_mediation}"} method calls \code{\link{ellipse_plot}()}
+or \code{\link{weight_plot}()}, depending on the argument \code{which}.
 
 The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}()},
-\code{\link{density_plot}()}, or \code{\link{ellipse_plot}()}, depending
-on the argument \code{which}.
+\code{\link{density_plot}()}, \code{\link{ellipse_plot}()}, or
+\code{\link{weight_plot}()}, depending on the argument \code{which}.
 }
 \examples{
 data("BSG2014")
@@ -59,13 +60,14 @@ robust_boot <- test_mediation(BSG2014,
 plot(robust_boot, which = "ci")
 plot(robust_boot, which = "density")
 plot(robust_boot, which = "ellipse")
+plot(robust_boot, which = "weight")
 
 }
 \seealso{
 \code{\link{fit_mediation}()}, \code{\link{test_mediation}()}
 
 \code{\link{ci_plot}()}, \code{\link{density_plot}()},
-\code{\link{ellipse_plot}()}
+\code{\link{ellipse_plot}()}, \code{\link{weight_plot}()}
 }
 \author{
 Andreas Alfons

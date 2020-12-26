@@ -4,16 +4,13 @@
 \alias{setup_weight_plot}
 \alias{setup_weight_plot.test_mediation}
 \alias{setup_weight_plot.reg_fit_mediation}
-\alias{setup_weight_plot.cov_fit_mediation}
-\title{Set up a diagnostic plot of regression weights}
+\title{Set up a diagnostic plot of robust regression weights}
 \usage{
 setup_weight_plot(object, ...)
 
 \method{setup_weight_plot}{test_mediation}(object, ...)
 
 \method{setup_weight_plot}{reg_fit_mediation}(object, outcome = NULL, npoints = 1000, ...)
-
-\method{setup_weight_plot}{cov_fit_mediation}(object, ...)
 }
 \description{
 Extract the relevant information for a diagnostic plot of the regression

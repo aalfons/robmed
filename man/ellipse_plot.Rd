@@ -122,7 +122,7 @@ ellipse_plot(tests) + theme_bw() +
 \code{\link{setup_ellipse_plot}()}
 
 \code{\link{ci_plot}()}, \code{\link{density_plot}()},
-\code{\link[=plot-methods]{plot}()}
+\code{\link{weight_plot}()}, \code{\link[=plot-methods]{plot}()}
 }
 \author{
 Andreas Alfons

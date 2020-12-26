@@ -7,12 +7,12 @@
 #'
 #' Visualize results from (robust) mediation analysis.
 #'
-#' The \code{"\link{fit_mediation}"} method is a wrapper for
-#' \code{\link{ellipse_plot}()}.
+#' The \code{"\link{fit_mediation}"} method calls \code{\link{ellipse_plot}()}
+#' or \code{\link{weight_plot}()}, depending on the argument \code{which}.
 #'
 #' The \code{"\link{test_mediation}"} method calls \code{\link{ci_plot}()},
-#' \code{\link{density_plot}()}, or \code{\link{ellipse_plot}()}, depending
-#' on the argument \code{which}.
+#' \code{\link{density_plot}()}, \code{\link{ellipse_plot}()}, or
+#' \code{\link{weight_plot}()}, depending on the argument \code{which}.
 #'
 #' @name plot-methods
 #'
@@ -23,9 +23,10 @@
 #' Possible values are \code{"ci"} for a dot plot of selected effects
 #' together with confidence intervals (see \code{\link{ci_plot}()}),
 #' \code{"density"} for a density plot of the indirect effect(s) (see
-#' \code{\link{density_plot}()}), or \code{"ellipse"} for a diagnostic plot
+#' \code{\link{density_plot}()}), \code{"ellipse"} for a diagnostic plot
 #' of the data together with a tolerance ellipse (see
-#' \code{\link{ellipse_plot}()}).
+#' \code{\link{ellipse_plot}()}), and \code{"weight"} for a diagnostic plot
+#' of robust regression weights (see \code{\link{weight_plot}()}).
 #' @param \dots  additional arguments to be passed down.
 #'
 #' @return An object of class \code{"\link[ggplot2]{ggplot}"}.
@@ -36,7 +37,7 @@
 #' \code{\link{fit_mediation}()}, \code{\link{test_mediation}()}
 #'
 #' \code{\link{ci_plot}()}, \code{\link{density_plot}()},
-#' \code{\link{ellipse_plot}()}
+#' \code{\link{ellipse_plot}()}, \code{\link{weight_plot}()}
 #'
 #' @examples
 #' data("BSG2014")
@@ -52,6 +53,7 @@
 #' plot(robust_boot, which = "ci")
 #' plot(robust_boot, which = "density")
 #' plot(robust_boot, which = "ellipse")
+#' plot(robust_boot, which = "weight")
 #'
 #' @keywords hplot
 #'
@@ -60,14 +62,27 @@
 NULL
 
 
-## internal function for plotting
-plot_internal <- function(object, which = c("ci", "density", "ellipse"), ...) {
+## internal function for plotting mediation fits
+plot_internal_fit <- function(object, which = c("ellipse", "weight"), ...) {
+  # initializations
+  which <- match.arg(which)
+  # call selected plot function
+  if (which == "ellipse") ellipse_plot(object, ...)
+  else if (which == "weight") weight_plot(object, ...)
+  else stop("type of plot not implemented")  # shouldn't happen
+}
+
+## internal function for plotting mediation tests
+plot_internal_test <- function(object,
+                               which = c("ci", "density", "ellipse", "weight"),
+                               ...) {
   # initializations
   which <- match.arg(which)
   # call selected plot function
   if (which == "ci") ci_plot(object, ...)
   else if (which == "density") density_plot(object, ...)
   else if (which == "ellipse") ellipse_plot(object, ...)
+  else if (which == "weight") weight_plot(object, ...)
   else stop("type of plot not implemented")  # shouldn't happen
 }
 
@@ -76,7 +91,10 @@ plot_internal <- function(object, which = c("ci", "density", "ellipse"), ...) {
 #' @method autoplot fit_mediation
 #' @export
 
-autoplot.fit_mediation <- function(object, ...) ellipse_plot(object, ...)
+autoplot.fit_mediation <- function(object, which = c("ellipse", "weight"),
+                                   ...) {
+  plot_internal_fit(object, which = which, ...)
+}
 
 
 #' @rdname plot-methods
@@ -84,9 +102,9 @@ autoplot.fit_mediation <- function(object, ...) ellipse_plot(object, ...)
 #' @export
 
 autoplot.test_mediation <- function(object,
-                                    which = c("ci", "density", "ellipse"),
+                                    which = c("ci", "density", "ellipse", "weight"),
                                     ...) {
-  plot_internal(object, which = which, ...)
+  plot_internal_test(object, which = which, ...)
 }
 
 
@@ -94,14 +112,17 @@ autoplot.test_mediation <- function(object,
 #' @method plot fit_mediation
 #' @export
 
-plot.fit_mediation <- function(x, ...) ellipse_plot(x, ...)
+plot.fit_mediation <- function(x, which = c("ellipse", "weight"), ...) {
+  plot_internal_fit(x, which = which, ...)
+}
 
 
 #' @rdname plot-methods
 #' @method plot test_mediation
 #' @export
 
-plot.test_mediation <- function(x, which = c("ci", "density", "ellipse"),
+plot.test_mediation <- function(x,
+                                which = c("ci", "density", "ellipse", "weight"),
                                 ...) {
-  plot_internal(x, which = which, ...)
+  plot_internal_test(x, which = which, ...)
 }

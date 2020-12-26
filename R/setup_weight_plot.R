@@ -4,7 +4,7 @@
 # --------------------------------------
 
 
-#' Set up a diagnostic plot of regression weights
+#' Set up a diagnostic plot of robust regression weights
 #'
 #' Extract the relevant information for a diagnostic plot of the regression
 #' weights from (robust) mediation analysis.  This plot allows to easily detect
@@ -68,21 +68,43 @@ setup_weight_plot.reg_fit_mediation <- function(object,
   # extract relevant variable names
   y <- object$y
   m <- object$m
-  p_m <- length(m)
   # check outcome variable that defines which regression model to plot
-  if (is.null(outcome)) outcome <- y
+  if (is.null(outcome)) outcome <- c(m, y)
   else {
-    if (!is.character(outcome) && length(outcome) == 1L) {
-      stop("only one outcome variable allowed")
+    if (!(is.character(outcome) && length(outcome) > 0L)) {
+      stop("outcome variables must be specified as character strings")
     }
-    if (!(outcome %in% m || outcome == y)) {
-      stop("outcome variable must be the dependent variable or a mediator")
+    if (!all(outcome %in% c(m, y))) {
+      stop("outcome variables must be the dependent variable or a mediator")
     }
   }
+  # call workhose function
+  if (length(outcome) == 1L) {
+    data <- get_weight_percentages(object, outcome = outcome, npoints = npoints)
+  } else {
+    tmp <- lapply(outcome, function(current) {
+      current_data <- get_weight_percentages(object, outcome = current,
+                                             npoints = npoints)
+      cbind(Outcome = current, current_data)
+    })
+    data <- do.call(rbind, tmp)
+  }
+  # return object
+  out <- list(data = data, outcome = outcome)
+  class(out) <- "setup_weight_plot"
+  out
+}
+
+# workhorse function to get the relevant data frame for a single regression fit
+get_weight_percentages <- function(object, outcome, npoints = 1000) {
+  # extract relevant variable names
+  y <- object$y
+  m <- object$m
+  p_m <- length(m)
   # extract selected regression model
   if (outcome == y) fit <- object$fit_ymx
-  else if (length(m) == 1) fit <- object$fit_mx
-  else fit <- object$fit_mx[[m]]
+  else if (p_m == 1L) fit <- object$fit_mx
+  else fit <- object$fit_mx[[outcome]]
   # extract residuals and weights
   residuals <- residuals(fit)
   weights <- weights(fit, type = "robustness")
@@ -92,7 +114,7 @@ setup_weight_plot.reg_fit_mediation <- function(object,
   tuning <- fit$control$tuning.psi
   # define grid of thresholds for weights
   thresholds <- seq(0, 1, length.out = npoints)
-  # compute expected number of observations with weights below threshold
+  # compute expected percentages of observations with weights below thresholds
   # (for positive errors only due to symmetry)
   expected <- sapply(thresholds, function(threshold) {
     # compute point where weight function is equal to threshold
@@ -101,12 +123,12 @@ setup_weight_plot.reg_fit_mediation <- function(object,
     # distribution
     pnorm(x, lower.tail = FALSE)
   })
-  # compute empirical percentages of weights smaller than threshold
+  # compute empirical percentages of observations with weights below thresholds
   # (for negative and positive residuals separately)
   # FIXME: this should be done as a proper step function (thresholds given
   # by weights, as those are the only points where something happens)
   tails <- c("negative", "positive")
-  tmp <- lapply(tails, function(tail) {
+  out_list <- lapply(tails, function(tail) {
     if (tail == "negative") {
       in_tail <- residuals <= 0
     } else {
@@ -115,42 +137,38 @@ setup_weight_plot.reg_fit_mediation <- function(object,
     # subset of residuals and weights
     r <- residuals[in_tail]
     w <- weights[in_tail]
-    # compute percentages of weights below thresholds
+    # compute percentages of observations with weights below thresholds
     empirical <- sapply(thresholds, function(threshold) {
       sum(w <= threshold) / n
     })
     # return data frame
     if (tail == "negative") {
       rbind(
-        data.frame(Tail = "Negative residuals", Type = "Empirical",
-                   Weight = thresholds, Percentage = empirical),
-        data.frame(Tail = "Negative residuals", Type = "Expected",
-                   Weight = thresholds, Percentage = expected)
+        data.frame(Tail = "Negative residuals", Weights = "Expected",
+                   Threshold = thresholds, Percentage = expected),
+        data.frame(Tail = "Negative residuals", Weights = "Empirical",
+                   Threshold = thresholds, Percentage = empirical)
       )
     } else {
       rbind(
-        data.frame(Tail = "Positive residuals", Type = "Empirical",
-                   Weight = thresholds, Percentage = empirical),
-        data.frame(Tail = "Positive residuals", Type = "Expected",
-                   Weight = thresholds, Percentage = expected)
+        data.frame(Tail = "Positive residuals", Weights = "Expected",
+                   Threshold = thresholds, Percentage = expected),
+        data.frame(Tail = "Positive residuals", Weights = "Empirical",
+                   Threshold = thresholds, Percentage = empirical)
       )
     }
   })
-  data <- do.call(rbind, tmp)
-  # return object
-  out <- list(data = data, outcome = outcome)
-  class(out) <- "setup_weight_plot"
-  out
+  # combine everything into one data frame
+  do.call(rbind, out_list)
 }
 
+# @rdname setup_weight_plot
+# @method setup_weight_plot cov_fit_mediation
+# @export
 
-#' @rdname setup_weight_plot
-#' @method setup_weight_plot cov_fit_mediation
-#' @export
-
-setup_weight_plot.cov_fit_mediation <- function(object, ...) {
-  stop("not yet implemented for robust covariance fits")
-}
+# setup_weight_plot.cov_fit_mediation <- function(object, ...) {
+#   stop("not yet implemented for robust covariance fits")
+# }
 
 
 ## utility functions

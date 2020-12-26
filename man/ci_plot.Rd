@@ -125,7 +125,7 @@ ci_plot(tests) +
 \code{\link{test_mediation}()}, \code{\link{setup_ci_plot}()}
 
 \code{\link{density_plot}()}, \code{\link{ellipse_plot}()},
-\code{\link[=plot-methods]{plot}()}
+\code{\link{weight_plot}()}, \code{\link[=plot-methods]{plot}()}
 }
 \author{
 Andreas Alfons
