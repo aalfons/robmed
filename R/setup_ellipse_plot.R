@@ -156,7 +156,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m[1L]
   else {
-    if (!is.character(vertical) && length(vertical) == 1L) {
+    if (!(is.character(vertical) && length(vertical) == 1L)) {
       stop("only one variable allowed for the vertical axis")
     }
     if (!(vertical %in% m || vertical == y)) {
@@ -167,7 +167,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   # check variable on horizontal axis
   if (is.null(horizontal)) horizontal <- x
   else {
-    if (!is.character(horizontal) && length(horizontal) == 1L) {
+    if (!(is.character(horizontal) && length(horizontal) == 1L)) {
       stop("only one variable allowed for the horizontal axis")
     }
     if (vertical %in% m && horizontal != x) {
@@ -307,7 +307,7 @@ setup_ellipse_plot.cov_fit_mediation <- function(object,
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m
   else {
-    if (!is.character(vertical) && length(vertical) == 1L) {
+    if (!(is.character(vertical) && length(vertical) == 1L)) {
       stop("only one variable allowed for the vertical axis")
     }
     if (vertical != m && vertical != y) {
@@ -318,7 +318,7 @@ setup_ellipse_plot.cov_fit_mediation <- function(object,
   # check variable on horizontal axis
   if (is.null(horizontal)) horizontal <- x
   else {
-    if (!is.character(horizontal) && length(horizontal) == 1L) {
+    if (!(is.character(horizontal) && length(horizontal) == 1L)) {
       stop("only one variable allowed for the horizontal axis")
     }
     if (vertical == m && horizontal != x) {

@@ -4,6 +4,9 @@ Changes in robmed version 0.8.0
 
     + Added more unit tests.
 
+    + Bugfix in setup_ellipse_plot() regarding checks of variables to be
+      plotted on vertical and horizontal axis.
+
 
 
 Changes in robmed version 0.7.0
