@@ -132,7 +132,7 @@ test_that("summary returns original object", {
   expect_identical(foo, bar)
 })
 
-test_that("object returned by setup_ellipse_plot() has correct structure", {
+test_that("object returned by setup_xxx_plot() has correct structure", {
 
   # check data frame for data to be plotted
   expect_s3_class(ellipse_mx$data, "data.frame")
@@ -201,6 +201,9 @@ test_that("object returned by setup_ellipse_plot() has correct structure", {
   expect_false(ellipse_mx$have_methods)
   expect_false(ellipse_ym$have_methods)
   expect_false(ellipse_partial$have_methods)
+
+  # not meaningful
+  expect_error(setup_weight_plot(foo))
 
 })
 

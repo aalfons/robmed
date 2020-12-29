@@ -201,6 +201,9 @@ test_that("summary has correct structure", {
   # F-test for model y ~ m + x
   expect_null(summary_boot$summary$fit_ymx$F_test)
   expect_null(summary_data$summary$fit_ymx$F_test)
+  # no plot is created
+  expect_null(summary_boot$plot)
+  expect_null(summary_data$plot)
 
 })
 
@@ -468,8 +471,9 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   # check logical for multiple methods
   expect_false(density$have_methods)
 
-  ## ellipse_plot
+  ## ellipse plot and weight plot
   expect_error(setup_ellipse_plot(boot))
+  expect_error(setup_weight_plot(boot))
 
 })
 

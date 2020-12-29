@@ -43,6 +43,7 @@ ci <- setup_ci_plot(boot)
 ci_perc <- setup_ci_plot(boot_perc, p_value = TRUE)
 density <- setup_density_plot(boot)
 ellipse <- setup_ellipse_plot(boot)
+weight <- setup_weight_plot(boot)
 
 ## stuff needed to check correctness
 indirect_names <- c("Total", "M1", "M2")
@@ -248,6 +249,9 @@ test_that("summary has correct structure", {
                    weights(boot$fit$fit_ymx, type = "robustness"))
   expect_identical(summary_data$summary$fit_ymx$outliers$threshold,
                    summary_ymx$control$eps.outlier)
+  # diagnostic plot
+  expect_s3_class(summary_boot$plot, "gg_weight_plot")
+  expect_s3_class(summary_data$plot, "gg_weight_plot")
 
 })
 
@@ -514,8 +518,9 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   # check logical for multiple methods
   expect_false(density$have_methods)
 
-  ## ellipse_plot
+  ## ellipse plot and weight plot
   expect_identical(ellipse, setup_ellipse_plot(boot$fit))
+  expect_identical(weight, setup_weight_plot(boot$fit))
 
 })
 

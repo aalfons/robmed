@@ -32,6 +32,8 @@ bar <- summary(foo)
 ellipse_default <- setup_ellipse_plot(foo)
 ellipse_partial <- setup_ellipse_plot(foo, horizontal = "M", vertical = "Y",
                                       partial = TRUE)
+weight_default <- setup_weight_plot(foo)
+weight_y <- setup_weight_plot(foo, outcome = "Y")
 
 
 ## run tests
@@ -164,6 +166,25 @@ test_that("object returned by setup_ellipse_plot() has correct structure", {
   # check logical for multiple methods
   expect_false(ellipse_default$have_methods)
   expect_false(ellipse_partial$have_methods)
+
+})
+
+test_that("object returned by setup_weight_plot() has correct structure", {
+
+  # check data frame for weight percentages to be plotted
+  expect_s3_class(weight_default$data, "data.frame")
+  expect_s3_class(weight_y$data, "data.frame")
+  # check dimensions
+  expect_identical(ncol(weight_default$data), 5L)
+  expect_identical(ncol(weight_y$data), 4L)
+  # check column names
+  column_names <- c("Outcome", "Tail", "Weights", "Threshold", "Percentage")
+  expect_named(weight_default$data, column_names)
+  expect_named(weight_y$data, column_names[-1])
+
+  # check if variables are passed correctly
+  expect_identical(weight_default$outcome, c("M", "Y"))
+  expect_identical(weight_y$outcome, "Y")
 
 })
 

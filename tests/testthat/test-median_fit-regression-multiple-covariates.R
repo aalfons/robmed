@@ -125,10 +125,11 @@ test_that("summary returns original object", {
   expect_identical(foo, bar)
 })
 
-test_that("object returned by setup_ellipse_plot() has correct structure", {
+test_that("object returned by setup_xxx_plot() has correct structure", {
 
   # not meaningful for median regression
   expect_error(setup_ellipse_plot(foo))
+  expect_error(setup_weight_plot(foo))
 
 })
 

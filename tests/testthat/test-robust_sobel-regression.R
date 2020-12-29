@@ -43,6 +43,7 @@ ci <- setup_ci_plot(sobel, level = level)
 ci_p <- setup_ci_plot(sobel, level = level, p_value = TRUE)
 density <- setup_density_plot(sobel, level = level)
 ellipse <- setup_ellipse_plot(sobel)
+weight <- setup_weight_plot(sobel)
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "Direct", "Total", "ab")
@@ -164,6 +165,8 @@ test_that("summary has correct structure", {
                    weights(sobel$fit$fit_ymx, type = "robustness"))
   expect_identical(summary_sobel$summary$fit_ymx$outliers$threshold,
                    summary(sobel$fit$fit_ymx)$control$eps.outlier)
+  # no plot is created
+  expect_null(summary_sobel$plot)
 
 })
 
@@ -337,8 +340,9 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
   # check logical for multiple methods
   expect_false(density$have_methods)
 
-  ## ellipse_plot
+  ## ellipse plot and weight plot
   expect_identical(ellipse, setup_ellipse_plot(sobel$fit))
+  expect_identical(weight, setup_weight_plot(sobel$fit))
 
 })
 
