@@ -6,7 +6,7 @@
 \alias{summary.sobel_test_mediation}
 \title{Summary of results from (robust) mediation analysis}
 \usage{
-\method{summary}{boot_test_mediation}(object, type = c("boot", "data"), ...)
+\method{summary}{boot_test_mediation}(object, type = c("boot", "data"), plot = TRUE, ...)
 
 \method{summary}{sobel_test_mediation}(object, ...)
 }
@@ -26,6 +26,11 @@ coefficients are estimated via regression).  Note that this is only relevant
 for mediation analysis via a bootstrap test, where significance of the
 indirect effect is always assessed via a percentile-based confidence
 interval due to the asymmetry of its distribution.}
+
+\item{plot}{a logical indicating whether to produce a diagnostic plot of
+robust regression weights (see \code{\link{weight_plot}()}).  This is only
+used for mediation analysis objects fitted with the robust MM-estimator (see
+\code{\link{test_mediation}()}).}
 
 \item{\dots}{additional arguments are currently ignored.}
 }

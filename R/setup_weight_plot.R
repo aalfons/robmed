@@ -7,13 +7,39 @@
 #' Set up a diagnostic plot of robust regression weights
 #'
 #' Extract the relevant information for a diagnostic plot of the regression
-#' weights from (robust) mediation analysis.  This plot allows to easily detect
+#' weights from robust mediation analysis.  This plot allows to easily detect
 #' deviations from normality assumptions such as skewness or heavy tails.
 #'
 #' This function is used internally by \code{\link{weight_plot}()}.  It may
 #' also be useful for users who want to produce a similar plot, but who want
 #' more control over what information to display or how to display that
 #' information.
+#'
+#' @param object  an object inheriting from class \code{"\link{fit_mediation}"}
+#' or \code{"\link{test_mediation}"} containing results from robust mediation
+#' analysis.  Only mediation analysis objects fitted with the robust
+#' MM-estimator are supported.
+#' @param outcome  a character vector specifying the outcome variables of the
+#' regressions to be included in the plot.  This must be a subset of the
+#' hypothesized mediators and the dependent variable, or \code{NULL} (the
+#' default) to include all regressions of the mediation model.
+#' @param npoints  the number of grid points used to evaluate the expected
+#' percentages.  The default is to use 1000 grid points.
+#' @param \dots  additional arguments to be passed down.
+#'
+#' @return An object of class \code{"setup_weight_plot"} with the following
+#' components:
+#' \item{data}{a data frame containing the following information: the outcome
+#' variable of the regression (column \code{Outcome}; only if multiple
+#' regressions are to be included in the plot), whether the row corresponds to
+#' the negative or the positive tail of the residual distribution (column
+#' \code{Tail}), whether the row corresponds to the expected (under the normal
+#' distribution) or the empirical weights (column \code{Weights}), the weight
+#' thresholds (column \code{Threshold}), and the corresponding percentage of
+#' observations that have a weight below this threshold (column
+#' \code{Percentage}).}
+#' \item{outcome}{a character vector containing the outcome variables of the
+#' regressions to be included in the plot.}
 #'
 #' @author Andreas Alfons
 #'
@@ -33,6 +59,10 @@
 #'
 #' # set up information for plot
 #' setup <- setup_weight_plot(robust_boot)
+#' # create diagnostic plot of robust regression weights
+#' weight_plot(setup) +
+#'   scale_color_manual("", values = c("black", "#00BFC4")) +
+#'   theme(legend.position = "top")
 #'
 #' @keywords hplot
 #'

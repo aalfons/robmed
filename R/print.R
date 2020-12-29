@@ -404,6 +404,9 @@ print.summary_test_mediation <- function(x, digits = max(3, getOption("digits")-
         signif.legend = FALSE, ...)
   # print legend for significance stars
   if(isTRUE(signif.stars) && isTRUE(signif.legend)) print_legend()
+  # create plot if requested
+  p <- x$plot
+  if (!is.null(p)) print(p)
   # return object invisibly
   invisible(x)
 }

@@ -10,7 +10,41 @@
 #' analysis.  This plot allows to easily detect deviations from normality
 #' assumptions such as skewness or heavy tails.
 #'
-#' @return An object of class \code{"\link[ggplot2]{ggplot}"}.
+#' The horizontal axis contains different weight thresholds, and the vertical
+#' axis displays the percentage of observations that have a weight below this
+#' threshold.  For comparison, a reference line is drawn for the expected
+#' percentages under normally distributed errors.  Observations with negative
+#' and positive residuals are shown separately to make it possible to
+#' distinguish between symmetric and asymmetric deviations from normality.
+#'
+#' If the plot reveals more downweighted observations than expected, but
+#' roughly the same amounts in both tails, the residual distribution is
+#' symmetric but with heavy tails.  If the plot shows that observations in one
+#' tail are downweighted more heavily than those in the other tail, the
+#' residual distribution is skewed.
+#'
+#' @param object  an object inheriting from class \code{"\link{fit_mediation}"}
+#' or \code{"\link{test_mediation}"} containing results from robust mediation
+#' analysis.  Only mediation analysis objects fitted with the robust
+#' MM-estimator are supported.
+#' @param outcome  a character vector specifying the outcome variables of the
+#' regressions to be included in the plot.  This must be a subset of the
+#' hypothesized mediators and the dependent variable, or \code{NULL} (the
+#' default) to include all regressions of the mediation model.
+#' @param npoints  the number of grid points used to evaluate and draw the
+#' expected percentages.  The default is to use 1000 grid points.
+#' @param \dots  additional arguments to be passed down.
+#'
+#' @return An object inheriting from class \code{"\link[ggplot2]{ggplot}"}.
+#'
+#' @note The current implementation is a slight hack of \pkg{ggplot2} and the
+#' \pkg{grid} graphics system in order to revert the horizontal axis only in
+#' the panels for observations with postive residuals.  It is therefore not
+#' possible to change the horizontal axis with
+#' \code{\link[ggplot2]{scale_x_continuous}()}.
+#'
+#' The implementation may change in the future if the required functionality
+#' becomes available in \pkg{ggplot2}.
 #'
 #' @author Andreas Alfons
 #'
@@ -31,8 +65,15 @@
 #'                               m = "TaskConflict",
 #'                               robust = TRUE)
 #'
-#' # create plot for robust bootstrap test
-#' weight_plot(robust_boot)
+#' # create diagnostic plot of robust regression weights
+#' weight_plot(robust_boot) +
+#'   scale_color_manual("", values = c("black", "#00BFC4")) +
+#'   theme(legend.position = "top")
+#'
+#' # plot only the regression model for the hypothesized mediator
+#' weight_plot(robust_boot, outcome = "TaskConflict") +
+#'   scale_color_manual("", values = c("black", "#00BFC4")) +
+#'   theme(legend.position = "top")
 #'
 #' @keywords hplot
 #'
@@ -100,23 +141,19 @@ print.gg_weight_plot <- function (x, newpage = is.null(vp), vp = NULL, ...) {
                                trans = "identity")
   p2 <- p + scale_x_continuous(expand = expansion(mult = c(0, 0.05)),
                                trans = "reverse")
+  # set up grid graphics system (this must be done before the grobs are
+  # created, otherwise an empty page will be created before the plot)
+  if (newpage) grid.newpage()
   # build plot and convert to grob
   g1 <- ggplot_gtable(ggplot_build(p1))
   g2 <- ggplot_gtable(ggplot_build(p2))
-  # # replace the panels from g1 with the ones from g2
-  # g1$grobs[grep("panel-2-1", g1$layout$name)] <-
-  #   g2$grobs[grep("panel-2-1", g2$layout$name)]
-  # # also replace the x-axis corresponding to those panels
-  # g1$grobs[grep('axis-b-2', g1$layout$name)] <-
-  #   g2$grobs[grep('axis-b-2', g2$layout$name)]
   # replace the panels from g1 with the ones from g2
   g1$grobs[find_right_panels(g1$layout)] <-
     g2$grobs[find_right_panels(g2$layout)]
   # also replace the x-axis corresponding to those panels
   g1$grobs[find_right_axis(g1$layout)] <-
     g2$grobs[find_right_axis(g2$layout)]
-  # set up grid graphics system
-  if (newpage) grid.newpage()
+  # draw plot
   if (is.null(vp)) grid.draw(g1)
   else {
     if (is.character(vp)) seekViewport(vp)
