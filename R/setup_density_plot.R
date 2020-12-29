@@ -106,7 +106,8 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
   # extract information to be plotted
   if (have_effects) {
     # information on indirect effects
-    effects <- names(ab)
+    effect_labels <- names(ab)
+    effects <- factor(effect_labels, levels = effect_labels)
     # construct data frame containing bootstrap density
     pdf_list <- lapply(seq_len(1L+p_m), function(j) {
       density(object$reps$t[, j], na.rm = TRUE)
