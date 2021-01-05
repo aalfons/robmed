@@ -1,11 +1,11 @@
 Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
-Version: 0.8.0
+Version: 0.8.1
 Date: 2021-01-05
 Depends:
     R (>= 3.2.0),
-    ggplot2 (>= 0.9.3),
+    ggplot2 (>= 3.3.0),
     robustbase (>= 0.92-7)
 Imports:
     boot (>= 1.3-20),
