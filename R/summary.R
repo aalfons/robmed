@@ -32,7 +32,7 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' default) to compute significance tests using the normal approximation of the
 #' bootstrap distribution (i.e., to assume a normal distribution of the
 #' corresponding effect with the standard deviation computed from the bootstrap
-#' replicates), or \code{"theory"} to compute significance tests via
+#' replicates), or \code{"data"} to compute significance tests via
 #' statistical theory based on the original data (e.g., t-tests if the
 #' coefficients are estimated via regression).  Note that this is only relevant
 #' for mediation analysis via a bootstrap test, where significance of the
