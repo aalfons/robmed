@@ -66,6 +66,8 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$robust, "MM")
   expect_identical(foo$family, "gaussian")
   expect_equal(foo$control, reg_control(max_iterations = 500))
+  # no contrasts
+  expect_false(foo$contrast)
 
 })
 

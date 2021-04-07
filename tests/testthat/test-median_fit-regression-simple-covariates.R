@@ -53,6 +53,8 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$robust, "median")
   expect_identical(foo$family, "gaussian")
   expect_null(foo$control)
+  # no contrasts
+  expect_false(foo$contrast)
 
 })
 

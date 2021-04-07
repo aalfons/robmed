@@ -55,7 +55,7 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$y, "Y")
   expect_identical(foo$m, "M1")
   expect_null(foo$fit$covariates)
-  # standard fit
+  # nonrobust fit
   expect_false(foo$robust)
   expect_null(foo$control)
 

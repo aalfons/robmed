@@ -53,10 +53,12 @@ test_that("arguments are correctly passed", {
   expect_identical(foo$y, "Y")
   expect_identical(foo$m, "M")
   expect_identical(foo$covariates, character())
-  # robust fit
+  # nonrobust fit
   expect_false(foo$robust)
   expect_identical(foo$family, "gaussian")
   expect_null(foo$control)
+  # no contrasts
+  expect_false(foo$contrast)
 
 })
 

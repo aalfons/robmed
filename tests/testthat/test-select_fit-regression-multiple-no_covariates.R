@@ -57,6 +57,8 @@ test_that("arguments are correctly passed", {
   expect_false(foo$robust)
   expect_identical(foo$family, "select")
   expect_null(foo$control)
+  # no contrasts
+  expect_false(foo$contrast)
 
 })
 
