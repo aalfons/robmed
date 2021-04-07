@@ -52,7 +52,7 @@
 #' ellipse under the assumption of a normal distribution, and therefore it
 #' controls the size of the ellipse.  The default is such that the ellipse is
 #' expected to contain 97.5\% of the observations.
-#' @param npoints  The number of grid points used to evaluate and draw the
+#' @param npoints  the number of grid points used to evaluate and draw the
 #' ellipse.  The default is to use 100 grid points.
 #' @param \dots  additional arguments to be passed down.
 #'
@@ -65,7 +65,7 @@
 #' \code{\link{setup_ellipse_plot}()}
 #'
 #' \code{\link{ci_plot}()}, \code{\link{density_plot}()},
-#' \code{\link[=plot-methods]{plot}()}
+#' \code{\link{weight_plot}()}, \code{\link[=plot-methods]{plot}()}
 #'
 #' @examples
 #' data("BSG2014")

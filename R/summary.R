@@ -32,12 +32,16 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' default) to compute significance tests using the normal approximation of the
 #' bootstrap distribution (i.e., to assume a normal distribution of the
 #' corresponding effect with the standard deviation computed from the bootstrap
-#' replicates), or \code{"theory"} to compute significance tests via
+#' replicates), or \code{"data"} to compute significance tests via
 #' statistical theory based on the original data (e.g., t-tests if the
 #' coefficients are estimated via regression).  Note that this is only relevant
 #' for mediation analysis via a bootstrap test, where significance of the
 #' indirect effect is always assessed via a percentile-based confidence
 #' interval due to the asymmetry of its distribution.
+#' @param plot  a logical indicating whether to produce a diagnostic plot of
+#' robust regression weights (see \code{\link{weight_plot}()}).  This is only
+#' used for mediation analysis objects fitted with the robust MM-estimator (see
+#' \code{\link{test_mediation}()}).
 #' @param \dots  additional arguments are currently ignored.
 #'
 #' @return An object of class \code{"summary_test_mediation"} with the
@@ -68,14 +72,25 @@ NULL
 #' @method summary boot_test_mediation
 #' @export
 
-summary.boot_test_mediation <- function(object, type = c("boot", "data"), ...) {
+summary.boot_test_mediation <- function(object, type = c("boot", "data"),
+                                        plot = TRUE, ...) {
   # get significance of effects and summary of model fit
   # component 'boot' only exists for bootstrap test, otherwise NULL
   type <- match.arg(type)
-  if(type == "boot") summary <- get_summary(object$fit, boot = object$reps)
-  else summary <- get_summary(object$fit)
+  fit <- object$fit
+  if(type == "boot") summary <- get_summary(fit, boot = object$reps)
+  else summary <- get_summary(fit)
   # construct return object
   result <- list(object = object, summary = summary)
+  # if requested, add diagnostic plot (only ROBMED)
+  have_robmed <- inherits(fit, "reg_fit_mediation") && fit$robust == "MM"
+  if (have_robmed && isTRUE(plot)) {
+    p <- weight_plot(fit) +
+      scale_color_manual("", values = c("black", "#00BFC4")) +
+      theme(legend.position = "top")
+    result$plot <- p
+  }
+  # add class and return object
   class(result) <- "summary_test_mediation"
   result
 }

@@ -1,15 +1,29 @@
+Changes in robmed version 0.8.1
+
+    + Updated package dependencies.
+
+    + retest() now uses values of original object as defaults for arguments
+      that are not supplied.
+
+
 Changes in robmed version 0.8.0
 
     + Changes in class structure regarding how effects are stored.
 
     + Added more unit tests.
 
-    + Bugfix in setup_density_plot(): in case of multiple indirect effects, the
-      column "Effect" of the data frames is now a factor to preserve the order
-      in the plot.
+    + Bugfix in setup_density_plot(): in case of multiple indirect effects,
+      the column "Effect" of the data frames is now a factor to preserve the
+      order in the plot.
 
-    + retest() now uses values of original object as defaults for arguments
-      that are not supplied.
+    + Bugfix in setup_ellipse_plot() regarding checks of variables to be
+      plotted on vertical and horizontal axis.
+
+    + Added functions setup_weight_plot() and weight_plot() to produce a
+      diagnostic plot of robust regression weights.
+
+    + summary() method for robust boostrap tests with MM-regressions now by
+      default produces a diagnostic plot of robust regresssion weights.
 
 
 

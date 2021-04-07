@@ -38,7 +38,7 @@
 #' ellipse under the assumption of a normal distribution, and therefore it
 #' controls the size of the ellipse.  The default is such that the ellipse is
 #' expected to contain 97.5\% of the observations.
-#' @param npoints  The number of grid points used to evaluate the ellipse.  The
+#' @param npoints  the number of grid points used to evaluate the ellipse.  The
 #' default is to use 100 grid points.
 #' @param \dots  additional arguments to be passed down.
 #'
@@ -156,7 +156,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m[1L]
   else {
-    if (!is.character(vertical) && length(vertical) == 1L) {
+    if (!(is.character(vertical) && length(vertical) == 1L)) {
       stop("only one variable allowed for the vertical axis")
     }
     if (!(vertical %in% m || vertical == y)) {
@@ -167,7 +167,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   # check variable on horizontal axis
   if (is.null(horizontal)) horizontal <- x
   else {
-    if (!is.character(horizontal) && length(horizontal) == 1L) {
+    if (!(is.character(horizontal) && length(horizontal) == 1L)) {
       stop("only one variable allowed for the horizontal axis")
     }
     if (vertical %in% m && horizontal != x) {
@@ -307,7 +307,7 @@ setup_ellipse_plot.cov_fit_mediation <- function(object,
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m
   else {
-    if (!is.character(vertical) && length(vertical) == 1L) {
+    if (!(is.character(vertical) && length(vertical) == 1L)) {
       stop("only one variable allowed for the vertical axis")
     }
     if (vertical != m && vertical != y) {
@@ -318,7 +318,7 @@ setup_ellipse_plot.cov_fit_mediation <- function(object,
   # check variable on horizontal axis
   if (is.null(horizontal)) horizontal <- x
   else {
-    if (!is.character(horizontal) && length(horizontal) == 1L) {
+    if (!(is.character(horizontal) && length(horizontal) == 1L)) {
       stop("only one variable allowed for the horizontal axis")
     }
     if (vertical == m && horizontal != x) {

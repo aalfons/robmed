@@ -66,7 +66,7 @@ ellipse under the assumption of a normal distribution, and therefore it
 controls the size of the ellipse.  The default is such that the ellipse is
 expected to contain 97.5\% of the observations.}
 
-\item{npoints}{The number of grid points used to evaluate the ellipse.  The
+\item{npoints}{the number of grid points used to evaluate the ellipse.  The
 default is to use 100 grid points.}
 }
 \value{
