@@ -1,9 +1,13 @@
-Changes in robmed version 0.8.1
+Changes in robmed version 0.9.0
 
     + Updated package dependencies.
 
     + retest() now uses values of original object as defaults for arguments
       that are not supplied.
+
+    + Added argument 'contrast' to fit_mediation() and test_mediation(), which
+      allows to test for differences of (absolute values) of indirect effects.
+
 
 
 Changes in robmed version 0.8.0

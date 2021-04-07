@@ -51,8 +51,11 @@ An object of the same class as \code{object} with updated test
 results (see \code{\link{test_mediation}()}).
 }
 \description{
-Re-perform a (fast and robust) bootstrap test or Sobel's test for the
-indirect effect(s) based on results from (robust) mediation analysis.
+Re-perform a test for the indirect effect(s) based on results from (robust)
+mediation analysis.  This function is purely available for computational
+convenience if the analysis was accidentally run with the wrong parameter
+settings, as it avoids having to re-run the bootstrap procedure.  It must
+not be abused for \eqn{p}{p}-hacking.
 }
 \note{
 From version 0.8.0 onwards, the behavior of this function changed.
