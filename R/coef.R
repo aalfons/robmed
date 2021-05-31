@@ -58,6 +58,8 @@ coef.boot_test_mediation <- function(object, parm = NULL,
                                      type = c("boot", "data"),
                                      ...) {
   # initializations
+  x <- object$x
+  p_x <- length(x)
   m <- object$fit$m
   p_m <- length(m)
   type <- match.arg(type)
@@ -67,11 +69,11 @@ coef.boot_test_mediation <- function(object, parm = NULL,
     ab <- object$ab
     coef <- c(object$a, object$b, object$direct, object$total, ab)
     # add coefficient names
-    if (p_m == 1L) indirect_names <- "ab"
+    if (p_x == 1L && p_m == 1L) indirect_names <- "ab"
     else indirect_names <- paste("ab", names(ab), sep = "_")
-    names(coef) <- c(get_effect_names(m), indirect_names)
+    names(coef) <- c(get_effect_names(x, m), indirect_names)
     # if requested, take subset of effects
-    if(!is.null(parm))  coef <- coef[parm]
+    if (!is.null(parm))  coef <- coef[parm]
   } else coef <- coef(object$fit, parm = parm, ...)
   # return effects
   coef
@@ -84,23 +86,43 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 
 coef.fit_mediation <- function(object, parm = NULL, ...) {
   # initializations
+  x <- object$x
+  p_x <- length(x)
   m <- object$m
   p_m <- length(m)
   # extract effects
   ab <- object$ab
   coef <- c(object$a, object$b, object$direct, object$total, ab)
   # add coefficient names
-  if (p_m == 1L) indirect_names <- "ab"
+  if (p_x == 1L && p_m == 1L) indirect_names <- "ab"
   else indirect_names <- paste("ab", names(ab), sep = "_")
-  names(coef) <- c(get_effect_names(m), indirect_names)
+  names(coef) <- c(get_effect_names(x, m), indirect_names)
   # if requested, take subset of effects
-  if(!is.null(parm))  coef <- coef[parm]
+  if (!is.null(parm))  coef <- coef[parm]
   coef
 }
 
 
 # utility function to get names of coefficients
-get_effect_names <- function(m, sep = "_") {
-  if(length(m) == 1L) c("a", "b", "Direct", "Total")
-  else c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
+get_effect_names <- function(x, m, sep = "_") {
+  # initializations
+  p_x <- length(x)
+  p_m <- length(m)
+  # construct names
+  if (p_x == 1L) {
+    if (p_m == 1L) c("a", "b", "Direct", "Total")
+    else {
+      c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
+    }
+  } else {
+    if (p_m == 1L) {
+      c(paste("a", x, sep = sep), "b", paste("Direct", x, sep = sep),
+        paste("Total", x, sep = sep))
+    } else {
+      c(paste("a", sapply(m, paste, x, sep = "."), sep = sep),
+        paste("b", m, sep = sep),
+        paste("Direct", x, sep = sep),
+        paste("Total", x, sep = sep))
+    }
+  }
 }

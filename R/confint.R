@@ -201,7 +201,7 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     }
     # combine confidence intervals
     ci <- rbind(confint_mx, confint_ymx, confint_yx)
-    rownames(ci) <- get_effect_names(object$m)
+    rownames(ci) <- get_effect_names(object$x, object$m)
   } else {
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
@@ -224,7 +224,7 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     ci <- do.call(rbind, ci)
     # add row and column names
     cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
-    dimnames(ci) <- list(get_effect_names(object$m), cn)
+    dimnames(ci) <- list(get_effect_names(object$x, object$m), cn)
   }
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]

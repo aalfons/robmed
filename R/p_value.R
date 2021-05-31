@@ -337,7 +337,7 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
     }
     # combine p-values
     p_values <- c(p_value_mx, p_value_ymx, p_value_yx)
-    names(p_values) <- get_effect_names(object$m)
+    names(p_values) <- get_effect_names(object$x, object$m)
   } else {
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
@@ -356,7 +356,7 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
     z <- estimates / se
     # compute p-values
     p_values <- p_value_z(z)
-    names(p_values) <- get_effect_names(object$m)
+    names(p_values) <- get_effect_names(object$x, object$m)
   }
   # if requested, take subset of effects
   if(!is.null(parm)) p_values <- p_values[parm]
