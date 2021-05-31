@@ -58,7 +58,7 @@ coef.boot_test_mediation <- function(object, parm = NULL,
                                      type = c("boot", "data"),
                                      ...) {
   # initializations
-  x <- object$x
+  x <- object$fit$x
   p_x <- length(x)
   m <- object$fit$m
   p_m <- length(m)
