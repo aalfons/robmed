@@ -295,8 +295,8 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   # check independent variable
   x <- data[, x, drop = FALSE]
   p_x <- ncol(x)
-  if (p_x != 1L) stop("exactly one independent variable required")
-  convert_x <- !is.numeric(x[, 1L])
+  if (p_x == 0L) stop("at least one independent variable required")
+  convert_x <- !all(sapply(x, is.numeric))
   # check dependent variable
   y <- data[, y, drop = FALSE]
   p_y <- ncol(y)
@@ -320,28 +320,28 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   data <- cbind(x, y, m, covariates)
   # extract names
   cn <- names(data)
-  x <- cn[1L]
-  y <- cn[2L]
-  m <- cn[2L + seq_len(p_m)]
-  covariates <- cn[-(seq_len(2L + p_m))]
+  x <- cn[seq_len(p_x)]
+  y <- cn[p_x + 1L]
+  m <- cn[p_x + 1L + seq_len(p_m)]
+  covariates <- cn[-(seq_len(p_x + 1L + p_m))]
   # remove incomplete observations
   data <- data[complete.cases(data), ]
-  # if necessary, convert non-numeric independent variable
+  # if necessary, convert non-numeric independent variables
   if (convert_x) {
     # construct variables for design matrix as usual
     x <- data[, x, drop = FALSE]
     x <- model.matrix(~ ., data = x)[, -1L, drop = FALSE]
-    # check if there is still only one variable
     p_x <- ncol(x)
-    if (p_x != 1L) {
-      stop("currently only implemented for a numeric ",
-           "or binary independent variable")
-    }
     # replace independent variable in data frame with converted one
     data <- cbind(x, data[, c(y, m, covariates), drop = FALSE])
     # update variable name
     x <- colnames(x)
   }
+  # # check combination of multiple independent variables and multiple mediators
+  # if (p_x > 1L && p_m > 1L) {
+  #   stop("not implemented for both multiple independent variables and ",
+  #        "multiple hypothesized mediators ")
+  # }
   # if necessary, convert non-numeric covariates
   if (convert_covariates) {
     # construct variables for design matrix as usual
@@ -358,7 +358,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   if (d[1L] <= d[2L]) stop("not enough observations")
   # check other arguments
   method <- match.arg(method)
-  if ((p_m > 1L || have_covariates) && method == "covariance") {
+  if ((p_x > 1L || p_m > 1L || have_covariates) && method == "covariance") {
     method <- "regression"
     warning("covariance method not available with multiple mediators ",
             "or any covariates; using regression method")
@@ -381,7 +381,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
       fit_yx <- isTRUE(fit_yx)
     }
     # check whether to compute differences of indirect effect(s)
-    if (p_m == 1L) contrast <- FALSE
+    if (p_x == 1L && p_m == 1L) contrast <- FALSE
     else if (is.logical(contrast)) {
       contrast <- isTRUE(contrast)
       if (contrast) contrast <- "estimates"
@@ -406,8 +406,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                               robust = "MM", family = "gaussian",
                               contrast = FALSE, fit_yx = TRUE,
                               control = reg_control()) {
-  # number of mediators
+  # number of indirect effects
+  p_x <- length(x)
   p_m <- length(m)
+  nr_indirect <- p_x * p_m
   # construct predictor matrices for regression models
   n <- nrow(data)
   predictors_mx <- as.matrix(data[, c(x, covariates), drop = FALSE])
@@ -497,32 +499,68 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                fixed.param = selm_args$fixed.param)
     }
   }
-  # extract effects a and b
+  # extract effects a and b and compute indirect effect(s)
   if (p_m == 1L) {
-    a <- unname(coef(fit_mx)[2L])
-    b <- unname(coef(fit_ymx)[1L + seq_len(p_m)])
+    # extract effects a and b
+    if (p_x == 1L) a <- unname(coef(fit_mx)[2L])
+    else a <- coef(fit_mx)[1L + seq_len(p_x)]
+    b <- unname(coef(fit_ymx)[2L])
+    # compute indirect effect(s)
+    ab <- a * b
   } else {
-    a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+    # extract effects a and b
+    if (p_x == 1L) {
+      a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+    } else {
+      a <- lapply(fit_mx, function(fit) coef(fit)[1L + seq_len(p_x)])
+    }
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
+    # compute indirect effect(s)
+    ab_list <- mapply(function(current_a, current_b) current_a * current_b,
+                      current_a = a, current_b = b, SIMPLIFY = FALSE)
+    # make sure we have vectors
+    if (p_x > 1L) a <- unlist(a, use.names = TRUE)
+    ab <- unlist(ab_list, use.names = TRUE)
   }
-  # compute indirect effect(s)
-  ab <- a * b
-  if (p_m > 1L) {
+  # if applicable, compute total indirect effect and contrasts
+  if (nr_indirect > 1L) {
     # if requested, compute contrasts
     if (have_contrast) {
       contrasts <- get_contrasts(ab, type = contrast)
       n_contrasts <- length(contrasts)
       names(contrasts) <- get_contrast_names(n_contrasts)
     } else contrasts <- NULL
-    # combine total indirect effects, individual indirect effects, and contrasts
-    ab <- c(Total = sum(ab), ab, contrasts)
+    # compute total indirect effect
+    ab_total <- sum(ab)
   }
-  # extract direct and total effect
-  direct <- unname(coef(fit_ymx)[2L + p_m])
+  # extract direct effect(s)
+  if (p_x == 1L) direct <- unname(coef(fit_ymx)[2L + p_m])
+  else direct <- coef(fit_ymx)[1L + p_m + seq_len(p_x)]
+  # extract total effect(s)
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
-    total <- if(p_m == 1L) ab + direct else unname(ab["Total"]) + direct
-  } else if (estimate_yx) total <- unname(coef(fit_yx)[2L])
-  else total <- NA_real_
+    if (p_x == 1L) {
+      total <- if (p_m == 1L) ab + direct else ab_total + direct
+    } else {
+      if (p_m == 1) total <- ab + direct
+      else {
+        total <- sapply(x, function(current_x) {
+          current_ab <- sapply(ab_list, "[", current_x)
+          sum(current_ab) + unname(direct[current_x])
+        })
+      }
+    }
+  } else if (estimate_yx) {
+    if (p_x == 1) total <- unname(coef(fit_yx)[2L])
+    else total <- coef(fit_yx)[1L + seq_len(p_x)]
+  } else {
+    if (p_x == 1) total <- NA_real_
+    else {
+      total <- rep.int(NA_real_, p_x)
+      names(total) <- x
+    }
+  }
+  # combine total indirect effect, individual indirect effects, and contrasts
+  if (nr_indirect > 1L) ab <- c(Total = ab_total, ab, contrasts)
   # return results
   result <- list(a = a, b = b, direct = direct, total = total, ab = ab,
                  fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
