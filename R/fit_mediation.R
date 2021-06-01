@@ -349,8 +349,9 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   method <- match.arg(method)
   if ((p_x > 1L || p_m > 1L || have_covariates) && method == "covariance") {
     method <- "regression"
-    warning("covariance method not available with multiple mediators ",
-            "or any covariates; using regression method")
+    warning("covariance method not available with multiple independent ",
+            "variables, multiple mediators, or covariates; using regression ",
+            "method")
   }
   # regression method requires some more checks, covariance method is simpler
   if (method == "regression") {
