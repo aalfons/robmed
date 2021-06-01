@@ -962,6 +962,13 @@ boot_test_mediation <- function(fit,
       ab <- c(ab, contrasts)
       ci <- rbind(ci, contrast_ci)
     }
+    # add names to effects other than the indirect effect
+    names(a) <- names(fit$a)
+    if (p_m > 1L) names(b) <- names(fit$b)
+    if (p_x > 1L) {
+      names(direct) <- names(fit$direct)
+      names(total) <- names(fit$total)
+    }
     # add names for indirect effects and confidence intervals
     names(ab) <- rownames(ci) <- names(fit$ab)
   }
