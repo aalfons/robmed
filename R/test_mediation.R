@@ -324,11 +324,12 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
   ## initializations
   test <- match.arg(test)
   alternative <- match.arg(alternative)
+  p_x <- length(object$x)
   p_m <- length(object$m)
-  if (p_m > 1L && test == "sobel") {
+  if ((p_x > 1L || p_m > 1L) && test == "sobel") {
     test <- "boot"
-    warning("Sobel test not available with multiple mediators; ",
-            "using bootstrap test")
+    warning("Sobel test not available with multiple independent variables or ",
+            "multiple mediators; using bootstrap test")
   }
   ## perform mediation analysis
   if (test == "boot") {
@@ -363,14 +364,23 @@ boot_test_mediation <- function(fit,
                                 ...) {
 
   # initializations
+  p_x <- length(fit$x)                     # number of independent variables
   p_m <- length(fit$m)                     # number of mediators
   p_covariates <- length(fit$covariates)   # number of covariates
+  nr_indirect <- p_x * p_m                 # number of indirect effects
   contrast <- fit$contrast                 # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
+  # useful index sequences
+  seq_x <- seq_len(p_x)
+  seq_m <- seq_len(p_m)
 
   # check whether we have a regression fit or a covariance fit
   if (inherits(fit, "reg_fit_mediation")) {
 
+    # indices of independent variables in data matrix to be used in bootstrap
+    j_x <- match(fit$x, names(fit$data)) + 1L
+    # indices of the dependent variable in data matrix to be used in bootstrap
+    j_y <- match(fit$y, names(fit$data)) + 1L
     # indices of mediators in data matrix to be used in bootstrap
     j_m <- match(fit$m, names(fit$data)) + 1L
     # indices of covariates in data matrix to be used in bootstrap
@@ -569,56 +579,128 @@ boot_test_mediation <- function(fit,
     } else if (family == "gaussian") {
 
       # define function for standard bootstrap mediation test
-      if (p_m == 1L)  {
-        # only one mediator
-        standard_bootstrap <- function(z, i) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          # compute coefficients from regression m ~ x + covariates
-          x_i <- z_i[, c(1L, 2L, j_covariates)]
-          m_i <- z_i[, 4L]
-          coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
-          # compute coefficients from regression y ~ m + x + covariates
-          mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
-          y_i <- z_i[, 3L]
-          coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
-          # compute effects
-          a <- coef_m_i[2L]
-          b <- coef_y_i[2L]
-          direct <- coef_y_i[3L]
-          ab <- a * b
-          total <- ab + direct
-          # return effects
-          c(ab, coef_m_i, coef_y_i, total)
-        }
-      } else{
-        # multiple mediators
-        standard_bootstrap <- function(z, i) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          # compute coefficients from regressions m ~ x + covariates
-          x_i <- z_i[, c(1L, 2L, j_covariates)]
-          # coef_m_i <- sapply(j_m, function(j) {
-          #   m_i <- z_i[, j]
-          #   coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
-          # })
-          m_i <- z_i[, j_m]
-          coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
-          # compute coefficients from regression y ~ m + x + covariates
-          mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
-          y_i <- z_i[, 3L]
-          coef_y_i <- drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i))
-          # compute effects
-          a <- unname(coef_m_i[2L, ])
-          b <- unname(coef_y_i[1L + seq_len(p_m)])
-          direct <- unname(coef_y_i[2L + p_m])
-          ab <- a * b
-          sum_ab <- sum(ab)
-          total <- sum_ab + direct
-          # return effects
-          c(sum_ab, ab, coef_m_i, coef_y_i, total)
-        }
+      # if (p_x == 1L) {
+      #   if (p_m == 1L)  {
+      #     # one independent variable, one mediator
+      #     standard_bootstrap <- function(z, i) {
+      #       # extract bootstrap sample from the data
+      #       z_i <- z[i, , drop = FALSE]
+      #       # compute coefficients from regression m ~ x + covariates
+      #       x_i <- z_i[, c(1L, 2L, j_covariates)]
+      #       m_i <- z_i[, 4L]
+      #       coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
+      #       # compute coefficients from regression y ~ m + x + covariates
+      #       mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
+      #       y_i <- z_i[, 3L]
+      #       coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
+      #       # compute effects
+      #       a <- coef_m_i[2L]
+      #       b <- coef_y_i[2L]
+      #       direct <- coef_y_i[3L]
+      #       ab <- a * b
+      #       total <- ab + direct
+      #       # return effects
+      #       c(ab, coef_m_i, coef_y_i, total)
+      #     }
+      #   } else{
+      #     # one independent variable, multiple mediators
+      #     standard_bootstrap <- function(z, i) {
+      #       # extract bootstrap sample from the data
+      #       z_i <- z[i, , drop = FALSE]
+      #       # compute coefficients from regressions m ~ x + covariates
+      #       x_i <- z_i[, c(1L, 2L, j_covariates)]
+      #       m_i <- z_i[, j_m]
+      #       coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
+      #       # compute coefficients from regression y ~ m + x + covariates
+      #       mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
+      #       y_i <- z_i[, 3L]
+      #       coef_y_i <- drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i))
+      #       # compute effects
+      #       a <- unname(coef_m_i[2L, ])
+      #       b <- unname(coef_y_i[1L + seq_len(p_m)])
+      #       direct <- unname(coef_y_i[2L + p_m])
+      #       ab <- a * b
+      #       sum_ab <- sum(ab)
+      #       total <- sum_ab + direct
+      #       # return effects
+      #       c(sum_ab, ab, coef_m_i, coef_y_i, total)
+      #     }
+      #   }
+      # } else {
+      #   if (p_m == 1L) {
+      #     # multiple independent variables, one mediator
+      #     standard_bootstrap <- function(z, i) {
+      #       # extract bootstrap sample from the data
+      #       z_i <- z[i, , drop = FALSE]
+      #       # compute coefficients from regression m ~ x + covariates
+      #       x_i <- z_i[, c(1L, j_x, j_covariates)]
+      #       m_i <- z_i[, j_m]
+      #       coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
+      #       # compute coefficients from regression y ~ m + x + covariates
+      #       mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+      #       y_i <- z_i[, j_y]
+      #       coef_y_i <- drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i))
+      #       # compute effects
+      #       a <- unname(coef_m_i[1L + seq_x])
+      #       b <- unname(coef_y_i[2L])
+      #       direct <- unname(coef_y_i[2L + seq_x])
+      #       ab <- a * b
+      #       sum_ab <- sum(ab)
+      #       total <- ab + direct
+      #       # return effects
+      #       c(sum_ab, ab, coef_m_i, coef_y_i, total)
+      #     }
+      #   } else {
+      #     # multiple independent variables, multiple mediators
+      #     standard_bootstrap <- function(z, i) {
+      #       # extract bootstrap sample from the data
+      #       z_i <- z[i, , drop = FALSE]
+      #       # compute coefficients from regressions m ~ x + covariates
+      #       x_i <- z_i[, c(1L, j_x, j_covariates)]
+      #       m_i <- z_i[, j_m]
+      #       coef_m_i <- drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i))
+      #       # compute coefficients from regression y ~ m + x + covariates
+      #       mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+      #       y_i <- z_i[, j_y]
+      #       coef_y_i <- drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i))
+      #       # compute effects
+      #       a <- unname(coef_m_i[1L + seq_x, ])
+      #       b <- unname(coef_y_i[1L + seq_m])
+      #       direct <- unname(coef_y_i[1L + p_m + seq_x])
+      #       ab <- sweep(a, 2, b, FUN = "*")
+      #       sum_ab <- sum(ab)
+      #       total <- rowSums(ab) + direct
+      #       # return effects
+      #       c(sum_ab, ab, coef_m_i, coef_y_i, total)
+      #     }
+      #   }
+      # }
+      standard_bootstrap <- function(z, i) {
+        # extract bootstrap sample from the data
+        z_i <- z[i, , drop = FALSE]
+        # compute coefficients from regressions m ~ x + covariates
+        x_i <- z_i[, c(1L, j_x, j_covariates)]
+        m_i <- z_i[, j_m]
+        coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
+        # compute coefficients from regression y ~ m + x + covariates
+        mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+        y_i <- z_i[, j_y]
+        coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
+        # compute effects
+        if (p_m == 1L) a <- coef_m_i[1L + seq_x]
+        else a <- coef_m_i[1L + seq_x, ]
+        b <- coef_y_i[1L + seq_m]
+        direct <- coef_y_i[1L + p_m + seq_x]
+        if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
+        else ab <- a * b
+        sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
+        if (p_m == 1L) total <- ab + direct
+        else if (p_x == 1L) total <- sum_ab + direct
+        else total <- rowSums(ab) + direct
+        # return effects
+        c(sum_ab, ab, coef_m_i, coef_y_i, total)
       }
+
       # perform standard bootstrap
       bootstrap <- local_boot(z, standard_bootstrap, R = R, ...)
       R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
@@ -835,35 +917,23 @@ boot_test_mediation <- function(fit,
 
   # get indices of columns of bootstrap replicates that that correspond to
   # the respective models
-  index_list <- get_index_list(p_m, p_covariates)
-  # extract bootstrap estimates of all effects and confidence interval of the
-  # indirect effect
-  if(p_m == 1L) {
-    ## only one mediator
-    # other effects
-    a <- mean(bootstrap$t[, index_list$fit_mx[2L]], na.rm = TRUE)
-    b <- mean(bootstrap$t[, index_list$fit_ymx[2L]], na.rm = TRUE)
-    direct <- mean(bootstrap$t[, index_list$fit_ymx[3L]], na.rm = TRUE)
-    total <- mean(bootstrap$t[, index_list$total], na.rm = TRUE)
-    # indirect effect
-    index_ab <- index_list$ab
-    ab <- mean(bootstrap$t[, index_ab], na.rm = TRUE)
-    ci <- confint(bootstrap, parm = index_ab, level = level,
+  index_list <- get_index_list(p_x, p_m, p_covariates)
+  # extract bootstrap estimates of effects other than the indirect effects
+  if (p_m == 1L) indices_a <- index_list$fit_mx[1L + seq_x]
+  else indices_a <- sapply(index_list$fit_mx, "[", 1L + seq_x)
+  a <- colMeans(bootstrap$t[, indices_a, drop = FALSE], na.rm = TRUE)
+  indices_b <- index_list$fit_ymx[1L + seq_m]
+  b <- colMeans(bootstrap$t[, indices_b, drop = FALSE], na.rm = TRUE)
+  indices_direct <- index_list$fit_ymx[1L + p_m + seq_x]
+  direct <- colMeans(bootstrap$t[, indices_direct, drop = FALSE], na.rm = TRUE)
+  total <- colMeans(bootstrap$t[, index_list$total, drop = FALSE], na.rm = TRUE)
+  # extract bootstrap estimates and confidence intervals of indirect effects
+  indices_ab <- index_list$ab
+  ab <- colMeans(bootstrap$t[, indices_ab, drop = FALSE], na.rm = TRUE)
+  if (nr_indirect == 1L) {
+    ci <- confint(bootstrap, parm = indices_ab, level = level,
                   alternative = alternative, type = type)
   } else {
-    ## multiple mediators
-    # other effects
-    indices_a <- sapply(index_list$fit_mx, "[", 2L)
-    a <- colMeans(bootstrap$t[, indices_a], na.rm = TRUE)
-    names(a) <- names(fit$a)
-    indices_b <- index_list$fit_ymx[1L + seq_len(p_m)]
-    b <- colMeans(bootstrap$t[, indices_b], na.rm = TRUE)
-    names(b) <- names(fit$b)
-    direct <- mean(bootstrap$t[, index_list$fit_ymx[p_m + 2L]], na.rm = TRUE)
-    total <- mean(bootstrap$t[, index_list$total], na.rm = TRUE)
-    # indirect effects
-    indices_ab <- index_list$ab
-    ab <- colMeans(bootstrap$t[, indices_ab], na.rm = TRUE)
     ci <- lapply(indices_ab, function(j) {
       confint(bootstrap, parm = j, level = level,
               alternative = alternative, type = type)
@@ -873,8 +943,6 @@ boot_test_mediation <- function(fit,
     if (have_contrast) {
       # list of all combinations of indices of the relevant indirect effects
       combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
-      # # compute bootstrap estimates of the contrasts
-      # contrasts <- get_contrasts(ab, combinations, type = contrast)
       # prepare "boot" object for the calculation of the confidence intervals
       contrast_bootstrap <- bootstrap
       contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,
@@ -897,7 +965,6 @@ boot_test_mediation <- function(fit,
     # add names for indirect effects and confidence intervals
     names(ab) <- rownames(ci) <- names(fit$ab)
   }
-
   # construct return object
   result <- list(a = a, b = b, direct = direct, total = total, ab = ab,
                  ci = ci, reps = bootstrap, alternative = alternative,
@@ -967,19 +1034,22 @@ p_value_z <- function(z, alternative = c("twosided", "less", "greater")) {
 }
 
 
-# The function for bootstrap replicates is required to return vector.  This
+# The function for bootstrap replicates is required to return a vector.  This
 # means that the columns of the bootstrap replicates contain coefficient
 # estimates from different models.  This utility function returns the indices
 # that correspond to the respective models, which makes it easier to extract
 # the desired coefficients.
-get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
+get_index_list <- function(p_x, p_m, p_covariates, indirect = TRUE) {
+  # initializations
+  nr_indirect <- p_x * p_m
   # numbers of coefficients in different models
-  if (indirect) p_ab <- if (p_m == 1L) 1L else 1L + p_m
+  if (indirect) p_ab <- if (nr_indirect == 1L) 1L else 1L + nr_indirect
   else p_ab <- 0L
-  p_mx <- rep.int(2L + p_covariates, p_m)
-  p_ymx <- 2L + p_m + p_covariates
-  p_total <- 1L
+  p_mx <- rep.int(1L + p_x + p_covariates, p_m)
+  p_ymx <- 1L + p_m + p_x + p_covariates
+  p_total <- p_x
   p_all <- sum(p_ab, p_mx, p_ymx, p_total)
+  # indices of vector for each bootstrap replicate
   indices <- seq_len(p_all)
   # the first columns correspond to indirect effect(s) of x on y
   first <- 1L
@@ -997,7 +1067,8 @@ get_index_list <- function(p_m, p_covariates, indirect = TRUE) {
   first <- first + sum(p_mx)
   indices_ymx <- seq.int(from = first, length.out = p_ymx)
   # the last column corresponds to the total effect of x on y
-  index_total <- first + p_ymx
+  first <- first + p_ymx
+  index_total <- seq.int(from = first, length.out = p_total)
   # return list of indices
   list(ab = indices_ab, fit_mx = indices_mx, fit_ymx = indices_ymx,
        total = index_total)

@@ -320,6 +320,7 @@ get_p_value.cov_fit_mediation <- function(object, parm = NULL, boot = NULL,
 get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
                                           ...) {
   # initializations
+  p_x <- length(object$x)
   p_m <- length(object$m)
   # extract point estimates and standard errors
   if(is.null(boot)) {
@@ -342,7 +343,7 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
     p_covariates <- length(object$fit$covariates)
-    index_list <- get_index_list(p_m, p_covariates)
+    index_list <- get_index_list(p_x, p_m, p_covariates)
     # the a path is the second coefficient in the model m ~ x + covariates
     if (p_m == 1) keep_mx <- index_list$fit_mx[2L]
     else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
