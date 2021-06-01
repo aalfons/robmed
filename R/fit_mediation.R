@@ -254,14 +254,8 @@ fit_mediation.formula <- function(formula, data, ...) {
   # make sure that independent variable is specified
   if (length(mf) == (2 + have_covariates)) {
     stop("no independent variable specified in formula")
-  } else if (length(mf) > (3 + have_covariates)) {
-    stop("only one independent variable allowed in formula")
   }
-  index_x <- setdiff(seq(2, 3 + have_covariates), c(index_m, index_covariates))
-  d <- dim(mf[[index_x]])
-  if (!is.null(d) && d[2] > 1) {
-    stop("only one independent variable allowed in formula")
-  }
+  index_x <- setdiff(seq(2, length(mf)), c(index_m, index_covariates))
   x <- names(mf)[index_x]
   # prepare to rebuild data frame
   mf <- as.list(mf)
@@ -337,11 +331,6 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     # update variable name
     x <- colnames(x)
   }
-  # # check combination of multiple independent variables and multiple mediators
-  # if (p_x > 1L && p_m > 1L) {
-  #   stop("not implemented for both multiple independent variables and ",
-  #        "multiple hypothesized mediators ")
-  # }
   # if necessary, convert non-numeric covariates
   if (convert_covariates) {
     # construct variables for design matrix as usual
