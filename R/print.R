@@ -421,17 +421,22 @@ print.summary_test_mediation <- function(x, digits = max(3, getOption("digits")-
 ## internal function to print information on contrast definitions
 # This now expects an object of class "fit_mediation".  In future versions,
 # this could also be turned into a generic function if necessary.
-print_contrast_info <- function(x, prefix = FALSE, ...) {
+print_contrast_info <- function(object, prefix = FALSE, ...) {
   # initializations
-  m <- x$m
-  p_m <- length(m)
-  contrast <- x$contrast                   # only implemented for regression fit
+  contrast <- object$contrast              # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
   # if applicable, print indirect effect contrast definitions
   if (have_contrast) {
-    plural <- if (p_m > 2L) "s" else ""
+    # extract further information
+    x <- object$x
+    p_x <- length(x)
+    m <- object$m
+    p_m <- length(m)
+    nr_indirect <- p_x * p_m
+    # print information on contrast definitions
+    plural <- if (nr_indirect > 2L) "s" else ""
     cat(sprintf("\nIndirect effect contrast definition%s:\n", plural))
-    contrast_info <- get_contrast_info(m, type = contrast, prefix = prefix)
+    contrast_info <- get_contrast_info(x, m, type = contrast, prefix = prefix)
     print(contrast_info, row.names = FALSE)
   }
 }

@@ -1046,7 +1046,18 @@ get_absolute_contrast <- function(j, x) {
 }
 
 # obtain information on how contrasts are computed
-get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
+get_contrast_info <- function(x, m, type = "estimates", prefix = FALSE) {
+  # initializations
+  p_x <- length(x)
+  p_m <- length(m)
+  # names used for indirect effects
+  if (p_x > 1 && p_m > 1) names <- sapply(m, paste, x, sep = ".")
+  else if (p_x > 1) names <- x
+  else if (p_m > 1) names <- m
+  else {
+    # should not happen
+    stop("contrasts are only applicable in case of multiple indirect effects")
+  }
   # compute combinations of names
   combinations <- combn(names, 2, simplify = FALSE)
   n_contrasts <- length(combinations)
