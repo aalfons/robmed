@@ -115,7 +115,7 @@ setup_weight_plot.reg_fit_mediation <- function(object,
     tmp <- lapply(outcome, function(current) {
       current_data <- get_weight_percentages(object, outcome = current,
                                              npoints = npoints)
-      cbind(Outcome = current, current_data)
+      data.frame(Outcome = current, current_data, stringsAsFactors = TRUE)
     })
     data <- do.call(rbind, tmp)
   }
@@ -175,16 +175,20 @@ get_weight_percentages <- function(object, outcome, npoints = 1000) {
     if (tail == "negative") {
       rbind(
         data.frame(Tail = "Negative residuals", Weights = "Expected",
-                   Threshold = thresholds, Percentage = expected),
+                   Threshold = thresholds, Percentage = expected,
+                   stringsAsFactors = TRUE),
         data.frame(Tail = "Negative residuals", Weights = "Empirical",
-                   Threshold = thresholds, Percentage = empirical)
+                   Threshold = thresholds, Percentage = empirical,
+                   stringsAsFactors = TRUE)
       )
     } else {
       rbind(
         data.frame(Tail = "Positive residuals", Weights = "Expected",
-                   Threshold = thresholds, Percentage = expected),
+                   Threshold = thresholds, Percentage = expected,
+                   stringsAsFactors = TRUE),
         data.frame(Tail = "Positive residuals", Weights = "Empirical",
-                   Threshold = thresholds, Percentage = empirical)
+                   Threshold = thresholds, Percentage = empirical,
+                   stringsAsFactors = TRUE)
       )
     }
   })
