@@ -73,22 +73,22 @@ NULL
 confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
                                         type = c("boot", "data"), ...) {
   # number of hypothesized mediators
-  p_m <- length(object$fit$m)
+  nr_indirect <- length(object$fit$x) * length(object$fit$m)
   # confidence interval of other effects
   type <- match.arg(type)
-  if(type == "boot") {
+  if (type == "boot") {
     ci <- get_confint(object$fit, level = object$level, boot = object$reps)
   } else ci <- get_confint(object$fit, level = object$level)
   # combine with confidence interval of indirect effect
-  if(p_m == 1L) ci <- rbind(ci, ab = object$ci)
+  if (nr_indirect == 1L) ci <- rbind(ci, ab = object$ci)
   else {
     tmp <- object$ci
     rownames(tmp) <- paste("ab", rownames(tmp), sep = "_")
     ci <- rbind(ci, tmp)
   }
-  if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
+  if (object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
-  if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
+  if (!is.null(parm)) ci <- ci[parm, , drop = FALSE]
   ci
 }
 
@@ -183,22 +183,27 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
   p_x <- length(object$x)
   p_m <- length(object$m)
   # extract point estimates and standard errors
-  if(is.null(boot)) {
+  if (is.null(boot)) {
     # extract confidence intervals from regression models
-    if(p_m == 1L) confint_mx <- confint(object$fit_mx, parm = 2L, level = level)
-    else {
-      confint_mx <- lapply(object$fit_mx, confint, parm = 2L, level = level)
+    if (p_m == 1L) {
+      confint_mx <- confint(object$fit_mx, parm = 1L + seq_len(p_x),
+                            level = level)
+    } else {
+      confint_mx <- lapply(object$fit_mx, confint, parm = 1L + seq_len(p_x),
+                           level = level)
       confint_mx <- do.call(rbind, confint_mx)
     }
-    confint_ymx <- confint(object$fit_ymx, parm = 1L + seq_len(p_m + 1L),
+    confint_ymx <- confint(object$fit_ymx, parm = 1L + seq_len(p_x + p_m),
                            level = level)
     # compute confidence interval for total effect
-    if(is.null(object$fit_yx)) {
+    if (is.null(object$fit_yx)) {
       # confidence interval not available
-      confint_yx <- rep.int(NA_real_, 2L)
+      if (p_x == 1L) confint_yx <- rep.int(NA_real_, 2L)
+      else confint_yx <- matrix(NA_real_, nrow = p_x, ncol = 2L)
     } else {
       # extract confidence interval from regression model
-      confint_yx <- confint(object$fit_yx, parm = 2L, level = level)
+      confint_yx <- confint(object$fit_yx, parm = 1L + seq_len(p_x),
+                            level = level)
     }
     # combine confidence intervals
     ci <- rbind(confint_mx, confint_ymx, confint_yx)
@@ -209,10 +214,10 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     p_covariates <- length(object$fit$covariates)
     index_list <- get_index_list(p_x, p_m, p_covariates)
     # the a path is the second coefficient in the model m ~ x + covariates
-    if (p_m == 1L) keep_mx <- index_list$fit_mx[2L]
-    else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
+    if (p_m == 1L) keep_mx <- index_list$fit_mx[1L + seq_len(p_x)]
+    else keep_mx <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
     # keep b and c coefficients of model y ~ m + x + covariates
-    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1L)]
+    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_x + p_m)]
     # index of total effect is stored separately in this list
     keep <- c(keep_mx, keep_ymx, index_list$total)
     # compute means and standard errors from bootstrap replicates
