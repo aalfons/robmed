@@ -234,14 +234,14 @@ setup_ci_plot.list <- function(object, ...) {
   }
   # reorganize information on the confidence interval in the proper structure
   ci_list <- mapply(function(object, method) {
-    data.frame(Method = method, object$ci)
+    data.frame(Method = method, object$ci, stringsAsFactors = TRUE)
   }, object = tmp, method = methods, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   ci <- do.call(rbind, ci_list)
   # if available, reorganize information on the p-value in the proper structure
   have_p_value <- !is.null(tmp[[1]]$p_value)
   if (have_p_value) {
     p_value_list <- mapply(function(object, method) {
-      data.frame(Method = method, object$p_value)
+      data.frame(Method = method, object$p_value, stringsAsFactors = TRUE)
     }, object = tmp, method = methods, SIMPLIFY = FALSE, USE.NAMES = FALSE)
     p_value <- do.call(rbind, p_value_list)
     # return object contains confidence intervals and p-values
