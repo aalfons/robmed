@@ -48,8 +48,8 @@ print_info.boot_test_mediation <- function(x, ...) {
     postfix <- ""
   }
   # use plural for multiple mediators
-  p_m <- length(x$fit$m)
-  plural <- if (length(p_m) == 1L) "" else "s"
+  nr_indirect <- length(x$fit$x) * length(x$fit$m)
+  plural <- if (nr_indirect == 1L) "" else "s"
   # return message
   cat(sprintf("%s test%s for indirect effect%s%s\n",
               prefix, plural, plural, postfix))
@@ -151,16 +151,18 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   # print information on type of model fit
   if (isTRUE(info)) print_info(x, ...)
   # initializations
+  p_x <- length(x$fit$x)
   m <- x$fit$m
   p_m <- length(m)
+  nr_indirect <- p_x * p_m
   # print indirect effects
-  plural <- if (p_m == 1L) "" else "s"
+  plural <- if (nr_indirect == 1L) "" else "s"
   cat(sprintf("\nIndirect effect%s of x on y:\n", plural))
   # extract indirect effect
   ab <- cbind(Data = x$fit$ab, Boot = x$ab)
-  if (p_m == 1L) rownames(ab) <- m
+  if (nr_indirect == 1L) rownames(ab) <- m
   # extract confidence interval
-  ci <- if (p_m == 1L) t(x$ci) else x$ci
+  ci <- if (nr_indirect == 1L) t(x$ci) else x$ci
   colnames(ci) <- c("Lower", "Upper")
   # combine and print
   print(cbind(ab, ci), digits = digits, ...)
