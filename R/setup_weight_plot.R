@@ -203,6 +203,3 @@ get_weight_percentages <- function(object, outcome, npoints = 1000) {
 # setup_weight_plot.cov_fit_mediation <- function(object, ...) {
 #   stop("not yet implemented for robust covariance fits")
 # }
-
-
-## utility functions
