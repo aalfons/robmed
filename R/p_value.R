@@ -80,17 +80,17 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
                                         type = c("boot", "data"),
                                         digits = 4L, ...) {
   # number of hypothesized mediators
-  p_m <- length(object$fit$m)
+  nr_indirect <- length(object$fit$x) * length(object$fit$m)
   contrast <- object$fit$contrast          # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
   # p-values of other effects
   type <- match.arg(type)
-  if(type == "boot") {
+  if (type == "boot") {
     p_values <- get_p_value(object$fit, boot = object$reps)
   } else p_values <- get_p_value(object$fit)
   # add temporary NA's for p-values of indirect effect,
   # as those take longer to compute
-  if (p_m == 1L) {
+  if (nr_indirect == 1L) {
     # only one mediator
     indirect_names <- "ab"
     alpha <- NA_real_
@@ -102,7 +102,7 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
   names(alpha) <- indirect_names
   p_values <- c(p_values, alpha)
   # if requested, take subset of effects
-  if(is.null(parm)) {
+  if (is.null(parm)) {
     # p-values of all indirect effects need to be computed
     which_names <- indirect_names
     which_indices <- seq_along(which_names)
@@ -114,7 +114,7 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
     which_indices <- match(which_names, indirect_names, nomatch = integer())
   }
   # preparations to modify bootstrap object if contrasts are requested
-  n_ab <- 1L + p_m
+  n_ab <- 1L + nr_indirect
   bootstrap <- object$reps
   # if contrasts are requested, modify bootstrap object to contain only
   # indirect effects and contrasts such that 'which_indices' correctly
@@ -143,74 +143,6 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
   p_values
 }
 
-# p_value.boot_test_mediation <- function(object, digits = 4L, ...) {
-#   # number of hypothesized mediators
-#   p_m <- length(object$fit$m)
-#   # compute p-value
-#   if(p_m == 1L) {
-#     # only one mediator
-#     # set lower bound of significance level to 0
-#     lower <- 0
-#     # loop over the number of digits and determine the corresponding digit after
-#     # the comma of the p-value
-#     for (digit in seq_len(digits)) {
-#       # set step size
-#       step <- 1 / 10^digit
-#       # reset the significance level to the lower bound as we continue from there
-#       # with a smaller stepsize
-#       alpha <- lower
-#       # there is no rejection at the lower bound, so increase significance level
-#       # until there is rejection
-#       reject <- FALSE
-#       while(!reject) {
-#         # update lower bound and significance level
-#         lower <- alpha
-#         alpha <- alpha + step
-#         # retest at current significance level and extract confidence interval
-#         ci <- confint(object$reps, parm = 1L, level = 1 - alpha,
-#                       alternative = object$alternative, type = object$type)
-#         # reject if 0 is not in the confidence interval
-#         reject <- prod(ci) > 0
-#       }
-#     }
-#   } else {
-#     # multiple mediators
-#     rn <- rownames(object$ci)
-#     alpha <- sapply(seq_along(rn), function(j) {
-#       # set lower bound of significance level to 0
-#       lower <- 0
-#       # loop over the number of digits and determine the corresponding digit after
-#       # the comma of the p-value
-#       for (digit in seq_len(digits)) {
-#         # set step size
-#         step <- 1 / 10^digit
-#         # reset the significance level to the lower bound as we continue from there
-#         # with a smaller stepsize
-#         alpha_j <- lower
-#         # there is no rejection at the lower bound, so increase significance level
-#         # until there is rejection
-#         reject <- FALSE
-#         while(!reject) {
-#           # update lower bound and significance level
-#           lower <- alpha_j
-#           alpha_j <- alpha_j + step
-#           # retest at current significance level and extract confidence interval
-#           # ci <- retest(object, level = 1 - alpha)$ci[m, ]
-#           ci <- confint(object$reps, parm = j, level = 1 - alpha_j,
-#                         alternative = object$alternative, type = object$type)
-#           # reject if 0 is not in the confidence interval
-#           reject <- prod(ci) > 0
-#         }
-#       }
-#       # return p-value for current indirect effect
-#       alpha_j
-#     })
-#     names(alpha) <- rn
-#   }
-#   # return smallest significance level where 0 is not in the confidence interval
-#   alpha
-# }
-
 
 #' @rdname p_value
 #' @method p_value sobel_test_mediation
@@ -230,8 +162,6 @@ p_value.sobel_test_mediation <- function(object, parm = NULL, ...) {
     p_values
   }
 }
-
-# p_value.sobel_test_mediation <- function(object, ...) object$p_value
 
 
 ## methods to extract p-values from model fits
@@ -325,16 +255,16 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
   # extract point estimates and standard errors
   if(is.null(boot)) {
     # extract p-values from regression models
-    if(p_m == 1L) p_value_mx <- p_value(object$fit_mx, parm = 2L)
-    else p_value_mx <- sapply(object$fit_mx, p_value, parm = 2L)
-    p_value_ymx <- p_value(object$fit_ymx, parm = 1L + seq_len(p_m + 1L))
-    # compute p-valuel for total effect
-    if(is_robust(object)) {
+    if(p_m == 1L) p_value_mx <- p_value(object$fit_mx, parm = 1L + seq_len(p_x))
+    else p_value_mx <- sapply(object$fit_mx, p_value, parm = 1L + seq_len(p_x))
+    p_value_ymx <- p_value(object$fit_ymx, parm = 1L + seq_len(p_x + p_m))
+    # compute p-value for total effect
+    if(is.null(object$fit_yx)) {
       # p-value not available
-      p_value_yx <- NA_real_
+      p_value_yx <- rep.int(NA_real_, p_x)
     } else {
       # extract p-value from regression model
-      p_value_yx <- p_value(object$fit_yx, parm = 2L)
+      p_value_yx <- p_value(object$fit_yx, parm = 1L + seq_len(p_x))
     }
     # combine p-values
     p_values <- c(p_value_mx, p_value_ymx, p_value_yx)
@@ -345,10 +275,10 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
     p_covariates <- length(object$fit$covariates)
     index_list <- get_index_list(p_x, p_m, p_covariates)
     # the a path is the second coefficient in the model m ~ x + covariates
-    if (p_m == 1) keep_mx <- index_list$fit_mx[2L]
-    else keep_mx <- sapply(index_list$fit_mx, "[", 2L)
+    if(p_m == 1) keep_mx <- index_list$fit_mx[1L + seq_len(p_x)]
+    else keep_mx <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
     # keep b and c coefficients of model y ~ m + x + covariates
-    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_m + 1)]
+    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_x + p_m)]
     # index of total effect is stored separately in this list
     keep <- c(keep_mx, keep_ymx, index_list$total)
     # compute means, standard errors and z-statistics from bootstrap replicates
@@ -384,7 +314,7 @@ p_value.boot <- function(object, parm = 1L, digits = 4L,
     # there is no rejection at the lower bound, so increase significance level
     # until there is rejection
     reject <- FALSE
-    while(!reject) {
+    while (!reject) {
       # update lower bound and significance level
       lower <- alpha
       alpha <- alpha + step
