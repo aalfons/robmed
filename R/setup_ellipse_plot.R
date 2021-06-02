@@ -150,9 +150,12 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   }
   # extract variable names
   x <- object$x
+  p_x <- length(x)
   y <- object$y
   m <- object$m
+  p_m <- length(m)
   covariates <- object$covariates
+  p_covariates <- length(covariates)
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m[1L]
   else {
@@ -165,26 +168,26 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
     }
   }
   # check variable on horizontal axis
-  if (is.null(horizontal)) horizontal <- x
+  if (is.null(horizontal)) horizontal <- x[1L]
   else {
     if (!(is.character(horizontal) && length(horizontal) == 1L)) {
       stop("only one variable allowed for the horizontal axis")
     }
-    if (vertical %in% m && horizontal != x) {
-      stop("variable on the horizontal axis must be the independent variable")
-    } else if (vertical == y && !(horizontal %in% m || horizontal == x)) {
+    if (vertical %in% m && !(horizontal %in% x)) {
+      stop("variable on the horizontal axis must be an independent variable")
+    } else if (vertical == y && !(horizontal %in% m || horizontal %in% x)) {
       stop("variable on the horizontal axis must be ",
-           "the dependent variable or a mediator")
+           "an independent variable or a mediator")
     }
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical %in% m && horizontal == x && length(covariates) == 0L
+  have_mx <- vertical %in% m && p_x == 1L && horizontal == x && p_covariates == 0L
   robust <- object$robust == "MM"
   # extract model fit
   if (partial || have_mx || robust) {
     if (vertical %in% m) {
-      fit <- if (length(m) > 1L) object$fit_mx[[vertical]] else object$fit_mx
+      fit <- if (p_m > 1L) object$fit_mx[[vertical]] else object$fit_mx
     } else fit <- object$fit_ymx
     coefficients <- coef(fit)
   }
@@ -325,7 +328,7 @@ setup_ellipse_plot.cov_fit_mediation <- function(object,
       stop("variable on the horizontal axis must be the independent variable")
     } else if (vertical == y && (horizontal != m && horizontal != x)) {
       stop("variable on the horizontal axis must be ",
-           "the dependent variable or a mediator")
+           "the independent variable or a mediator")
     }
   }
   # other initializations
