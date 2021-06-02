@@ -8,6 +8,10 @@ Changes in robmed version 0.9.0
     + Added argument 'contrast' to fit_mediation() and test_mediation(), which
       allows to test for differences of (absolute values) of indirect effects.
 
+    + Bugfix in plots: order of different models, effects or methods is
+      preserved with R >= 4.0.0 (where data.frame() by default no longer
+      converts character strings to factors).
+
 
 
 Changes in robmed version 0.8.0

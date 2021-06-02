@@ -455,15 +455,20 @@ setup_ellipse_plot.list <- function(object, ...) {
     if (sum_robust == 0L) {
       # add column identifying the method to data for scatter plots
       data_list <- mapply(function(ellipse, method) {
-        cbind(Method = method, ellipse$data)
+        data.frame(Method = method, ellipse$data, stringsAsFactors = TRUE)
       }, ellipse = tol_ellipse_list, method = methods,
       SIMPLIFY = FALSE, USE.NAMES = FALSE)
     } else {
       # if there is a robust method, add column with weights for nonrobust
       # methods as well
       data_list <- mapply(function(ellipse, method) {
-        if (ellipse$robust) cbind(Method = method, ellipse$data)
-        else cbind(Method = method, ellipse$data, Weight = 1)
+        if (ellipse$robust) {
+          data.frame(Method = method, ellipse$data,
+                     stringsAsFactors = TRUE)
+        } else {
+          data.frame(Method = method, ellipse$data, Weight = 1,
+                     stringsAsFactors = TRUE)
+        }
       }, ellipse = tol_ellipse_list, method = methods,
       SIMPLIFY = FALSE, USE.NAMES = FALSE)
     }
@@ -473,14 +478,16 @@ setup_ellipse_plot.list <- function(object, ...) {
   else data <- tol_ellipse_list[[1]]$data
   # combine data for ellipses
   ellipse_list <- mapply(function(ellipse, method) {
-    cbind(Method = method, ellipse$ellipse)
+    data.frame(Method = method, ellipse$ellipse, stringsAsFactors = TRUE)
   }, ellipse = tol_ellipse_list, method = methods,
   SIMPLIFY = FALSE, USE.NAMES = FALSE)
   ellipses <- do.call(rbind, ellipse_list)
   # combine data for lines representing (partial) effects
   line_list <- mapply(function(ellipse, method) {
     line <- ellipse$line
-    if (!is.null(line)) cbind(Method = method, line)
+    if (!is.null(line)) {
+      data.frame(Method = method, line, stringsAsFactors = TRUE)
+    }
   }, ellipse = tol_ellipse_list, method = methods,
   SIMPLIFY = FALSE, USE.NAMES = FALSE)
   lines <- do.call(rbind, line_list)

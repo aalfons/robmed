@@ -212,12 +212,12 @@ setup_density_plot.list <- function(object, ...) {
   }
   # reorganize information on the density in the proper structure
   density_list <- mapply(function(object, method) {
-    data.frame(Method = method, object$density)
+    data.frame(Method = method, object$density, stringsAsFactors = TRUE)
   }, object = tmp, method = methods, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   density <- do.call(rbind, density_list)
   # reorganize information on the confidence interval in the proper structure
   ci_list <- mapply(function(object, method) {
-    data.frame(Method = method, object$ci)
+    data.frame(Method = method, object$ci, stringsAsFactors = TRUE)
   }, object = tmp, method = methods, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   ci <- do.call(rbind, ci_list)
   # extract information on type of test
