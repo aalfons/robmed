@@ -599,45 +599,60 @@ boot_test_mediation <- function(fit,
       estimate_yx <- !is.null(fit$fit_yx)
       # obtain parameters as required for package 'sn'
       control <- list(method = "MLE")
-      # select among normal, skew-normal, t and skew-t errors
-      if (p_m == 1) {
-        # use values from full sample as starting values for optimization
+
+      # use values from full sample as starting values for optimization
+      if (p_m == 1L) {
         start <- list(mx = fit$fit_mx$start, ymx = fit$fit_ymx$start,
                       yx = fit$fit_yx$start)
-        # only one mediator
-        select_bootstrap <- function(z, i, start, control, estimate_yx) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          # skew-t distribution can be unstable on bootstrap samples
-          tryCatch({
-            # compute coefficients from regression m ~ x + covariates
-            x_i <- z_i[, c(1L, 2L, j_covariates)]
-            m_i <- z_i[, 4L]
+      } else {
+        start <- list(mx = lapply(fit$fit_mx, "[[", "start"),
+                      ymx = fit$fit_ymx$start,
+                      yx = fit$fit_yx$start)
+      }
+
+      # define function for bootstrap with selection of error distribution
+      select_bootstrap <- function(z, i, start, control, estimate_yx) {
+        # extract bootstrap sample from the data
+        z_i <- z[i, , drop = FALSE]
+        # skew-t distribution can be unstable on bootstrap samples
+        tryCatch({
+          # compute coefficients from regression m ~ x + covariates
+          x_i <- z_i[, c(1L, j_x, j_covariates)]
+          if (p_m == 1L) {
+            m_i <- z_i[, j_m]
             coef_mx_i <- lmselect_boot(x_i, m_i, start = start$mx,
                                        control = control)
-            # compute coefficients from regression y ~ m + x + covariates
-            mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
-            y_i <- z_i[, 3L]
-            coef_ymx_i <- lmselect_boot(mx_i, y_i, start = start$ymx,
-                                        control = control)
-            # compute coefficients from regression y ~ x + covariates
-            if (estimate_yx) {
-              coef_yx_i <- lmselect_boot(x_i, y_i, start = start$yx,
+          } else {
+            coef_mx_i <- mapply(function(j, start) {
+              m_i <- z_i[, j]
+              coef_mx_i <- lmselect_boot(x_i, m_i, start = start,
                                          control = control)
-              total <- coef_yx_i[2L]
-            } else total <- NA_real_
-            # compute indirect effect
-            a <- coef_mx_i[2L]
-            b <- coef_ymx_i[2L]
-            ab <- a * b
-            # return effects
-            c(ab, coef_mx_i, coef_ymx_i, total)
-          }, error = function(condition) NA_real_)
-        }
-      } else {
-        # multiple mediators
-        stop("not yet implemented")
+            }, j = j_m, start = start$mx)
+
+          }
+          # compute coefficients from regression y ~ m + x + covariates
+          mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+          y_i <- z_i[, j_y]
+          coef_ymx_i <- lmselect_boot(mx_i, y_i, start = start$ymx,
+                                      control = control)
+          # compute coefficients from regression y ~ x + covariates
+          if (estimate_yx) {
+            coef_yx_i <- lmselect_boot(x_i, y_i, start = start$yx,
+                                       control = control)
+            total <- coef_yx_i[1L + seq_x]
+          } else total <- rep.int(NA_real_, p_x)
+          # compute indirect effects
+          if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
+          else a <- coef_mx_i[1L + seq_x, ]
+          b <- coef_ymx_i[1L + seq_m]
+          if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
+          else ab <- a * b
+          sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
+          # return effects
+          c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
+        }, error = function(condition) NA_real_)
       }
+
       # perform bootstrap with selection of error distribution
       bootstrap <- local_boot(z, select_bootstrap, R = R, start = start,
                               control = control, estimate_yx = estimate_yx,
@@ -651,116 +666,86 @@ boot_test_mediation <- function(fit,
       # obtain parameters as required for package 'sn'
       selm_args <- get_selm_args(family)
       control <- list(method = "MLE")
-      # define function for bootstrap with skew-elliptical errors
-      if (p_m == 1L)  {
-        # use values from full sample as starting values for optimization
-        if (family == "skewnormal") {
-          # starting values in centered parametrization
+
+      # use values from full sample as starting values for optimization
+      if (family == "skewnormal") {
+        # starting values in centered parametrization
+        if (p_m == 1L) {
           start <- list(mx = get_cp(fit$fit_mx), ymx = get_cp(fit$fit_ymx),
                         yx = get_cp(fit$fit_yx))
         } else {
-          # starting values in direct parametrization
+          start <- list(mx = lapply(fit$fit_mx, get_cp),
+                        ymx = get_cp(fit$fit_ymx),
+                        yx = get_cp(fit$fit_yx))
+        }
+      } else {
+        # starting values in direct parametrization
+        if (p_m == 1L) {
           start <- list(mx = get_dp(fit$fit_mx), ymx = get_dp(fit$fit_ymx),
                         yx = get_dp(fit$fit_yx))
+
+        } else {
+          start <- list(mx = lapply(fit$fit_mx, get_dp),
+                        ymx = get_dp(fit$fit_ymx),
+                        yx = get_dp(fit$fit_yx))
         }
-        # only one mediator
-        selm_bootstrap <- function(z, i, family, start, fixed.param,
-                                   control, estimate_yx) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          # skew-t distribution can be unstable on bootstrap samples
-          tryCatch({
-            # compute coefficients from regression m ~ x + covariates
-            x_i <- z_i[, c(1L, 2L, j_covariates)]
-            m_i <- z_i[, 4L]
+      }
+
+      # define function for bootstrap with skew-elliptical errors
+      selm_bootstrap <- function(z, i, family, start, fixed.param,
+                                 control, estimate_yx) {
+        # extract bootstrap sample from the data
+        z_i <- z[i, , drop = FALSE]
+        # skew-t distribution can be unstable on bootstrap samples
+        tryCatch({
+          # compute coefficients from regression m ~ x + covariates
+          x_i <- z_i[, c(1L, j_x, j_covariates)]
+          if (p_m == 1L) {
+            m_i <- z_i[, j_m]
             fit_mx_i <- selm.fit(x_i, m_i, family = family,
                                  start = start$mx,
                                  fixed.param = fixed.param,
                                  selm.control = control)
             coef_mx_i <- unname(get_coef(fit_mx_i$param, family))
-            # compute coefficients from regression y ~ m + x + covariates
-            mx_i <- z_i[, c(1L, 4L, 2L, j_covariates)]
-            y_i <- z_i[, 3L]
-            fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
-                                  start = start$ymx,
-                                  fixed.param = fixed.param,
-                                  selm.control = control)
-            coef_ymx_i <- unname(get_coef(fit_ymx_i$param, family))
-            # compute coefficients from regression y ~ x + covariates
-            if (estimate_yx) {
-              fit_yx_i <- selm.fit(x_i, y_i, family = family,
-                                   start = start$yx,
-                                   fixed.param = fixed.param,
-                                   selm.control = control)
-              coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
-              total <- coef_yx_i[2L]
-            } else total <- NA_real_
-            # compute indirect effect
-            a <- coef_mx_i[2L]
-            b <- coef_ymx_i[2L]
-            ab <- a * b
-            # return effects
-            c(ab, coef_mx_i, coef_ymx_i, total)
-          }, error = function(condition) NA_real_)
-        }
-      } else{
-        # use values from full sample as starting values for optimization
-        if (family == "skewnormal") {
-          # starting values in centered parametrization
-          start <- list(mx = lapply(fit$fit_mx, get_cp),
-                        ymx = get_cp(fit$fit_ymx),
-                        yx = get_cp(fit$fit_yx))
-        } else {
-          # starting values in direct parametrization
-          start <- list(mx = lapply(fit$fit_mx, get_dp),
-                        ymx = get_dp(fit$fit_ymx),
-                        yx = get_dp(fit$fit_yx))
-        }
-        # multiple mediators
-        selm_bootstrap <- function(z, i, family, start, fixed.param,
-                                   control, estimate_yx) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          # skew-t distribution can be unstable on bootstrap samples
-          tryCatch({
-            # compute coefficients from regressions m ~ x + covariates
-            x_i <- z_i[, c(1L, 2L, j_covariates)]
+          } else {
             coef_mx_i <- mapply(function(j, start) {
               m_i <- z_i[, j]
               fit_mx_i <- selm.fit(x_i, m_i, family = family,
                                    start = start,
                                    fixed.param = fixed.param,
                                    selm.control = control)
-              get_coef(fit_mx_i$param, family)
+              unname(get_coef(fit_mx_i$param, family))
             }, j = j_m, start = start$mx)
-            # compute coefficients from regression y ~ m + x + covariates
-            mx_i <- z_i[, c(1L, j_m, 2L, j_covariates)]
-            y_i <- z_i[, 3L]
-            fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
-                                  start = start$ymx,
-                                  fixed.param = fixed.param,
-                                  selm.control = control)
-            coef_ymx_i <- get_coef(fit_ymx_i$param, family)
-            # compute coefficients from regression y ~ x + covariates
-            if (estimate_yx) {
-              fit_yx_i <- selm.fit(x_i, y_i, family = family,
-                                   start = start$yx,
-                                   fixed.param = fixed.param,
-                                   selm.control = control)
-              coef_yx_i <- get_coef(fit_yx_i$param, family)
-              total <- unname(coef_yx_i[2L])
-            } else total <- NA_real_
-            # compute indirect effects
-            a <- unname(coef_mx_i[2L, ])
-            b <- unname(coef_ymx_i[1L + seq_len(p_m)])
-            direct <- unname(coef_ymx_i[2L + p_m])
-            ab <- a * b
-            sum_ab <- sum(ab)
-            # return effects
-            c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
-          }, error = function(condition) NA_real_)
-        }
+          }
+          # compute coefficients from regression y ~ m + x + covariates
+          mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+          y_i <- z_i[, j_y]
+          fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
+                                start = start$ymx,
+                                fixed.param = fixed.param,
+                                selm.control = control)
+          coef_ymx_i <- unname(get_coef(fit_ymx_i$param, family))
+          # compute coefficients from regression y ~ x + covariates
+          if (estimate_yx) {
+            fit_yx_i <- selm.fit(x_i, y_i, family = family,
+                                 start = start$yx,
+                                 fixed.param = fixed.param,
+                                 selm.control = control)
+            coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
+            total <- coef_yx_i[1L + seq_x]
+          } else total <- rep.int(NA_real_, p_x)
+          # compute indirect effects
+          if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
+          else a <- coef_mx_i[1L + seq_x, ]
+          b <- coef_ymx_i[1L + seq_m]
+          if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
+          else ab <- a * b
+          sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
+          # return effects
+          c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
+        }, error = function(condition) NA_real_)
       }
+
       # perform bootstrap with skew-elliptical errors
       bootstrap <- local_boot(z, selm_bootstrap, R = R,
                               family = selm_args$family, start = start,
@@ -814,7 +799,17 @@ boot_test_mediation <- function(fit,
   b <- colMeans(bootstrap$t[, indices_b, drop = FALSE], na.rm = TRUE)
   indices_direct <- index_list$fit_ymx[1L + p_m + seq_x]
   direct <- colMeans(bootstrap$t[, indices_direct, drop = FALSE], na.rm = TRUE)
-  total <- colMeans(bootstrap$t[, index_list$total, drop = FALSE], na.rm = TRUE)
+  # -----
+  # colMeans() may return NaN instead of NA when all values are NA.  Here this
+  # is the case for regression with skew-elliptical errors when the regression
+  # for the total effect is not performed.
+  # -----
+  # total <- colMeans(bootstrap$t[, index_list$total, drop = FALSE], na.rm = TRUE)
+  # -----
+  bootstrap_total <- bootstrap$t[, index_list$total, drop = FALSE]
+  if (all(is.na(bootstrap_total))) total <- rep.int(NA_real_, p_x)
+  else total <- colMeans(bootstrap_total, na.rm = TRUE)
+  # -----
   # extract bootstrap estimates and confidence intervals of indirect effects
   indices_ab <- index_list$ab
   ab <- colMeans(bootstrap$t[, indices_ab, drop = FALSE], na.rm = TRUE)
