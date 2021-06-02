@@ -59,9 +59,8 @@ coef.boot_test_mediation <- function(object, parm = NULL,
                                      ...) {
   # initializations
   x <- object$fit$x
-  p_x <- length(x)
   m <- object$fit$m
-  p_m <- length(m)
+  nr_indirect <- length(x) * length(m)
   type <- match.arg(type)
   # extract effects (including indirect effect)
   if(type == "boot") {
@@ -69,7 +68,7 @@ coef.boot_test_mediation <- function(object, parm = NULL,
     ab <- object$ab
     coef <- c(object$a, object$b, object$direct, object$total, ab)
     # add coefficient names
-    if (p_x == 1L && p_m == 1L) indirect_names <- "ab"
+    if (nr_indirect == 1L) indirect_names <- "ab"
     else indirect_names <- paste("ab", names(ab), sep = "_")
     names(coef) <- c(get_effect_names(x, m), indirect_names)
     # if requested, take subset of effects
@@ -87,14 +86,13 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 coef.fit_mediation <- function(object, parm = NULL, ...) {
   # initializations
   x <- object$x
-  p_x <- length(x)
   m <- object$m
-  p_m <- length(m)
+  nr_indirect <- length(x) * length(m)
   # extract effects
   ab <- object$ab
   coef <- c(object$a, object$b, object$direct, object$total, ab)
   # add coefficient names
-  if (p_x == 1L && p_m == 1L) indirect_names <- "ab"
+  if (nr_indirect == 1L) indirect_names <- "ab"
   else indirect_names <- paste("ab", names(ab), sep = "_")
   names(coef) <- c(get_effect_names(x, m), indirect_names)
   # if requested, take subset of effects
