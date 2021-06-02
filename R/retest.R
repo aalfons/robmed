@@ -76,8 +76,7 @@ retest <- function(object, ...) UseMethod("retest")
 retest.boot_test_mediation <- function(object, alternative, level,
                                        type, contrast, ...) {
   # initializations
-  m <- object$fit$m
-  p_m <- length(m)
+  nr_indirect <- length(object$fit$x) * length(object$fit$m)
   # check alternative hypothesis
   if (missing(alternative)) alternative <- object$alternative
   else {
@@ -98,7 +97,7 @@ retest.boot_test_mediation <- function(object, alternative, level,
     # regression model fit (multiple mediators and contrasts are supported)
     if (missing(contrast)) contrast <- object$fit$contrast
     else {
-      if (p_m == 1L) contrast <- FALSE
+      if (nr_indirect == 1L) contrast <- FALSE
       else if (is.logical(contrast)) {
         contrast <- isTRUE(contrast)
         if (contrast) contrast <- "estimates"
@@ -121,13 +120,13 @@ retest.boot_test_mediation <- function(object, alternative, level,
   # reperform test if necessary
   if (update) {
     # recompute confidence interval
-    if(p_m == 1L) {
+    if(nr_indirect == 1L) {
       # only one mediator
       ci <- confint(object$reps, parm = 1L, level = level,
                     alternative = alternative, type = type)
     } else {
       # multiple mediators
-      indices_ab <- seq_len(1L + p_m)
+      indices_ab <- seq_len(1L + nr_indirect)
       bootstrap <- object$reps
       ci <- lapply(indices_ab, function(j) {
         confint(bootstrap, parm = j, level = level,
