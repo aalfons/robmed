@@ -98,8 +98,8 @@ setup_density_plot <- function(object, ...) UseMethod("setup_density_plot")
 
 setup_density_plot.boot_test_mediation <- function(object, ...) {
   # initialization
-  p_m <- length(object$fit$m)
-  have_effects <- p_m > 1L
+  nr_indirect <- length(object$fit$x) * length(object$fit$m)
+  have_effects <- nr_indirect > 1L
   contrast <- object$fit$contrast          # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
   # extract point estimate and confidence interval
@@ -111,7 +111,7 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
     effect_labels <- names(ab)
     effects <- factor(effect_labels, levels = effect_labels)
     # compute bootstrap densities
-    indices <- seq_len(1L+p_m)
+    indices <- seq_len(1L + nr_indirect)
     pdf_list <- lapply(indices, function(j, x) density(x[, j], na.rm = TRUE),
                        x = object$reps$t)
     # add densities of contrasts (if applicable)
