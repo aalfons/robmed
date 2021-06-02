@@ -112,10 +112,16 @@ setup_ci_plot.boot_test_mediation <- function(object, parm = NULL,
                                               p_value = FALSE, digits = 4L,
                                               ...) {
   # initializations
+  p_x <- length(object$fit$x)
   p_m <- length(object$fit$m)
   if (is.null(parm)) {
-    if (p_m == 1L) parm <- c("Direct", "ab")
-    else parm <- c("Direct", paste("ab", names(object$ab), sep = "_"))
+    if (p_x == 1L) {
+      if (p_m == 1L) parm <- c("Direct", "ab")
+      else parm <- c("Direct", paste("ab", names(object$ab), sep = "_"))
+    } else {
+      parm <- c(paste("Direct", names(object$direct), sep = "_"),
+                paste("ab", names(object$ab), sep = "_"))
+    }
   }
   include_p_value <- isTRUE(p_value)
   # extract point estimates
