@@ -82,19 +82,28 @@ print_info.sobel_test_mediation <- function(x, ...) {
 # information on variables in summary of mediation analysis
 print_info.summary_fit_mediation <- function(x, ...) {
   # initializations
+  p_x <- length(x$x)
   p_m <- length(x$m)
+  nr_indirect <- p_x * p_m
   have_covariates <- length(x$covariates) > 0L
   # print information on variables
-  if (p_m == 1L) {
+  if (nr_indirect == 1L) {
     cat(sprintf("x = %s\n", x$x))
     cat(sprintf("y = %s\n", x$y))
     cat(sprintf("m = %s\n", x$m))
   } else {
-    width <- nchar(p_m) + 1L
-    cat(sprintf(paste0("%-", width, "s = %s\n"), "x", x$x))
+    width <- max(nchar(p_x), nchar(p_m)) + 1L
+    if (p_x == 1L) cat(sprintf(paste0("%-", width, "s = %s\n"), "x", x$x))
+    else {
+      x_labels <- paste0("x", seq_len(p_x))
+      cat(sprintf(paste0("%-", width, "s = %s\n"), x_labels, x$x), sep = "")
+    }
     cat(sprintf(paste0("%-", width, "s = %s\n"), "y", x$y))
-    m_labels <- paste0("m", seq_len(p_m))
-    cat(sprintf(paste0("%-", width, "s = %s\n"), m_labels, x$m), sep = "")
+    if (p_m == 1L) cat(sprintf(paste0("%-", width, "s = %s\n"), "m", x$m))
+    else {
+      m_labels <- paste0("m", seq_len(p_m))
+      cat(sprintf(paste0("%-", width, "s = %s\n"), m_labels, x$m), sep = "")
+    }
   }
   if (have_covariates) {
     cat("\nCovariates:\n")
@@ -151,10 +160,8 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   # print information on type of model fit
   if (isTRUE(info)) print_info(x, ...)
   # initializations
-  p_x <- length(x$fit$x)
   m <- x$fit$m
-  p_m <- length(m)
-  nr_indirect <- p_x * p_m
+  nr_indirect <- length(x$fit$x) * length(m)
   # print indirect effects
   plural <- if (nr_indirect == 1L) "" else "s"
   cat(sprintf("\nIndirect effect%s of x on y:\n", plural))
@@ -431,10 +438,8 @@ print_contrast_info <- function(object, prefix = FALSE, ...) {
   if (have_contrast) {
     # extract further information
     x <- object$x
-    p_x <- length(x)
     m <- object$m
-    p_m <- length(m)
-    nr_indirect <- p_x * p_m
+    nr_indirect <- length(x) * length(m)
     # print information on contrast definitions
     plural <- if (nr_indirect > 2L) "s" else ""
     cat(sprintf("\nIndirect effect contrast definition%s:\n", plural))

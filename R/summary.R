@@ -202,6 +202,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   m <- object$m
   p_x <- length(x)
   p_m <- length(m)
+  nr_indirect <- p_x * p_m
   covariates <- object$covariates
   p_covariates <- length(covariates)
   have_robust <- is_robust(object)
@@ -219,7 +220,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
     names(total) <- object$x
     coefficients <- c(coef_mx, coef(object$fit_ymx), total)
     # compute standard errors and z-statistics from bootstrap replicates
-    remove <- if(p_m == 1L) 1L else seq_len(1L + p_m)
+    remove <- if (nr_indirect == 1L) 1L else seq_len(1L + nr_indirect)
     means <- colMeans(boot$t[, -remove], na.rm = TRUE)
     se <- apply(boot$t[, -remove], 2, sd, na.rm = TRUE)
     z <- means / se
@@ -245,12 +246,6 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   }
   # compute summary of model
   summary_mx <- get_summary(object$fit_mx)
-  # if (p_m == 1L) summary_mx <- get_summary(object$fit_mx)
-  # else {
-  #   summary_mx <- lapply(object$fit_mx, get_summary)
-  #   # summary_mx <- replicate(p_m, NULL)
-  #   # for (i in seq_len(p_m)) summary_mx[[i]] <- get_summary(object$fit_mx[[i]])
-  # }
   # if bootstrap inference is requested, replace the usual coefficient matrix
   # with one that has bootstrap tests
   if (have_boot) {
@@ -276,7 +271,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
     summary_ymx$coefficients <- coefficients[keep, , drop = FALSE]
   }
   ## extract direct effect of x on y
-  direct <- summary_ymx$coefficients[2L + p_m, , drop = FALSE]
+  direct <- summary_ymx$coefficients[1L + p_m + seq_len(p_x), , drop = FALSE]
   # summary of total effect of x on y
   if (have_boot) {
     keep <- index_list$total
@@ -284,10 +279,10 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   } else if (have_fit_yx) {
     # compute summary of y ~ x + covariates and extract summary of total effect
     summary_yx <- get_summary(object$fit_yx)
-    total <- coef(summary_yx)[2L, , drop = FALSE]
+    total <- coef(summary_yx)[1L + seq_len(p_x), , drop = FALSE]
   } else {
     # standard errors and t-test not available
-    total <- matrix(c(object$total, rep.int(NA_real_, 3L)), nrow = 1L)
+    total <- cbind(object$total, matrix(NA_real_, nrow = p_x, ncol = 3L))
     dimnames(total) <- dimnames(direct)
   }
   # return results
