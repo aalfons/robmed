@@ -79,8 +79,8 @@ shinyServer(function(input, output) {
                                         method = "regression",
                                         robust = FALSE)
       }
-      if (input$huberized) {
-        huberized_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
+      if (input$winsorized) {
+        winsorized_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
                                          test = "boot", R = 1000,
                                          method = "covariance",
                                          robust = TRUE)
@@ -102,12 +102,12 @@ shinyServer(function(input, output) {
     # create object containing selected tests and select colors accordingly
     tests <- list()
     if (input$standard) tests$Standard <- standard_boot
-    if (input$huberized) tests$Huberized <- huberized_boot
+    if (input$winsorized) tests$Winsorized <- winsorized_boot
     if (input$median) tests$Median <- median_boot
     if (input$robust) tests$ROBMED <- robust_boot
 
     # select colors
-    select <- c(input$standard, input$huberized, input$median, input$robust)
+    select <- c(input$standard, input$winsorized, input$median, input$robust)
     selected_colors <- colors[select]
 
     # plot the density of the bootstrap distribution

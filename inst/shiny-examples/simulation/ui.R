@@ -14,7 +14,7 @@ shinyUI(fluidPage(
       wellPanel(
         strong("Methods to compare:"),
         checkboxInput("standard", "Standard bootstrap", value = TRUE),
-        checkboxInput("huberized", "Huberized bootstrap", value = FALSE),
+        checkboxInput("winsorized", "Winsorized bootstrap", value = FALSE),
         checkboxInput("median", "Bootstrap based on median regression",
                       value = FALSE),
         checkboxInput("robust", "ROBMED", value = TRUE),
@@ -47,10 +47,10 @@ shinyUI(fluidPage(
       h3("Description"),
       p("You can compare various bootstrap methods for mediation analysis on
          simulated data: the standard bootstrap test of Preacher & Hayes (2004,
-         2008), the Huberized bootstrap test of Zu & Yuan (2010), the bootstrap
-         test based on median regression of Yuan & MacKinnon (2014), and the
-         fast and robust boostrap test (ROBMED) of Alfons, Ates & Groenen
-         (2018)."),
+         2008), the winsorized bootstrap test of Zu & Yuan (2010), the
+         bootstrap test based on median regression of Yuan & MacKinnon (2014),
+         and the robust boostrap test (ROBMED) of Alfons, Ates & Groenen
+        (2021)."),
 
       p("The default settings follow the simulation design of Zu & Yuan (2010).
          The good data points are generated via the mediation model",
@@ -68,11 +68,11 @@ shinyUI(fluidPage(
          area representing the 95% confidence interval."),
       h3("References"),
       HTML('<p>
-              Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2018) A robust
+              Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust
               bootstrap test for mediation analysis.
-              <em>ERIM Report Series in Management</em>, Erasmus Research
-              Institute of Management.  URL
-              <a href="https://hdl.handle.net/1765/109594">https://hdl.handle.net/1765/109594</a>.
+              <em>Organizational Research Methods</em>, DOI:
+              10.1177/1094428121999096.  URL
+              <a href="https://doi.org/10.1177/1094428121999096">https://doi.org/10.1177/1094428121999096</a>.
             </p>'),
       HTML("<p>
               Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for
