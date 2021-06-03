@@ -1,4 +1,4 @@
-context("robust bootstrap test: regression, multiple mediators, no covariates")
+context("robust bootstrap test: regression, one X, two M, no covariates")
 
 
 ## load package

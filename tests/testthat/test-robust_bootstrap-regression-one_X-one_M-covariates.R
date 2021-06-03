@@ -1,4 +1,4 @@
-context("robust bootstrap test: regression, single mediator, no covariates")
+context("robust bootstrap test: regression, one X, one M, covariates")
 
 
 ## load package
@@ -18,15 +18,18 @@ set.seed(seed)
 X <- rnorm(n)
 M <- a * X + rnorm(n)
 Y <- b * M + c * X + rnorm(n)
-test_data <- data.frame(X, Y, M)
+C1 <- rnorm(n)
+C2 <- rnorm(n)
+test_data <- data.frame(X, Y, M, C1, C2)
 
 ## run bootstrap test
 level <- c(0.9, 0.95)
-ctrl <- reg_control(efficiency = 0.95)
+ctrl <- reg_control(max_iterations = 500)
 set.seed(seed)
 boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
-                       test = "boot", R = R, level = level[1], type = "bca",
-                       method = "regression", robust = TRUE, control = ctrl)
+                       covariates = c("C1", "C2"), test = "boot", R = R,
+                       level = level[1], type = "bca", method = "regression",
+                       robust = TRUE, control = ctrl)
 
 ## compute summary
 summary_boot <- summary(boot, type = "boot")
@@ -46,8 +49,8 @@ weight <- setup_weight_plot(boot)
 
 ## stuff needed to check correctness
 coef_names <- c("a", "b", "Direct", "Total", "ab")
-mx_names <- c("(Intercept)", "X")
-ymx_names <- c("(Intercept)", "M", "X")
+mx_names <- c("(Intercept)", "X", "C1", "C2")
+ymx_names <- c("(Intercept)", "M", "X", "C1", "C2")
 
 
 ## run tests
@@ -79,7 +82,7 @@ test_that("arguments are correctly passed", {
   expect_identical(boot$fit$x, "X")
   expect_identical(boot$fit$y, "Y")
   expect_identical(boot$fit$m, "M")
-  expect_identical(boot$fit$covariates, character())
+  expect_identical(boot$fit$covariates, c("C1", "C2"))
   # robust fit and test
   expect_identical(boot$fit$robust, "MM")
   expect_identical(boot$fit$family, "gaussian")
@@ -95,7 +98,7 @@ test_that("dimensions are correct", {
   expect_length(boot$ci, 2L)
   # dimensions of bootstrap replicates
   d_boot <- dim(boot$reps$t)
-  expect_identical(d_boot, c(as.integer(R), 7L))
+  expect_identical(d_boot, c(as.integer(R), 11L))
 
 })
 
@@ -124,11 +127,11 @@ test_that("coef() method returns correct values of coefficients", {
   expect_equivalent(coef(boot, parm = "a", type = "boot"),
                     mean(boot$reps$t[, 3]))
   expect_equivalent(coef(boot, parm = "b", type = "boot"),
-                    mean(boot$reps$t[, 5]))
-  expect_equivalent(coef(boot, parm = "Direct", type = "boot"),
-                    mean(boot$reps$t[, 6]))
-  expect_equivalent(coef(boot, parm = "Total", type = "boot"),
                     mean(boot$reps$t[, 7]))
+  expect_equivalent(coef(boot, parm = "Direct", type = "boot"),
+                    mean(boot$reps$t[, 8]))
+  expect_equivalent(coef(boot, parm = "Total", type = "boot"),
+                    mean(boot$reps$t[, 11]))
   expect_equivalent(coef(boot, parm = "ab", type = "boot"),
                     boot$ab)
 
@@ -215,13 +218,13 @@ test_that("summary has correct structure", {
   expect_named(summary_boot$summary$fit_ymx$F_test,
                c("statistic", "df", "p_value"))
   df_test_boot <- summary_boot$summary$fit_ymx$F_test$df
-  expect_identical(df_test_boot[1], 2)
+  expect_identical(df_test_boot[1], 4)
   expect_identical(df_test_boot[2], Inf)
   expect_type(summary_data$summary$fit_ymx$F_test, "list")
   expect_named(summary_data$summary$fit_ymx$F_test,
                c("statistic", "df", "p_value"))
   df_test_data <- summary_data$summary$fit_ymx$F_test$df
-  expect_identical(df_test_data[1], 2)
+  expect_identical(df_test_data[1], 4)
   expect_identical(df_test_data[2], Inf)
   # information on outliers in model y ~ m + x
   summary_ymx <- summary(boot$fit$fit_ymx)
@@ -259,11 +262,11 @@ test_that("attributes are correctly passed through summary", {
   expect_identical(summary_boot$summary$x, "X")
   expect_identical(summary_boot$summary$y, "Y")
   expect_identical(summary_boot$summary$m, "M")
-  expect_identical(summary_boot$summary$covariates, character())
+  expect_identical(summary_boot$summary$covariates, c("C1", "C2"))
   expect_identical(summary_data$summary$x, "X")
   expect_identical(summary_data$summary$y, "Y")
   expect_identical(summary_data$summary$m, "M")
-  expect_identical(summary_data$summary$covariates, character())
+  expect_identical(summary_data$summary$covariates, c("C1", "C2"))
 
 })
 
@@ -271,26 +274,26 @@ test_that("effect summaries have correct names", {
 
   # a path
   expect_identical(dim(summary_boot$summary$fit_mx$coefficients),
-                   c(2L, 5L))
+                   c(4L, 5L))
   expect_identical(rownames(summary_boot$summary$fit_mx$coefficients),
                    mx_names)
   expect_identical(colnames(summary_boot$summary$fit_mx$coefficients)[1:2],
                    c("Data", "Boot"))
   expect_identical(dim(summary_data$summary$fit_mx$coefficients),
-                   c(2L, 4L))
+                   c(4L, 4L))
   expect_identical(rownames(summary_data$summary$fit_mx$coefficients),
                    mx_names)
   expect_identical(colnames(summary_data$summary$fit_mx$coefficients)[1],
                    "Estimate")
   # b path
   expect_identical(dim(summary_boot$summary$fit_ymx$coefficients),
-                   c(3L, 5L))
+                   c(5L, 5L))
   expect_identical(rownames(summary_boot$summary$fit_ymx$coefficient),
                    ymx_names)
   expect_identical(colnames(summary_boot$summary$fit_ymx$coefficient)[1:2],
                    c("Data", "Boot"))
   expect_identical(dim(summary_data$summary$fit_ymx$coefficient),
-                   c(3L, 4L))
+                   c(5L, 4L))
   expect_identical(rownames(summary_data$summary$fit_ymx$coefficient),
                    ymx_names)
   expect_identical(colnames(summary_data$summary$fit_ymx$coefficient)[1],
@@ -348,11 +351,11 @@ test_that("effect summaries contain correct coefficient values", {
   expect_equivalent(summary_boot$summary$fit_mx$coefficients[2, "Boot"],
                     mean(boot$reps$t[, 3]))
   expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2, "Boot"],
-                    mean(boot$reps$t[, 5]))
+                    mean(boot$reps$t[, 7]))
   expect_equal(summary_boot$summary$direct["X", "Boot"],
-               mean(boot$reps$t[, 6]))
+               mean(boot$reps$t[, 8]))
   expect_equal(summary_boot$summary$total["X", "Boot"],
-               mean(boot$reps$t[, 7]))
+               mean(boot$reps$t[, 11]))
 
 })
 
@@ -498,18 +501,19 @@ test_that("objects returned by setup_xxx_plot() have correct structure", {
 
 # run mediation analysis through formula interface with data argument
 set.seed(seed)
-boot_f1 <- test_mediation(Y ~ m(M) + X, data = test_data,
+boot_f1 <- test_mediation(Y ~ m(M) + X + covariates(C1, C2), data = test_data,
                           test = "boot", R = R, level = 0.9, type = "bca",
                           method = "regression", robust = TRUE, control = ctrl)
 # run mediation analysis through formula interface without data argument
 set.seed(seed)
-boot_f2 <- test_mediation(Y ~ m(M) + X,
+boot_f2 <- test_mediation(Y ~ m(M) + X + covariates(C1, C2),
                           test = "boot", R = R, level = 0.9, type = "bca",
                           method = "regression", robust = TRUE, control = ctrl)
-# define mediator outside formula
+# define mediator and covariates outside formula
 med <- m(M)
+cov <- covariates(C1, C2)
 set.seed(seed)
-boot_f3 <- test_mediation(Y ~ med + X, data = test_data,
+boot_f3 <- test_mediation(Y ~ med + X + cov, data = test_data,
                           test = "boot", R = R, level = 0.9, type = "bca",
                           method = "regression", robust = TRUE, control = ctrl)
 
