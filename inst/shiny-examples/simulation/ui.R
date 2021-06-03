@@ -71,8 +71,7 @@ shinyUI(fluidPage(
               Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust
               bootstrap test for mediation analysis.
               <em>Organizational Research Methods</em>, DOI:
-              10.1177/1094428121999096.  URL
-              <a href="https://doi.org/10.1177/1094428121999096">https://doi.org/10.1177/1094428121999096</a>.
+              <a href="https://doi.org/10.1177/1094428121999096">10.1177/1094428121999096</a>.
             </p>'),
       HTML("<p>
               Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for
