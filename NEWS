@@ -12,6 +12,9 @@ Changes in robmed version 0.9.0
       preserved with R >= 4.0.0 (where data.frame() by default no longer
       converts character strings to factors).
 
+    + Added support for multiple independent variables to be mediated in
+      bootstrap tests based on regressions.
+
 
 
 Changes in robmed version 0.8.0

@@ -37,18 +37,18 @@ An object of class \code{"setup_density_plot"} with the following
 components:
 \item{density}{a data frame containing the values of the indirect effect
 where the density is estimated (column \code{ab}), and the estimated density
-values (column \code{Density}).  In case of a multiple mediator
-model, there is a column \code{Effect} that indicates the different
+values (column \code{Density}).  In case of a model with multiple indirect
+effects, there is a column \code{Effect} that indicates the different
 indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
 been supplied, there is also a column \code{Method}, which takes the names
 or indices of the list elements to indicate the different methods.}
 \item{ci}{a data frame consisting of column \code{Estimate} containing the
 point estimates, column \code{Lower} for the lower confidence limit, and
-column \code{Upper} for the upper confidence limit.  In case of a multiple
-mediator model, there is a column \code{Effect} that indicates the different
-indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
-been supplied, there is also a column \code{Method}, which takes the names
-or indices of the list elements to indicate the different methods.}
+column \code{Upper} for the upper confidence limit.  In case of a model with
+multiple indirect effects, there is a column \code{Effect} that indicates
+the different indirect effects.  If a list of \code{"\link{test_mediation}"}
+objects has been supplied, there is also a column \code{Method}, which takes
+the names or indices of the list elements to indicate the different methods.}
 \item{test}{a character string indicating whether the object contains
 results from a bootstrap test (\code{"boot"}) or a Sobel test
 (\code{"sobel"}), or a vector of such character strings if a list of
@@ -56,7 +56,7 @@ results from a bootstrap test (\code{"boot"}) or a Sobel test
 \item{level}{numeric; the confidence level used for the confidence intervals
 of the indirect effect(s).}
 \item{have_effects}{a logical indicating whether the mediation model
-contains multiple mediators.  If \code{TRUE}, the data frames in the
+contains multiple indirect effects  If \code{TRUE}, the data frames in the
 \code{density} and \code{ci} components contain a column \code{Effect}.}
 \item{have_methods}{a logical indicating whether a list of
 \code{"\link{test_mediation}"} objects has been supplied.  If \code{TRUE},

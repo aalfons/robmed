@@ -33,11 +33,11 @@
 #' analysis, or a list of such objects.
 #' @param horizontal  a character string specifying the variable to be
 #' plotted on the horizontal axis.  If the dependent variable is chosen for
-#' the vertical axis, a hypothsized mediator or the independent variable must
+#' the vertical axis, a hypothsized mediator or an independent variable must
 #' be selected for the horizontal axis.  If a hypothesized mediator is chosen
-#' for the vertical axis, the independent variable must be selected for the
-#' horizontal axis.  The default is to plot the independent variable on the
-#' horizontal axis.
+#' for the vertical axis, an independent variable must be selected for the
+#' horizontal axis.  The default is to plot the first independent variable on
+#' the horizontal axis.
 #' @param vertical  a character string specifying the variable to be
 #' plotted on the vertical axis: the dependent variable or a hypothesized
 #' mediator.  The default is to plot the first hypothesized mediator on the

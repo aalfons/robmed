@@ -31,7 +31,7 @@ the effects other than the indirect effect(s).  Possible values are
 approximation (i.e., to assume a normal distribution of the corresponding
 effect with the standard deviation computed from the bootstrap replicates),
 or \code{"data"} to compute p-values via statistical theory based on the
-original data (e.g., based on a t-distribution the coefficients are
+original data (e.g., based on a t-distribution if the coefficients are
 estimated via regression).  Note that this is only relevant for mediation
 analysis via a bootstrap test, where the p-value of the indirect effect is
 always computed as described in \sQuote{Details}.}

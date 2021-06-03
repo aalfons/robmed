@@ -56,8 +56,8 @@
 #' \code{\link{covariates}()}.
 #' @param data  for the \code{formula} method, a data frame containing the
 #' variables.
-#' @param x  a character string, an integer or a logical vector specifying the
-#' column of \code{object} containing the independent variable.
+#' @param x  a character, integer or logical vector specifying the columns of
+#' \code{object} containing the independent variables.
 #' @param y  a character string, an integer or a logical vector specifying the
 #' column of \code{object} containing the dependent variable.
 #' @param m  a character, integer or logical vector specifying the columns of
@@ -66,9 +66,9 @@
 #' specifying the columns of \code{object} containing additional covariates to
 #' be used as control variables.
 #' @param test  a character string specifying the test to be performed for
-#' the indirect effect.  Possible values are \code{"boot"} (the default) for
+#' the indirect effects.  Possible values are \code{"boot"} (the default) for
 #' the bootstrap, or \code{"sobel"} for Sobel's test.  Currently, Sobel's test
-#' is not implemented for more than one hypothesized mediator variable.
+#' is not implemented for models with multiple indirect effects.
 #' @param alternative  a character string specifying the alternative hypothesis
 #' in the test for the indirect effects.  Possible values are \code{"twosided"}
 #' (the default), \code{"less"} or \code{"greater"}.
@@ -81,15 +81,15 @@
 #' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
 #' for the percentile bootstrap.
 #' @param order  a character string specifying the order of approximation of
-#' the standard error in the Sobel test.  Possible values are \code{"first"}
+#' the standard error in Sobel's test.  Possible values are \code{"first"}
 #' (the default) for a first-order approximation, and \code{"second"} for a
 #' second-order approximation.
 #' @param method  a character string specifying the method of estimation for
 #' the mediation model.  Possible values are \code{"regression"} (the default)
 #' to estimate the effects via regressions, or \code{"covariance"} to estimate
 #' the effects via the covariance matrix.  Note that the effects are
-#' always estimated via regressions if more than one hypothesized mediator is
-#' specified or if control variables are supplied.
+#' always estimated via regressions if more than one independent variable or
+#' hypothesized mediator is specified, or if control variables are supplied.
 #' @param robust  a logical indicating whether to perform a robust test
 #' (defaults to \code{TRUE}).  For estimation via regressions
 #' (\code{method = "regression"}), this can also be a character string, with
@@ -99,20 +99,20 @@
 #' used in maximum likelihood estimation of regression models.  Possible values
 #' are \code{"gaussian"} for a normal distribution (the default),
 #' \code{skewnormal} for a skew-normal distribution, \code{"student"} for
-#' Student's t distribution, \code{"skew-t"} for a skew-t distribution, or
+#' Student's t distribution, \code{"skewt"} for a skew-t distribution, or
 #' \code{"select"} to select among these four distributions via BIC (see
 #' \code{\link{fit_mediation}()} for details).  This is only relevant if
 #' \code{method = "regression"} and \code{robust = FALSE}.
 #' @param contrast  a logical indicating whether to compute pairwise contrasts
 #' of the indirect effects (defaults to \code{FALSE}).  This can also be a
-#' character string, with \code{"estimates"} for computing the differences
-#' of the indirect effects (such that it is tested whether two indirect effects
-#' are equal), and \code{"absolute"} for computing the differences
-#' of the absolute values of the indirect effects (such that it is tested
-#' whether two indirect effects are equal in magnitude).  This is only relevant
-#' for models with multiple hypothesized mediators, which are currently only
-#' implemented for bootstrap tests and estimation via regressions
-#' (\code{test = "boot"} and \code{method = "regression"}).
+#' character string, with \code{"estimates"} for computing the pairwise
+#' differences of the indirect effects (such that it is tested whether two
+#' indirect effects are equal), and \code{"absolute"} for computing the
+#' pairwise differences of the absolute values of the indirect effects
+#' (such that it is tested whether two indirect effects are equal in
+#' magnitude).  This is only relevant for models with multiple indirect
+#' effects, which are currently only implemented for estimation via
+#' regressions (\code{method = "regression"}).
 #' @param fit_yx  a logical indicating whether to fit the regression model
 #' \code{y ~ x + covariates} to estimate the total effect (the default is
 #' \code{TRUE}).  This is only relevant if \code{method = "regression"} and
@@ -121,7 +121,7 @@
 #' method.  For robust regression (\code{method = "regression"}, and
 #' \code{robust = TRUE} or \code{robust = "MM"}), a list of tuning
 #' parameters for \code{\link[robustbase]{lmrob}()} as generated by
-#' \code{\link{reg_control}()}.  For Huberized covariance matrix estimation
+#' \code{\link{reg_control}()}.  For winsorized covariance matrix estimation
 #' (\code{method = "covariance"} and \code{robust = TRUE}), a list of tuning
 #' parameters for \code{\link{cov_Huber}()} as generated by
 #' \code{\link{cov_control}()}.  No tuning parameters are necessary for median
@@ -135,17 +135,17 @@
 #' \code{"sobel_test_mediation"} if \code{test = "sobel"}) with the
 #' following components:
 #' \item{a}{a numeric vector containing the bootstrap point estimates of the
-#' effect of the independent variable on the proposed mediator variables (only
-#' \code{"boot_test_mediation"}).}
-#' \item{b}{a numeric vector containing the bootstrap point estimates of the
-#' direct effect of the proposed mediator variables on the dependent variable
+#' effects of the independent variables on the proposed mediator variables
 #' (only \code{"boot_test_mediation"}).}
-#' \item{direct}{numeric; the bootstrap point estimate of the direct effect
-#' of the independent variable on the dependent variable (only
-#' \code{"boot_test_mediation"}).}
-#' \item{total}{numeric; the bootstrap point estimate of the total effect
-#' of the independent variable on the dependent variable (only
-#' \code{"boot_test_mediation"}).}
+#' \item{b}{a numeric vector containing the bootstrap point estimates of the
+#' direct effects of the proposed mediator variables on the dependent variable
+#' (only \code{"boot_test_mediation"}).}
+#' \item{direct}{a numeric vector containing the bootstrap point estimates of
+#' the direct effects of the independent variables on the dependent variable
+#' (only \code{"boot_test_mediation"}).}
+#' \item{total}{a numeric vector containing the bootstrap point estimates of
+#' the total effects of the independent variables on the dependent variable
+#' (only \code{"boot_test_mediation"}).}
 #' \item{ab}{a numeric vector containing the bootstrap point estimates of the
 #' indirect effects (only \code{"boot_test_mediation"}).}
 #' \item{ci}{a numeric vector of length two or a matrix of two columns

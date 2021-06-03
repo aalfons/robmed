@@ -47,9 +47,9 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' @return An object of class \code{"summary_test_mediation"} with the
 #' following components:
 #' \item{object}{the \code{object} passed to the \code{summary} method, which
-#' contains the results from testing the indirect effect.}
+#' contains the results from testing the indirect effect(s).}
 #' \item{summary}{an object containing all necessary information to summarize
-#' the effects other than the indirect effect.}
+#' the effects other than the indirect effect(s).}
 #'
 #' @author Andreas Alfons
 #'

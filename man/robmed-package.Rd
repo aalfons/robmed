@@ -27,9 +27,10 @@ demo("case3")
 }
 }
 \references{
-Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2018) A robust bootstrap test for
-mediation analysis. \emph{ERIM Report Series in Management}, Erasmus Research
-Institute of Management.  URL \url{https://hdl.handle.net/1765/109594}.
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust bootstrap test
+for mediation analysis.  \emph{Organizational Research Methods}, DOI:
+10.1177/1094428121999096.  URL
+\url{https://doi.org/10.1177/1094428121999096}.
 }
 \author{
 \packageAuthor{robmed}

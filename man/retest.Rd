@@ -33,16 +33,16 @@ percentile bootstrap.}
 
 \item{contrast}{a logical indicating whether to compute pairwise contrasts
 of the indirect effects.  This can also be a character string, with
-\code{"estimates"} for computing the differences of the indirect effects
-(such that it is tested whether two indirect effects are equal), and
-\code{"absolute"} for computing the differences of the absolute values of
-the indirect effects (such that it is tested whether two indirect effects
-are equal in magnitude).  This is only relevant for models with multiple
-hypothesized mediators, which are currently only implemented for bootstrap
-tests and estimation via regressions.}
+\code{"estimates"} for computing the pairwise differences of the indirect
+effects (such that it is tested whether two indirect effects are equal),
+and \code{"absolute"} for computing the pairwise differences of the absolute
+values of the indirect effects (such that it is tested whether two indirect
+effects are equal in magnitude).  This is only relevant for models with
+multiple indirect effects, which are currently only implemented for
+bootstrap tests and estimation via regressions.}
 
 \item{order}{a character string specifying the order of approximation of
-the standard error in the Sobel test.  Possible values are \code{"first"}
+the standard error in Sobel's test.  Possible values are \code{"first"}
 for a first-order approximation, and \code{"second"} for a second-order
 approximation.}
 }

@@ -29,7 +29,7 @@
 #' standard deviation computed from the bootstrap replicates).  If
 #' \code{"data"}, the confidence intervals of effects other than the indirect
 #' effect(s) are computed via statistical theory based on the original data
-#' (e.g., based on a t-distribution the coefficients are estimated via
+#' (e.g., based on a t-distribution if the coefficients are estimated via
 #' regression).  Note that this is only relevant for mediation analysis via a
 #' bootstrap test, where the confidence interval of the indirect effect is
 #' always computed via a percentile-based method due to the asymmetry of its
