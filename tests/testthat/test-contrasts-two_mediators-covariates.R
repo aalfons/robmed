@@ -126,9 +126,16 @@ test_that("model fit works correctly", {
 test_that("bootstrap test works correctly", {
 
   # relevant components are the same as when no contrasts are computed
-  keep <- setdiff(names(boot_without), c("ab", "ci", "fit"))
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_without), c("ab", "ci", "fit", "reps"))
   expect_equal(boot_estimates[keep], boot_without[keep])
   expect_equal(boot_absolute[keep], boot_without[keep])
+
+  # check that "boot" object is the same as when no contrasts are computed
+  keep <- setdiff(names(boot_without$reps), c("statistic"))
+  expect_equal(boot_estimates$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_absolute$reps[keep], boot_without$reps[keep])
 
   # multiple indirect effects have correct dimensions and names
   expect_length(boot_estimates$ab, 4L)
@@ -145,9 +152,21 @@ test_that("bootstrap test works correctly", {
 })
 
 test_that("retest() works correctly for two mediators", {
+
   # object should be the same as when argument is supplied from the start
-  expect_equal(reboot_estimates, boot_estimates)
-  expect_equal(reboot_absolute, boot_absolute)
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_estimates), "reps")
+  expect_equal(reboot_estimates[keep], boot_estimates[keep])
+  keep <- setdiff(names(boot_absolute), "reps")
+  expect_equal(reboot_absolute[keep], boot_absolute[keep])
+
+  # check that "boot" object is the same
+  keep <- setdiff(names(boot_estimates$reps), "statistic")
+  expect_equal(reboot_estimates$reps[keep], boot_estimates$reps[keep])
+  keep <- setdiff(names(boot_absolute$reps), "statistic")
+  expect_equal(reboot_absolute$reps[keep], boot_absolute$reps[keep])
+
 })
 
 
