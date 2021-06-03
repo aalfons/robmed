@@ -262,8 +262,11 @@ versions.
 \examples{
 data("BSG2014")
 
-# to reproduce results in paper
-RNGversion("3.5.3")
+## The results in Alfons et al. (2021) were obtained with an
+## older version of the random number generator.  To reproduce
+## those results, uncomment the call to RNGversion() below.
+
+# RNGversion("3.5.3")
 seed <- 20150601
 
 # formula interface
