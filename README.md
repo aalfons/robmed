@@ -1,5 +1,8 @@
 # robmed: (Robust) Mediation Analysis
 
+[![CRAN](https://www.R-pkg.org/badges/version/robmed)](https://CRAN.R-project.org/package=robmed) 
+
+
 Perform mediation analysis via the robust bootstrap test ROBMED ([Alfons, Ates & Groenen, 2021](https://doi.org/10.1177/1094428121999096)).  In addition to ROBMED, several other (bootstrap) tests for mediation analysis are implemented.
 
 
@@ -9,8 +12,8 @@ The robust bootstrap test ROBMED for mediation analysis is less sensitive to dev
 
 More information can be found in our article:
 
-[Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2021). A Robust Bootstrap Test for
-Mediation Analysis. *Organizational Research Methods*. DOI 10.1177/1094428121999096.](https://doi.org/10.1177/1094428121999096)
+Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2021). A Robust Bootstrap Test for
+Mediation Analysis. *Organizational Research Methods*. DOI [10.1177/1094428121999096](https://doi.org/10.1177/1094428121999096).
 
 
 ## Installation
@@ -25,3 +28,16 @@ install.packages("robmed")
 ## Bug reports and feature requests
 
 If you experience any problems with `robmed` or if you have any suggestions for additional features, please submit an issue via the *Issues* tab of this repository.  Please have a look at existing issues first to see if your problem for feature request has already been discussed.
+
+
+## Contribute to the package
+
+If you want to contribute to the package, you can fork this repository
+and create a pull request after implementing the desired functionality.
+
+
+## Ask for help
+
+If you need help using the package, or if you are interested in
+collaborations related to this project, please get in touch with the
+[package maintainer](https://personal.eur.nl/alfons/).
