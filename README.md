@@ -18,7 +18,7 @@ Mediation Analysis. *Organizational Research Methods*. DOI [10.1177/109442812199
 
 ## Installation
 
-The `R` package `robmed` is on CRAN (The Comprehensive R Archive Network), hence it can be easily installed from the `R` command line via
+Package `robmed` is on CRAN (The Comprehensive R Archive Network), hence the latest release can be easily installed from the `R` command line via
 
 ```
 install.packages("robmed")
