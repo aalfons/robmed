@@ -1,8 +1,8 @@
 Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
-Version: 0.9.0
-Date: 2021-06-03
+Version: 0.9.1
+Date: 2021-11-16
 Depends:
     R (>= 3.2.0),
     ggplot2 (>= 3.3.0),
@@ -16,7 +16,6 @@ Imports:
     sn (>= 1.5-4),
     utils
 Suggests:
-    MASS,
     testthat
 Description: Perform mediation analysis via a (fast and robust) bootstrap test.
 License: GPL (>= 2)
@@ -27,4 +26,4 @@ Authors@R: c(person("Andreas", "Alfons", email = "alfons@ese.eur.nl",
 Author: Andreas Alfons [aut, cre]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
