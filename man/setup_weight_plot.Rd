@@ -57,15 +57,14 @@ information.
 \examples{
 data("BSG2014")
 
-# run fast and robust bootstrap test
-robust_boot <- test_mediation(BSG2014,
-                              x = "ValueDiversity",
-                              y = "TeamCommitment",
-                              m = "TaskConflict",
-                              robust = TRUE)
+# run fast-and-robust bootstrap test
+test <- test_mediation(BSG2014,
+                       x = "ValueDiversity",
+                       y = "TeamCommitment",
+                       m = "TaskConflict")
 
 # set up information for plot
-setup <- setup_weight_plot(robust_boot)
+setup <- setup_weight_plot(test)
 # create diagnostic plot of robust regression weights
 weight_plot(setup) +
   scale_color_manual("", values = c("black", "#00BFC4")) +

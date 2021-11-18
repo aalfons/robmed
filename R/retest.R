@@ -52,7 +52,7 @@
 #' @examples
 #' data("BSG2014")
 #'
-#' # run fast and robust bootstrap test
+#' # run fast-and-robust bootstrap test
 #' test <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",

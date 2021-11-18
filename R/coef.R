@@ -37,7 +37,7 @@
 #'                      m = "TaskConflict")
 #' coef(fit)
 #'
-#' # run fast and robust bootstrap test and extract coefficients
+#' # run fast-and-robust bootstrap test and extract coefficients
 #' test <- test_mediation(fit)
 #' coef(test, type = "data")  # from original sample
 #' coef(test, type = "boot")  # means of bootstrap replicates

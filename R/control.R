@@ -42,7 +42,7 @@
 #' @examples
 #' data("BSG2014")
 #'
-#' # run fast and robust bootstrap test
+#' # run fast-and-robust bootstrap test
 #' ctrl <- reg_control(efficiency = 0.95)
 #' test <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
@@ -115,7 +115,7 @@ reg_control <- function(efficiency = 0.85, max_iterations = 200,
 #' @examples
 #' data("BSG2014")
 #'
-#' # run fast and robust bootstrap test
+#' # run bootstrap test after winsorization
 #' ctrl <- cov_control(prob = 0.95)
 #' test <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",

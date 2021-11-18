@@ -37,7 +37,7 @@ please specify the corresponding tuning parameters in
 \examples{
 data("BSG2014")
 
-# run fast and robust bootstrap test
+# run fast-and-robust bootstrap test
 ctrl <- reg_control(efficiency = 0.95)
 test <- test_mediation(BSG2014,
                        x = "ValueDiversity",

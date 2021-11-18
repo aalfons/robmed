@@ -2,6 +2,8 @@ Changes in robmed version 0.9.1
 
     + Removed superfluous package MASS from Suggests.
 
+    + Updated examples.
+
 
 Changes in robmed version 0.9.0
 

@@ -179,28 +179,20 @@
 #' @examples
 #' data("BSG2014")
 #'
+#' # set seed of the random number generator
+#' set.seed(20211117)
+#'
 #' ## The results in Alfons et al. (2021) were obtained with an
 #' ## older version of the random number generator.  To reproduce
-#' ## those results, uncomment the call to RNGversion() below.
-#'
+#' ## those results, uncomment the two lines below.
 #' # RNGversion("3.5.3")
-#' seed <- 20150601
+#' # set.seed(20150601)
 #'
-#' # formula interface
-#' set.seed(seed)
-#' fit1 <- fit_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
-#'                       data = BSG2014)
-#' test1 <- test_mediation(fit1)
-#' summary(test1)
-#'
-#' # default method
-#' set.seed(seed)
-#' fit2 <- fit_mediation(BSG2014,
-#'                       x = "ValueDiversity",
-#'                       y = "TeamCommitment",
-#'                       m = "TaskConflict")
-#' test2 <- test_mediation(fit2)
-#' summary(test2)
+#' # perform mediation analysis
+#' fit <- fit_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+#'                      data = BSG2014)
+#' test <- test_mediation(fit)
+#' summary(test)
 #'
 #' @keywords multivariate
 #'

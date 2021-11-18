@@ -26,7 +26,7 @@ Obtain a list with tuning paramters for \code{\link{cov_Huber}()}.
 \examples{
 data("BSG2014")
 
-# run fast and robust bootstrap test
+# run bootstrap test after winsorization
 ctrl <- cov_control(prob = 0.95)
 test <- test_mediation(BSG2014,
                        x = "ValueDiversity",

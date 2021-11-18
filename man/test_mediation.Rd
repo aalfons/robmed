@@ -212,20 +212,20 @@ confidence interval (only \code{"boot_test_mediation"}).}
 mediation model on the original data.}
 }
 \description{
-Perform (robust) mediation analysis via a (fast and robust) bootstrap test
+Perform (robust) mediation analysis via a (fast-and-robust) bootstrap test
 or Sobel's test.
 }
 \details{
 With \code{method = "regression"}, and \code{robust = TRUE} or
 \code{robust = "MM"}, the tests are based on robust regressions with the
 MM-estimator from \code{\link[robustbase]{lmrob}()}.  The bootstrap test is
-thereby performed via the fast and robust bootstrap.  This is the default
+thereby performed via the fast-and-robust bootstrap.  This is the default
 behavior.
 
 Note that the MM-estimator of regression implemented in
 \code{\link[robustbase]{lmrob}()} can be seen as weighted least squares
 estimator, where the weights are dependent on how much an observation is
-deviating from the rest.  The trick for the fast and robust bootstrap is
+deviating from the rest.  The trick for the fast-and-robust bootstrap is
 that on each bootstrap sample, first a weighted least squares estimator
 is computed (using those robustness weights from the original sample)
 followed by a linear correction of the coefficients.  The purpose of this
@@ -235,7 +235,7 @@ robustness weights.
 With \code{method = "regression"} and \code{robust = "median"}, the tests
 are based on median regressions with \code{\link[quantreg]{rq}()}.  Note
 that the bootstrap test is performed via the standard bootstrap, as the
-fast and robust bootstrap is not applicable.  Unlike the robust regressions
+fast-and-robust bootstrap is not applicable.  Unlike the robust regressions
 described above, median regressions are not robust against outliers in
 the explanatory variables, and the standard bootstrap can suffer from
 oversampling of outliers in the bootstrap samples.
@@ -249,10 +249,10 @@ approach based on robust regressions described above.  Furthermore, the
 bootstrap does not account for the variability from cleaning the data.
 
 \code{robmed()} is a wrapper function for performing robust mediation
-analysis via regressions and the fast and robust bootstrap.
+analysis via regressions and the fast-and-robust bootstrap.
 }
 \note{
-For the fast and robust bootstrap, the simpler correction of
+For the fast-and-robust bootstrap, the simpler correction of
 Salibian-Barrera & Van Aelst (2008) is used rather than the originally
 proposed correction of Salibian-Barrera & Zamar (2002).
 
@@ -262,26 +262,19 @@ versions.
 \examples{
 data("BSG2014")
 
+# set seed of the random number generator
+set.seed(20211117)
+
 ## The results in Alfons et al. (2021) were obtained with an
 ## older version of the random number generator.  To reproduce
-## those results, uncomment the call to RNGversion() below.
-
+## those results, uncomment the two lines below.
 # RNGversion("3.5.3")
-seed <- 20150601
+# set.seed(20150601)
 
-# formula interface
-set.seed(seed)
-test1 <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
-                        data = BSG2014)
-summary(test1)
-
-# default method
-set.seed(seed)
-test2 <- test_mediation(BSG2014,
-                        x = "ValueDiversity",
-                        y = "TeamCommitment",
-                        m = "TaskConflict")
-summary(test2)
+# perform mediation analysis
+test <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+                       data = BSG2014)
+summary(test)
 
 }
 \references{

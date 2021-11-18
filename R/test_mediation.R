@@ -5,19 +5,19 @@
 
 #' (Robust) mediation analysis
 #'
-#' Perform (robust) mediation analysis via a (fast and robust) bootstrap test
+#' Perform (robust) mediation analysis via a (fast-and-robust) bootstrap test
 #' or Sobel's test.
 #'
 #' With \code{method = "regression"}, and \code{robust = TRUE} or
 #' \code{robust = "MM"}, the tests are based on robust regressions with the
 #' MM-estimator from \code{\link[robustbase]{lmrob}()}.  The bootstrap test is
-#' thereby performed via the fast and robust bootstrap.  This is the default
+#' thereby performed via the fast-and-robust bootstrap.  This is the default
 #' behavior.
 #'
 #' Note that the MM-estimator of regression implemented in
 #' \code{\link[robustbase]{lmrob}()} can be seen as weighted least squares
 #' estimator, where the weights are dependent on how much an observation is
-#' deviating from the rest.  The trick for the fast and robust bootstrap is
+#' deviating from the rest.  The trick for the fast-and-robust bootstrap is
 #' that on each bootstrap sample, first a weighted least squares estimator
 #' is computed (using those robustness weights from the original sample)
 #' followed by a linear correction of the coefficients.  The purpose of this
@@ -27,7 +27,7 @@
 #' With \code{method = "regression"} and \code{robust = "median"}, the tests
 #' are based on median regressions with \code{\link[quantreg]{rq}()}.  Note
 #' that the bootstrap test is performed via the standard bootstrap, as the
-#' fast and robust bootstrap is not applicable.  Unlike the robust regressions
+#' fast-and-robust bootstrap is not applicable.  Unlike the robust regressions
 #' described above, median regressions are not robust against outliers in
 #' the explanatory variables, and the standard bootstrap can suffer from
 #' oversampling of outliers in the bootstrap samples.
@@ -41,7 +41,7 @@
 #' bootstrap does not account for the variability from cleaning the data.
 #'
 #' \code{robmed()} is a wrapper function for performing robust mediation
-#' analysis via regressions and the fast and robust bootstrap.
+#' analysis via regressions and the fast-and-robust bootstrap.
 #'
 #' @aliases print.boot_test_mediation print.sobel_test_mediation
 #'
@@ -171,7 +171,7 @@
 #' \code{"\link{fit_mediation}"} containing the estimation results of the
 #' mediation model on the original data.}
 #'
-#' @note For the fast and robust bootstrap, the simpler correction of
+#' @note For the fast-and-robust bootstrap, the simpler correction of
 #' Salibian-Barrera & Van Aelst (2008) is used rather than the originally
 #' proposed correction of Salibian-Barrera & Zamar (2002).
 #'
@@ -228,26 +228,19 @@
 #' @examples
 #' data("BSG2014")
 #'
+#' # set seed of the random number generator
+#' set.seed(20211117)
+#'
 #' ## The results in Alfons et al. (2021) were obtained with an
 #' ## older version of the random number generator.  To reproduce
-#' ## those results, uncomment the call to RNGversion() below.
-#'
+#' ## those results, uncomment the two lines below.
 #' # RNGversion("3.5.3")
-#' seed <- 20150601
+#' # set.seed(20150601)
 #'
-#' # formula interface
-#' set.seed(seed)
-#' test1 <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
-#'                         data = BSG2014)
-#' summary(test1)
-#'
-#' # default method
-#' set.seed(seed)
-#' test2 <- test_mediation(BSG2014,
-#'                         x = "ValueDiversity",
-#'                         y = "TeamCommitment",
-#'                         m = "TaskConflict")
-#' summary(test2)
+#' # perform mediation analysis
+#' test <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+#'                        data = BSG2014)
+#' summary(test)
 #'
 #' @keywords multivariate
 #'
@@ -391,7 +384,7 @@ boot_test_mediation <- function(fit,
     n <- nrow(fit$data)
     z <- cbind(rep.int(1, n), as.matrix(fit$data))
 
-    # perform (fast and robust) bootstrap
+    # perform (fast-and-robust) bootstrap
     robust <- fit$robust
     family <- fit$family
     if (robust == "MM") {
@@ -440,7 +433,7 @@ boot_test_mediation <- function(fit,
       d_m <- 1L + p_x + p_covariates
       d_y <- 1L + p_m + p_x + p_covariates
 
-      # define function for fast and robust bootstrap
+      # define function for fast-and-robust bootstrap
       if (p_m == 1) {
         # one mediator
         robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
@@ -516,7 +509,7 @@ boot_test_mediation <- function(fit,
         }
       }
 
-      # perform fast and robust bootstrap
+      # perform fast-and-robust bootstrap
       bootstrap <- local_boot(z, robust_bootstrap, R = R, w_m = w_m,
                               corr_m = corr_m, coef_m = coef_m, w_y = w_y,
                               corr_y = corr_y, coef_y = coef_y, ...)
@@ -525,7 +518,7 @@ boot_test_mediation <- function(fit,
     } else if (robust == "median") {
 
       # define function for standard bootstrap with median regression
-      # (the fast and robust bootstrap does not work for median regression)
+      # (the fast-and-robust bootstrap does not work for median regression)
       median_bootstrap <- function(z, i) {
         # extract bootstrap sample from the data
         z_i <- z[i, , drop = FALSE]

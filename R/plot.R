@@ -42,18 +42,17 @@
 #' @examples
 #' data("BSG2014")
 #'
-#' # run fast and robust bootstrap test
-#' robust_boot <- test_mediation(BSG2014,
-#'                               x = "ValueDiversity",
-#'                               y = "TeamCommitment",
-#'                               m = "TaskConflict",
-#'                               robust = TRUE)
+#' # run fast-and-robust bootstrap test
+#' test <- test_mediation(BSG2014,
+#'                        x = "ValueDiversity",
+#'                        y = "TeamCommitment",
+#'                        m = "TaskConflict")
 #'
 #' # create plots for robust bootstrap test
-#' plot(robust_boot, which = "ci")
-#' plot(robust_boot, which = "density")
-#' plot(robust_boot, which = "ellipse")
-#' plot(robust_boot, which = "weight")
+#' plot(test, which = "ci")
+#' plot(test, which = "density")
+#' plot(test, which = "ellipse")
+#' plot(test, which = "weight")
 #'
 #' @keywords hplot
 #'

@@ -47,12 +47,26 @@ Summarize results from (robust) mediation analysis for proper interpretation.
 }
 \examples{
 data("BSG2014")
-test <- test_mediation(BSG2014,
-                       x = "ValueDiversity",
-                       y = "TeamCommitment",
-                       m = "TaskConflict")
+
+# set seed of the random number generator
+set.seed(20211117)
+
+## The results in Alfons et al. (2021) were obtained with an
+## older version of the random number generator.  To reproduce
+## those results, uncomment the two lines below.
+# RNGversion("3.5.3")
+# set.seed(20150601)
+
+# perform mediation analysis
+test <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
+                       data = BSG2014)
 summary(test)
 
+}
+\references{
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust bootstrap test
+for mediation analysis.  \emph{Organizational Research Methods},
+\doi{10.1177/1094428121999096}.
 }
 \seealso{
 \code{\link{test_mediation}}

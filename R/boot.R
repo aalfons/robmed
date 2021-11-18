@@ -6,7 +6,7 @@
 
 #' Draw bootstrap samples
 #'
-#' Draw bootstrap samples to be used for (fast and robust) bootstrap tests
+#' Draw bootstrap samples to be used for (fast-and-robust) bootstrap tests
 #' for mediation analysis.  Note that this function is intended for use in
 #' simulation studies, it is not expected to be called by the user.
 #'
@@ -29,10 +29,10 @@
 #' \donttest{
 #' # control parameters
 #' n <- 100
-#' a <- b <- c <- 0.2
+#' a <- b <- c <- 0.4
 #'
 #' # generate data
-#' set.seed(20150326)
+#' set.seed(20200309)
 #' x <- rnorm(n)
 #' m <- a * x + rnorm(n)
 #' y <- b * m + c * x + rnorm(n)
@@ -40,16 +40,16 @@
 #'
 #' # perform boostrap tests
 #' indices <- boot_samples(n, R = 5000)
-#' standard_boot <- test_mediation(simulated_data,
-#'                                 x = "x", y = "y", m = "m",
-#'                                 robust = FALSE,
-#'                                 indices = indices)
-#' summary(standard_boot)
 #' robust_boot <- test_mediation(simulated_data,
 #'                               x = "x", y = "y", m = "m",
 #'                               robust = TRUE,
 #'                               indices = indices)
 #' summary(robust_boot)
+#' standard_boot <- test_mediation(simulated_data,
+#'                                 x = "x", y = "y", m = "m",
+#'                                 robust = FALSE,
+#'                                 indices = indices)
+#' summary(standard_boot)
 #' }
 #'
 #' @keywords utilities
