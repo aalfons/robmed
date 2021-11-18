@@ -15,7 +15,9 @@ shinyServer(function(input, output) {
   colors <- c("#F8766D", "#F564E3", "#619CFF", "#00BFC4")
 
   ## function to generate data
-  generate_data <- function(n_obs, a, b, c, n_out, d, seed) {
+  generate_data <- function(n_obs, a, b, c, n_out, #d,
+                            shift_X, shift_M, shift_Y,
+                            seed) {
     # set seed of random number generator
     set.seed(seed)
     # generate clean data
@@ -32,16 +34,12 @@ shinyServer(function(input, output) {
                     nrow = 3, ncol = 3)
     # contaminate the data
     if(n_out > 0) {
-      # mean of clean data
-      mu <-  c(0, 0, 0)
-      # define means of contaminated data
-      mu_out <- c(0, 1, -1)
-      mu_out <- mu_out / sqrt(mahalanobis(mu_out, center = mu, cov = Sigma))
       # contaminate the first observations
       i <- seq_len(n_out)
-      # x[i] <- x[i] + d * mu_out[1]  # not necessary (mu_out[1] is set to 0)
-      y[i] <- y[i] + d * mu_out[2]
-      m[i] <- m[i] + d * mu_out[3]
+      # add outlier shifts
+      x[i] <- x[i] + shift_X
+      m[i] <- m[i] + shift_M
+      y[i] <- y[i] + shift_Y
     }
     # return data frame
     data.frame(X = x, M = m, Y = y)
@@ -51,15 +49,17 @@ shinyServer(function(input, output) {
   ## generate data
   df <- reactive({
     generate_data(input$n_obs, input$a, input$b, input$c,
-                  input$n_out, input$d, input$seed)
+                  input$n_out, #input$d,
+                  input$shift_X, input$shift_M, input$shift_Y,
+                  input$seed)
   })
 
   ## scatter plot matrix of generated data
   output$scatterPlotMatrix <- renderPlot({
     col_points <- rep.int(colors, c(input$n_out, 0, 0, input$n_obs-input$n_out))
     plot(df(), pch = 16, cex = 2, col = col_points, cex.axis = 1.5,
-         cex.labels = 2, las = 1, oma = c(2.5, 2.5, 2.5, 10.5))
-    legend("right", inset = c(-0.03, 0), legend = c("Good point", "Outlier"),
+         cex.labels = 2, las = 1, oma = c(2.5, 2.5, 2.5, 12))
+    legend("right", inset = c(-0.03, 0), legend = c("Regular point", "Outlier"),
            pch = 16, pt.cex = 1.4, col = colors[c(4, 1)], cex = 1.1,
            y.intersp = 0.75, bty = "n", xpd = TRUE)
   })
@@ -75,25 +75,25 @@ shinyServer(function(input, output) {
     suppressWarnings({
       if (input$standard) {
         standard_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                        test = "boot", R = 1000,
+                                        test = "boot", R = input$R,
                                         method = "regression",
                                         robust = FALSE)
       }
       if (input$winsorized) {
         winsorized_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                         test = "boot", R = 1000,
+                                         test = "boot", R = input$R,
                                          method = "covariance",
                                          robust = TRUE)
       }
       if (input$median) {
         median_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                      test = "boot", R = 1000,
+                                      test = "boot", R = input$R,
                                       method = "regression",
                                       robust = "median")
       }
       if (input$robust) {
         robust_boot <- test_mediation(df(), x = "X", y = "Y", m = "M",
-                                      test = "boot", R = 1000,
+                                      test = "boot", R = input$R,
                                       method = "regression",
                                       robust = "MM")
       }
