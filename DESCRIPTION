@@ -22,9 +22,12 @@ License: GPL (>= 2)
 URL: https://github.com/aalfons/robmed
 BugReports: https://github.com/aalfons/robmed/issues
 LazyData: yes
-Authors@R: c(person("Andreas", "Alfons", email = "alfons@ese.eur.nl",
-    role = c("aut", "cre")))
-Author: Andreas Alfons [aut, cre]
+Authors@R: c(person("Andreas", "Alfons", 
+                    email = "alfons@ese.eur.nl", 
+                    role = c("aut", "cre")), 
+             person("Nufer Y.", "Ates", role = "ctb", 
+                    comment = "provided the BSG2014 data"))
+Author: Andreas Alfons [aut, cre], Nufer Y. Ates [ctb] (provided the BSG2014 data)
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
 RoxygenNote: 7.1.2
