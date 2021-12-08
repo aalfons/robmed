@@ -20,6 +20,7 @@ fit_mediation(object, ...)
   m,
   covariates = NULL,
   method = c("regression", "covariance"),
+  model = c("parallel", "serial"),
   robust = TRUE,
   family = "gaussian",
   contrast = FALSE,

@@ -1,8 +1,9 @@
-Changes in robmed version 0.9.1
+Changes in robmed version 0.10.0
 
     + Removed superfluous package MASS from Suggests.
 
     + Updated examples and shiny app.
+
 
 
 Changes in robmed version 0.9.0
