@@ -79,6 +79,12 @@
 #' \code{"select"} to select among these four distributions via BIC (see
 #' \sQuote{Details}).  This is only relevant if \code{method = "regression"}
 #' and \code{robust = FALSE}.
+#' @param model  a character string specifying the type of model in case of
+#' multiple mediators.  Possible values are \code{"parallel"} (the default) for
+#' the parallel multiple mediator model, or \code{"serial"} for the serial
+#' multiple mediator model.  This is only relevant for models with multiple
+#' hypothesized mediators, which are currently only implemented for estimation
+#' via regressions (\code{method = "regression"}).
 #' @param contrast  a logical indicating whether to compute pairwise contrasts
 #' of the indirect effects (defaults to \code{FALSE}).  This can also be a
 #' character string, with \code{"estimates"} for computing the pairwise
@@ -116,8 +122,11 @@
 #' effects of the independent variables on the dependent variable.}
 #' \item{total}{a numeric vector containing the point estimates of the total
 #' effects of the independent variables on the dependent variable.}
-#' \item{ab}{a numeric vector containing the point estimates of the indirect
-#' effects.}
+#' \item{indirect}{a numeric vector containing the point estimates of the
+#' indirect effects.}
+#' \item{ab}{for back-compatibility with versions <0.10.0, the point estimates
+#' of the indirect effects are also included here.  This component is
+#' deprecated and may be removed as soon as the next version.}
 #' \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"},
 #' \code{"\link[quantreg]{rq}"}, \code{"\link[stats]{lm}"} or \code{"lmse"}
 #' containing the estimation results from the regression of the proposed
@@ -277,8 +286,8 @@ fit_mediation.formula <- function(formula, data, ...) {
 
 fit_mediation.default <- function(object, x, y, m, covariates = NULL,
                                   method = c("regression", "covariance"),
-                                  model = c("parallel", "serial"),
                                   robust = TRUE, family = "gaussian",
+                                  model = c("parallel", "serial"),
                                   contrast = FALSE, fit_yx = TRUE,
                                   control = NULL, ...) {
   ## initializations
@@ -409,11 +418,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                               model = "parallel", robust = "MM",
                               family = "gaussian", contrast = FALSE,
                               fit_yx = TRUE, control = reg_control()) {
-  # number of indirect effects
+  # number of variables and indirect effects
   p_x <- length(x)
   p_m <- length(m)
-  if (model == "serial") nr_indirect <- if (p_m == 2) 3 else 7
-  else nr_indirect <- p_x * p_m
+  nr_indirect <- get_nr_indirect(x, m, model = model)
   # other initializations
   have_robust <- is.character(robust)
   have_contrast <- is.character(contrast)
@@ -434,8 +442,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   }
   # compute regression models
   if (have_robust) {
-    # for the robust methods, the total effect is estimated as c' = ab + c
-    # to satisfy this relationship
+    # for the robust methods, the total effect is estimated as
+    # total = indirect + direct to satisfy this relationship
     # (For median regression, I believe this only makes sense if the
     # conditional distribution is symmetric.  This is ok, because the robust
     # methods assume a normal distribution, which is reflected by setting
@@ -543,10 +551,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       # add names
       names(fit_mx) <- m
     }
-    # The relationship ab + direct = total doesn't hold, so we need to
-    # perform the regression for the total effect.  But it is up to the
-    # user whether this is done, which can save computation time if the
-    # user is not interested in the total effect.
+    # The relationship indirect + direct = total doesn't hold, so we need to
+    # perform the regression for the total effect.  But it is up to the user
+    # whether this is done, which can save computation time if the user is not
+    # interested in the total effect.
     fit_ymx <- selm_fit(predictors_ymx, data[, y], family = selm_args$family,
                         fixed.param = selm_args$fixed.param)
     fit_yx <- if (estimate_yx) {
@@ -561,7 +569,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     else a <- coef(fit_mx)[1L + seq_len(p_x)]
     b <- unname(coef(fit_ymx)[2L])
     # compute indirect effect(s)
-    ab <- a * b
+    indirect <- a * b
   } else {
     # extract effects a and b
     if (model == "serial") {
@@ -582,35 +590,35 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       # compute indirect effects
       if (p_m == 2) {
         # two serial mediators
-        ab <- c(a * b, a[1] * d[[1]] * b[2])
+        indirect <- c(a * b, a[1] * d[[1]] * b[2])
       } else  {
         # three serial mediators
-        ab <- c(a * b, a[1] * d[[1]] * b[2], a[1] * d[[2]][1] * b[3],
-                a[2] * d[[2]][2] * b[3], a[1] * d[[1]] * d[[2]][2] * b[3])
+        indirect <- c(a * b, a[1] * d[[1]] * b[2], a[1] * d[[2]][1] * b[3],
+                      a[2] * d[[2]][2] * b[3], a[1] * d[[1]] * d[[2]][2] * b[3])
       }
       # add names
-      names(ab) <- get_indirect_names(nr_indirect)
+      names(indirect) <- get_indirect_names(m = m, model = "serial")
       # make sure we have vectors
       d <- unlist(d, use.names = TRUE)
     } else {
       # list of indirect effects
-      ab_list <- mapply(function(current_a, current_b) current_a * current_b,
-                        current_a = a, current_b = b, SIMPLIFY = FALSE)
+      indirect_list <- mapply(function(a_j, b_j) a_j * b_j, a_j = a, b_j = b,
+                              SIMPLIFY = FALSE, USE.NAMES = TRUE)
       # make sure we have vectors
       if (p_x > 1L) a <- unlist(a, use.names = TRUE)
-      ab <- unlist(ab_list, use.names = TRUE)
+      indirect <- unlist(indirect_list, use.names = TRUE)
     }
   }
   # if applicable, compute total indirect effect and contrasts
   if (nr_indirect > 1L) {
     # if requested, compute contrasts
     if (have_contrast) {
-      contrasts <- get_contrasts(ab, type = contrast)
+      contrasts <- get_contrasts(indirect, type = contrast)
       n_contrasts <- length(contrasts)
       names(contrasts) <- get_contrast_names(n_contrasts)
     } else contrasts <- NULL
     # compute total indirect effect
-    ab_total <- sum(ab)
+    indirect_total <- sum(indirect)
   }
   # extract direct effect(s)
   if (p_x == 1L) direct <- unname(coef(fit_ymx)[2L + p_m])
@@ -618,9 +626,9 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   # extract total effect(s)
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
     if (p_x == 1L) {
-      total <- if (p_m == 1L) ab + direct else ab_total + direct
+      total <- if (p_m == 1L) indirect + direct else indirect_total + direct
     } else {
-      if (p_m == 1) total <- ab + direct
+      if (p_m == 1) total <- indirect + direct
       else {
         total <- sapply(x, function(current_x) {
           current_ab <- sapply(ab_list, "[", current_x)
@@ -639,15 +647,19 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     }
   }
   # combine total indirect effect, individual indirect effects, and contrasts
-  if (nr_indirect > 1L) ab <- c(Total = ab_total, ab, contrasts)
+  if (nr_indirect > 1L) {
+    indirect <- c(Total = indirect_total, indirect, contrasts)
+  }
   # return results
   result <- list(a = a, b = b)
   if (model == "serial") result$d <- d
   result <- c(result,
-              list(direct = direct, total = total, ab = ab, fit_mx = fit_mx,
-                   fit_ymx = fit_ymx, fit_yx = fit_yx, x = x, y = y, m = m,
-                   covariates = covariates, data = data, model = model,
-                   robust = robust, family = family, contrast = contrast))
+              list(direct = direct, total = total, indirect = indirect,
+                   ab = indirect,  # for back-compatibility, will be removed
+                   fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
+                   x = x, y = y, m = m, covariates = covariates, data = data,
+                   model = model, robust = robust, family = family,
+                   contrast = contrast))
   if (robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
@@ -667,9 +679,10 @@ cov_fit_mediation <- function(data, x, y, m, robust = TRUE,
   direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
   total <- S[y, x] / S[x, x]
   # return results
-  result <- list(a = a, b = b, direct = direct, total = total, ab = a * b,
-                 cov = cov, x = x, y = y, m = m, covariates = character(),
-                 data = data, robust = robust)
+  result <- list(a = a, b = b, direct = direct, total = total,
+                 indirect = a * b, cov = cov, x = x, y = y, m = m,
+                 covariates = character(), data = data,
+                 robust = robust)
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result
@@ -756,5 +769,43 @@ rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
 
 ## internal functions for serial multiple mediator model
 
-# obtain names for indirect effects
-get_indirect_names <- function(n) paste0("Indirect", seq_len(n))
+# obtain number of indirect effects
+get_nr_indirect <- function(x, m, model = "parallel") {
+  p_m <- length(m)
+  if (model == "serial") {
+    # currently only implemented for a single independent variable and
+    # two or three hypothesized mediators
+    nr_indirect <- if (p_m == 2) 3 else 7
+  } else {
+    # single mediator or parallel multiple mediators
+    p_x <- length(x)
+    nr_indirect <- p_x * p_m
+  }
+}
+
+# obtain names for indirect effects in serial multiple mediator model
+get_indirect_names <- function(x, m, model = "parallel") {
+  p_m <- length(m)
+  if (model == "serial") {
+    # currently only implemented for a single independent variable and
+    # two or three hypothesized mediators
+    if (p_m == 2L) {
+      # two serial mediators
+      c(m, paste(m, collapse = "."))
+    } else {
+      # three serial mediators
+      c(m, paste(m[1], m[2], sep = "."), paste(m[1], m[3], sep = "."),
+        paste(m[2], m[3], sep = "."), paste(m, collapse = "."))
+    }
+  } else {
+    # single mediator or parallel multiple mediators
+    p_x <- length(x)
+    if (p_m == 1) names <- if (p_x > 1) x
+    else {
+      if (p_x == 1) names <- m
+      else names <- unlist(lapply(m, paste, x, sep = "."), use.names = FALSE)
+    }
+    # return names
+    names
+  }
+}

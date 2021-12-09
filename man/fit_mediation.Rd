@@ -20,9 +20,9 @@ fit_mediation(object, ...)
   m,
   covariates = NULL,
   method = c("regression", "covariance"),
-  model = c("parallel", "serial"),
   robust = TRUE,
   family = "gaussian",
+  model = c("parallel", "serial"),
   contrast = FALSE,
   fit_yx = TRUE,
   control = NULL,
@@ -82,6 +82,13 @@ Student's t distribution, \code{"skewt"} for a skew-t distribution, or
 \sQuote{Details}).  This is only relevant if \code{method = "regression"}
 and \code{robust = FALSE}.}
 
+\item{model}{a character string specifying the type of model in case of
+multiple mediators.  Possible values are \code{"parallel"} (the default) for
+the parallel multiple mediator model, or \code{"serial"} for the serial
+multiple mediator model.  This is only relevant for models with multiple
+hypothesized mediators, which are currently only implemented for estimation
+via regressions (\code{method = "regression"}).}
+
 \item{contrast}{a logical indicating whether to compute pairwise contrasts
 of the indirect effects (defaults to \code{FALSE}).  This can also be a
 character string, with \code{"estimates"} for computing the pairwise
@@ -119,8 +126,11 @@ effects of the proposed mediator variables on the dependent variable.}
 effects of the independent variables on the dependent variable.}
 \item{total}{a numeric vector containing the point estimates of the total
 effects of the independent variables on the dependent variable.}
-\item{ab}{a numeric vector containing the point estimates of the indirect
-effects.}
+\item{indirect}{a numeric vector containing the point estimates of the
+indirect effects.}
+\item{ab}{for back-compatibility with versions <0.10.0, the point estimates
+of the indirect effects are also included here.  This component is
+deprecated and may be removed as soon as the next version.}
 \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"},
 \code{"\link[quantreg]{rq}"}, \code{"\link[stats]{lm}"} or \code{"lmse"}
 containing the estimation results from the regression of the proposed

@@ -1002,30 +1002,50 @@ get_absolute_contrast <- function(j, x) {
 }
 
 # obtain information on how contrasts are computed
-get_contrast_info <- function(x, m, type = "estimates", prefix = FALSE) {
-  # initializations
-  p_x <- length(x)
-  p_m <- length(m)
-  # names used for indirect effects
-  if (p_x > 1 && p_m > 1) names <- sapply(m, paste, x, sep = ".")
-  else if (p_x > 1) names <- x
-  else if (p_m > 1) names <- m
-  else {
-    # should not happen
-    stop("contrasts are only applicable in case of multiple indirect effects")
-  }
+get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
   # compute combinations of names
   combinations <- combn(names, 2, simplify = FALSE)
   n_contrasts <- length(combinations)
   # obtain labels for contrasts
   labels <- get_contrast_names(n_contrasts)
-  if (prefix) labels <- paste("ab", labels, sep = "_")
+  if (prefix) labels <- paste("Indirect", labels, sep = "_")
   # obtain information on contrasts
   if (type == "estimates") {
-    fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
+    fun <- function(names) {
+      paste(paste("Indirect", names, sep = "_"), collapse = " - ")
+    }
   } else if (type == "absolute") {
-    fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")
+    fun <- function(names) {
+      paste(paste0("|Indirect_", names, "|"), collapse = " - ")
+    }
   } else stop(sprintf("%s contrasts not implemented", type))
   # return information on contrasts
   data.frame(Label = labels, Definition = sapply(combinations, fun))
 }
+# get_contrast_info <- function(x, m, type = "estimates", prefix = FALSE) {
+#   # initializations
+#   p_x <- length(x)
+#   p_m <- length(m)
+#   # names used for indirect effects
+#   if (p_x > 1 && p_m > 1) names <- sapply(m, paste, x, sep = ".")
+#   else if (p_x > 1) names <- x
+#   else if (p_m > 1) names <- m
+#   else {
+#     # should not happen
+#     stop("contrasts are only applicable in case of multiple indirect effects")
+#   }
+#   # compute combinations of names
+#   combinations <- combn(names, 2, simplify = FALSE)
+#   n_contrasts <- length(combinations)
+#   # obtain labels for contrasts
+#   labels <- get_contrast_names(n_contrasts)
+#   if (prefix) labels <- paste("ab", labels, sep = "_")
+#   # obtain information on contrasts
+#   if (type == "estimates") {
+#     fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
+#   } else if (type == "absolute") {
+#     fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")
+#   } else stop(sprintf("%s contrasts not implemented", type))
+#   # return information on contrasts
+#   data.frame(Label = labels, Definition = sapply(combinations, fun))
+# }
