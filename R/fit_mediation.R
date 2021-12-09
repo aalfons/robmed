@@ -588,7 +588,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                   fit = fit_mx[-1], j = seq_len(p_m-1),
                   SIMPLIFY = FALSE, USE.NAMES = TRUE)
       # compute indirect effects
-      if (p_m == 2) {
+      if (p_m == 2L) {
         # two serial mediators
         indirect <- c(a * b, a[1] * d[[1]] * b[2])
       } else  {
@@ -628,7 +628,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     if (p_x == 1L) {
       total <- if (p_m == 1L) indirect + direct else indirect_total + direct
     } else {
-      if (p_m == 1) total <- indirect + direct
+      if (p_m == 1L) total <- indirect + direct
       else {
         total <- sapply(x, function(current_x) {
           current_ab <- sapply(ab_list, "[", current_x)
@@ -637,10 +637,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       }
     }
   } else if (estimate_yx) {
-    if (p_x == 1) total <- unname(coef(fit_yx)[2L])
+    if (p_x == 1L) total <- unname(coef(fit_yx)[2L])
     else total <- coef(fit_yx)[1L + seq_len(p_x)]
   } else {
-    if (p_x == 1) total <- NA_real_
+    if (p_x == 1L) total <- NA_real_
     else {
       total <- rep.int(NA_real_, p_x)
       names(total) <- x
@@ -658,7 +658,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                    ab = indirect,  # for back-compatibility, will be removed
                    fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
                    x = x, y = y, m = m, covariates = covariates, data = data,
-                   model = model, robust = robust, family = family,
+                   robust = robust, family = family, model = model,
                    contrast = contrast))
   if (robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")

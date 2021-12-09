@@ -103,7 +103,7 @@ get_nr_indirect <- function(x, m, model = "parallel") {
   if (model == "serial") {
     # currently only implemented for a single independent variable and
     # two or three hypothesized mediators
-    nr_indirect <- if (p_m == 2) 3 else 7
+    nr_indirect <- if (p_m == 2L) 3L else 7L
   } else {
     # single mediator or parallel multiple mediators
     p_x <- length(x)
@@ -122,15 +122,15 @@ get_indirect_names <- function(x, m, model = "parallel") {
       c(m, paste(m, collapse = "."))
     } else {
       # three serial mediators
-      c(m, paste(m[1], m[2], sep = "."), paste(m[1], m[3], sep = "."),
-        paste(m[2], m[3], sep = "."), paste(m, collapse = "."))
+      c(m, paste(m[1L], m[2L], sep = "."), paste(m[1L], m[3L], sep = "."),
+        paste(m[2L], m[3L], sep = "."), paste(m, collapse = "."))
     }
   } else {
     # single mediator or parallel multiple mediators
     p_x <- length(x)
-    if (p_m == 1) names <- if (p_x > 1) x
+    if (p_m == 1L) names <- if (p_x > 1L) x
     else {
-      if (p_x == 1) names <- m
+      if (p_x == 1L) names <- m
       else names <- unlist(lapply(m, paste, x, sep = "."), use.names = FALSE)
     }
     # return names

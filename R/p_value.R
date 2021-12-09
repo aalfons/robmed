@@ -275,7 +275,7 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
     p_covariates <- length(object$fit$covariates)
     index_list <- get_index_list(p_x, p_m, p_covariates)
     # the a path is the second coefficient in the model m ~ x + covariates
-    if(p_m == 1) keep_mx <- index_list$fit_mx[1L + seq_len(p_x)]
+    if(p_m == 1L) keep_mx <- index_list$fit_mx[1L + seq_len(p_x)]
     else keep_mx <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
     # keep b and c coefficients of model y ~ m + x + covariates
     keep_ymx <- index_list$fit_ymx[1L + seq_len(p_x + p_m)]

@@ -402,12 +402,12 @@ boot_test_mediation <- function(fit,
       psi_control <- get_psi_control(fit_ymx)  # the same for all model fits
 
       # extract (square root of) robustness weights and combine data
-      if (p_m == 1) w_m <- sqrt(weights(fit_mx, type = "robustness"))
+      if (p_m == 1L) w_m <- sqrt(weights(fit_mx, type = "robustness"))
       else w_m <- sqrt(sapply(fit_mx, weights, type = "robustness"))
       w_y <- sqrt(weights(fit_ymx, type = "robustness"))
       # compute matrices for linear corrections and
       # extract coefficients from full sample
-      if (p_m == 1) {
+      if (p_m == 1L) {
         corr_m <- correction_matrix(z[, c(1L, j_x, j_covariates)],
                                     weights = w_m,
                                     residuals = residuals(fit_mx),
