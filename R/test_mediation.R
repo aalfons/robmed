@@ -895,6 +895,7 @@ sobel_test_mediation <- function(fit,
 # ## arguments for parallel computing to be passed down
 # local_boot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
 
+
 ## get control arguments for psi function as used in a given model fit
 get_psi_control <- function(object) object$control[c("tuning.psi", "psi")]
 
@@ -958,94 +959,3 @@ get_index_list <- function(p_x, p_m, p_covariates, indirect = TRUE) {
   list(ab = indices_ab, fit_mx = indices_mx, fit_ymx = indices_ymx,
        total = index_total)
 }
-
-
-## internal functions to compute contrasts
-
-# compute contrasts
-get_contrasts <- function(x, combinations = NULL, type = "estimates") {
-  # compute combinations if not supplied
-  if (is.null(combinations)) {
-    indices <- get_contrast_indices(x)
-    combinations <- combn(indices, 2, simplify = FALSE)
-  }
-  # define function to compute contrasts
-  if (type == "estimates") fun <- get_original_contrast
-  else if (type == "absolute") fun <- get_absolute_contrast
-  else stop(sprintf("%s contrasts not implemented", type))
-  # compute contrasts
-  sapply(combinations, fun, x = x)
-}
-
-# obtain indices to be used for computing contrasts
-get_contrast_indices <- function(x) {
-  if (is.matrix(x) || is.data.frame(x)) seq_len(ncol(x))
-  else seq_along(x)
-}
-
-# obtain names for contrasts
-get_contrast_names <- function(n) {
-  if (n > 1) paste0("Contrast", seq_len(n))
-  else "Contrast"
-}
-
-# compute contrasts as differences of values
-get_original_contrast <- function(j, x) {
-  if (is.matrix(x) || is.data.frame(x)) x[, j[1]] - x[, j[2]]
-  else x[j[1]] - x[j[2]]
-}
-
-# compute contrasts as differences of absolute values
-get_absolute_contrast <- function(j, x) {
-  if (is.matrix(x) || is.data.frame(x)) abs(x[, j[1]]) - abs(x[, j[2]])
-  else abs(x[j[1]]) - abs(x[j[2]])
-}
-
-# obtain information on how contrasts are computed
-get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
-  # compute combinations of names
-  combinations <- combn(names, 2, simplify = FALSE)
-  n_contrasts <- length(combinations)
-  # obtain labels for contrasts
-  labels <- get_contrast_names(n_contrasts)
-  if (prefix) labels <- paste("Indirect", labels, sep = "_")
-  # obtain information on contrasts
-  if (type == "estimates") {
-    fun <- function(names) {
-      paste(paste("Indirect", names, sep = "_"), collapse = " - ")
-    }
-  } else if (type == "absolute") {
-    fun <- function(names) {
-      paste(paste0("|Indirect_", names, "|"), collapse = " - ")
-    }
-  } else stop(sprintf("%s contrasts not implemented", type))
-  # return information on contrasts
-  data.frame(Label = labels, Definition = sapply(combinations, fun))
-}
-# get_contrast_info <- function(x, m, type = "estimates", prefix = FALSE) {
-#   # initializations
-#   p_x <- length(x)
-#   p_m <- length(m)
-#   # names used for indirect effects
-#   if (p_x > 1 && p_m > 1) names <- sapply(m, paste, x, sep = ".")
-#   else if (p_x > 1) names <- x
-#   else if (p_m > 1) names <- m
-#   else {
-#     # should not happen
-#     stop("contrasts are only applicable in case of multiple indirect effects")
-#   }
-#   # compute combinations of names
-#   combinations <- combn(names, 2, simplify = FALSE)
-#   n_contrasts <- length(combinations)
-#   # obtain labels for contrasts
-#   labels <- get_contrast_names(n_contrasts)
-#   if (prefix) labels <- paste("ab", labels, sep = "_")
-#   # obtain information on contrasts
-#   if (type == "estimates") {
-#     fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
-#   } else if (type == "absolute") {
-#     fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")
-#   } else stop(sprintf("%s contrasts not implemented", type))
-#   # return information on contrasts
-#   data.frame(Label = labels, Definition = sapply(combinations, fun))
-# }
