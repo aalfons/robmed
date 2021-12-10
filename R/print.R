@@ -119,8 +119,29 @@ print.fit_mediation <- function(x, info = TRUE, ...) {
   # print information on type of model fit
   if (isTRUE(info)) print_info(x, ...)
   # print estimated effects
-  cat("\nEffects:\n")
-  print(coef(x), ...)
+  if (is.null(x$model) || x$model == "simple") {
+    cat("\nEffects:\n")
+    print(coef(x), ...)
+  } else {
+    # some initializations
+    p_x <- length(x$x)
+    p_m <- length(x$m)
+    # print effects
+    cat("\na paths:\n")
+    print(x$a, ...)
+    cat(sprintf("\nb path%s:\n", if (p_m == 1L) "" else "s"))
+    print(x$b, ...)
+    if (!is.null(x$d)) {
+      cat(sprintf("\nd path%s:\n", if (p_m > 2L) "s" else ""))
+      print(x$d, ...)
+    }
+    cat(sprintf("\nTotal effect%s:\n", if (p_x == 1L) "" else "s"))
+    print(x$total, ...)
+    cat(sprintf("\nDirect effect%s:\n", if (p_x == 1L) "" else "s"))
+    print(x$direct, ...)
+    cat("\nIndirect effects:\n")
+    print(x$indirect, ...)
+  }
   # print information on how contrasts are computed
   # (if there are no contrasts, nothing is printed)
   print_contrast_info(x, prefix = TRUE)
