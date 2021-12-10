@@ -127,7 +127,7 @@ get_effect_names <- function(a = NULL, b = NULL, d = NULL, direct = NULL,
   else b_names <- if (length(b) == 1L) "b" else paste("b", names(b), sep = sep)
   # names for effect(s) d
   if (is.null(d)) d_names <- NULL
-  else d_names <- paste("d", names(d), sep = sep)
+  else d_names <- if (length(d) == 1L) "d" else paste("d", names(d), sep = sep)
   # names for direct effect(s)
   if (is.null(direct)) direct_names <- NULL
   else if (length(direct) == 1L) direct_names <- "Direct"

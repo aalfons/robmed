@@ -592,11 +592,12 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     }
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
     # compute indirect effects
+    indirect_names <- get_indirect_names(x, m, model = model)
     if (model == "serial") {
       # extract effect d
       d <- mapply(function(fit, j) coef(fit)[1L + seq_len(j)],
                   fit = fit_mx[-1L], j = seq_len(p_m-1L),
-                  SIMPLIFY = FALSE, USE.NAMES = TRUE)
+                  SIMPLIFY = FALSE, USE.NAMES = FALSE)
       # compute indirect effects
       if (p_m == 2L) {
         # two serial mediators
@@ -609,15 +610,21 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       # add names
       names(indirect) <- get_indirect_names(m = m, model = "serial")
       # make sure we have vectors
-      d <- unlist(d, use.names = TRUE)
+      d <- unlist(d, use.names = FALSE)
+      names(d) <- get_d_names(m)
     } else {
       # list of indirect effects
       indirect_list <- mapply(function(a_j, b_j) a_j * b_j, a_j = a, b_j = b,
-                              SIMPLIFY = FALSE, USE.NAMES = TRUE)
+                              SIMPLIFY = FALSE, USE.NAMES = FALSE)
       # make sure we have vectors
-      if (p_x > 1L) a <- unlist(a, use.names = TRUE)
-      indirect <- unlist(indirect_list, use.names = TRUE)
+      if (p_x > 1L) {
+        a <- unlist(a, use.names = FALSE)
+        names(a) <- indirect_names  # names of indirect effects reflect a path
+      }
+      indirect <- unlist(indirect_list, use.names = FALSE)
     }
+    # add names
+    names(indirect) <- indirect_names
   }
   # if applicable, compute total indirect effect and contrasts
   if (nr_indirect > 1L) {

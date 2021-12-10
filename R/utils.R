@@ -145,6 +145,28 @@ get_index_list <- function(p_x, p_m, p_covariates, indirect = TRUE,
 
 ## internal functions related to indirect effects
 
+# obtain names for d path in serial multiple mediator models
+get_d_names <- function(m, sep = "->") {
+  # initializations
+  p_m <- length(m)
+  # currently only implemented for a single independent variable and
+  # two or three hypothesized mediators
+  if (p_m == 2L) {
+    # two serial mediators
+    names <- NULL
+  } else {
+    # three serial mediators
+    responses <- m[-1L]
+    predictors <- list(m[1L], m[-3L])
+    names_list <- mapply(function(current_response, current_predictors) {
+      paste(current_predictors, current_response, sep = sep)
+    }, responses, predictors, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    names <- unlist(names_list, use.names = FALSE)
+  }
+  # return names
+  names
+}
+
 # obtain number of indirect effects
 get_nr_indirect <- function(p_x, p_m, model = "parallel") {
   if (!is.null(model) && model == "serial") {
@@ -160,18 +182,18 @@ get_nr_indirect <- function(p_x, p_m, model = "parallel") {
 }
 
 # obtain names for indirect effects
-get_indirect_names <- function(x, m, model = "parallel") {
+get_indirect_names <- function(x, m, model = "parallel", sep = "->") {
   p_m <- length(m)
   if (!is.null(model) && model == "serial") {
     # currently only implemented for a single independent variable and
     # two or three hypothesized mediators
     if (p_m == 2L) {
       # two serial mediators
-      c(m, paste(m, collapse = "."))
+      c(m, paste(m, collapse = sep))
     } else {
       # three serial mediators
-      c(m, paste(m[1L], m[2L], sep = "."), paste(m[1L], m[3L], sep = "."),
-        paste(m[2L], m[3L], sep = "."), paste(m, collapse = "."))
+      c(m, paste(m[1L], m[2L], sep = sep), paste(m[1L], m[3L], sep = sep),
+        paste(m[2L], m[3L], sep = sep), paste(m, collapse = sep))
     }
   } else {
     # single mediator or parallel multiple mediators
@@ -180,13 +202,16 @@ get_indirect_names <- function(x, m, model = "parallel") {
       names <- if (p_x > 1L) x
     } else {
       if (p_x == 1L) names <- m
-      else names <- unlist(lapply(m, paste, x, sep = "."), use.names = FALSE)
+      else {
+        names <- unlist(lapply(m, function(current_m) {
+          paste(x, current_m, sep = sep)
+        }), use.names = FALSE)
+      }
     }
     # return names
     names
   }
 }
-
 
 # obtain labels for indirect effects in printed output of bootstrap tests: only
 # relevant in case of multiple independent variables and multiple mediators, or
