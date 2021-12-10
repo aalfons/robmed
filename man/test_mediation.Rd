@@ -45,6 +45,7 @@ test_mediation(object, ...)
   method = c("regression", "covariance"),
   robust = TRUE,
   family = "gaussian",
+  model = c("parallel", "serial"),
   contrast = FALSE,
   fit_yx = TRUE,
   control = NULL,
@@ -168,6 +169,13 @@ column of \code{object} containing the dependent variable.}
 \item{covariates}{optional; a character, integer or logical vector
 specifying the columns of \code{object} containing additional covariates to
 be used as control variables.}
+
+\item{model}{a character string specifying the type of model in case of
+multiple mediators.  Possible values are \code{"parallel"} (the default) for
+the parallel multiple mediator model, or \code{"serial"} for the serial
+multiple mediator model.  This is only relevant for models with multiple
+hypothesized mediators, which are currently only implemented for estimation
+via regressions (\code{method = "regression"}).}
 }
 \value{
 An object inheriting from class \code{"test_mediation"} (class

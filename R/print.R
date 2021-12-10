@@ -157,25 +157,36 @@ print.cov_ML <- function(x, ...) {
 #' @export
 print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
                                       info = TRUE, ...) {
+  # initializations
+  p_x <- length(x$fit$x)
+  m <- x$fit$m
+  p_m <- length(m)
+  model <- x$fit$model
+  nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
   # print information on type of model fit
   if (isTRUE(info)) print_info(x, ...)
-  # initializations
-  m <- x$fit$m
-  nr_indirect <- length(x$fit$x) * length(m)
   # print indirect effects
   plural <- if (nr_indirect == 1L) "" else "s"
   cat(sprintf("\nIndirect effect%s of x on y:\n", plural))
   # extract indirect effect
-  ab <- cbind(Data = x$fit$ab, Boot = x$ab)
-  if (nr_indirect == 1L) rownames(ab) <- m
+  indirect <- cbind(Data = x$fit$indirect, Boot = x$indirect)
+  if (nr_indirect == 1L) rownames(indirect) <- m
+  if (p_m > 1L && (p_x > 1L || model == "serial")) {
+    labels <- get_indirect_labels(nr_indirect)
+    rownames(indirect)[1L + seq_len(nr_indirect)] <- labels
+  } else labels <- NULL
   # extract confidence interval
   ci <- if (nr_indirect == 1L) t(x$ci) else x$ci
   colnames(ci) <- c("Lower", "Upper")
   # combine and print
-  print(cbind(ab, ci), digits = digits, ...)
+  print(cbind(indirect, ci), digits = digits, ...)
+  # print information on indirect effect paths for models with multiple
+  # independent variables and multiple mediators, or serial multiple mediators
+  # (if we have a different model, nothing is printed)
+  print_indirect_info(x$fit, labels = labels)
   # print information on how contrasts are computed
   # (if there are no contrasts, nothing is printed)
-  print_contrast_info(x$fit)
+  print_contrast_info(x$fit, labels = labels)
   # print additional information
   cat("---\nLevel of confidence: ", format(100 * x$level), " %\n", sep = "")
   cat(sprintf("\nNumber of bootstrap replicates: %d\n", x$R))
@@ -427,25 +438,81 @@ print.summary_test_mediation <- function(x, digits = max(3, getOption("digits")-
   invisible(x)
 }
 
+## internal function to print information on labels for indirect effects for
+## serial multiple mediator models
+# This now expects an object of class "fit_mediation".  In future versions,
+# this could also be turned into a generic function if necessary.
+print_indirect_info <- function(object, labels = NULL, ...) {
+  # initializations
+  x <- object$x
+  p_x <- length(x)
+  m <- object$m
+  p_m <- length(m)
+  y <- object$y
+  model <- object$model  # only implemented for regression fit
+  show_info <- p_m > 1L && (p_x > 1L || model == "serial")
+  # if applicable, print information on indirect effect paths
+  if (show_info) {
+    # if no labels are supplied, get names of indirect effects
+    if (is.null(labels)) labels <- get_indirect_names(x, m, model = model)
+    # get information on indirect effect paths
+    if (model == "serial") {
+      if (p_m == 2L) {
+        ## two serial mediators
+        # format strings of relevant variable names to be of equal length
+        format_m <- format(m)
+        format_ym <- format(c(y, m[2L]))
+        # generate strings describing the paths
+        paths <- c(paste(x, format_m, format_ym[1L], sep = " -> "),
+                   paste(x, format_m[1L], format_ym[2L], y, sep = " -> "))
+      } else {
+        # three serial mediators
+        format_m <- format(m)
+        format_ym23 <- format(c(y, m[-1L]))
+        format_ym3 <- format(c(y, m[3L]))
+        # generate strings describing the paths
+        paths <- c(paste(x, format_m, format_ym23[1L], sep = " -> "),
+                   paste(x, format_m[c(1L, 1L, 2L)], format_ym23[c(2L, 3L, 3L)],
+                         format_ym3[1L], sep = " -> "),
+                   paste(x, format_m[1L], format_ym23[2L], format_ym3[2L],
+                         y, sep = " -> "))
+      }
+    } else {
+      ## multiple independend variables and multiple parallel mediators
+      format_x <- format(x)
+      format_m <- format(m)
+      # generate strings describing the paths
+      paths <- paste(rep.int(format_x, times = p_m), rep(format_m, each = p_x),
+                     y, sep = " -> ")
+    }
+    # create data frame with information on indirect effect paths
+    indirect_info <- data.frame(Label = labels, Path = paths)
+    # print information on indirect effect paths
+    cat("\nIndirect effect paths:\n")
+    print(indirect_info, right = FALSE, row.names = FALSE)
+  }
+}
+
 ## internal function to print information on contrast definitions
 # This now expects an object of class "fit_mediation".  In future versions,
 # this could also be turned into a generic function if necessary.
-print_contrast_info <- function(object, prefix = FALSE, ...) {
+print_contrast_info <- function(object, prefix = FALSE, labels = NULL, ...) {
   # initializations
   contrast <- object$contrast              # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
   # if applicable, print indirect effect contrast definitions
   if (have_contrast) {
-    # get names of indirect effects
-    indirect_names <- get_indirect_names(object$x, object$m,
-                                         model = object$model)
-    nr_indirect <- length(indirect_names)
+    # if no labels are supplied, get names of indirect effects
+    if (is.null(labels)) {
+      labels <- get_indirect_names(object$x, object$m,
+                                   model = object$model)
+    }
+    nr_indirect <- length(labels)
     # print information on contrast definitions
     plural <- if (nr_indirect > 2L) "s" else ""
     cat(sprintf("\nIndirect effect contrast definition%s:\n", plural))
-    contrast_info <- get_contrast_info(indirect_names, type = contrast,
-                                       prefix = prefix)
-    print(contrast_info, row.names = FALSE)
+    contrast_info <- get_contrast_info(labels, type = contrast, prefix = prefix)
+    print(contrast_info, right = FALSE, row.names = FALSE)
   }
 }
 # print_contrast_info <- function(object, prefix = FALSE, ...) {

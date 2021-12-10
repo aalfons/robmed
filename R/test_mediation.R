@@ -103,6 +103,12 @@
 #' \code{"select"} to select among these four distributions via BIC (see
 #' \code{\link{fit_mediation}()} for details).  This is only relevant if
 #' \code{method = "regression"} and \code{robust = FALSE}.
+#' @param model  a character string specifying the type of model in case of
+#' multiple mediators.  Possible values are \code{"parallel"} (the default) for
+#' the parallel multiple mediator model, or \code{"serial"} for the serial
+#' multiple mediator model.  This is only relevant for models with multiple
+#' hypothesized mediators, which are currently only implemented for estimation
+#' via regressions (\code{method = "regression"}).
 #' @param contrast  a logical indicating whether to compute pairwise contrasts
 #' of the indirect effects (defaults to \code{FALSE}).  This can also be a
 #' character string, with \code{"estimates"} for computing the pairwise
@@ -294,12 +300,14 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
+                                   model = c("parallel", "serial"),
                                    contrast = FALSE, fit_yx = TRUE,
                                    control = NULL, ...) {
   ## fit mediation model
   fit <- fit_mediation(object, x = x, y = y, m = m, covariates = covariates,
                        method = method, robust = robust, family = family,
-                       contrast = contrast, fit_yx = fit_yx, control = control)
+                       model = model, contrast = contrast, fit_yx = fit_yx,
+                       control = control)
   ## call method for fitted model
   test_mediation(fit, test = test, alternative = alternative, R = R,
                  level = level, type = type, order = order, ...)
@@ -362,9 +370,11 @@ boot_test_mediation <- function(fit,
   p_x <- length(fit$x)                     # number of independent variables
   p_m <- length(fit$m)                     # number of mediators
   p_covariates <- length(fit$covariates)   # number of covariates
-  nr_indirect <- p_x * p_m                 # number of indirect effects
+  model <- fit$model                       # only implemented for regression fit
   contrast <- fit$contrast                 # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
+  # number of indirect effects
+  nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
   # useful index sequences
   seq_x <- seq_len(p_x)
   seq_m <- seq_len(p_m)
@@ -383,6 +393,16 @@ boot_test_mediation <- function(fit,
     # combine data
     n <- nrow(fit$data)
     z <- cbind(rep.int(1, n), as.matrix(fit$data))
+
+    # in case of a serial multiple mediator model, construct list containing
+    # indices of predictor variables
+    if (model == "serial") {
+      j_mx <- vector("list", length = p_m)
+      j_mx[[1L]] <- c(1L, j_x, j_covariates)
+      for (j in seq_m[-p_m]) {
+        j_mx[[j+1L]] <- c(1L, j_m[seq_len(j)], j_x, j_covariates)
+      }
+    }
 
     # perform (fast-and-robust) bootstrap
     robust <- fit$robust
@@ -405,9 +425,10 @@ boot_test_mediation <- function(fit,
       if (p_m == 1L) w_m <- sqrt(weights(fit_mx, type = "robustness"))
       else w_m <- sqrt(sapply(fit_mx, weights, type = "robustness"))
       w_y <- sqrt(weights(fit_ymx, type = "robustness"))
-      # compute matrices for linear corrections and
-      # extract coefficients from full sample
+      # for regression m ~ x + covariates: compute matrices for linear
+      # corrections and extract coefficients from full sample
       if (p_m == 1L) {
+        ## single mediator
         corr_m <- correction_matrix(z[, c(1L, j_x, j_covariates)],
                                     weights = w_m,
                                     residuals = residuals(fit_mx),
@@ -415,14 +436,29 @@ boot_test_mediation <- function(fit,
                                     control = psi_control)
         coef_m <- coef(fit_mx)
       } else {
-        corr_m <- lapply(fit$m, function(m, z) {
-          correction_matrix(z, weights = w_m[, m],
-                            residuals = residuals(fit_mx[[m]]),
-                            scale = fit_mx[[m]]$scale,
-                            control = psi_control)
-        }, z = z[, c(1L, j_x, j_covariates)])
+        ## multiple mediators
+        # compute matrices for linear corrections
+        if (model == "serial") {
+          corr_m <- mapply(function(m, current_j_mx) {
+            correction_matrix(z[, current_j_mx], weights = w_m[, m],
+                              residuals = residuals(fit_mx[[m]]),
+                              scale = fit_mx[[m]]$scale,
+                              control = psi_control)
+          }, m = fit$m, current_j_mx = j_mx,
+          SIMPLIFY = FALSE, USE.NAMES = FALSE)
+        } else {
+          corr_m <- lapply(fit$m, function(m, z) {
+            correction_matrix(z, weights = w_m[, m],
+                              residuals = residuals(fit_mx[[m]]),
+                              scale = fit_mx[[m]]$scale,
+                              control = psi_control)
+          }, z = z[, c(1L, j_x, j_covariates)])
+        }
+        # extract coefficients
         coef_m <- lapply(fit_mx, coef)
       }
+      # for regression y ~ m + x + covariates: compute matrices for linear
+      # corrections and extract coefficients from full sample
       corr_y <- correction_matrix(z[, c(1L, j_m, j_x, j_covariates)],
                                   weights = w_y,
                                   residuals = residuals(fit_ymx),
@@ -430,11 +466,13 @@ boot_test_mediation <- function(fit,
                                   control = psi_control)
       coef_y <- coef(fit_ymx)
       # number of variables in predictor matrices of regression models
-      d_m <- 1L + p_x + p_covariates
+      if (model == "serial") d_m <- sapply(j_mx, length)
+      else d_m <- 1L + p_x + p_covariates
       d_y <- 1L + p_m + p_x + p_covariates
 
       # define function for fast-and-robust bootstrap
-      if (p_m == 1) {
+      if (p_m == 1L) {
+
         # one mediator
         robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
                                      w_y, corr_y, coef_y) {
@@ -461,14 +499,78 @@ boot_test_mediation <- function(fit,
           a <- coef_m_i[1L + seq_x]
           b <- coef_y_i[2L]
           direct <- coef_y_i[2L + seq_x]
-          ab <- a * b
-          sum_ab <- if (p_x > 1L) sum(ab)
-          total <- ab + direct
+          indirect <- a * b
+          sum_indirect <- if (p_x > 1L) sum(indirect)
+          total <- indirect + direct
           # return effects
-          c(sum_ab, ab, coef_m_i, coef_y_i, total)
+          c(sum_indirect, indirect, coef_m_i, coef_y_i, total)
         }
+
+      } else if (model == "serial") {
+
+        # multiple serial mediators
+        robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
+                                     w_y, corr_y, coef_y) {
+          # extract bootstrap sample from the data
+          z_i <- z[i, , drop = FALSE]
+          w_m_i <- w_m[i, , drop = FALSE]
+          w_y_i <- w_y[i]
+          # check whether there are enough observations with nonzero weights
+          if(any(colSums(w_m_i > 0) <= d_m) || sum(w_y_i > 0) <= d_y) {
+            return(NA_real_)
+          }
+          # compute coefficients from weighted regression m ~ x + covariates
+          coef_m_i <- mapply(function(m, current_j_mx) {
+            w_i <- w_m_i[, m]
+            weighted_mx_i <- w_i * z_i[, current_j_mx]
+            weighted_m_i <- w_i * z_i[, m]
+            solve(crossprod(weighted_mx_i)) %*%
+              crossprod(weighted_mx_i, weighted_m_i)
+          }, m = fit$m, current_j_mx = j_mx,
+          SIMPLIFY = FALSE, USE.NAMES = FALSE)
+          # compute coefficients from weighted regression y ~ m + x + covariates
+          weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
+          weighted_y_i <- w_y_i * z_i[, j_y]
+          coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
+            crossprod(weighted_mx_i, weighted_y_i)
+          # compute corrected coefficients
+          coef_m_i <- mapply(function(coef_m, coef_m_i, corr_m) {
+            unname(drop(coef_m + corr_m %*% (coef_m_i - coef_m)))
+          }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m)
+          coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
+          # compute effects
+          a <- mapply(function(coef, j) coef[1L + j], coef = coef_m_i,
+                      j = seq_m, USE.NAMES = FALSE)
+          b <- coef_y_i[1L + seq_m]
+          direct <- coef_y_i[1L + p_m + seq_x]
+          # extract effect d
+          d <- mapply(function(coef, j) coef[1L + seq_len(j)],
+                      coef = coef_m_i[-1L], j = seq_m[-p_m],
+                      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+          # compute indirect effects
+          if (p_m == 2L) {
+            # two serial mediators
+            indirect <- c(a * b, a[1] * d[[1]] * b[2])
+          } else  {
+            # three serial mediators
+            indirect <- c(a * b, a[1] * d[[1]] * b[2],
+                          a[1] * d[[2]][1] * b[3], a[2] * d[[2]][2] * b[3],
+                          a[1] * d[[1]] * d[[2]][2] * b[3])
+          }
+          # compute total indirect effect
+          sum_indirect <- sum(indirect)
+          # compute total effect
+          if (p_x == 1L) total <- sum_indirect + direct
+          else total <- rowSums(indirect) + direct
+          # make sure coefficients are vectors
+          coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+          # return effects
+          c(sum_indirect, indirect, coef_m_i, coef_y_i, total)
+        }
+
       } else {
-        # multiple mediators
+
+        # multiple parallel mediators
         robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
                                      w_y, corr_y, coef_y) {
           # extract bootstrap sample from the data
@@ -501,12 +603,14 @@ boot_test_mediation <- function(fit,
           a <- coef_m_i[1L + seq_x, ]
           b <- coef_y_i[1L + seq_m]
           direct <- coef_y_i[1L + p_m + seq_x]
-          ab <- if (p_x == 1L) a * b else sweep(a, 2, b, FUN = "*")
-          sum_ab <- sum(ab)
-          total <- if (p_x == 1L) sum_ab + direct else rowSums(ab) + direct
+          indirect <- if (p_x == 1L) a * b else sweep(a, 2, b, FUN = "*")
+          sum_indirect <- sum(indirect)
+          if (p_x == 1L) total <- sum_indirect + direct
+          else total <- rowSums(indirect) + direct
           # return effects
-          c(sum_ab, ab, coef_m_i, coef_y_i, total)
+          c(sum_indirect, indirect, coef_m_i, coef_y_i, total)
         }
+
       }
 
       # perform fast-and-robust bootstrap
@@ -523,14 +627,26 @@ boot_test_mediation <- function(fit,
         # extract bootstrap sample from the data
         z_i <- z[i, , drop = FALSE]
         # compute coefficients from regressions m ~ x + covariates
-        x_i <- z_i[, c(1L, j_x, j_covariates)]
-        m_i <- z_i[, j_m]
-        if (p_m == 1L) {
-          coef_m_i <- unname(rq.fit(x_i, m_i, tau = 0.5)$coefficients)
+        if (model == "serial") {
+          # compute coefficients
+          coef_m_i <- mapply(function(current_j_m, current_j_mx) {
+            mx_i <- z_i[, current_j_mx]
+            m_i <- z_i[, current_j_m]
+            unname(rq.fit(mx_i, m_i, tau = 0.5)$coefficients)
+          }, current_j_m = j_m, current_j_mx = j_mx,
+          SIMPLIFY = FALSE, USE.NAMES = FALSE)
         } else {
-          coef_m_i <- unname(apply(m_i, 2, function(current_m_i) {
-            rq.fit(x_i, current_m_i, tau = 0.5)$coefficients
-          }))
+          # extract predictor matrix and mediators
+          x_i <- z_i[, c(1L, j_x, j_covariates)]
+          m_i <- z_i[, j_m]
+          # compute coefficients
+          if (p_m == 1L) {
+            coef_m_i <- unname(rq.fit(x_i, m_i, tau = 0.5)$coefficients)
+          } else {
+            coef_m_i <- unname(apply(m_i, 2, function(current_m_i) {
+              rq.fit(x_i, current_m_i, tau = 0.5)$coefficients
+            }))
+          }
         }
         # compute coefficients from regression y ~ m + x + covariates
         mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
@@ -538,17 +654,39 @@ boot_test_mediation <- function(fit,
         coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
         # compute effects
         if (p_m == 1L) a <- coef_m_i[1L + seq_x]
-        else a <- coef_m_i[1L + seq_x, ]
+        else if (model == "serial") {
+          a <- mapply(function(coef, j) coef[1L + j], coef = coef_m_i,
+                      j = seq_m, USE.NAMES = FALSE)
+        } else a <- coef_m_i[1L + seq_x, ]
         b <- coef_y_i[1L + seq_m]
         direct <- coef_y_i[1L + p_m + seq_x]
-        if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
-        else ab <- a * b
-        sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
-        if (p_m == 1L) total <- ab + direct
-        else if (p_x == 1L) total <- sum_ab + direct
-        else total <- rowSums(ab) + direct
+        # compute indirect effects
+        if (model == "serial") {
+          # extract effect d
+          d <- mapply(function(coef, j) coef[1L + seq_len(j)],
+                      coef = coef_m_i[-1L], j = seq_m[-p_m],
+                      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+          # compute indirect effects
+          if (p_m == 2L) {
+            # two serial mediators
+            indirect <- c(a * b, a[1] * d[[1]] * b[2])
+          } else  {
+            # three serial mediators
+            indirect <- c(a * b, a[1] * d[[1]] * b[2],
+                          a[1] * d[[2]][1] * b[3], a[2] * d[[2]][2] * b[3],
+                          a[1] * d[[1]] * d[[2]][2] * b[3])
+          }
+          # make sure coefficients are vectors
+          coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+        } else if (p_x > 1L && p_m > 1L) indirect <- sweep(a, 2, b, FUN = "*")
+        else indirect <- a * b
+        sum_indirect <- if (p_x > 1L || p_m > 1L) sum(indirect)
+        # compute total effect
+        if (p_m == 1L) total <- indirect + direct
+        else if (p_x == 1L) total <- sum_indirect + direct
+        else total <- rowSums(indirect) + direct
         # return effects
-        c(sum_ab, ab, coef_m_i, coef_y_i, total)
+        c(sum_indirect, indirect, coef_m_i, coef_y_i, total)
       }
 
       # perform standard bootstrap with median regression
@@ -562,26 +700,59 @@ boot_test_mediation <- function(fit,
         # extract bootstrap sample from the data
         z_i <- z[i, , drop = FALSE]
         # compute coefficients from regressions m ~ x + covariates
-        x_i <- z_i[, c(1L, j_x, j_covariates)]
-        m_i <- z_i[, j_m]
-        coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
+        if (model == "serial") {
+          # compute coefficients
+          coef_m_i <- mapply(function(current_j_m, current_j_mx) {
+            mx_i <- z_i[, current_j_mx]
+            m_i <- z_i[, current_j_m]
+            coef_m_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, m_i)))
+          }, current_j_m = j_m, current_j_mx = j_mx,
+          SIMPLIFY = FALSE, USE.NAMES = FALSE)
+        } else {
+          # compute coefficients
+          x_i <- z_i[, c(1L, j_x, j_covariates)]
+          m_i <- z_i[, j_m]
+          coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
+        }
         # compute coefficients from regression y ~ m + x + covariates
         mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
         y_i <- z_i[, j_y]
         coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
         # compute effects
         if (p_m == 1L) a <- coef_m_i[1L + seq_x]
-        else a <- coef_m_i[1L + seq_x, ]
+        else if (model == "serial") {
+          a <- mapply(function(coef, j) coef[1L + j], coef = coef_m_i,
+                      j = seq_m, USE.NAMES = FALSE)
+        } else a <- coef_m_i[1L + seq_x, ]
         b <- coef_y_i[1L + seq_m]
         direct <- coef_y_i[1L + p_m + seq_x]
-        if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
-        else ab <- a * b
-        sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
-        if (p_m == 1L) total <- ab + direct
-        else if (p_x == 1L) total <- sum_ab + direct
-        else total <- rowSums(ab) + direct
+        # compute indirect effects
+        if (model == "serial") {
+          # extract effect d
+          d <- mapply(function(coef, j) coef[1L + seq_len(j)],
+                      coef = coef_m_i[-1L], j = seq_m[-p_m],
+                      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+          # compute indirect effects
+          if (p_m == 2L) {
+            # two serial mediators
+            indirect <- c(a * b, a[1] * d[[1]] * b[2])
+          } else  {
+            # three serial mediators
+            indirect <- c(a * b, a[1] * d[[1]] * b[2],
+                          a[1] * d[[2]][1] * b[3], a[2] * d[[2]][2] * b[3],
+                          a[1] * d[[1]] * d[[2]][2] * b[3])
+          }
+          # make sure coefficients are vectors
+          coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+        } else if (p_x > 1L && p_m > 1L) indirect <- sweep(a, 2, b, FUN = "*")
+        else indirect <- a * b
+        sum_indirect <- if (p_x > 1L || p_m > 1L) sum(indirect)
+        # compute total effect
+        if (p_m == 1L) total <- indirect + direct
+        else if (p_x == 1L) total <- sum_indirect + direct
+        else total <- rowSums(indirect) + direct
         # return effects
-        c(sum_ab, ab, coef_m_i, coef_y_i, total)
+        c(sum_indirect, indirect, coef_m_i, coef_y_i, total)
       }
 
       # perform standard bootstrap
@@ -611,19 +782,31 @@ boot_test_mediation <- function(fit,
         z_i <- z[i, , drop = FALSE]
         # skew-t distribution can be unstable on bootstrap samples
         tryCatch({
+          # extract predictor matrix
+          if (model != "serial" || estimate_yx) {
+            x_i <- z_i[, c(1L, j_x, j_covariates)]
+          }
           # compute coefficients from regression m ~ x + covariates
-          x_i <- z_i[, c(1L, j_x, j_covariates)]
-          if (p_m == 1L) {
-            m_i <- z_i[, j_m]
-            coef_mx_i <- lmselect_boot(x_i, m_i, start = start$mx,
-                                       control = control)
+          if (model == "serial") {
+            # compute coefficients
+            coef_mx_i <- mapply(function(current_j_m, current_j_mx, start) {
+              mx_i <- z_i[, current_j_mx]
+              m_i <- z_i[, current_j_m]
+              lmselect_boot(mx_i, m_i, start = start, control = control)
+            }, current_j_m = j_m, current_j_mx = j_mx, start = start$mx,
+            SIMPLIFY = FALSE, USE.NAMES = FALSE)
           } else {
-            coef_mx_i <- mapply(function(j, start) {
-              m_i <- z_i[, j]
-              coef_mx_i <- lmselect_boot(x_i, m_i, start = start,
+            # compute coefficients
+            if (p_m == 1L) {
+              m_i <- z_i[, j_m]
+              coef_mx_i <- lmselect_boot(x_i, m_i, start = start$mx,
                                          control = control)
-            }, j = j_m, start = start$mx)
-
+            } else {
+              coef_mx_i <- mapply(function(j, start) {
+                m_i <- z_i[, j]
+                lmselect_boot(x_i, m_i, start = start, control = control)
+              }, j = j_m, start = start$mx)
+            }
           }
           # compute coefficients from regression y ~ m + x + covariates
           mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
@@ -636,15 +819,36 @@ boot_test_mediation <- function(fit,
                                        control = control)
             total <- coef_yx_i[1L + seq_x]
           } else total <- rep.int(NA_real_, p_x)
-          # compute indirect effects
+          # compute effects
           if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
-          else a <- coef_mx_i[1L + seq_x, ]
+          else if (model == "serial") {
+            a <- mapply(function(coef, j) coef[1L + j], coef = coef_mx_i,
+                        j = seq_m, USE.NAMES = FALSE)
+          } else a <- coef_mx_i[1L + seq_x, ]
           b <- coef_ymx_i[1L + seq_m]
-          if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
-          else ab <- a * b
-          sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
+          # compute indirect effects
+          if (model == "serial") {
+            # extract effect d
+            d <- mapply(function(coef, j) coef[1L + seq_len(j)],
+                        coef = coef_mx_i[-1L], j = seq_m[-p_m],
+                        SIMPLIFY = FALSE, USE.NAMES = FALSE)
+            # compute indirect effects
+            if (p_m == 2L) {
+              # two serial mediators
+              indirect <- c(a * b, a[1] * d[[1]] * b[2])
+            } else  {
+              # three serial mediators
+              indirect <- c(a * b, a[1] * d[[1]] * b[2],
+                            a[1] * d[[2]][1] * b[3], a[2] * d[[2]][2] * b[3],
+                            a[1] * d[[1]] * d[[2]][2] * b[3])
+            }
+            # make sure coefficients are vectors
+            coef_mx_i <- unlist(coef_mx_i, use.names = FALSE)
+          } else if (p_x > 1L && p_m > 1L) indirect <- sweep(a, 2, b, FUN = "*")
+          else indirect <- a * b
+          sum_indirect <- if (p_x > 1L || p_m > 1L) sum(indirect)
           # return effects
-          c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
+          c(sum_indirect, indirect, coef_mx_i, coef_ymx_i, total)
         }, error = function(condition) NA_real_)
       }
 
@@ -693,24 +897,42 @@ boot_test_mediation <- function(fit,
         z_i <- z[i, , drop = FALSE]
         # skew-t distribution can be unstable on bootstrap samples
         tryCatch({
+          # extract predictor matrix
+          if (model != "serial" || estimate_yx) {
+            x_i <- z_i[, c(1L, j_x, j_covariates)]
+          }
           # compute coefficients from regression m ~ x + covariates
-          x_i <- z_i[, c(1L, j_x, j_covariates)]
-          if (p_m == 1L) {
-            m_i <- z_i[, j_m]
-            fit_mx_i <- selm.fit(x_i, m_i, family = family,
-                                 start = start$mx,
-                                 fixed.param = fixed.param,
-                                 selm.control = control)
-            coef_mx_i <- unname(get_coef(fit_mx_i$param, family))
-          } else {
-            coef_mx_i <- mapply(function(j, start) {
-              m_i <- z_i[, j]
-              fit_mx_i <- selm.fit(x_i, m_i, family = family,
+          if (model == "serial") {
+            # compute coefficients
+            coef_mx_i <- mapply(function(current_j_m, current_j_mx, start) {
+              mx_i <- z_i[, current_j_mx]
+              m_i <- z_i[, current_j_m]
+              fit_mx_i <- selm.fit(mx_i, m_i, family = family,
                                    start = start,
                                    fixed.param = fixed.param,
                                    selm.control = control)
               unname(get_coef(fit_mx_i$param, family))
-            }, j = j_m, start = start$mx)
+            }, current_j_m = j_m, current_j_mx = j_mx, start = start$mx,
+            SIMPLIFY = FALSE, USE.NAMES = FALSE)
+          } else {
+            # compute coefficients
+            if (p_m == 1L) {
+              m_i <- z_i[, j_m]
+              fit_mx_i <- selm.fit(x_i, m_i, family = family,
+                                   start = start$mx,
+                                   fixed.param = fixed.param,
+                                   selm.control = control)
+              coef_mx_i <- unname(get_coef(fit_mx_i$param, family))
+            } else {
+              coef_mx_i <- mapply(function(j, start) {
+                m_i <- z_i[, j]
+                fit_mx_i <- selm.fit(x_i, m_i, family = family,
+                                     start = start,
+                                     fixed.param = fixed.param,
+                                     selm.control = control)
+                unname(get_coef(fit_mx_i$param, family))
+              }, j = j_m, start = start$mx)
+            }
           }
           # compute coefficients from regression y ~ m + x + covariates
           mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
@@ -729,15 +951,36 @@ boot_test_mediation <- function(fit,
             coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
             total <- coef_yx_i[1L + seq_x]
           } else total <- rep.int(NA_real_, p_x)
-          # compute indirect effects
+          # compute effects
           if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
-          else a <- coef_mx_i[1L + seq_x, ]
+          else if (model == "serial") {
+            a <- mapply(function(coef, j) coef[1L + j], coef = coef_mx_i,
+                        j = seq_m, USE.NAMES = FALSE)
+          } else a <- coef_mx_i[1L + seq_x, ]
           b <- coef_ymx_i[1L + seq_m]
-          if (p_x > 1L && p_m > 1L) ab <- sweep(a, 2, b, FUN = "*")
-          else ab <- a * b
-          sum_ab <- if (p_x > 1L || p_m > 1L) sum(ab)
+          # compute indirect effects
+          if (model == "serial") {
+            # extract effect d
+            d <- mapply(function(coef, j) coef[1L + seq_len(j)],
+                        coef = coef_mx_i[-1L], j = seq_m[-p_m],
+                        SIMPLIFY = FALSE, USE.NAMES = FALSE)
+            # compute indirect effects
+            if (p_m == 2L) {
+              # two serial mediators
+              indirect <- c(a * b, a[1] * d[[1]] * b[2])
+            } else  {
+              # three serial mediators
+              indirect <- c(a * b, a[1] * d[[1]] * b[2],
+                            a[1] * d[[2]][1] * b[3], a[2] * d[[2]][2] * b[3],
+                            a[1] * d[[1]] * d[[2]][2] * b[3])
+            }
+            # make sure coefficients are vectors
+            coef_mx_i <- unlist(coef_mx_i, use.names = FALSE)
+          } else if (p_x > 1L && p_m > 1L) indirect <- sweep(a, 2, b, FUN = "*")
+          else indirect <- a * b
+          sum_indirect <- if (p_x > 1L || p_m > 1L) sum(indirect)
           # return effects
-          c(sum_ab, ab, coef_mx_i, coef_ymx_i, total)
+          c(sum_indirect, indirect, coef_mx_i, coef_ymx_i, total)
         }, error = function(condition) NA_real_)
       }
 
@@ -785,10 +1028,12 @@ boot_test_mediation <- function(fit,
 
   # get indices of columns of bootstrap replicates that that correspond to
   # the respective models
-  index_list <- get_index_list(p_x, p_m, p_covariates)
+  index_list <- get_index_list(p_x, p_m, p_covariates, model = model)
   # extract bootstrap estimates of effects other than the indirect effects
   if (p_m == 1L) indices_a <- index_list$fit_mx[1L + seq_x]
-  else indices_a <- sapply(index_list$fit_mx, "[", 1L + seq_x)
+  else if (model == "serial") {
+    indices_a <- mapply("[", index_list$fit_mx, 1L + seq_m, USE.NAMES = FALSE)
+  } else indices_a <- sapply(index_list$fit_mx, "[", 1L + seq_x)
   a <- colMeans(bootstrap$t[, indices_a, drop = FALSE], na.rm = TRUE)
   indices_b <- index_list$fit_ymx[1L + seq_m]
   b <- colMeans(bootstrap$t[, indices_b, drop = FALSE], na.rm = TRUE)
@@ -806,13 +1051,14 @@ boot_test_mediation <- function(fit,
   else total <- colMeans(bootstrap_total, na.rm = TRUE)
   # -----
   # extract bootstrap estimates and confidence intervals of indirect effects
-  indices_ab <- index_list$ab
-  ab <- colMeans(bootstrap$t[, indices_ab, drop = FALSE], na.rm = TRUE)
+  indices_indirect <- index_list$indirect
+  indirect <- colMeans(bootstrap$t[, indices_indirect, drop = FALSE],
+                       na.rm = TRUE)
   if (nr_indirect == 1L) {
-    ci <- confint(bootstrap, parm = indices_ab, level = level,
+    ci <- confint(bootstrap, parm = indices_indirect, level = level,
                   alternative = alternative, type = type)
   } else {
-    ci <- lapply(indices_ab, function(j) {
+    ci <- lapply(indices_indirect, function(j) {
       confint(bootstrap, parm = j, level = level,
               alternative = alternative, type = type)
     })
@@ -820,7 +1066,7 @@ boot_test_mediation <- function(fit,
     # if requested, compute contrasts of indirect effects
     if (have_contrast) {
       # list of all combinations of indices of the relevant indirect effects
-      combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
+      combinations <- combn(indices_indirect[-1L], 2, simplify = FALSE)
       # prepare "boot" object for the calculation of the confidence intervals
       contrast_bootstrap <- bootstrap
       contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,
@@ -837,7 +1083,7 @@ boot_test_mediation <- function(fit,
       })
       contrast_ci <- do.call(rbind, contrast_ci)
       # add contrasts to results for the indirect effects
-      ab <- c(ab, contrasts)
+      indirect <- c(indirect, contrasts)
       ci <- rbind(ci, contrast_ci)
     }
     # add names to effects other than the indirect effect
@@ -848,12 +1094,13 @@ boot_test_mediation <- function(fit,
       names(total) <- names(fit$total)
     }
     # add names for indirect effects and confidence intervals
-    names(ab) <- rownames(ci) <- names(fit$ab)
+    names(indirect) <- rownames(ci) <- names(fit$indirect)
   }
   # construct return object
-  result <- list(a = a, b = b, direct = direct, total = total, ab = ab,
-                 ci = ci, reps = bootstrap, alternative = alternative,
-                 R = as.integer(R[1L]), level = level, type = type, fit = fit)
+  result <- list(a = a, b = b, direct = direct, total = total,
+                 indirect = indirect, ci = ci, reps = bootstrap,
+                 alternative = alternative, R = as.integer(R[1L]),
+                 level = level, type = type, fit = fit)
   class(result) <- c("boot_test_mediation", "test_mediation")
   result
 
@@ -867,7 +1114,7 @@ sobel_test_mediation <- function(fit,
   # extract coefficients
   a <- fit$a
   b <- fit$b
-  ab <- fit$ab
+  indirect <- fit$indirect
   # compute standard errors
   summary <- get_summary(fit)
   if (inherits(fit, "reg_fit_mediation")) {
@@ -880,7 +1127,7 @@ sobel_test_mediation <- function(fit,
   # compute test statistic and p-Value
   if (order == "first") se <- sqrt(b^2 * sa^2 + a^2 * sb^2)
   else se <- sqrt(b^2 * sa^2 + a^2 * sb^2 + sa^2 * sb^2)
-  z <- ab / se
+  z <- indirect / se
   p_value <- p_value_z(z, alternative = alternative)
   # construct return item
   result <- list(se = se, statistic = z, p_value = p_value,
@@ -917,45 +1164,4 @@ p_value_z <- function(z, alternative = c("twosided", "less", "greater")) {
   # compute p-value
   switch(alternative, twosided = 2 * pnorm(abs(z), lower.tail = FALSE),
          less = pnorm(z), greater = pnorm(z, lower.tail = FALSE))
-}
-
-
-# The function for bootstrap replicates is required to return a vector.  This
-# means that the columns of the bootstrap replicates contain coefficient
-# estimates from different models.  This utility function returns the indices
-# that correspond to the respective models, which makes it easier to extract
-# the desired coefficients.
-get_index_list <- function(p_x, p_m, p_covariates, indirect = TRUE) {
-  # initializations
-  nr_indirect <- p_x * p_m
-  # numbers of coefficients in different models
-  if (indirect) p_ab <- if (nr_indirect == 1L) 1L else 1L + nr_indirect
-  else p_ab <- 0L
-  p_mx <- rep.int(1L + p_x + p_covariates, p_m)
-  p_ymx <- 1L + p_m + p_x + p_covariates
-  p_total <- p_x
-  p_all <- sum(p_ab, p_mx, p_ymx, p_total)
-  # indices of vector for each bootstrap replicate
-  indices <- seq_len(p_all)
-  # the first columns correspond to indirect effect(s) of x on y
-  first <- 1L
-  indices_ab <- if (indirect) seq.int(first, length.out = p_ab) else integer()
-  # the next columns correspond to models m ~ x + covariates
-  first <- first + p_ab
-  if (p_m == 1L) {
-    indices_mx <- seq.int(from = first, length.out = p_mx)
-  } else {
-    first_mx <- first + c(0L, cumsum(p_mx[-1L]))
-    indices_mx <- mapply(seq.int, from = first_mx, length.out = p_mx,
-                         SIMPLIFY = FALSE, USE.NAMES = FALSE)
-  }
-  # the next columns correspond to model y ~ m + x + covariates
-  first <- first + sum(p_mx)
-  indices_ymx <- seq.int(from = first, length.out = p_ymx)
-  # the last column corresponds to the total effect of x on y
-  first <- first + p_ymx
-  index_total <- seq.int(from = first, length.out = p_total)
-  # return list of indices
-  list(ab = indices_ab, fit_mx = indices_mx, fit_ymx = indices_ymx,
-       total = index_total)
 }

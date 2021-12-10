@@ -118,6 +118,10 @@
 #' the independent variables on the proposed mediator variables.}
 #' \item{b}{a numeric vector containing the point estimates of the direct
 #' effects of the proposed mediator variables on the dependent variable.}
+#' \item{d}{in case of a serial multiple mediator model, a numeric vector
+#' containing the point estimates of the effects of the proposed mediator
+#' variables on the other mediator variables further down the sequence (only
+#' \code{"reg_fit_mediation"} if \code{model} is \code{"serial"}).}
 #' \item{direct}{a numeric vector containing the point estimates of the direct
 #' effects of the independent variables on the dependent variable.}
 #' \item{total}{a numeric vector containing the point estimates of the total
@@ -125,8 +129,8 @@
 #' \item{indirect}{a numeric vector containing the point estimates of the
 #' indirect effects.}
 #' \item{ab}{for back-compatibility with versions <0.10.0, the point estimates
-#' of the indirect effects are also included here.  This component is
-#' deprecated and may be removed as soon as the next version.}
+#' of the indirect effects are also included here.  \bold{This component is
+#' deprecated and may be removed as soon as the next version.}}
 #' \item{fit_mx}{an object of class \code{"\link[robustbase]{lmrob}"},
 #' \code{"\link[quantreg]{rq}"}, \code{"\link[stats]{lm}"} or \code{"lmse"}
 #' containing the estimation results from the regression of the proposed
@@ -152,6 +156,12 @@
 #' \item{robust}{either a logical indicating whether the effects were estimated
 #' robustly, or one of the character strings \code{"MM"} and \code{"median"}
 #' specifying the type of robust regressions.}
+#' \item{model}{a character string specifying the type of mediation model
+#' fitted: \code{"simple"} in case of one independent variable and one
+#' hypothesized mediator, \code{"multiple"} in case of multiple independent
+#' variables and one hypothesized mediator, \code{"parallel"} in case of
+#' parallel multiple mediators, or \code{"serial"} in case of serial multiple
+#' mediators (only \code{"reg_fit_mediation"}).}
 #' \item{contrast}{either a logical indicating whether contrasts of the
 #' indirect effects were computed, or one of the character strings
 #' \code{"estimates"} and \code{"absolute"} specifying the type of contrasts
@@ -421,7 +431,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   # number of variables and indirect effects
   p_x <- length(x)
   p_m <- length(m)
-  nr_indirect <- get_nr_indirect(x, m, model = model)
+  nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
   # other initializations
   have_robust <- is.character(robust)
   have_contrast <- is.character(contrast)
@@ -585,7 +595,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     if (model == "serial") {
       # extract effect d
       d <- mapply(function(fit, j) coef(fit)[1L + seq_len(j)],
-                  fit = fit_mx[-1], j = seq_len(p_m-1),
+                  fit = fit_mx[-1L], j = seq_len(p_m-1L),
                   SIMPLIFY = FALSE, USE.NAMES = TRUE)
       # compute indirect effects
       if (p_m == 2L) {
@@ -631,8 +641,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       if (p_m == 1L) total <- indirect + direct
       else {
         total <- sapply(x, function(current_x) {
-          current_ab <- sapply(ab_list, "[", current_x)
-          sum(current_ab) + unname(direct[current_x])
+          current_indirect <- sapply(indirect_list, "[", current_x)
+          sum(current_indirect) + unname(direct[current_x])
         })
       }
     }

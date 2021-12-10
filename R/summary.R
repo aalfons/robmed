@@ -384,7 +384,7 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
 ## fit based on a scatter matrix)
 duplication_matrix <- function(p){
   D <- diag(p)
-  index <- seq(p*(p+1)/2)
+  index <- seq_len(p*(p+1)/2)
   D[lower.tri(D, diag=TRUE)] <- index
   D[upper.tri(D)] <- D[lower.tri(D)]
   outer(c(D), index, function(i, j) ifelse(i == j, 1, 0 ))

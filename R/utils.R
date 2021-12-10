@@ -48,19 +48,19 @@ get_absolute_contrast <- function(j, x) {
 # obtain information on how contrasts are computed
 get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
   # compute combinations of names
+  if (prefix) names <- paste("Indirect", names, sep = "_")
   combinations <- combn(names, 2, simplify = FALSE)
   n_contrasts <- length(combinations)
   # obtain labels for contrasts
   labels <- get_contrast_names(n_contrasts)
   if (prefix) labels <- paste("Indirect", labels, sep = "_")
   # obtain information on contrasts
+  # FIXME: add prefix 'Indirect' only if 'prefix = TRUE'
   if (type == "estimates") {
-    fun <- function(names) {
-      paste(paste("Indirect", names, sep = "_"), collapse = " - ")
-    }
+    fun <- function(names) paste(names, collapse = " - ")
   } else if (type == "absolute") {
     fun <- function(names) {
-      paste(paste0("|Indirect_", names, "|"), collapse = " - ")
+      paste(paste0("|", names, "|"), collapse = " - ")
     }
   } else stop(sprintf("%s contrasts not implemented", type))
   # return information on contrasts
@@ -95,26 +95,74 @@ get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
 # }
 
 
+## The function for bootstrap replicates is required to return a vector.  This
+## means that the columns of the bootstrap replicates contain coefficient
+## estimates from different models.  This utility function returns the indices
+## that correspond to the respective models, which makes it easier to extract
+## the desired coefficients.
+get_index_list <- function(p_x, p_m, p_covariates, indirect = TRUE,
+                           model = "parallel") {
+  # initializations
+  include_indirect <- indirect
+  nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
+  # numbers of coefficients in different models
+  if (include_indirect) {
+    p_indirect <- if (nr_indirect == 1L) 1L else 1L + nr_indirect
+  } else p_indirect <- 0L
+  if (!is.null(model) && model == "serial") {
+    p_mx <- 1L + seq.int(0L, p_m-1L) + p_x + p_covariates
+  } else p_mx <- rep.int(1L + p_x + p_covariates, p_m)
+  p_ymx <- 1L + p_m + p_x + p_covariates
+  p_total <- p_x
+  p_all <- sum(p_indirect, p_mx, p_ymx, p_total)
+  # indices of vector for each bootstrap replicate
+  indices <- seq_len(p_all)
+  # the first columns correspond to indirect effect(s) of x on y
+  first <- 1L
+  if (include_indirect) {
+    indices_indirect <- seq.int(first, length.out = p_indirect)
+  } else indices_indirect <- integer()
+  # the next columns correspond to models m ~ x + covariates
+  first <- first + p_indirect
+  if (p_m == 1L) {
+    indices_mx <- seq.int(from = first, length.out = p_mx)
+  } else {
+    first_mx <- first + c(0L, cumsum(p_mx[-p_m]))
+    indices_mx <- mapply(seq.int, from = first_mx, length.out = p_mx,
+                         SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  }
+  # the next columns correspond to model y ~ m + x + covariates
+  first <- first + sum(p_mx)
+  indices_ymx <- seq.int(from = first, length.out = p_ymx)
+  # the last column corresponds to the total effect of x on y
+  first <- first + p_ymx
+  index_total <- seq.int(from = first, length.out = p_total)
+  # return list of indices
+  list(indirect = indices_indirect, fit_mx = indices_mx,
+       fit_ymx = indices_ymx, total = index_total)
+}
+
+
 ## internal functions related to indirect effects
 
 # obtain number of indirect effects
-get_nr_indirect <- function(x, m, model = "parallel") {
-  p_m <- length(m)
-  if (model == "serial") {
+get_nr_indirect <- function(p_x, p_m, model = "parallel") {
+  if (!is.null(model) && model == "serial") {
     # currently only implemented for a single independent variable and
     # two or three hypothesized mediators
     nr_indirect <- if (p_m == 2L) 3L else 7L
   } else {
     # single mediator or parallel multiple mediators
-    p_x <- length(x)
     nr_indirect <- p_x * p_m
   }
+  # return number of indirect effects
+  nr_indirect
 }
 
-# obtain names for indirect effects in serial multiple mediator model
+# obtain names for indirect effects
 get_indirect_names <- function(x, m, model = "parallel") {
   p_m <- length(m)
-  if (model == "serial") {
+  if (!is.null(model) && model == "serial") {
     # currently only implemented for a single independent variable and
     # two or three hypothesized mediators
     if (p_m == 2L) {
@@ -128,8 +176,9 @@ get_indirect_names <- function(x, m, model = "parallel") {
   } else {
     # single mediator or parallel multiple mediators
     p_x <- length(x)
-    if (p_m == 1L) names <- if (p_x > 1L) x
-    else {
+    if (p_m == 1L) {
+      names <- if (p_x > 1L) x
+    } else {
       if (p_x == 1L) names <- m
       else names <- unlist(lapply(m, paste, x, sep = "."), use.names = FALSE)
     }
@@ -137,6 +186,34 @@ get_indirect_names <- function(x, m, model = "parallel") {
     names
   }
 }
+
+
+# obtain labels for indirect effects in printed output of bootstrap tests: only
+# relevant in case of multiple independent variables and multiple mediators, or
+# in case of a serial multiple mediator model
+get_indirect_labels <- function(n) paste0("Indirect", seq_len(n))
+
+# ## obtain labels for indirect effects in printed output of bootstrap tests
+#
+# get_indirect_labels <- function(object, ...) UseMethod("get_indirect_labels")
+#
+# get_indirect_labels.reg_fit_mediation <- function(object, ...) {
+#   # initializations
+#   x <- object$x
+#   p_x <- length(x)
+#   m <- object$m
+#   p_m <- length(m)
+#   model <- object$model
+#   nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
+#   # obtain labels
+#   if (model == "serial") labels <- paste0("Indirect", seq_len(nr_indirect))
+#   else if (nr_indirect == 1L) labels <- m
+#   else labels <- names(object$indirect)
+#   # return labels
+#   labels
+# }
+#
+# get_indirect_labels.cov_fit_mediation <- function(object, ...) object$m
 
 
 ## check whether an object corresponds to a robust model fit
