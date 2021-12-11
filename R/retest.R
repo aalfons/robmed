@@ -76,7 +76,8 @@ retest <- function(object, ...) UseMethod("retest")
 retest.boot_test_mediation <- function(object, alternative, level,
                                        type, contrast, ...) {
   # initializations
-  nr_indirect <- length(object$fit$x) * length(object$fit$m)
+  nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
+                                 model = object$fit$model)
   # check alternative hypothesis
   if (missing(alternative)) alternative <- object$alternative
   else {
@@ -126,9 +127,9 @@ retest.boot_test_mediation <- function(object, alternative, level,
                     alternative = alternative, type = type)
     } else {
       # multiple mediators
-      indices_ab <- seq_len(1L + nr_indirect)
+      indices_indirect <- seq_len(1L + nr_indirect)
       bootstrap <- object$reps
-      ci <- lapply(indices_ab, function(j) {
+      ci <- lapply(indices_indirect, function(j) {
         confint(bootstrap, parm = j, level = level,
                 alternative = alternative, type = type)
       })
@@ -136,7 +137,7 @@ retest.boot_test_mediation <- function(object, alternative, level,
       # if requested, compute contrasts of indirect effects
       if (have_contrast) {
         # list of all combinations of indices of the relevant indirect effects
-        combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
+        combinations <- combn(indices_indirect[-1L], 2, simplify = FALSE)
         # prepare "boot" object for the calculation of the confidence intervals
         contrast_bootstrap <- bootstrap
         contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,
@@ -162,22 +163,23 @@ retest.boot_test_mediation <- function(object, alternative, level,
         # compute estimates of the contrasts
         if (update_contrast) {
           # compute bootstrap estimates
-          ab_boot <- c(object$ab[indices_ab],
-                       colMeans(contrast_bootstrap$t, na.rm = TRUE))
+          indirect_boot <- c(object$indirect[indices_indirect],
+                             colMeans(contrast_bootstrap$t, na.rm = TRUE))
           # compute estimates on original data
-          ab_data <- object$fit$ab[indices_ab]
-          contrasts_ab <- get_contrasts(ab_data, combinations, type = contrast)
-          ab_data <- c(ab_data, contrasts_ab)
+          indirect_data <- object$fit$indirect[indices_indirect]
+          contrasts_indirect <- get_contrasts(indirect_data, combinations,
+                                              type = contrast)
+          indirect_data <- c(indirect_data, contrasts_indirect)
           # add names
-          names(ab_boot) <- names(ab_data) <- indirect_names
+          names(indirect_boot) <- names(indirect_data) <- indirect_names
         }
       } else if (update_contrast) {
         ## the new object doesn't have contrasts, but the old object did
         # add rownames to conficence intervals
-        rownames(ci) <- rownames(object$ci[indices_ab])
+        rownames(ci) <- rownames(object$ci[indices_indirect])
         # removing contrasts from estimates
-        ab_boot <- object$ab[indices_ab]
-        ab_data <- object$fit$ab[indices_ab]
+        indirect_boot <- object$indirect[indices_indirect]
+        indirect_data <- object$fit$indirect[indices_indirect]
       } else {
         ## neither the old nor the new object had contrasts
         # add rownames to conficence intervals
@@ -190,8 +192,11 @@ retest.boot_test_mediation <- function(object, alternative, level,
     if (update_level) object$level <- level
     if (update_type) object$type <- type
     if (update_contrast) {
-      object$ab <- ab_boot
-      object$fit$ab <- ab_data
+      # FIXME: when the component 'ab' is removed from objects returned by
+      #        fit_mediation() and test_mediation(), it must also be removed
+      #        here
+      object$indirect <- object$ab <- indirect_boot
+      object$fit$indirect <- object$fit$ab <- indirect_data
       object$fit$contrast <- contrast
     }
   } else warning("no new argument values; returning original object")
@@ -213,8 +218,6 @@ retest.sobel_test_mediation <- function(object, alternative, order, ...) {
   }
   if (missing(order)) order <- object$order
   else order <- match.arg(order, choices = c("first", "second"))
-  print(order)
-  print(object$order)
   # reperform test if necessary
   if (order != object$order) {
     # entire test needs to be re-run (standard error and test statistic change)
