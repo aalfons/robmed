@@ -123,12 +123,12 @@ the independent variables on the proposed mediator variables.}
 \item{b}{a numeric vector containing the point estimates of the direct
 effects of the proposed mediator variables on the dependent variable.}
 \item{d}{in case of a serial multiple mediator model, a numeric vector
-containing the point estimates of the effects of the proposed mediator
-variables on the other mediator variables further down the sequence (only
-\code{"reg_fit_mediation"} if \code{model} is \code{"serial"}).}
-\item{direct}{a numeric vector containing the point estimates of the direct
-effects of the independent variables on the dependent variable.}
+containing the point estimates of the effects of proposed mediator variables
+on other mediator variables further down the sequence (only
+\code{"reg_fit_mediation"} if applicable).}
 \item{total}{a numeric vector containing the point estimates of the total
+effects of the independent variables on the dependent variable.}
+\item{direct}{a numeric vector containing the point estimates of the direct
 effects of the independent variables on the dependent variable.}
 \item{indirect}{a numeric vector containing the point estimates of the
 indirect effects.}

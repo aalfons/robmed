@@ -95,6 +95,57 @@ get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
 # }
 
 
+## utility function to get names of coefficients
+get_effect_names <- function(a = NULL, b = NULL, d = NULL, total = NULL,
+                             direct = NULL, indirect = NULL, sep = "_") {
+  # names for effect(s) a
+  if (is.null(a)) a_names <- NULL
+  else a_names <- if (length(a) == 1L) "a" else paste("a", names(a), sep = sep)
+  # names for effect(s) b
+  if (is.null(b)) b_names <- NULL
+  else b_names <- if (length(b) == 1L) "b" else paste("b", names(b), sep = sep)
+  # names for effect(s) d
+  if (is.null(d)) d_names <- NULL
+  else d_names <- if (length(d) == 1L) "d" else paste("d", names(d), sep = sep)
+  # names for total effect(s)
+  if (is.null(total)) total_names <- NULL
+  else if (length(total) == 1L) total_names <- "Total"
+  else total_names <- paste("Total", names(total), sep = sep)
+  # names for direct effect(s)
+  if (is.null(direct)) direct_names <- NULL
+  else if (length(direct) == 1L) direct_names <- "Direct"
+  else direct_names <- paste("Direct", names(direct), sep = sep)
+  # names for indirect effect(s)
+  if (is.null(indirect)) indirect_names <- NULL
+  else if (length(indirect) == 1L) indirect_names <- "Indirect"
+  else indirect_names <- paste("Indirect", names(indirect), sep = sep)
+  # return requested names
+  c(a_names, b_names, d_names, total_names, direct_names, indirect_names)
+}
+# get_effect_names <- function(x, m, sep = "_") {
+#   # initializations
+#   p_x <- length(x)
+#   p_m <- length(m)
+#   # construct names
+#   if (p_x == 1L) {
+#     if (p_m == 1L) c("a", "b", "Direct", "Total")
+#     else {
+#       c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
+#     }
+#   } else {
+#     if (p_m == 1L) {
+#       c(paste("a", x, sep = sep), "b", paste("Direct", x, sep = sep),
+#         paste("Total", x, sep = sep))
+#     } else {
+#       c(paste("a", sapply(m, paste, x, sep = "."), sep = sep),
+#         paste("b", m, sep = sep),
+#         paste("Direct", x, sep = sep),
+#         paste("Total", x, sep = sep))
+#     }
+#   }
+# }
+
+
 ## The function for bootstrap replicates is required to return a vector.  This
 ## means that the columns of the bootstrap replicates contain coefficient
 ## estimates from different models.  This utility function returns the indices

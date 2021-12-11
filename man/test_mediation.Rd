@@ -188,14 +188,22 @@ effects of the independent variables on the proposed mediator variables
 \item{b}{a numeric vector containing the bootstrap point estimates of the
 direct effects of the proposed mediator variables on the dependent variable
 (only \code{"boot_test_mediation"}).}
-\item{direct}{a numeric vector containing the bootstrap point estimates of
-the direct effects of the independent variables on the dependent variable
-(only \code{"boot_test_mediation"}).}
+\item{d}{in case of a serial multiple mediator model, a numeric vector
+containing the bootstrap point estimates of the effects of proposed mediator
+variables on other mediator variables further down the sequence (only
+\code{"boot_test_mediation"} if applicable.}
 \item{total}{a numeric vector containing the bootstrap point estimates of
 the total effects of the independent variables on the dependent variable
 (only \code{"boot_test_mediation"}).}
-\item{ab}{a numeric vector containing the bootstrap point estimates of the
-indirect effects (only \code{"boot_test_mediation"}).}
+\item{direct}{a numeric vector containing the bootstrap point estimates of
+the direct effects of the independent variables on the dependent variable
+(only \code{"boot_test_mediation"}).}
+\item{indirect}{a numeric vector containing the bootstrap point estimates of
+the indirect effects (only \code{"boot_test_mediation"}).}
+\item{ab}{for back-compatibility with versions <0.10.0, the bootstrap
+point estimates of the indirect effects are also included here (only
+\code{"boot_test_mediation"}).  \bold{This component is deprecated and
+may be removed as soon as the next version.}}
 \item{ci}{a numeric vector of length two or a matrix of two columns
 containing the bootstrap confidence intervals for the indirect effects
 (only \code{"boot_test_mediation"}).}

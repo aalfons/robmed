@@ -119,12 +119,12 @@
 #' \item{b}{a numeric vector containing the point estimates of the direct
 #' effects of the proposed mediator variables on the dependent variable.}
 #' \item{d}{in case of a serial multiple mediator model, a numeric vector
-#' containing the point estimates of the effects of the proposed mediator
-#' variables on the other mediator variables further down the sequence (only
-#' \code{"reg_fit_mediation"} if \code{model} is \code{"serial"}).}
-#' \item{direct}{a numeric vector containing the point estimates of the direct
-#' effects of the independent variables on the dependent variable.}
+#' containing the point estimates of the effects of proposed mediator variables
+#' on other mediator variables further down the sequence (only
+#' \code{"reg_fit_mediation"} if applicable).}
 #' \item{total}{a numeric vector containing the point estimates of the total
+#' effects of the independent variables on the dependent variable.}
+#' \item{direct}{a numeric vector containing the point estimates of the direct
 #' effects of the independent variables on the dependent variable.}
 #' \item{indirect}{a numeric vector containing the point estimates of the
 #' indirect effects.}
@@ -304,11 +304,13 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
   # prepare data set
   data <- as.data.frame(object)
   # check independent variable
+  if (missing(x)) stop("no independent variable supplied")
   x <- data[, x, drop = FALSE]
   p_x <- ncol(x)
   if (p_x == 0L) stop("at least one independent variable required")
   convert_x <- !all(sapply(x, is.numeric))
   # check dependent variable
+  if (missing(y)) stop("no dependent variable supplied")
   y <- data[, y, drop = FALSE]
   p_y <- ncol(y)
   if (p_y != 1L) stop("exactly one dependent variable required")
@@ -316,6 +318,7 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
     stop("currently only implemented for a numeric dependent variable")
   }
   # check hypothesized mediator variables
+  if (missing(m)) stop("no hypothesized mediator variable supplied")
   m <- data[, m, drop = FALSE]
   p_m <- ncol(m)
   if (p_m == 0L) stop("at least one hypothesized mediator variable required")
@@ -671,7 +674,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   result <- list(a = a, b = b)
   if (model == "serial") result$d <- d
   result <- c(result,
-              list(direct = direct, total = total, indirect = indirect,
+              list(total = total, direct = direct, indirect = indirect,
                    ab = indirect,  # for back-compatibility, will be removed
                    fit_mx = fit_mx, fit_ymx = fit_ymx, fit_yx = fit_yx,
                    x = x, y = y, m = m, covariates = covariates, data = data,
