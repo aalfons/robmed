@@ -545,23 +545,6 @@ print_contrast_info <- function(object, prefix = FALSE, labels = NULL, ...) {
     print(contrast_info, right = FALSE, row.names = FALSE)
   }
 }
-# print_contrast_info <- function(object, prefix = FALSE, ...) {
-#   # initializations
-#   contrast <- object$contrast              # only implemented for regression fit
-#   have_contrast <- is.character(contrast)  # but this always works
-#   # if applicable, print indirect effect contrast definitions
-#   if (have_contrast) {
-#     # extract further information
-#     x <- object$x
-#     m <- object$m
-#     nr_indirect <- length(x) * length(m)
-#     # print information on contrast definitions
-#     plural <- if (nr_indirect > 2L) "s" else ""
-#     cat(sprintf("\nIndirect effect contrast definition%s:\n", plural))
-#     contrast_info <- get_contrast_info(x, m, type = contrast, prefix = prefix)
-#     print(contrast_info, row.names = FALSE)
-#   }
-# }
 
 ## internal function to print legend for significance stars
 print_legend <- function() {
