@@ -547,8 +547,7 @@ boot_test_mediation <- function(fit,
           }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m)
           coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
           # compute effects
-          a <- mapply(function(coef, j) coef[1L + j], coef = coef_m_i,
-                      j = seq_m, USE.NAMES = FALSE)
+          a <- mapply("[", coef_m_i, 1L + seq_m, USE.NAMES = FALSE)
           b <- coef_y_i[1L + seq_m]
           direct <- coef_y_i[1L + p_m + seq_x]
           # extract effect d
@@ -663,8 +662,7 @@ boot_test_mediation <- function(fit,
         # compute effects
         if (p_m == 1L) a <- coef_m_i[1L + seq_x]
         else if (have_serial) {
-          a <- mapply(function(coef, j) coef[1L + j], coef = coef_m_i,
-                      j = seq_m, USE.NAMES = FALSE)
+          a <- mapply("[", coef_m_i,  1L + seq_m, USE.NAMES = FALSE)
         } else a <- coef_m_i[1L + seq_x, ]
         b <- coef_y_i[1L + seq_m]
         direct <- coef_y_i[1L + p_m + seq_x]
@@ -729,8 +727,7 @@ boot_test_mediation <- function(fit,
         # compute effects
         if (p_m == 1L) a <- coef_m_i[1L + seq_x]
         else if (have_serial) {
-          a <- mapply(function(coef, j) coef[1L + j], coef = coef_m_i,
-                      j = seq_m, USE.NAMES = FALSE)
+          a <- mapply("[", coef_m_i,  1L + seq_m, USE.NAMES = FALSE)
         } else a <- coef_m_i[1L + seq_x, ]
         b <- coef_y_i[1L + seq_m]
         direct <- coef_y_i[1L + p_m + seq_x]
@@ -830,8 +827,7 @@ boot_test_mediation <- function(fit,
           # compute effects
           if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
           else if (have_serial) {
-            a <- mapply(function(coef, j) coef[1L + j], coef = coef_mx_i,
-                        j = seq_m, USE.NAMES = FALSE)
+            a <- mapply("[", coef_mx_i,  1L + seq_m, USE.NAMES = FALSE)
           } else a <- coef_mx_i[1L + seq_x, ]
           b <- coef_ymx_i[1L + seq_m]
           # compute indirect effects
@@ -962,8 +958,7 @@ boot_test_mediation <- function(fit,
           # compute effects
           if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
           else if (have_serial) {
-            a <- mapply(function(coef, j) coef[j], coef = coef_mx_i,
-                        j = 1L + seq_m, USE.NAMES = FALSE)
+            a <- mapply("[", coef_mx_i,  1L + seq_m, USE.NAMES = FALSE)
           } else a <- coef_mx_i[1L + seq_x, ]
           b <- coef_ymx_i[1L + seq_m]
           # compute indirect effects
