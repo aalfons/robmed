@@ -4,14 +4,14 @@
 # --------------------------------------
 
 # information to display for different objects in first line of output
-print_info <- function(x, ...) UseMethod("print_info")
+print_info <- function(object, ...) UseMethod("print_info")
 
 # information to display for regression fits
-print_info.reg_fit_mediation <- function(x, ...) {
-  prefix <- if (is_robust(x)) "Robust mediation" else "Mediation"
-  if (x$robust == "median") postfix <- "via median regression"
+print_info.reg_fit_mediation <- function(object, ...) {
+  prefix <- if (is_robust(object)) "Robust mediation" else "Mediation"
+  if (object$robust == "median") postfix <- "via median regression"
   else {
-    errors <- switch(x$family, student = " with t errors",
+    errors <- switch(object$family, student = " with t errors",
                      skewnormal = " with skew-normal errors",
                      skewt = " with skew-t errors",
                      select = " with selection of error distribution")
@@ -21,16 +21,16 @@ print_info.reg_fit_mediation <- function(x, ...) {
 }
 
 # information to display for covariance matrix fits
-print_info.cov_fit_mediation <- function(x, ...) {
-  prefix <- if (is_robust(x)) "Robust mediation" else "Mediation"
+print_info.cov_fit_mediation <- function(object, ...) {
+  prefix <- if (is_robust(object)) "Robust mediation" else "Mediation"
   cat(sprintf("%s model fit via covariance matrix\n", prefix))
 }
 
 # information to display for bootstrap tests
-print_info.boot_test_mediation <- function(x, ...) {
+print_info.boot_test_mediation <- function(object, ...) {
   # type of test and model fit
-  fit <- x$fit
-  if (inherits(x$fit, "reg_fit_mediation")) {
+  fit <- object$fit
+  if (inherits(object$fit, "reg_fit_mediation")) {
     prefix <- if (fit$robust == "MM") "Robust bootstrap" else "Bootstrap"
     if (fit$robust == "median") postfix <- " via median regression"
     else {
@@ -48,7 +48,8 @@ print_info.boot_test_mediation <- function(x, ...) {
     postfix <- ""
   }
   # use plural for multiple mediators
-  nr_indirect <- length(x$fit$x) * length(x$fit$m)
+  nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
+                                 model = object$fit$model)
   plural <- if (nr_indirect == 1L) "" else "s"
   # return message
   cat(sprintf("%s test%s for indirect effect%s%s\n",
@@ -56,10 +57,10 @@ print_info.boot_test_mediation <- function(x, ...) {
 }
 
 # information to display for sobel tests
-print_info.sobel_test_mediation <- function(x, ...) {
+print_info.sobel_test_mediation <- function(object, ...) {
   # type of test and model fit
-  fit <- x$fit
-  if (inherits(x$fit, "reg_fit_mediation")) {
+  fit <- object$fit
+  if (inherits(object$fit, "reg_fit_mediation")) {
     prefix <- if (fit$robust == "MM") "Robust normal" else "Normal"
     if (fit$robust == "median") postfix <- " via median regression"
     else {
@@ -80,37 +81,42 @@ print_info.sobel_test_mediation <- function(x, ...) {
 }
 
 # information on variables in summary of mediation analysis
-print_info.summary_fit_mediation <- function(x, ...) {
+print_info.summary_fit_mediation <- function(object, ...) {
   # initializations
-  p_x <- length(x$x)
-  p_m <- length(x$m)
-  nr_indirect <- p_x * p_m
-  have_covariates <- length(x$covariates) > 0L
+  p_x <- length(object$x)
+  p_m <- length(object$m)
+  nr_indirect <- get_nr_indirect(p_x, p_m, model = object$model)
+  have_covariates <- length(object$covariates) > 0L
+  # in case of multiple mediators, print information on type of mediation model
+  if (p_m > 1L) {
+    prefix <- switch(object$model, parallel = "Parallel", serial = "Serial")
+    cat(prefix, "multiple mediator model\n\n")
+  }
   # print information on variables
   if (nr_indirect == 1L) {
-    cat(sprintf("x = %s\n", x$x))
-    cat(sprintf("y = %s\n", x$y))
-    cat(sprintf("m = %s\n", x$m))
+    cat(sprintf("x = %s\n", object$x))
+    cat(sprintf("y = %s\n", object$y))
+    cat(sprintf("m = %s\n", object$m))
   } else {
     width <- max(nchar(p_x), nchar(p_m)) + 1L
-    if (p_x == 1L) cat(sprintf(paste0("%-", width, "s = %s\n"), "x", x$x))
+    if (p_x == 1L) cat(sprintf(paste0("%-", width, "s = %s\n"), "x", object$x))
     else {
       x_labels <- paste0("x", seq_len(p_x))
-      cat(sprintf(paste0("%-", width, "s = %s\n"), x_labels, x$x), sep = "")
+      cat(sprintf(paste0("%-", width, "s = %s\n"), x_labels, object$x), sep = "")
     }
-    cat(sprintf(paste0("%-", width, "s = %s\n"), "y", x$y))
-    if (p_m == 1L) cat(sprintf(paste0("%-", width, "s = %s\n"), "m", x$m))
+    cat(sprintf(paste0("%-", width, "s = %s\n"), "y", object$y))
+    if (p_m == 1L) cat(sprintf(paste0("%-", width, "s = %s\n"), "m", object$m))
     else {
       m_labels <- paste0("m", seq_len(p_m))
-      cat(sprintf(paste0("%-", width, "s = %s\n"), m_labels, x$m), sep = "")
+      cat(sprintf(paste0("%-", width, "s = %s\n"), m_labels, object$m), sep = "")
     }
   }
   if (have_covariates) {
     cat("\nCovariates:\n")
-    print(x$covariates, quote = FALSE)
+    print(object$covariates, quote = FALSE)
   }
   # print sample size
-  cat(sprintf("\nSample size: %d\n", x$n))
+  cat(sprintf("\nSample size: %d\n", object$n))
 }
 
 
@@ -381,6 +387,7 @@ print.summary_reg_fit_mediation <- function(x, digits = max(3, getOption("digits
                                             signif.stars = getOption("show.signif.stars"),
                                             signif.legend = signif.stars, ...) {
   # initializations
+  p_x <- length(x$x)
   p_m <- length(x$m)
   # information on variables
   print_info(x, ...)
@@ -401,10 +408,11 @@ print.summary_reg_fit_mediation <- function(x, digits = max(3, getOption("digits
   print(x$fit_ymx, digits = digits, signif.stars = signif.stars,
         signif.legend = FALSE, ...)
   # print summary of total and direct effects of x on y
-  cat("---\nTotal effect of x on y:\n")
+  plural <- if (p_x == 1L) "" else "s"
+  cat(sprintf("---\nTotal effect%s of x on y:\n", plural))
   printCoefmat(x$total, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
-  cat("\nDirect effect of x on y:\n")
+  cat(sprintf("\nDirect effect%s of x on y:\n", plural))
   printCoefmat(x$direct, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   # return object invisibly
@@ -458,6 +466,7 @@ print.summary_test_mediation <- function(x, digits = max(3, getOption("digits")-
   # return object invisibly
   invisible(x)
 }
+
 
 ## internal function to print information on labels for indirect effects for
 ## serial multiple mediator models

@@ -133,8 +133,11 @@ get_summary <- function(object, ...) UseMethod("get_summary")
 get_summary.NULL <- function(object, ...) NULL
 
 # for a list: get summary for each list element
-# FIXME: I think this only works when the function is exported
+# -----
+# FIXME: I think the code below only works when the function is exported
+# -----
 # get_summary.list <- function(object, ...) lapply(object, get_summary, ...)
+# -----
 # dirty hack:
 get_summary.list <- function(object, ...) {
   lapply(object, function(x, ...) {
@@ -147,6 +150,7 @@ get_summary.list <- function(object, ...) {
     else stop("not implemented yet")
   })
 }
+# -----
 
 # for a linear model: return coefficient matrix, regression standard error,
 # R-squared and F-test
@@ -214,9 +218,10 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   x <- object$x
   y <- object$y
   m <- object$m
+  model <- object$model
   p_x <- length(x)
   p_m <- length(m)
-  nr_indirect <- p_x * p_m
+  nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
   covariates <- object$covariates
   p_covariates <- length(covariates)
   have_robust <- is_robust(object)
@@ -244,7 +249,8 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
                           "Std. Error" = se, "z value" = z,
                           "Pr(>|z|)" = p_value)
     # get indices of rows that that correspond to the respective models
-    index_list <- get_index_list(p_x, p_m, p_covariates, indirect = FALSE)
+    index_list <- get_index_list(p_x, p_m, p_covariates, indirect = FALSE,
+                                 model = model)
   }
   ## compute summary of m ~ x + covariates
   # robust F test requires that response variable is stored in "lmrob" object
@@ -302,7 +308,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   # return results
   result <- list(fit_mx = summary_mx, fit_ymx = summary_ymx, total = total,
                  direct = direct, x = x, y = y, m = m, covariates = covariates,
-                 n = n, robust = robust)
+                 n = n, robust = robust, model = model)
   class(result) <- c("summary_reg_fit_mediation", "summary_fit_mediation")
   result
 }
