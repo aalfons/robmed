@@ -228,7 +228,7 @@ print.sobel_test_mediation <- function(x, digits = max(3, getOption("digits")-3)
   if (isTRUE(info)) print_info(x, ...)
   # print indirect effect
   cat("\nIndirect effect of x on y:\n")
-  ab <- cbind(x$fit$ab, x$se, x$statistic, x$p_value)
+  ab <- cbind(x$fit$indirect, x$se, x$statistic, x$p_value)
   m <- x$fit$m
   cn <- switch(x$alternative, twosided = "Pr(>|z|)",
                less = "Pr(<z)", greater = "Pr(>z)")
