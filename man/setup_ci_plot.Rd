@@ -106,7 +106,7 @@ test <- test_mediation(BSG2014,
                        m = "TaskConflict")
 
 # set up information for plot
-setup <- setup_ci_plot(test, parm = "ab")
+setup <- setup_ci_plot(test, parm = "Indirect")
 
 # plot only density and confidence interval
 ggplot() +

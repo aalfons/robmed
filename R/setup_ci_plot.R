@@ -85,7 +85,7 @@
 #'                        m = "TaskConflict")
 #'
 #' # set up information for plot
-#' setup <- setup_ci_plot(test, parm = "ab")
+#' setup <- setup_ci_plot(test, parm = "Indirect")
 #'
 #' # plot only density and confidence interval
 #' ggplot() +
@@ -115,11 +115,14 @@ setup_ci_plot.boot_test_mediation <- function(object, parm = NULL,
   p_m <- length(object$fit$m)
   if (is.null(parm)) {
     if (p_x == 1L) {
-      if (p_m == 1L) parm <- c("Direct", "ab")
-      else parm <- c("Direct", paste("ab", names(object$ab), sep = "_"))
+      if (p_m == 1L) parm <- c("Direct", "Indirect")
+      else {
+        parm <- c("Direct",
+                  paste("Indirect", names(object$indirect), sep = "_"))
+      }
     } else {
       parm <- c(paste("Direct", names(object$direct), sep = "_"),
-                paste("ab", names(object$ab), sep = "_"))
+                paste("Indirect", names(object$indirect), sep = "_"))
     }
   }
   include_p_value <- isTRUE(p_value)
@@ -166,7 +169,7 @@ setup_ci_plot.sobel_test_mediation <- function(object, parm = NULL,
                                                level = 0.95, p_value = FALSE,
                                                ...) {
   # initializations
-  if (is.null(parm)) parm <- c("Direct", "ab")
+  if (is.null(parm)) parm <- c("Direct", "Indirect")
   level <- rep(as.numeric(level), length.out = 1)
   if (is.na(level) || level < 0 || level > 1) level <- formals()$level
   include_p_value <- isTRUE(p_value)
