@@ -55,7 +55,6 @@ get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
   labels <- get_contrast_names(n_contrasts)
   if (prefix) labels <- paste("Indirect", labels, sep = "_")
   # obtain information on contrasts
-  # FIXME: add prefix 'Indirect' only if 'prefix = TRUE'
   if (type == "estimates") {
     fun <- function(names) paste(names, collapse = " - ")
   } else if (type == "absolute") {
@@ -66,84 +65,30 @@ get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
   # return information on contrasts
   data.frame(Label = labels, Definition = sapply(combinations, fun))
 }
-# get_contrast_info <- function(x, m, type = "estimates", prefix = FALSE) {
-#   # initializations
-#   p_x <- length(x)
-#   p_m <- length(m)
-#   # names used for indirect effects
-#   if (p_x > 1 && p_m > 1) names <- sapply(m, paste, x, sep = ".")
-#   else if (p_x > 1) names <- x
-#   else if (p_m > 1) names <- m
-#   else {
-#     # should not happen
-#     stop("contrasts are only applicable in case of multiple indirect effects")
-#   }
-#   # compute combinations of names
-#   combinations <- combn(names, 2, simplify = FALSE)
-#   n_contrasts <- length(combinations)
-#   # obtain labels for contrasts
-#   labels <- get_contrast_names(n_contrasts)
-#   if (prefix) labels <- paste("ab", labels, sep = "_")
-#   # obtain information on contrasts
-#   if (type == "estimates") {
-#     fun <- function(names) paste(paste("ab", names, sep = "_"), collapse = " - ")
-#   } else if (type == "absolute") {
-#     fun <- function(names) paste(paste0("|ab_", names, "|"), collapse = " - ")
-#   } else stop(sprintf("%s contrasts not implemented", type))
-#   # return information on contrasts
-#   data.frame(Label = labels, Definition = sapply(combinations, fun))
-# }
 
 
 ## utility function to get names of coefficients
-get_effect_names <- function(a = NULL, b = NULL, d = NULL, total = NULL,
-                             direct = NULL, indirect = NULL, sep = "_") {
-  # names for effect(s) a
-  if (is.null(a)) a_names <- NULL
-  else a_names <- if (length(a) == 1L) "a" else paste("a", names(a), sep = sep)
-  # names for effect(s) b
-  if (is.null(b)) b_names <- NULL
-  else b_names <- if (length(b) == 1L) "b" else paste("b", names(b), sep = sep)
-  # names for effect(s) d
-  if (is.null(d)) d_names <- NULL
-  else d_names <- if (length(d) == 1L) "d" else paste("d", names(d), sep = sep)
-  # names for total effect(s)
-  if (is.null(total)) total_names <- NULL
-  else if (length(total) == 1L) total_names <- "Total"
-  else total_names <- paste("Total", names(total), sep = sep)
-  # names for direct effect(s)
-  if (is.null(direct)) direct_names <- NULL
-  else if (length(direct) == 1L) direct_names <- "Direct"
-  else direct_names <- paste("Direct", names(direct), sep = sep)
-  # names for indirect effect(s)
-  if (is.null(indirect)) indirect_names <- NULL
-  else if (length(indirect) == 1L) indirect_names <- "Indirect"
-  else indirect_names <- paste("Indirect", names(indirect), sep = sep)
-  # return requested names
-  c(a_names, b_names, d_names, total_names, direct_names, indirect_names)
+get_effect_names <- function(..., effects = list(...), sep = "_") {
+  # loop over effects and get corresponding names
+  effect_names <- mapply(function(effect, name) {
+    if (is.null(effect)) effect_name <- NULL
+    else {
+      # define label
+      if (name == "total") label <- "Total"
+      else if (name == "direct") label <- "Direct"
+      else if (name == "indirect") label <- "Indirect"
+      else label <- name
+      # set label or add label as prefix
+      if (length(effect) == 1L) effect_name <- label
+      else effect_name <- paste(label, names(effect), sep = sep)
+    }
+    # return effect name
+    effect_name
+  }, effect = effects, name = names(effects),
+  SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  # return effect names
+  unlist(effect_names, use.names = FALSE)
 }
-# get_effect_names <- function(x, m, sep = "_") {
-#   # initializations
-#   p_x <- length(x)
-#   p_m <- length(m)
-#   # construct names
-#   if (p_x == 1L) {
-#     if (p_m == 1L) c("a", "b", "Direct", "Total")
-#     else {
-#       c(paste("a", m, sep = sep), paste("b", m, sep = sep), "Direct", "Total")
-#     }
-#   } else {
-#     if (p_m == 1L) {
-#       c(paste("a", x, sep = sep), "b", paste("Direct", x, sep = sep),
-#         paste("Total", x, sep = sep))
-#     } else {
-#       c(paste("a", sapply(m, paste, x, sep = "."), sep = sep),
-#         paste("b", m, sep = sep),
-#         paste("Direct", x, sep = sep),
-#         paste("Total", x, sep = sep))
-#     }
-#   }
-# }
 
 
 ## The function for bootstrap replicates is required to return a vector.  This
@@ -268,28 +213,6 @@ get_indirect_names <- function(x, m, model = "parallel", sep = "->") {
 # relevant in case of multiple independent variables and multiple mediators, or
 # in case of a serial multiple mediator model
 get_indirect_labels <- function(n) paste0("Indirect", seq_len(n))
-
-# ## obtain labels for indirect effects in printed output of bootstrap tests
-#
-# get_indirect_labels <- function(object, ...) UseMethod("get_indirect_labels")
-#
-# get_indirect_labels.reg_fit_mediation <- function(object, ...) {
-#   # initializations
-#   x <- object$x
-#   p_x <- length(x)
-#   m <- object$m
-#   p_m <- length(m)
-#   model <- object$model
-#   nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
-#   # obtain labels
-#   if (model == "serial") labels <- paste0("Indirect", seq_len(nr_indirect))
-#   else if (nr_indirect == 1L) labels <- m
-#   else labels <- names(object$indirect)
-#   # return labels
-#   labels
-# }
-#
-# get_indirect_labels.cov_fit_mediation <- function(object, ...) object$m
 
 
 ## check whether an object corresponds to a robust model fit

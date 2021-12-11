@@ -586,8 +586,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   } else {
     # extract effects a and b
     if (model == "serial") {
-      a <- mapply(function(fit, j) unname(coef(fit)[1L + j]),
-                  fit = fit_mx, j = seq_len(p_m), USE.NAMES = TRUE)
+      a <- mapply(function(fit, j) unname(coef(fit)[j]),
+                  fit = fit_mx, j = 1L + seq_len(p_m), USE.NAMES = TRUE)
     } else if (p_x == 1L) {
       a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
     } else {

@@ -67,13 +67,10 @@ coef.boot_test_mediation <- function(object, parm = NULL,
     #       of the effects can become quite complex.  At least this way it is
     #       predictable for the user.  For backwards compatibility, "ab" should
     #       be allowed as a synonym for "indirect".
-    # construct vector of bootstrap estimates
-    coef <- c(object$a, object$b, object$d, object$total,
-              object$direct, object$indirect)
-    names(coef) <- get_effect_names(a = object$fit$a, b = object$fit$b,
-                                    d = object$fit$d, total = object$fit$total,
-                                    direct = object$fit$direct,
-                                    indirect = object$fit$indirect)
+    # extract bootstrap estimates (also works if d path does not exist)
+    keep <- c("a", "b", "d", "total", "direct", "indirect")
+    coef <- unlist(object[keep], use.names = FALSE)
+    names(coef) <- get_effect_names(effects = object[keep])
     # if requested, take subset of effects
     if (!is.null(parm))  coef <- coef[parm]
   } else coef <- coef(object$fit, parm = parm, ...)
@@ -93,12 +90,10 @@ coef.fit_mediation <- function(object, parm = NULL, ...) {
   #       of the effects can become quite complex.  At least this way it is
   #       predictable for the user.  For backwards compatibility, "ab" should
   #       be allowed as a synonym for "indirect".
-  # extract effects
-  coef <- c(object$a, object$b, object$d, object$total,
-            object$direct, object$indirect)
-  names(coef) <- get_effect_names(a = object$a, b = object$b, d = object$d,
-                                  total = object$total, direct = object$direct,
-                                  indirect = object$indirect)
+  # extract effect estimates (also works if d path does not exist)
+  keep <- c("a", "b", "d", "total", "direct", "indirect")
+  coef <- unlist(object[keep], use.names = FALSE)
+  names(coef) <- get_effect_names(effects = object[keep])
   # if requested, take subset of effects
   if (!is.null(parm))  coef <- coef[parm]
   coef

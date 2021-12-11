@@ -962,8 +962,8 @@ boot_test_mediation <- function(fit,
           # compute effects
           if (p_m == 1L) a <- coef_mx_i[1L + seq_x]
           else if (have_serial) {
-            a <- mapply(function(coef, j) coef[1L + j], coef = coef_mx_i,
-                        j = seq_m, USE.NAMES = FALSE)
+            a <- mapply(function(coef, j) coef[j], coef = coef_mx_i,
+                        j = 1L + seq_m, USE.NAMES = FALSE)
           } else a <- coef_mx_i[1L + seq_x, ]
           b <- coef_ymx_i[1L + seq_m]
           # compute indirect effects
@@ -1101,13 +1101,13 @@ boot_test_mediation <- function(fit,
       ci <- rbind(ci, contrast_ci)
     }
     # add names to effects other than the indirect effect (where applicable)
-    names(a) <- names(fit$a)
-    names(b) <- names(fit$b)
-    if (have_serial) names(d) <- names(fit$d)
-    names(direct) <- names(fit$direct)
-    names(total) <- names(fit$total)
+    names(a) <- names(fit[["a"]])
+    names(b) <- names(fit[["b"]])
+    if (have_serial) names(d) <- names(fit[["d"]])
+    names(direct) <- names(fit[["direct"]])
+    names(total) <- names(fit[["total"]])
     # add names for indirect effects and confidence intervals
-    names(indirect) <- rownames(ci) <- names(fit$indirect)
+    names(indirect) <- rownames(ci) <- names(fit[["indirect"]])
   }
   # construct return object
   result <- list(a = a, b = b)

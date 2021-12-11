@@ -80,11 +80,11 @@ confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
     ci <- get_confint(object$fit, level = object$level, boot = object$reps)
   } else ci <- get_confint(object$fit, level = object$level)
   # combine with confidence interval of indirect effect
-  if (nr_indirect == 1L) ci <- rbind(ci, ab = object$ci)
+  if (nr_indirect == 1L) ci <- rbind(ci, "Indirect" = object$ci)
   else {
-    tmp <- object$ci
-    rownames(tmp) <- paste("ab", rownames(tmp), sep = "_")
-    ci <- rbind(ci, tmp)
+    ci_indirect <- object$ci
+    rownames(ci_indirect) <- paste("Indirect", rownames(ci_indirect), sep = "_")
+    ci <- rbind(ci, ci_indirect)
   }
   if (object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
@@ -103,10 +103,10 @@ confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
   level <- rep(as.numeric(level), length.out = 1)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # confidence interval of indirect effect
-  ci <- confint_z(object$fit$ab, object$se, level = level,
+  ci <- confint_z(object$fit$indirect, object$se, level = level,
                   alternative = object$alternative)
   # combine with confidence intervalse of other effects
-  ci <- rbind(get_confint(object$fit, level = level), ab = ci)
+  ci <- rbind(get_confint(object$fit, level = level), "Indirect" = ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
@@ -167,10 +167,11 @@ get_confint.cov_fit_mediation <- function(object, parm = NULL, level = 0.95,
   # compute confidence intervals and combine into one matrix
   ci <- rbind(confint_z(estimates[1], se[1], level=level),
               confint_z(estimates[2], se[2], level=level),
-              confint_z(estimates[3], se[3], level=level),
-              confint_z(estimates[4], se[4], level=level))
+              confint_z(estimates[4], se[4], level=level),
+              confint_z(estimates[3], se[3], level=level))
+  rn <- get_effect_names(effects = object[c("a", "b", "total", "direct")])
   cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
-  dimnames(ci) <- list(c("a", "b", "Direct", "Total"), cn)
+  dimnames(ci) <- list(rn, cn)
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
   ci
@@ -182,44 +183,74 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
   alpha <- 1 - level
   p_x <- length(object$x)
   p_m <- length(object$m)
-  # extract point estimates and standard errors
+  model <- object$model
+  # row names to be used for confidence intervals
+  keep <- c("a", "b", "d", "total", "direct")
+  rn <- get_effect_names(effects = object[keep])
+  # compute confidence intervals
   if (is.null(boot)) {
-    # extract confidence intervals from regression models
+    # compute confidence intervals for a path
     if (p_m == 1L) {
-      confint_mx <- confint(object$fit_mx, parm = 1L + seq_len(p_x),
-                            level = level)
+      # single mediator
+      confint_a <- confint(object$fit_mx, parm = 1L + seq_len(p_x),
+                           level = level)
     } else {
-      confint_mx <- lapply(object$fit_mx, confint, parm = 1L + seq_len(p_x),
-                           level = level)
-      confint_mx <- do.call(rbind, confint_mx)
+      # multiple mediators
+      if (model == "serial") {
+        confint_a <- mapply(confint, object$fit_mx, parm = 1L + seq_len(p_m),
+                            SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      } else {
+        confint_a <- lapply(object$fit_mx, confint, parm = 1L + seq_len(p_x),
+                            level = level)
+      }
+      confint_a <- do.call(rbind, confint_a)
     }
-    confint_ymx <- confint(object$fit_ymx, parm = 1L + seq_len(p_x + p_m),
-                           level = level)
-    # compute confidence interval for total effect
+    # for serial multiple mediators, compute confidence intervals for d path
+    if (model == "serial") {
+      j_list <- lapply(seq_len(p_m-1L), function(j) 1L + seq_len(j))
+      confint_d <- mapply(confint, object$fit_mx[-1L], parm = j_list,
+                          SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      confint_d <- do.call(rbind, confint_d)
+    } else confint_d <- NULL
+    # compute confidence intervals for b path and direct effect
+    confint_b <- confint(object$fit_ymx, parm = 1L + seq_len(p_m),
+                         level = level)
+    confint_direct <- confint(object$fit_ymx, parm = 1L + p_m + seq_len(p_x),
+                              level = level)
+    # compute confidence intervals for total effect
     if (is.null(object$fit_yx)) {
       # confidence interval not available
-      if (p_x == 1L) confint_yx <- rep.int(NA_real_, 2L)
-      else confint_yx <- matrix(NA_real_, nrow = p_x, ncol = 2L)
+      confint_total <- matrix(NA_real_, nrow = p_x, ncol = 2L)
     } else {
       # extract confidence interval from regression model
-      confint_yx <- confint(object$fit_yx, parm = 1L + seq_len(p_x),
-                            level = level)
+      confint_total <- confint(object$fit_yx, parm = 1L + seq_len(p_x),
+                               level = level)
     }
     # combine confidence intervals
-    ci <- rbind(confint_mx, confint_ymx, confint_yx)
-    rownames(ci) <- get_effect_names(object$x, object$m)
+    ci <- rbind(confint_a, confint_b, confint_d, confint_total, confint_direct)
+    rownames(ci) <- rn
   } else {
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
     p_covariates <- length(object$fit$covariates)
-    index_list <- get_index_list(p_x, p_m, p_covariates)
-    # the a path is the second coefficient in the model m ~ x + covariates
-    if (p_m == 1L) keep_mx <- index_list$fit_mx[1L + seq_len(p_x)]
-    else keep_mx <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
-    # keep b and c coefficients of model y ~ m + x + covariates
-    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_x + p_m)]
+    index_list <- get_index_list(p_x, p_m, p_covariates, model = model)
+    # keep indices for a path in model m ~ x + covariates
+    if (p_m == 1L) keep_a <- index_list$fit_mx[1L + seq_len(p_x)]
+    else if (model == "serial") {
+      keep_a <- mapply("[", index_list$fit_mx, 1L + seq_len(p_m),
+                       USE.NAMES = FALSE)
+    } else keep_a <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
+    # for serial multiple mediators, keep indices for d path
+    if (model == "serial") {
+      j_list <- lapply(seq_len(p_m-1L), function(j) 1L + seq_len(j))
+      keep_d <- unlist(mapply("[", index_list$fit_mx[-1L], parm = j_list,
+                              SIMPLIFY = FALSE, USE.NAMES = FALSE))
+    } else keep_d <- NULL
+    # keep indeces of b path and direct effect in model y ~ m + x + covariates
+    keep_b <- index_list$fit_ymx[1L + seq_len(p_m)]
+    keep_direct <- index_list$fit_ymx[1L + p_m + seq_len(p_x)]
     # index of total effect is stored separately in this list
-    keep <- c(keep_mx, keep_ymx, index_list$total)
+    keep <- c(keep_a, keep_b, keep_d, index_list$total, keep_direct)
     # compute means and standard errors from bootstrap replicates
     estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
     se <- apply(boot$t[, keep], 2L, sd, na.rm = TRUE)
@@ -230,7 +261,7 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
     ci <- do.call(rbind, ci)
     # add row and column names
     cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
-    dimnames(ci) <- list(get_effect_names(object$x, object$m), cn)
+    dimnames(ci) <- list(rn, cn)
   }
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]

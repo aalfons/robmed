@@ -128,19 +128,19 @@ print.fit_mediation <- function(x, info = TRUE, ...) {
     p_m <- length(x$m)
     # print effects
     cat("\na paths:\n")
-    print(x$a, ...)
+    print(x[["a"]], ...)
     cat(sprintf("\nb path%s:\n", if (p_m == 1L) "" else "s"))
-    print(x$b, ...)
-    if (!is.null(x$d)) {
+    print(x[["b"]], ...)
+    if (!is.null(x[["d"]])) {
       cat(sprintf("\nd path%s:\n", if (p_m > 2L) "s" else ""))
-      print(x$d, ...)
+      print(x[["d"]], ...)
     }
     cat(sprintf("\nTotal effect%s:\n", if (p_x == 1L) "" else "s"))
-    print(x$total, ...)
+    print(x[["total"]], ...)
     cat(sprintf("\nDirect effect%s:\n", if (p_x == 1L) "" else "s"))
-    print(x$direct, ...)
+    print(x[["direct"]], ...)
     cat("\nIndirect effects:\n")
-    print(x$indirect, ...)
+    print(x[["indirect"]], ...)
   }
   # print information on how contrasts are computed
   # (if there are no contrasts, nothing is printed)
