@@ -190,7 +190,7 @@ direct effects of the proposed mediator variables on the dependent variable
 (only \code{"boot_test_mediation"}).}
 \item{d}{in case of a serial multiple mediator model, a numeric vector
 containing the bootstrap point estimates of the effects of proposed mediator
-variables on other mediator variables further down the sequence (only
+variables on other mediator variables occurring later in the sequence (only
 \code{"boot_test_mediation"} if applicable.}
 \item{total}{a numeric vector containing the bootstrap point estimates of
 the total effects of the independent variables on the dependent variable

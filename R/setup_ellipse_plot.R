@@ -22,8 +22,9 @@
 #' the vertical axis, a hypothsized mediator or an independent variable must
 #' be selected for the horizontal axis.  If a hypothesized mediator is chosen
 #' for the vertical axis, an independent variable must be selected for the
-#' horizontal axis.  The default is to plot the first independent variable on
-#' the horizontal axis.
+#' horizontal axis (in case of a serial multiple mediator model, a hypothesized
+#' mediator occurring earlier in the sequence is also allowed).  The default is
+#' to plot the first independent variable on the horizontal axis.
 #' @param vertical  a character string specifying the variable to be
 #' plotted on the vertical axis: the dependent variable or a hypothesized
 #' mediator.  The default is to plot the first hypothesized mediator on the
@@ -155,6 +156,7 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
   p_m <- length(m)
   covariates <- object$covariates
   p_covariates <- length(covariates)
+  model <- object$model
   # check variable on vertical axis
   if (is.null(vertical)) vertical <- m[1L]
   else {
@@ -172,16 +174,37 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
     if (!(is.character(horizontal) && length(horizontal) == 1L)) {
       stop("only one variable allowed for the horizontal axis")
     }
-    if (vertical %in% m && !(horizontal %in% x)) {
-      stop("variable on the horizontal axis must be an independent variable")
-    } else if (vertical == y && !(horizontal %in% m || horizontal %in% x)) {
+    # check horizontal axis if a mediator is on vertical axis
+    if (model == "serial") {
+      # serial multiple mediators: independent variable and mediators earlier
+      # in the sequence can be on horizontal axis
+      if (vertical %in% m) {
+        pos <- which(vertical == m)
+        if (pos == 1L && !horizontal %in% x) {
+          stop("variable on the horizontal axis must be an independent variable")
+        }
+        if (pos > 1L && !(horizontal %in% c(x, m[seq_len(pos-1L)]))) {
+          stop("variable on the horizontal axis must be an independent variable ",
+               "or a mediator occuring earlier in the serial mediator model")
+        }
+      }
+    } else {
+      # single mediator or parallel multiple mediators: only independent
+      # variable can be on horizontal axis
+      if (vertical %in% m && !(horizontal %in% x)) {
+        stop("variable on the horizontal axis must be an independent variable")
+      }
+    }
+    # check horizontal axis if dependent variable is on vertical axis
+    if (vertical == y && !(horizontal %in% m || horizontal %in% x)) {
       stop("variable on the horizontal axis must be ",
            "an independent variable or a mediator")
     }
   }
   # other initializations
   partial <- isTRUE(partial)
-  have_mx <- vertical %in% m && p_x == 1L && horizontal == x && p_covariates == 0L
+  vertical_mx <- if (model == "serial") vertical == m[1L] else vertical %in% m
+  have_mx <- vertical_mx && p_x == 1L && horizontal == x && p_covariates == 0L
   robust <- object$robust == "MM"
   # extract model fit
   if (partial || have_mx || robust) {
@@ -254,8 +277,12 @@ setup_ellipse_plot.reg_fit_mediation <- function(object,
     } else {
       # compute weighted mean and weighted covariance matrix of all explanatory
       # variables, as this is necessary for proper correction
-      if (vertical %in% m) predictors <- c(x, covariates)
-      else predictors <- c(m, x, covariates)
+      if (vertical %in% m) {
+        if (model == "serial") {
+          pos <- which(vertical == m)
+          predictors <- c(m[seq_len(pos-1)], x, covariates)
+        } else predictors <- c(x, covariates)
+      } else predictors <- c(m, x, covariates)
       predictor_data <- object$data[, predictors, drop = FALSE]
       m_x <- sapply(predictor_data, weighted.mean, w = w)
       S_xx <- weighted.cov(predictor_data, w = w, center = m_x)

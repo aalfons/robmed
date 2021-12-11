@@ -120,7 +120,7 @@
 #' effects of the proposed mediator variables on the dependent variable.}
 #' \item{d}{in case of a serial multiple mediator model, a numeric vector
 #' containing the point estimates of the effects of proposed mediator variables
-#' on other mediator variables further down the sequence (only
+#' on other mediator variables occurring later in the sequence (only
 #' \code{"reg_fit_mediation"} if applicable).}
 #' \item{total}{a numeric vector containing the point estimates of the total
 #' effects of the independent variables on the dependent variable.}
