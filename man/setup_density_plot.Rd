@@ -36,12 +36,12 @@ the confidence level already in \code{\link{test_mediation}()}.}
 An object of class \code{"setup_density_plot"} with the following
 components:
 \item{density}{a data frame containing the values of the indirect effect
-where the density is estimated (column \code{ab}), and the estimated density
-values (column \code{Density}).  In case of a model with multiple indirect
-effects, there is a column \code{Effect} that indicates the different
-indirect effects.  If a list of \code{"\link{test_mediation}"} objects has
-been supplied, there is also a column \code{Method}, which takes the names
-or indices of the list elements to indicate the different methods.}
+where the density is estimated (column \code{Indirect}), and the estimated
+density values (column \code{Density}).  In case of a model with multiple
+indirect effects, there is a column \code{Effect} that indicates the
+different indirect effects.  If a list of \code{"\link{test_mediation}"}
+objects has been supplied, there is also a column \code{Method}, which takes
+the names or indices of the list elements to indicate the different methods.}
 \item{ci}{a data frame consisting of column \code{Estimate} containing the
 point estimates, column \code{Lower} for the lower confidence limit, and
 column \code{Upper} for the upper confidence limit.  In case of a model with
@@ -87,7 +87,7 @@ setup <- setup_density_plot(test)
 
 # plot only density and confidence interval
 ggplot() +
-  geom_density(aes(x = ab, y = Density), data = setup$density,
+  geom_density(aes(x = Indirect, y = Density), data = setup$density,
                stat = "identity") +
   geom_rect(aes(xmin = Lower, xmax = Upper,
                 ymin = -Inf, ymax = Inf),
