@@ -1168,12 +1168,3 @@ correction_matrix <- function(X, weights, residuals, scale, control) {
   tmp <- Mpsi(residuals/scale, cc=control$tuning.psi, psi=control$psi, deriv=1)
   solve(crossprod(X, tmp * X)) %*% crossprod(weights * X)
 }
-
-## internal function to compute p-value based on normal distribution
-p_value_z <- function(z, alternative = c("twosided", "less", "greater")) {
-  # initializations
-  alternative <- match.arg(alternative)
-  # compute p-value
-  switch(alternative, twosided = 2 * pnorm(abs(z), lower.tail = FALSE),
-         less = pnorm(z), greater = pnorm(z, lower.tail = FALSE))
-}

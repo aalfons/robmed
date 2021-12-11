@@ -80,23 +80,23 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
                                         type = c("boot", "data"),
                                         digits = 4L, ...) {
   # number of hypothesized mediators
-  nr_indirect <- length(object$fit$x) * length(object$fit$m)
+  nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
+                                 model = object$fit$model)
   contrast <- object$fit$contrast          # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
   # p-values of other effects
   type <- match.arg(type)
-  if (type == "boot") {
-    p_values <- get_p_value(object$fit, boot = object$reps)
-  } else p_values <- get_p_value(object$fit)
+  if (type == "boot") p_values <- get_p_value(object$fit, boot = object$reps)
+  else p_values <- get_p_value(object$fit)
   # add temporary NA's for p-values of indirect effect,
   # as those take longer to compute
   if (nr_indirect == 1L) {
     # only one mediator
-    indirect_names <- "ab"
+    indirect_names <- "Indirect"
     alpha <- NA_real_
   } else {
     # multiple mediators
-    indirect_names <- paste("ab", rownames(object$ci), sep = "_")
+    indirect_names <- paste("Indirect", rownames(object$ci), sep = "_")
     alpha <- rep.int(NA_real_, nrow(object$ci))
   }
   names(alpha) <- indirect_names
@@ -110,24 +110,24 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
     # take subset of p-values
     p_values <- p_values[parm]
     # check which p-values of indirect effects need to be computed
-    which_names <- grep("ab", names(p_values), value = TRUE)
+    which_names <- grep("Indirect", names(p_values), value = TRUE)
     which_indices <- match(which_names, indirect_names, nomatch = integer())
   }
   # preparations to modify bootstrap object if contrasts are requested
-  n_ab <- 1L + nr_indirect
+  n_indirect <- 1L + nr_indirect
   bootstrap <- object$reps
   # if contrasts are requested, modify bootstrap object to contain only
   # indirect effects and contrasts such that 'which_indices' correctly
   # describes the columns containing the bootstrap replicates
-  if (have_contrast && any(which_indices > n_ab)) {
+  if (have_contrast && any(which_indices > n_indirect)) {
     # list of all combinations of indices of the relevant indirect effects
-    indices_ab <- seq_len(n_ab)
-    combinations <- combn(indices_ab[-1L], 2, simplify = FALSE)
+    indices_indirect <- seq_len(n_indirect)
+    combinations <- combn(indices_indirect[-1L], 2, simplify = FALSE)
     # modify bootstrap object to add contrasts
-    bootstrap$t0 <- c(bootstrap$t0[indices_ab],
+    bootstrap$t0 <- c(bootstrap$t0[indices_indirect],
                       get_contrasts(bootstrap$t0, combinations,
                                     type = contrast))
-    bootstrap$t <- cbind(bootstrap$t[, indices_ab],
+    bootstrap$t <- cbind(bootstrap$t[, indices_indirect],
                          get_contrasts(bootstrap$t, combinations,
                                        type = contrast))
   }
@@ -149,18 +149,11 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
 #' @export
 
 p_value.sobel_test_mediation <- function(object, parm = NULL, ...) {
-  # old behavior by default if new arguments are missing
-  if (missing(parm)) {
-    warning("default behavior will change in a future version, see the ",
-            sQuote("Note"), " section of the help file")
-    object$p_value
-  } else {
-    # combine p-value of indirect effect with that of other effects
-    p_values <- c(get_p_value(object$fit), ab = object$p_value)
-    # if requested, take subset of effects
-    if(!is.null(parm)) p_values <- p_values[parm]
-    p_values
-  }
+  # combine p-value of indirect effect with that of other effects
+  p_values <- c(get_p_value(object$fit), Indirect = object$p_value)
+  # if requested, take subset of effects
+  if(!is.null(parm)) p_values <- p_values[parm]
+  p_values
 }
 
 
@@ -229,19 +222,20 @@ get_p_value.cov_fit_mediation <- function(object, parm = NULL, boot = NULL,
     estimates <- c(object$a, object$b, object$direct, object$total)
     # compute standard errors
     summary <- get_summary(object)
-    p_values <- c(summary$a[1, 4], summary$b[1, 4], summary$direct[1, 4],
-                  summary$total[1, 4])
-    names(p_values) <- c("a", "b", "Direct", "Total")
+    p_values <- c(summary$a[1, 4], summary$b[1, 4], summary$total[1, 4],
+                  summary$direct[1, 4])
   } else {
     # compute means, standard errors and z-statistics from bootstrap replicates
-    keep <- c(3L, 5L:7L)
+    keep <- c(3L, 5L, 7L, 6L)
     estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
     se <- apply(boot$t[, keep], 2, sd, na.rm = TRUE)
     z <- estimates / se
     # compute p-values
     p_values <- p_value_z(z)
-    names(p_values) <- c("a", "b", "Direct", "Total")
   }
+  # add names
+  keep <- c("a", "b", "total", "direct")
+  names(p_values) <- get_effect_names(effects = object[keep])
   # if requested, take subset of effects
   if(!is.null(parm)) p_values <- p_values[parm]
   p_values
@@ -252,43 +246,70 @@ get_p_value.reg_fit_mediation <- function(object, parm = NULL, boot = NULL,
   # initializations
   p_x <- length(object$x)
   p_m <- length(object$m)
+  model <- object$model
   # extract point estimates and standard errors
   if(is.null(boot)) {
-    # extract p-values from regression models
-    if(p_m == 1L) p_value_mx <- p_value(object$fit_mx, parm = 1L + seq_len(p_x))
-    else p_value_mx <- sapply(object$fit_mx, p_value, parm = 1L + seq_len(p_x))
-    p_value_ymx <- p_value(object$fit_ymx, parm = 1L + seq_len(p_x + p_m))
+    # compute p-values for a path
+    if(p_m == 1L) p_value_a <- p_value(object$fit_mx, parm = 1L + seq_len(p_x))
+    else if (model == "serial") {
+      p_value_a <- mapply(p_value, object$fit_mx, parm = 1L + seq_len(p_m),
+                          USE.NAMES = FALSE)
+    } else {
+      p_value_a <- sapply(object$fit_mx, p_value, parm = 1L + seq_len(p_x),
+                          USE.NAMES = FALSE)
+    }
+    # for serial multiple mediator models, compute p-values for d path
+    if (model == "serial") {
+      j_list <- lapply(seq_len(p_m-1L), function(j) 1L + seq_len(j))
+      p_value_d <- mapply(p_value, object$fit_mx[-1L], parm = j_list,
+                          SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      p_value_d <- unlist(p_value_d, use.names = FALSE)
+    } else p_value_d <- NULL
+    # compute p-values for b path and direct effect
+    p_value_b <- p_value(object$fit_ymx, parm = 1L + seq_len(p_m))
+    p_value_direct <- p_value(object$fit_ymx, parm = 1L + p_m + seq_len(p_x))
     # compute p-value for total effect
     if(is.null(object$fit_yx)) {
       # p-value not available
-      p_value_yx <- rep.int(NA_real_, p_x)
+      p_value_total <- rep.int(NA_real_, p_x)
     } else {
       # extract p-value from regression model
-      p_value_yx <- p_value(object$fit_yx, parm = 1L + seq_len(p_x))
+      p_value_total <- p_value(object$fit_yx, parm = 1L + seq_len(p_x))
     }
     # combine p-values
-    p_values <- c(p_value_mx, p_value_ymx, p_value_yx)
-    names(p_values) <- get_effect_names(object$x, object$m)
+    p_values <- c(p_value_a, p_value_b, p_value_d,
+                  p_value_total, p_value_direct)
   } else {
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
-    p_covariates <- length(object$fit$covariates)
-    index_list <- get_index_list(p_x, p_m, p_covariates)
-    # the a path is the second coefficient in the model m ~ x + covariates
-    if(p_m == 1L) keep_mx <- index_list$fit_mx[1L + seq_len(p_x)]
-    else keep_mx <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
-    # keep b and c coefficients of model y ~ m + x + covariates
-    keep_ymx <- index_list$fit_ymx[1L + seq_len(p_x + p_m)]
+    p_covariates <- length(object$covariates)
+    index_list <- get_index_list(p_x, p_m, p_covariates, model = model)
+    # keep indices for a path in model m ~ x + covariates
+    if(p_m == 1L) keep_a <- index_list$fit_mx[1L + seq_len(p_x)]
+    else if (model == "serial") {
+      keep_a <- mapply("[", index_list$fit_mx, 1L + seq_len(p_m))
+    } else keep_a <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
+    # for serial multiple mediators, keep indices for d path
+    if (model == "serial") {
+      j_list <- lapply(seq_len(p_m-1L), function(j) 1L + seq_len(j))
+      keep_d <- unlist(mapply("[", index_list$fit_mx[-1L], parm = j_list,
+                              SIMPLIFY = FALSE, USE.NAMES = FALSE))
+    } else keep_d <- NULL
+    # keep indeces of b path and direct effect in model y ~ m + x + covariates
+    keep_b <- index_list$fit_ymx[1L + seq_len(p_m)]
+    keep_direct <- index_list$fit_ymx[1L + p_m + seq_len(p_x)]
     # index of total effect is stored separately in this list
-    keep <- c(keep_mx, keep_ymx, index_list$total)
+    keep <- c(keep_a, keep_b, keep_d, index_list$total, keep_direct)
     # compute means, standard errors and z-statistics from bootstrap replicates
     estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
     se <- apply(boot$t[, keep], 2L, sd, na.rm = TRUE)
     z <- estimates / se
     # compute p-values
     p_values <- p_value_z(z)
-    names(p_values) <- get_effect_names(object$x, object$m)
   }
+  # add names
+  keep <- c("a", "b", "d", "total", "direct")
+  names(p_values) <- get_effect_names(effects = object[keep])
   # if requested, take subset of effects
   if(!is.null(parm)) p_values <- p_values[parm]
   p_values
@@ -327,4 +348,14 @@ p_value.boot <- function(object, parm = 1L, digits = 4L,
   }
   # return smallest significance level where 0 is not in the confidence interval
   alpha
+}
+
+
+## internal function to compute p-value based on normal distribution
+p_value_z <- function(z, alternative = c("twosided", "less", "greater")) {
+  # initializations
+  alternative <- match.arg(alternative)
+  # compute p-value
+  switch(alternative, twosided = 2 * pnorm(abs(z), lower.tail = FALSE),
+         less = pnorm(z), greater = pnorm(z, lower.tail = FALSE))
 }

@@ -81,7 +81,7 @@ confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
     ci <- get_confint(object$fit, level = object$level, boot = object$reps)
   } else ci <- get_confint(object$fit, level = object$level)
   # combine with confidence interval of indirect effect
-  if (nr_indirect == 1L) ci <- rbind(ci, "Indirect" = object$ci)
+  if (nr_indirect == 1L) ci <- rbind(ci, Indirect = object$ci)
   else {
     ci_indirect <- object$ci
     rownames(ci_indirect) <- paste("Indirect", rownames(ci_indirect), sep = "_")
@@ -107,7 +107,7 @@ confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
   ci <- confint_z(object$fit$indirect, object$se, level = level,
                   alternative = object$alternative)
   # combine with confidence intervalse of other effects
-  ci <- rbind(get_confint(object$fit, level = level), "Indirect" = ci)
+  ci <- rbind(get_confint(object$fit, level = level), Indirect = ci)
   if(object$alternative != "twosided") colnames(ci) <- c("Lower", "Upper")
   # if requested, take subset of effects
   if(!is.null(parm)) ci <- ci[parm, , drop = FALSE]
@@ -233,13 +233,12 @@ get_confint.reg_fit_mediation <- function(object, parm = NULL, level = 0.95,
   } else {
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
-    p_covariates <- length(object$fit$covariates)
+    p_covariates <- length(object$covariates)
     index_list <- get_index_list(p_x, p_m, p_covariates, model = model)
     # keep indices for a path in model m ~ x + covariates
     if (p_m == 1L) keep_a <- index_list$fit_mx[1L + seq_len(p_x)]
     else if (model == "serial") {
-      keep_a <- mapply("[", index_list$fit_mx, 1L + seq_len(p_m),
-                       USE.NAMES = FALSE)
+      keep_a <- mapply("[", index_list$fit_mx, 1L + seq_len(p_m))
     } else keep_a <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
     # for serial multiple mediators, keep indices for d path
     if (model == "serial") {
