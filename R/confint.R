@@ -73,7 +73,8 @@ NULL
 confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
                                         type = c("boot", "data"), ...) {
   # number of hypothesized mediators
-  nr_indirect <- length(object$fit$x) * length(object$fit$m)
+  nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
+                                 model = object$fit$model)
   # confidence interval of other effects
   type <- match.arg(type)
   if (type == "boot") {
