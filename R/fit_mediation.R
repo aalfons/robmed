@@ -253,13 +253,15 @@ fit_mediation.formula <- function(formula, data, ...) {
   index_y <- 1
   y <- names(mf)[index_y]
   # make sure that mediators are specified
-  index_m <- which(sapply(mf, inherits, "parallel_mediators"))
+  index_m <- which(sapply(mf, inherits, "mediators"))
   if (length(index_m) == 0) {
     stop("mediators must be specified using m() in the formula")
   } else if (length(index_m) > 1) {
     stop("use m() only once in the formula to specify all mediators")
   }
   m <- colnames(mf[[index_m]])
+  if (inherits(mf[[index_m]], "serial_mediators")) model <- "serial"
+  else model <- "parallel"
   # check if covariates are specified
   index_covariates <- which(sapply(mf, inherits, "covariates"))
   if (length(index_covariates) > 1) {
@@ -286,7 +288,8 @@ fit_mediation.formula <- function(formula, data, ...) {
   # rebuild data frame
   data <- do.call(data.frame, mf)
   # call default method
-  fit_mediation(data, x = x, y = y, m = m, covariates = covariates, ...)
+  fit_mediation(data, x = x, y = y, m = m, covariates = covariates,
+                model = model, ...)
 }
 
 

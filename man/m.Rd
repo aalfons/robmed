@@ -2,30 +2,48 @@
 % Please edit documentation in R/formula.R
 \name{m}
 \alias{m}
+\alias{parallel_m}
+\alias{serial_m}
 \alias{covariates}
 \title{Create an object of hypothesized mediators or control variables}
 \usage{
-m(...)
+m(..., .model = c("parallel", "serial"))
+
+parallel_m(...)
+
+serial_m(...)
 
 covariates(...)
 }
 \arguments{
 \item{\dots}{variables are supplied as arguments, as usual separated by a
 comma.}
+
+\item{.model}{a character string specifying the type of model in case of
+multiple mediators.  Possible values are \code{"parallel"} (the default) for
+the parallel multiple mediator model, or \code{"serial"} for the serial
+multiple mediator model.}
 }
 \value{
-\code{m()} returns an object of class \code{"parallel_mediators"}
+\code{m()} returns an object inheriting from class
+\code{"mediators"} (with subclass \code{"parallel_mediators"} or
+\code{"serial_mediators"} as specified by argument \code{.model}),
 and \code{covariates()} returns an object of class \code{"covariates"}.
 Typically, these inherit from class \code{"matrix"}.
 }
 \description{
-\code{m()} creates an object of hypothesized mediators, while
-\code{covariates()} creates an object of control variables.  Usually,
-these are used in a formula specifying a mediation model.
+\code{m()} and its wrappers \code{parallel_m()} and \code{serial_m()}
+create an object of hypothesized mediators, while \code{covariates()}
+creates an object of control variables.  Usually, these are used in a
+formula specifying a mediation model.
 }
 \details{
-These are essentially wrappers for \code{\link[base]{cbind}()} with a
-specific class prepended to the class(es) of the resulting object.
+\code{m()} and \code{covariates()} are essentially wrappers for
+\code{\link[base]{cbind}()} with a specific class prepended to the
+class(es) of the resulting object.
+
+\code{parallel_m()} and \code{serial_m()} are wrappers for \code{m()} with
+the respective value for argument \code{.model}.
 }
 \note{
 The formula interface is still experimental and may change in future

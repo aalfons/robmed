@@ -5,17 +5,28 @@
 
 #' Create an object of hypothesized mediators or control variables
 #'
-#' \code{m()} creates an object of hypothesized mediators, while
-#' \code{covariates()} creates an object of control variables.  Usually,
-#' these are used in a formula specifying a mediation model.
+#' \code{m()} and its wrappers \code{parallel_m()} and \code{serial_m()}
+#' create an object of hypothesized mediators, while \code{covariates()}
+#' creates an object of control variables.  Usually, these are used in a
+#' formula specifying a mediation model.
 #'
-#' These are essentially wrappers for \code{\link[base]{cbind}()} with a
-#' specific class prepended to the class(es) of the resulting object.
+#' \code{m()} and \code{covariates()} are essentially wrappers for
+#' \code{\link[base]{cbind}()} with a specific class prepended to the
+#' class(es) of the resulting object.
+#'
+#' \code{parallel_m()} and \code{serial_m()} are wrappers for \code{m()} with
+#' the respective value for argument \code{.model}.
 #'
 #' @param \dots  variables are supplied as arguments, as usual separated by a
 #' comma.
+#' @param .model  a character string specifying the type of model in case of
+#' multiple mediators.  Possible values are \code{"parallel"} (the default) for
+#' the parallel multiple mediator model, or \code{"serial"} for the serial
+#' multiple mediator model.
 #'
-#' @return \code{m()} returns an object of class \code{"parallel_mediators"}
+#' @return \code{m()} returns an object inheriting from class
+#' \code{"mediators"} (with subclass \code{"parallel_mediators"} or
+#' \code{"serial_mediators"} as specified by argument \code{.model}),
 #' and \code{covariates()} returns an object of class \code{"covariates"}.
 #' Typically, these inherit from class \code{"matrix"}.
 #'
@@ -41,7 +52,9 @@
 #' @keywords utilities
 #' @export
 
-m <- function(...) {
+m <- function(..., .model = c("parallel", "serial")) {
+  # initializations
+  .model <- match.arg(.model)
   # This is a bit of a hack: returning a data frame would cause an error
   # with model.frame() in fit_mediation().  Instead, use cbind() to create
   # a matrix and store information on variable types as arguments.
@@ -53,13 +66,26 @@ m <- function(...) {
     if (is.factor(x)) levels(x)
   })
   # add class
-  class(out) <- c("parallel_mediators", class(out))
+  class(out) <- c(paste(.model, "mediators", sep = "_"),
+                  "mediators", class(out))
   # add information on variable types as attributes
   attr(out, "column_types") <- classes
   attr(out, "factor_levels") <- levels
   # return object
   out
 }
+
+
+#' @rdname m
+#' @export
+
+parallel_m <- function(...) m(..., .model = "parallel")
+
+
+#' @rdname m
+#' @export
+
+serial_m <- function(...) m(..., .model = "serial")
 
 
 #' @rdname m
@@ -119,7 +145,7 @@ convert_to_df <- function(x, row.names = NULL, optional = FALSE, ...) {
 }
 
 # convert "parallel_mediators" object to data frame
-as.data.frame.parallel_mediators <- convert_to_df
+as.data.frame.mediators <- convert_to_df
 
 # convert "covariates" object to data frame
 as.data.frame.covariates <- convert_to_df
