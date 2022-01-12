@@ -1,4 +1,4 @@
-context("bootstrap test: simple mediation, no covariates")
+context("bootstrap test: simple mediation, covariates")
 
 
 ## load package
@@ -8,7 +8,7 @@ library("robmed", quietly = TRUE)
 n <- 250            # number of observations
 a <- c <- 0.2       # true effects
 b <- 0              # true effect
-seed <- 20150601    # seed for the random number generator
+seed <- 20190201    # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
@@ -17,68 +17,71 @@ set.seed(seed)
 X <- rnorm(n)
 M <- a * X + rnorm(n)
 Y <- b * M + c * X + rnorm(n)
-test_data <- data.frame(X, Y, M)
+C1 <- rnorm(n)
+C2 <- rnorm(n)
+test_data <- data.frame(X, Y, M, C1, C2)
 
 ## arguments for bootstrap tests
-R <- 100                                # number of bootstrap samples
-level <- 0.9                            # confidence level
-type <- "perc"                          # type of confidence intervals
-reg_ctrl <- reg_control(efficiency = 0.95)  # for MM-regression estimator
-cov_ctrl <- cov_control(prob = 0.9)         # for winsorized covariance matrix
+R <- 100                                   # number of bootstrap samples
+level <- 0.9                               # confidence level
+type <- "perc"                             # type of confidence intervals
+ctrl <- reg_control(max_iterations = 500)  # for MM-regression estimator
 
 ## perform bootstrap tests
 boot_list <- list(
   robust = {
     set.seed(seed)
     test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   test = "boot", R = R, level = level, type = type,
-                   method = "regression", robust = TRUE, control = reg_ctrl)
+                   covariates = c("C1", "C2"), test = "boot",
+                   R = R, level = level, type = type,
+                   method = "regression", robust = TRUE,
+                   control = ctrl)
   },
   median = {
     set.seed(seed)
     test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   test = "boot", R = R, level = level, type = type,
+                   covariates = c("C1", "C2"), test = "boot",
+                   R = R, level = level, type = type,
                    method = "regression", robust = "median")
   },
   OLS = {
     set.seed(seed)
     test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   test = "boot", R = R, level = level, type = type,
-                   method = "regression", robust = FALSE, family = "gaussian")
-  },
+                   covariates = c("C1", "C2"), test = "boot",
+                   R = R, level = level, type = type,
+                   method = "regression", robust = FALSE,
+                   family = "gaussian")
+  # },
   # student = {
   #   set.seed(seed)
   #   suppressWarnings(
   #     test_mediation(test_data, x = "X", y = "Y", m = "M",
-  #                    test = "boot", R = R, level = level, type = type,
-  #                    method = "regression", robust = FALSE, family = "student")
+  #                    covariates = c("C1", "C2"), test = "boot",
+  #                    R = R, level = level, type = type,
+  #                    method = "regression", robust = FALSE,
+  #                    family = "student")
   #   )
   # },
   # select = {
   #   set.seed(seed)
   #   suppressWarnings(
   #     test_mediation(test_data, x = "X", y = "Y", m = "M",
-  #                    test = "boot", R = R, level = level, type = type,
-  #                    method = "regression", robust = FALSE, family = "select")
+  #                    covariates = c("C1", "C2"), test = "boot",
+  #                    R = R, level = level, type = type,
+  #                    method = "regression", robust = FALSE,
+  #                    family = "select")
   #   )
-  # },
-  winsorized = {
-    set.seed(seed)
-    test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   test = "boot", R = R, level = level, type = type,
-                   method = "covariance", robust = TRUE, control = cov_ctrl)
-  },
-  ML = {
-    set.seed(seed)
-    test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   test = "boot", R = R, level = level, type = type,
-                   method = "covariance", robust = FALSE)
   }
 )
 
 ## compute summaries
 summary_boot_list <- lapply(boot_list, summary, type = "boot")
 summary_data_list <- lapply(boot_list, summary, type = "data")
+
+## relevant information
+classes <- c(robust = "summary_lmrob", median = "summary_rq",
+             OLS = "summary_lm", student = "summary_lmse",
+             select = "summary_lm")
 
 ## correct values
 coef_names <- c("a", "b", "Total", "Direct", "Indirect")
@@ -95,6 +98,17 @@ for (method in methods) {
   summary_boot <- summary_boot_list[[method]]
   summary_data <- summary_data_list[[method]]
 
+  ## correct values
+  class <- classes[method]
+  family <- if (method %in% c("student", "select")) method else "gaussian"
+  if (method == "student") {
+    mx_names <- c("(Intercept.DP)", "X", "C1", "C2")
+    ymx_names <- c("(Intercept.DP)", "M", "X", "C1", "C2")
+  } else {
+    mx_names <- c("(Intercept)", "X", "C1", "C2")
+    ymx_names <- c("(Intercept)", "M", "X", "C1", "C2")
+  }
+
 
   ## run tests
 
@@ -103,7 +117,8 @@ for (method in methods) {
     # bootstrap test
     expect_s3_class(boot, "boot_test_mediation")
     expect_s3_class(boot, "test_mediation")
-    # model fit
+    # regression fit
+    expect_s3_class(boot$fit, "reg_fit_mediation")
     expect_s3_class(boot$fit, "fit_mediation")
     # bootstrap replicates
     expect_s3_class(boot$reps, "boot")
@@ -125,21 +140,24 @@ for (method in methods) {
     expect_identical(boot$fit$x, "X")
     expect_identical(boot$fit$y, "Y")
     expect_identical(boot$fit$m, "M")
-    expect_identical(boot$fit$covariates, character())
+    expect_identical(boot$fit$covariates, c("C1", "C2"))
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(boot$fit$robust, "MM")
-      expect_equal(boot$fit$control, reg_ctrl)
+      expect_equal(boot$fit$control, ctrl)
     } else if (method == "median") {
       expect_identical(boot$fit$robust, "median")
       expect_null(boot$fit$control)
-    } else if (method == "winsorized") {
-      expect_true(boot$fit$robust)
-      expect_equal(boot$fit$control, cov_ctrl)
     } else {
       expect_false(boot$fit$robust)
       expect_null(boot$fit$control)
     }
+    # assumed error distribution
+    expect_identical(boot$fit$family, family)
+    # mediation model
+    expect_identical(boot$fit$model, "simple")
+    # no contrasts
+    expect_false(boot$fit$contrast)
 
   })
 
@@ -150,7 +168,7 @@ for (method in methods) {
     # only one indirect effect, so only one confidence interval
     expect_length(boot$ci, 2L)
     # dimensions of bootstrap replicates
-    expect_identical(dim(boot$reps$t), c(as.integer(R), 7L))
+    expect_identical(dim(boot$reps$t), c(as.integer(R), 11L))
 
   })
 
@@ -179,11 +197,11 @@ for (method in methods) {
     expect_equivalent(coef(boot, parm = "a", type = "boot"),
                       mean(boot$reps$t[, 3]))
     expect_equivalent(coef(boot, parm = "b", type = "boot"),
-                      mean(boot$reps$t[, 5]))
-    expect_equivalent(coef(boot, parm = "Total", type = "boot"),
                       mean(boot$reps$t[, 7]))
+    expect_equivalent(coef(boot, parm = "Total", type = "boot"),
+                      mean(boot$reps$t[, 11]))
     expect_equivalent(coef(boot, parm = "Direct", type = "boot"),
-                      mean(boot$reps$t[, 6]))
+                      mean(boot$reps$t[, 8]))
     expect_equivalent(coef(boot, parm = "Indirect", type = "boot"),
                       boot$indirect)
 
@@ -234,7 +252,9 @@ for (method in methods) {
     expect_identical(summary_boot$object, boot)
     expect_identical(summary_data$object, boot)
     # summary of the model fit
+    expect_s3_class(summary_boot$summary, "summary_reg_fit_mediation")
     expect_s3_class(summary_boot$summary, "summary_fit_mediation")
+    expect_s3_class(summary_data$summary, "summary_reg_fit_mediation")
     expect_s3_class(summary_data$summary, "summary_fit_mediation")
     # diagnostic plot only for ROBMED
     if (method == "robust") {
@@ -247,170 +267,12 @@ for (method in methods) {
 
   })
 
-  test_that("attributes are correctly passed through summary", {
-
-    # robustness
-    if (method == "robust") {
-      expect_identical(summary_boot$summary$robust, "MM")
-      expect_identical(summary_data$summary$robust, "MM")
-    } else if (method == "median") {
-      expect_identical(summary_boot$summary$robust, "median")
-      expect_identical(summary_data$summary$robust, "median")
-    } else if (method == "winsorized") {
-      expect_true(summary_boot$summary$robust)
-      expect_true(summary_data$summary$robust)
-    } else {
-      expect_false(summary_boot$summary$robust)
-      expect_false(summary_data$summary$robust)
-    }
-    # number of observations
-    expect_identical(summary_boot$summary$n, as.integer(n))
-    expect_identical(summary_data$summary$n, as.integer(n))
-    # variable names
-    expect_identical(summary_boot$summary$x, "X")
-    expect_identical(summary_boot$summary$y, "Y")
-    expect_identical(summary_boot$summary$m, "M")
-    expect_identical(summary_boot$summary$covariates, character())
-    expect_identical(summary_data$summary$x, "X")
-    expect_identical(summary_data$summary$y, "Y")
-    expect_identical(summary_data$summary$m, "M")
-    expect_identical(summary_data$summary$covariates, character())
-
-  })
-
-  test_that("effect summaries have correct names", {
-
-   # total effect
-    expect_identical(dim(summary_boot$summary$total),
-                     c(1L, 5L))
-    expect_identical(rownames(summary_boot$summary$total),
-                     "X")
-    expect_identical(colnames(summary_boot$summary$total)[1:2],
-                     c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$total),
-                     c(1L, 4L))
-    expect_identical(rownames(summary_data$summary$total),
-                     "X")
-    expect_identical(colnames(summary_data$summary$total)[1],
-                     "Estimate")
-    # direct effect
-    expect_identical(dim(summary_boot$summary$direct),
-                     c(1L, 5L))
-    expect_identical(rownames(summary_boot$summary$direct),
-                     "X")
-    expect_identical(colnames(summary_boot$summary$direct)[1:2],
-                     c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$direct),
-                     c(1L, 4L))
-    expect_identical(rownames(summary_data$summary$direct),
-                     "X")
-    expect_identical(colnames(summary_data$summary$direct)[1],
-                     "Estimate")
-
-  })
-
-  test_that("effect summaries contain correct coefficient values", {
-
-    # effects computed on original sample
-    expect_identical(summary_boot$summary$total["X", "Data"],
-                     boot$fit$total)
-    expect_identical(summary_boot$summary$direct["X", "Data"],
-                     boot$fit$direct)
-    expect_identical(summary_data$summary$total["X", "Estimate"],
-                     boot$fit$total)
-    expect_identical(summary_data$summary$direct["X", "Estimate"],
-                     boot$fit$direct)
-
-    # bootstrapped effects
-    expect_equal(summary_boot$summary$total["X", "Boot"],
-                 mean(boot$reps$t[, 7]))
-    expect_equal(summary_boot$summary$direct["X", "Boot"],
-                 mean(boot$reps$t[, 6]))
-
-  })
-
-  test_that("output of p_value() method has correct attributes", {
-
-    digits <- 3
-    p_boot <- p_value(boot, type = "boot", digits = digits)
-    p_data <- p_value(boot, type = "data", digits = digits)
-    # bootstrapped effects
-    expect_length(p_boot, 5L)
-    expect_named(p_boot, coef_names)
-    expect_equal(p_boot["Indirect"], round(p_boot["Indirect"], digits = digits))
-    # effects computed on original sample
-    expect_length(p_data, 5L)
-    expect_named(p_data, coef_names)
-    expect_equal(p_data["Indirect"], round(p_data["Indirect"], digits = digits))
-
-  })
-
-}
-
-
-
-## additional tests for regression fits
-
-# relevant information
-reg_methods <- c("robust", "median", "OLS", "student", "select")
-classes <- c(robust = "summary_lmrob", median = "summary_rq",
-             OLS = "summary_lm", student = "summary_lmse",
-             select = "summary_lm")
-
-# loop over methods
-for (method in intersect(methods, reg_methods)) {
-
-  # extract information for current method
-  boot <- boot_list[[method]]
-  summary_boot <- summary_boot_list[[method]]
-  summary_data <- summary_data_list[[method]]
-
-  ## correct values
-  class <- classes[method]
-  family <- if (method %in% c("student", "select")) method else "gaussian"
-  if (method == "student") {
-    mx_names <- c("(Intercept.DP)", "X")
-    ymx_names <- c("(Intercept.DP)", "M", "X")
-  } else {
-    mx_names <- c("(Intercept)", "X")
-    ymx_names <- c("(Intercept)", "M", "X")
-  }
-
-
-  ## run tests
-
-  test_that("output has correct structure", {
-
-    # regression fit
-    expect_s3_class(boot$fit, "reg_fit_mediation")
-
-  })
-
-  test_that("arguments are correctly passed", {
-
-    # assumed error distribution
-    expect_identical(boot$fit$family, family)
-    # mediation model
-    expect_identical(boot$fit$model, "simple")
-    # no contrasts
-    expect_false(boot$fit$contrast)
-
-  })
-
-  test_that("summary has correct structure", {
-
-    # summary of the model fit
-    expect_s3_class(summary_boot$summary, "summary_reg_fit_mediation")
-    expect_s3_class(summary_data$summary, "summary_reg_fit_mediation")
-
-  })
-
   # different combinations of model summaries
   combinations <- expand.grid(summary = c("boot", "data"),
                               fit = c("fit_mx", "fit_ymx"),
                               stringsAsFactors = FALSE)
   # correct degrees of freedom in the numerator for F-test
-  df1 <- c(1, 1, 2, 2)
+  df1 <- c(3, 3, 4, 4)
 
   # loop over model summaries
   for (i in 1:nrow(combinations)) {
@@ -479,33 +341,87 @@ for (method in intersect(methods, reg_methods)) {
 
   }
 
+  test_that("attributes are correctly passed through summary", {
+
+    # robustness
+    if (method == "robust") {
+      expect_identical(summary_boot$summary$robust, "MM")
+      expect_identical(summary_data$summary$robust, "MM")
+    } else if (method == "median") {
+      expect_identical(summary_boot$summary$robust, "median")
+      expect_identical(summary_data$summary$robust, "median")
+    } else {
+      expect_false(summary_boot$summary$robust)
+      expect_false(summary_data$summary$robust)
+    }
+    # number of observations
+    expect_identical(summary_boot$summary$n, as.integer(n))
+    expect_identical(summary_data$summary$n, as.integer(n))
+    # variable names
+    expect_identical(summary_boot$summary$x, "X")
+    expect_identical(summary_boot$summary$y, "Y")
+    expect_identical(summary_boot$summary$m, "M")
+    expect_identical(summary_boot$summary$covariates, c("C1", "C2"))
+    expect_identical(summary_data$summary$x, "X")
+    expect_identical(summary_data$summary$y, "Y")
+    expect_identical(summary_data$summary$m, "M")
+    expect_identical(summary_data$summary$covariates, c("C1", "C2"))
+
+  })
+
   test_that("effect summaries have correct names", {
 
     # regression m ~ x
     expect_identical(dim(summary_boot$summary$fit_mx$coefficients),
-                     c(2L, 5L))
+                     c(4L, 5L))
     expect_identical(rownames(summary_boot$summary$fit_mx$coefficients),
                      mx_names)
     expect_identical(colnames(summary_boot$summary$fit_mx$coefficients)[1:2],
                      c("Data", "Boot"))
     expect_identical(dim(summary_data$summary$fit_mx$coefficients),
-                     c(2L, 4L))
+                     c(4L, 4L))
     expect_identical(rownames(summary_data$summary$fit_mx$coefficients),
                      mx_names)
     expect_identical(colnames(summary_data$summary$fit_mx$coefficients)[1],
                      "Estimate")
     # regression y ~ m + x
     expect_identical(dim(summary_boot$summary$fit_ymx$coefficients),
-                     c(3L, 5L))
+                     c(5L, 5L))
     expect_identical(rownames(summary_boot$summary$fit_ymx$coefficient),
                      ymx_names)
     expect_identical(colnames(summary_boot$summary$fit_ymx$coefficient)[1:2],
                      c("Data", "Boot"))
     expect_identical(dim(summary_data$summary$fit_ymx$coefficient),
-                     c(3L, 4L))
+                     c(5L, 4L))
     expect_identical(rownames(summary_data$summary$fit_ymx$coefficient),
                      ymx_names)
     expect_identical(colnames(summary_data$summary$fit_ymx$coefficient)[1],
+                     "Estimate")
+    # total effect
+    expect_identical(dim(summary_boot$summary$total),
+                     c(1L, 5L))
+    expect_identical(rownames(summary_boot$summary$total),
+                     "X")
+    expect_identical(colnames(summary_boot$summary$total)[1:2],
+                     c("Data", "Boot"))
+    expect_identical(dim(summary_data$summary$total),
+                     c(1L, 4L))
+    expect_identical(rownames(summary_data$summary$total),
+                     "X")
+    expect_identical(colnames(summary_data$summary$total)[1],
+                     "Estimate")
+    # direct effect
+    expect_identical(dim(summary_boot$summary$direct),
+                     c(1L, 5L))
+    expect_identical(rownames(summary_boot$summary$direct),
+                     "X")
+    expect_identical(colnames(summary_boot$summary$direct)[1:2],
+                     c("Data", "Boot"))
+    expect_identical(dim(summary_data$summary$direct),
+                     c(1L, 4L))
+    expect_identical(rownames(summary_data$summary$direct),
+                     "X")
+    expect_identical(colnames(summary_data$summary$direct)[1],
                      "Estimate")
 
   })
@@ -517,92 +433,85 @@ for (method in intersect(methods, reg_methods)) {
                       boot$fit$a)
     expect_identical(summary_boot$summary$fit_ymx$coefficients[2, "Data"],
                      boot$fit$b)
+    expect_identical(summary_boot$summary$total["X", "Data"],
+                     boot$fit$total)
+    expect_identical(summary_boot$summary$direct["X", "Data"],
+                     boot$fit$direct)
     expect_equivalent(summary_data$summary$fit_mx$coefficients[2, "Estimate"],
                       boot$fit$a)
     expect_identical(summary_data$summary$fit_ymx$coefficients[2, "Estimate"],
                      boot$fit$b)
+    expect_identical(summary_data$summary$total["X", "Estimate"],
+                     boot$fit$total)
+    expect_identical(summary_data$summary$direct["X", "Estimate"],
+                     boot$fit$direct)
 
     # bootstrapped effects
     expect_equivalent(summary_boot$summary$fit_mx$coefficients[2, "Boot"],
                       mean(boot$reps$t[, 3]))
     expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2, "Boot"],
-                      mean(boot$reps$t[, 5]))
+                      mean(boot$reps$t[, 7]))
+    expect_equal(summary_boot$summary$total["X", "Boot"],
+                 mean(boot$reps$t[, 11]))
+    expect_equal(summary_boot$summary$direct["X", "Boot"],
+                 mean(boot$reps$t[, 8]))
 
   })
 
-}
+  test_that("output of p_value() method has correct attributes", {
 
-
-## additional tests for covariance fits
-
-# relevant information
-cov_methods <- c("winsorized", "ML")
-
-# loop over methods
-for (method in intersect(methods, cov_methods)) {
-
-  # extract information for current method
-  boot <- boot_list[[method]]
-  summary_boot <- summary_boot_list[[method]]
-  summary_data <- summary_data_list[[method]]
-
-
-  ## run tests
-
-
-  test_that("output has correct structure", {
-
-    # covariance fit
-    expect_s3_class(boot$fit, "cov_fit_mediation")
-
-  })
-
-  test_that("summary has correct structure", {
-
-    # summary of the model fit
-    expect_s3_class(summary_boot$summary, "summary_cov_fit_mediation")
-    expect_s3_class(summary_data$summary, "summary_cov_fit_mediation")
-    # no regression model summaries
-    expect_null(summary_boot$summary$fit_mx)
-    expect_null(summary_boot$summary$fit_ymx)
-    expect_null(summary_data$summary$fit_mx)
-    expect_null(summary_data$summary$fit_ymx)
-
-  })
-
-  test_that("effect summaries have correct names", {
-
-    # a path
-    expect_identical(dim(summary_boot$summary$a), c(1L, 5L))
-    expect_identical(rownames(summary_boot$summary$a), "X")
-    expect_identical(colnames(summary_boot$summary$a)[1:2], c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$a), c(1L, 4L))
-    expect_identical(rownames(summary_data$summary$a), "X")
-    expect_identical(colnames(summary_data$summary$a)[1], "Estimate")
-    # b path
-    expect_identical(dim(summary_boot$summary$b), c(1L, 5L))
-    expect_identical(rownames(summary_boot$summary$b), "M")
-    expect_identical(colnames(summary_boot$summary$b)[1:2], c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$b), c(1L, 4L))
-    expect_identical(rownames(summary_data$summary$b), "M")
-    expect_identical(colnames(summary_data$summary$b)[1], "Estimate")
-
-  })
-
-  test_that("effect summaries contain correct coefficient values", {
-
-    # effects computed on original sample
-    expect_identical(summary_boot$summary$a["X", "Data"], boot$fit$a)
-    expect_identical(summary_boot$summary$b["M", "Data"], boot$fit$b)
-    expect_identical(summary_data$summary$a["X", "Estimate"], boot$fit$a)
-    expect_identical(summary_data$summary$b["M", "Estimate"], boot$fit$b)
-
+    digits <- 3
+    p_boot <- p_value(boot, type = "boot", digits = digits)
+    p_data <- p_value(boot, type = "data", digits = digits)
     # bootstrapped effects
-    expect_equal(summary_boot$summary$a["X", "Boot"],
-                 mean(boot$reps$t[, 3]))
-    expect_equal(summary_boot$summary$b["M", "Boot"],
-                 mean(boot$reps$t[, 5]))
+    expect_length(p_boot, 5L)
+    expect_named(p_boot, coef_names)
+    expect_equal(p_boot["Indirect"], round(p_boot["Indirect"], digits = digits))
+    # effects computed on original sample
+    expect_length(p_data, 5L)
+    expect_named(p_data, coef_names)
+    expect_equal(p_data["Indirect"], round(p_data["Indirect"], digits = digits))
 
   })
 
 }
+
+
+# ## covariance fits only implemented for simple mediation without covariates
+#
+# # argument values
+# cov_args <- list(winsorized = list(robust = TRUE),
+#                  ML = list(robust = FALSE))
+#
+# # loop over methods
+# cov_methods <- names(cov_args)
+# for (method in cov_methods) {
+#
+#   # argument values
+#   robust <- cov_args[[method]]$robust
+#
+#
+#   # run tests
+#
+#   test_that("covariates not implemented", {
+#
+#     # use regression fit
+#     set.seed(seed)
+#     reg_boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
+#                                 covariates = c("C1", "C2"), test = "boot",
+#                                 method = "regression", robust = robust)
+#
+#     # try to use covariance fit with covariates (should give warning)
+#     set.seed(seed)
+#     expect_warning(
+#       cov_boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
+#                                   covariates = c("C1", "C2"), test = "boot",
+#                                   method = "covariance", robust = robust)
+#     )
+#
+#     # these should be the same
+#     expect_equal(cov_boot, reg_boot)
+#
+#   })
+#
+# }

@@ -83,7 +83,7 @@ for (method in methods) {
 
   test_that("output has correct structure", {
 
-    # regression fit
+    # model fit
     expect_s3_class(fit, "fit_mediation")
 
   })

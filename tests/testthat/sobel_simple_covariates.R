@@ -1,4 +1,4 @@
-context("Sobel test: simple mediation, no covariates")
+context("Sobel test: simple mediation, covariates")
 
 
 ## load package
@@ -8,7 +8,7 @@ library("robmed", quietly = TRUE)
 n <- 250            # number of observations
 a <- c <- 0.2       # true effects
 b <- 0              # true effect
-seed <- 20150601    # seed for the random number generator
+seed <- 20190201    # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
@@ -17,42 +17,40 @@ set.seed(seed)
 X <- rnorm(n)
 M <- a * X + rnorm(n)
 Y <- b * M + c * X + rnorm(n)
-test_data <- data.frame(X, Y, M)
+C1 <- rnorm(n)
+C2 <- rnorm(n)
+test_data <- data.frame(X, Y, M, C1, C2)
 
 ## control parameters for methods
-reg_ctrl <- reg_control(efficiency = 0.95)  # for MM-regression estimator
-cov_ctrl <- cov_control(prob = 0.9)         # for winsorized covariance matrix
+ctrl <- reg_control(max_iterations = 500)  # for MM-regression estimator
 
 ## perform Sobel tests
 sobel_list <- list(
   robust = {
     set.seed(seed)
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
-                   method = "regression", robust = TRUE, control = reg_ctrl)
+    test_mediation(test_data, x = "X", y = "Y", m = "M",
+                   covariates = c("C1", "C2"), test = "sobel",
+                   method = "regression", robust = TRUE, control = ctrl)
   },
   median = {
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
+    test_mediation(test_data, x = "X", y = "Y", m = "M",
+                   covariates = c("C1", "C2"), test = "sobel",
                    method = "regression", robust = "median")
   },
   OLS = {
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
+    test_mediation(test_data, x = "X", y = "Y", m = "M",
+                   covariates = c("C1", "C2"), test = "sobel",
                    method = "regression", robust = FALSE, family = "gaussian")
   },
   student = {
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
+    test_mediation(test_data, x = "X", y = "Y", m = "M",
+                   covariates = c("C1", "C2"), test = "sobel",
                    method = "regression", robust = FALSE, family = "student")
   },
   select = {
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
+    test_mediation(test_data, x = "X", y = "Y", m = "M",
+                   covariates = c("C1", "C2"), test = "sobel",
                    method = "regression", robust = FALSE, family = "select")
-  },
-  winsorized = {
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
-                   method = "covariance", robust = TRUE, control = cov_ctrl)
-  },
-  ML = {
-    test_mediation(test_data, x = "X", y = "Y", m = "M", test = "sobel",
-                   method = "covariance", robust = FALSE)
   }
 )
 
@@ -60,6 +58,9 @@ sobel_list <- list(
 summary_list <- lapply(sobel_list, summary)
 
 ## relevant information
+classes <- c(robust = "summary_lmrob", median = "summary_rq",
+             OLS = "summary_lm", student = "summary_lmse",
+             select = "summary_lm")
 level <- 0.9
 
 ## correct values
@@ -76,6 +77,17 @@ for (method in methods) {
   sobel <- sobel_list[[method]]
   summary <- summary_list[[method]]
 
+  ## correct values
+  class <- classes[method]
+  family <- if (method %in% c("student", "select")) method else "gaussian"
+  if (method == "student") {
+    mx_names <- c("(Intercept.DP)", "X", "C1", "C2")
+    ymx_names <- c("(Intercept.DP)", "M", "X", "C1", "C2")
+  } else {
+    mx_names <- c("(Intercept)", "X", "C1", "C2")
+    ymx_names <- c("(Intercept)", "M", "X", "C1", "C2")
+  }
+
 
   ## run tests
 
@@ -84,7 +96,8 @@ for (method in methods) {
     # Sobel test
     expect_s3_class(sobel, "sobel_test_mediation")
     expect_s3_class(sobel, "test_mediation")
-    # model fit
+    # regression fit
+    expect_s3_class(sobel$fit, "reg_fit_mediation")
     expect_s3_class(sobel$fit, "fit_mediation")
     # standard error
     expect_is(sobel$se, "numeric")
@@ -105,21 +118,24 @@ for (method in methods) {
     expect_identical(sobel$fit$x, "X")
     expect_identical(sobel$fit$y, "Y")
     expect_identical(sobel$fit$m, "M")
-    expect_identical(sobel$fit$covariates, character())
+    expect_identical(sobel$fit$covariates, c("C1", "C2"))
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(sobel$fit$robust, "MM")
-      expect_equal(sobel$fit$control, reg_ctrl)
+      expect_equal(sobel$fit$control, ctrl)
     } else if (method == "median") {
       expect_identical(sobel$fit$robust, "median")
       expect_null(sobel$fit$control)
-    } else if (method == "winsorized") {
-      expect_true(sobel$fit$robust)
-      expect_equal(sobel$fit$control, cov_ctrl)
     } else {
       expect_false(sobel$fit$robust)
       expect_null(sobel$fit$control)
     }
+    # assumed error distribution
+    expect_identical(sobel$fit$family, family)
+    # mediation model
+    expect_identical(sobel$fit$model, "simple")
+    # no contrasts
+    expect_false(sobel$fit$contrast)
 
   })
 
@@ -172,125 +188,17 @@ for (method in methods) {
     # original output of test for indirect effect
     expect_identical(summary$object, sobel)
     # summary of the model fit
+    expect_s3_class(summary$summary, "summary_reg_fit_mediation")
     expect_s3_class(summary$summary, "summary_fit_mediation")
     # no diagnostic plot
     expect_null(summary$plot)
 
   })
 
-  test_that("attributes are correctly passed through summary", {
-
-    # robustness
-    if (method == "robust") {
-      expect_identical(summary$summary$robust, "MM")
-    } else if (method == "median") {
-      expect_identical(summary$summary$robust, "median")
-    } else if (method == "winsorized") {
-      expect_true(summary$summary$robust)
-    } else {
-      expect_false(summary$summary$robust)
-    }
-    # number of observations
-    expect_identical(summary$summary$n, as.integer(n))
-    # variable names
-    expect_identical(summary$summary$x, "X")
-    expect_identical(summary$summary$y, "Y")
-    expect_identical(summary$summary$m, "M")
-    expect_identical(summary$summary$covariates, character())
-
-  })
-
-  test_that("effect summaries have correct names", {
-
-    # total effect
-    expect_identical(dim(summary$summary$total), c(1L, 4L))
-    expect_identical(rownames(summary$summary$total), "X")
-    expect_identical(colnames(summary$summary$total)[1], "Estimate")
-    # direct effect
-    expect_identical(dim(summary$summary$direct), c(1L, 4L))
-    expect_identical(rownames(summary$summary$direct), "X")
-    expect_identical(colnames(summary$summary$direct)[1], "Estimate")
-
-  })
-
-  test_that("effect summaries contain correct coefficient values", {
-
-    expect_identical(summary$summary$total["X", "Estimate"], sobel$fit$total)
-    expect_identical(summary$summary$direct["X", "Estimate"], sobel$fit$direct)
-
-  })
-
-  test_that("output of p_value() method has correct attributes", {
-
-    p_data <- p_value(sobel)
-    expect_length(p_data, 5L)
-    expect_named(p_data, coef_names)
-    expect_equivalent(p_data["Indirect"], sobel$p_value)
-
-  })
-
-}
-
-
-
-## additional tests for regression fits
-
-# relevant information
-reg_methods <- c("robust", "median", "OLS", "student", "select")
-classes <- c(robust = "summary_lmrob", median = "summary_rq",
-             OLS = "summary_lm", student = "summary_lmse",
-             select = "summary_lm")
-
-# loop over methods
-for (method in intersect(methods, reg_methods)) {
-
-  # extract information for current method
-  sobel <- sobel_list[[method]]
-  summary <- summary_list[[method]]
-
-  ## correct values
-  class <- classes[method]
-  family <- if (method %in% c("student", "select")) method else "gaussian"
-  if (method == "student") {
-    mx_names <- c("(Intercept.DP)", "X")
-    ymx_names <- c("(Intercept.DP)", "M", "X")
-  } else {
-    mx_names <- c("(Intercept)", "X")
-    ymx_names <- c("(Intercept)", "M", "X")
-  }
-
-
-  ## run tests
-
-  test_that("output has correct structure", {
-
-    # regression fit
-    expect_s3_class(sobel$fit, "reg_fit_mediation")
-
-  })
-
-  test_that("arguments are correctly passed", {
-
-    # assumed error distribution
-    expect_identical(sobel$fit$family, family)
-    # mediation model
-    expect_identical(sobel$fit$model, "simple")
-    # no contrasts
-    expect_false(sobel$fit$contrast)
-
-  })
-
-  test_that("summary has correct structure", {
-
-    # summary of the model fit
-    expect_s3_class(summary$summary, "summary_reg_fit_mediation")
-
-  })
-
   # model summaries of regressions m ~ x and y ~ m + x
   fit_names <- c("fit_mx", "fit_ymx")
   # correct degrees of freedom in the numerator for F-test
-  df1 <- c(1, 2)
+  df1 <- c(3, 4)
 
   # loop over model summaries
   for (i in 1:length(fit_names)) {
@@ -357,22 +265,50 @@ for (method in intersect(methods, reg_methods)) {
 
   }
 
+  test_that("attributes are correctly passed through summary", {
+
+    # robustness
+    if (method == "robust") {
+      expect_identical(summary$summary$robust, "MM")
+    } else if (method == "median") {
+      expect_identical(summary$summary$robust, "median")
+    } else {
+      expect_false(summary$summary$robust)
+    }
+    # number of observations
+    expect_identical(summary$summary$n, as.integer(n))
+    # variable names
+    expect_identical(summary$summary$x, "X")
+    expect_identical(summary$summary$y, "Y")
+    expect_identical(summary$summary$m, "M")
+    expect_identical(summary$summary$covariates, c("C1", "C2"))
+
+  })
+
   test_that("effect summaries have correct names", {
 
     # regression m ~ x
     expect_identical(dim(summary$summary$fit_mx$coefficients),
-                     c(2L, 4L))
+                     c(4L, 4L))
     expect_identical(rownames(summary$summary$fit_mx$coefficients),
                      mx_names)
     expect_identical(colnames(summary$summary$fit_mx$coefficients)[1],
                      "Estimate")
     # regression y ~ m + x
     expect_identical(dim(summary$summary$fit_ymx$coefficients),
-                     c(3L, 4L))
+                     c(5L, 4L))
     expect_identical(rownames(summary$summary$fit_ymx$coefficient),
                      ymx_names)
     expect_identical(colnames(summary$summary$fit_ymx$coefficient)[1],
                      "Estimate")
+    # total effect
+    expect_identical(dim(summary$summary$total), c(1L, 4L))
+    expect_identical(rownames(summary$summary$total), "X")
+    expect_identical(colnames(summary$summary$total)[1], "Estimate")
+    # direct effect
+    expect_identical(dim(summary$summary$direct), c(1L, 4L))
+    expect_identical(rownames(summary$summary$direct), "X")
+    expect_identical(colnames(summary$summary$direct)[1], "Estimate")
 
   })
 
@@ -382,61 +318,57 @@ for (method in intersect(methods, reg_methods)) {
                      sobel$fit$a)
     expect_identical(summary$summary$fit_ymx$coefficients["M", "Estimate"],
                      sobel$fit$b)
+    expect_identical(summary$summary$total["X", "Estimate"], sobel$fit$total)
+    expect_identical(summary$summary$direct["X", "Estimate"], sobel$fit$direct)
+
+  })
+
+  test_that("output of p_value() method has correct attributes", {
+
+    p_data <- p_value(sobel)
+    expect_length(p_data, 5L)
+    expect_named(p_data, coef_names)
+    expect_equivalent(p_data["Indirect"], sobel$p_value)
 
   })
 
 }
 
 
-## additional tests for covariance fits
+## covariance fits only implemented for simple mediation without covariates
 
-# relevant information
-cov_methods <- c("winsorized", "ML")
+# argument values
+cov_args <- list(winsorized = list(robust = TRUE),
+                 ML = list(robust = FALSE))
 
 # loop over methods
-for (method in intersect(methods, cov_methods)) {
+cov_methods <- names(cov_args)
+for (method in cov_methods) {
 
-  # extract information for current method
-  sobel <- sobel_list[[method]]
-  summary <- summary_list[[method]]
+  # argument values
+  robust <- cov_args[[method]]$robust
 
 
-  ## run tests
+  # run tests
 
-  test_that("output has correct structure", {
+  test_that("covariates not implemented", {
 
-    # covariance fit
-    expect_s3_class(sobel$fit, "cov_fit_mediation")
+    # use regression fit
+    set.seed(seed)
+    reg_sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M",
+                                covariates = c("C1", "C2"), test = "sobel",
+                                method = "regression", robust = robust)
 
-  })
+    # try to use covariance fit with covariates (should give warning)
+    set.seed(seed)
+    expect_warning(
+      cov_sobel <- test_mediation(test_data, x = "X", y = "Y", m = "M",
+                                  covariates = c("C1", "C2"), test = "sobel",
+                                  method = "covariance", robust = robust)
+    )
 
-  test_that("summary has correct structure", {
-
-    # summary of the model fit
-    expect_s3_class(summary$summary, "summary_cov_fit_mediation")
-    # no regression model summaries
-    expect_null(summary$summary$fit_mx)
-    expect_null(summary$summary$fit_ymx)
-
-  })
-
-  test_that("effect summaries have correct names", {
-
-    # a path
-    expect_identical(dim(summary$summary$a), c(1L, 4L))
-    expect_identical(rownames(summary$summary$a), "X")
-    expect_identical(colnames(summary$summary$a)[1], "Estimate")
-    # b path
-    expect_identical(dim(summary$summary$b), c(1L, 4L))
-    expect_identical(rownames(summary$summary$b), "M")
-    expect_identical(colnames(summary$summary$b)[1], "Estimate")
-
-  })
-
-  test_that("effect summaries contain correct coefficient values", {
-
-    expect_identical(summary$summary$a["X", "Estimate"], sobel$fit$a)
-    expect_identical(summary$summary$b["M", "Estimate"], sobel$fit$b)
+    # these should be the same
+    expect_equal(cov_sobel, reg_sobel)
 
   })
 
