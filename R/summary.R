@@ -378,8 +378,8 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
                  b = coefficients[2, , drop = FALSE],
                  total = coefficients[4, , drop = FALSE],
                  direct = coefficients[3, , drop = FALSE],
-                 x = x, y = y, m = m, n = n,
-                 robust = object$robust)
+                 x = x, y = y, m = m, covariates = object$covariates,
+                 n = n, robust = object$robust)
   class(result) <- c("summary_cov_fit_mediation", "summary_fit_mediation")
   result
 }
