@@ -137,9 +137,9 @@ for (method in methods) {
 
     expect_equivalent(coef(fit, parm = "a"), fit$a)
     expect_equivalent(coef(fit, parm = "b"), fit$b)
-    expect_equivalent(coef(fit, parm = "Total"), fit$total)
-    expect_equivalent(coef(fit, parm = "Direct"), fit$direct)
-    expect_equivalent(coef(fit, parm = "Indirect"), fit$indirect)
+    expect_equivalent(coef(fit, parm = "total"), fit$total)
+    expect_equivalent(coef(fit, parm = "direct"), fit$direct)
+    expect_equivalent(coef(fit, parm = "indirect"), fit$indirect)
 
   })
 

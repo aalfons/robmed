@@ -151,14 +151,14 @@ for (method in methods) {
 
   test_that("confint() method returns correct values of confidence intervals", {
 
-    ci_90 <- confint(sobel, parm = "Indirect", level = level)
+    ci_90 <- confint(sobel, parm = "indirect", level = level)
     if (method == "student") {
       # Sobel test not meaningful as higher moments may not exist
       expect_true(is.na(ci_90["Indirect", 1]))
       expect_true(is.na(ci_90["Indirect", 2]))
     } else {
       # default CI should be wider
-      ci_default <- confint(sobel, parm = "Indirect")  # should be 95%
+      ci_default <- confint(sobel, parm = "indirect")  # should be 95%
       expect_lt(ci_default["Indirect", 1], ci_90["Indirect", 1])
       expect_gt(ci_default["Indirect", 2], ci_90["Indirect", 2])
     }

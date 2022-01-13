@@ -216,8 +216,7 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
                SIMPLIFY = FALSE, USE.NAMES = FALSE)
   ci <- do.call(rbind, ci)
   # add row and column names
-  alpha <- 1 - level
-  cn <- paste(format(100 * c(alpha/2, 1 - alpha/2), trim = TRUE), "%")
+  cn <- get_ci_names(level)
   dimnames(ci) <- list(coef_names, cn)
   # -----
   # check parameters to extract

@@ -19,7 +19,10 @@ from class \code{"\link{fit_mediation}"} containing a (robust) mediation
 model fit.}
 
 \item{parm}{an integer, character or logical vector specifying the
-coefficients to be extracted, or \code{NULL} to extract all coefficients.}
+paths for which to extract coefficients, or \code{NULL} to extract all
+coefficients.  In case of a character vector, possible values are
+\code{"a"}, \code{"b"}, \code{"d"} (only serial multiple mediator
+models), \code{"total"}, \code{"direct"}, and \code{"indirect"}.}
 
 \item{\dots}{additional arguments are currently ignored.}
 
@@ -32,6 +35,9 @@ A numeric vector containing the requested coefficients.
 }
 \description{
 Extract coefficients from models computed in (robust) mediation analysis.
+}
+\note{
+The behavior of argument \code{parm} has changed in version 0.10.0.
 }
 \examples{
 data("BSG2014")

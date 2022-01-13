@@ -13,14 +13,19 @@
 #' containing results from (robust) mediation analysis, or an object inheriting
 #' from class \code{"\link{fit_mediation}"} containing a (robust) mediation
 #' model fit.
+#' @param parm  an integer, character or logical vector specifying the
+#' paths for which to extract coefficients, or \code{NULL} to extract all
+#' coefficients.  In case of a character vector, possible values are
+#' \code{"a"}, \code{"b"}, \code{"d"} (only serial multiple mediator
+#' models), \code{"total"}, \code{"direct"}, and \code{"indirect"}.
 #' @param type  a character string specifying whether to extract the means
 #' of the bootstrap distribution (\code{"boot"}; the default), or the
 #' coefficient estimates based on the original data set (\code{"data"}).
-#' @param parm  an integer, character or logical vector specifying the
-#' coefficients to be extracted, or \code{NULL} to extract all coefficients.
 #' @param \dots  additional arguments are currently ignored.
 #'
 #' @return A numeric vector containing the requested coefficients.
+#'
+#' @note The behavior of argument \code{parm} has changed in version 0.10.0.
 #'
 #' @author Andreas Alfons
 #'
@@ -59,23 +64,14 @@ coef.boot_test_mediation <- function(object, parm = NULL,
                                      ...) {
   # initializations
   type <- match.arg(type)
+  fit <- object$fit
   # extract effects
   if(type == "boot") {
-    # TODO: 'parm' should only allow the following values:
-    #       "a", "b", "d", "total", "direct", "indirect"
-    #       Then all effects of such a path should be returned, as the names
-    #       of the effects can become quite complex.  At least this way it is
-    #       predictable for the user.  For backwards compatibility, "ab" should
-    #       be allowed as a synonym for "indirect".
-    # extract bootstrap estimates (also works if d path does not exist)
-    keep <- c("a", "b", "d", "total", "direct", "indirect")
-    coef <- unlist(object[keep], use.names = FALSE)
-    names(coef) <- get_effect_names(effects = object[keep])
-    # if requested, take subset of effects
-    if (!is.null(parm))  coef <- coef[parm]
-  } else coef <- coef(object$fit, parm = parm, ...)
-  # return effects
-  coef
+    # call workhorse function with list of effect estimates
+    have_d <- inherits(fit, "reg_fit_mediation") && fit$model == "serial"
+    keep <- c("a", "b", if (have_d) "d", "total", "direct", "indirect")
+    coef_mediation(object[keep], parm = parm)
+  } else coef(fit, parm = parm, ...)
 }
 
 
@@ -84,17 +80,40 @@ coef.boot_test_mediation <- function(object, parm = NULL,
 #' @export
 
 coef.fit_mediation <- function(object, parm = NULL, ...) {
-  # TODO: 'parm' should only allow the following values:
-  #       "a", "b", "d", "total", "direct", "indirect"
-  #       Then all effects of such a path should be returned, as the names
-  #       of the effects can become quite complex.  At least this way it is
-  #       predictable for the user.  For backwards compatibility, "ab" should
-  #       be allowed as a synonym for "indirect".
-  # extract effect estimates (also works if d path does not exist)
-  keep <- c("a", "b", "d", "total", "direct", "indirect")
-  coef <- unlist(object[keep], use.names = FALSE)
-  names(coef) <- get_effect_names(effects = object[keep])
+  # call workhorse function with list of effect estimates
+  have_d <- inherits(object, "reg_fit_mediation") && object$model == "serial"
+  keep <- c("a", "b", if (have_d) "d", "total", "direct", "indirect")
+  coef_mediation(object[keep], parm = parm)
+}
+
+
+# workhorse function to extract coefficients
+coef_mediation <- function(coef_list, parm = NULL) {
   # if requested, take subset of effects
-  if (!is.null(parm))  coef <- coef[parm]
+  if (!is.null(parm)) coef_list <- coef_list[check_parm(parm)]
+  # convert effect estimates to vector and add names
+  coef <- unlist(coef_list, use.names = FALSE)
+  names(coef) <- get_effect_names(effects = coef_list)
   coef
 }
+
+# internal function to check argument 'parm' for backwards compatibility
+check_parm <- function(parm = NULL) {
+  # some checks if effects are selected via a character vector
+  if (is.character(parm)) {
+    # for backwards compatibility, check if 'ab' is used for the indirect effect
+    which_ab <- which(parm == "ab")
+    if (length(which_ab) > 0) {
+      parm[which_ab] <- "indirect"
+      warning("component 'ab' is deprecated, please use 'indirect' instead",
+              call. = FALSE)
+    }
+    # allow for capitalized names
+    parm[which(parm == "Total")] <- "total"
+    parm[which(parm == "Direct")] <- "direct"
+    parm[which(parm == "Indirect")] <- "indirect"
+  }
+  # return checked object
+  parm
+}
+

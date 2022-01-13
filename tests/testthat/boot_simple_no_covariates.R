@@ -149,6 +149,7 @@ for (method in methods) {
     expect_length(boot$indirect, 1L)
     # only one indirect effect, so only one confidence interval
     expect_length(boot$ci, 2L)
+    expect_identical(names(boot$ci), c("Lower", "Upper"))
     # dimensions of bootstrap replicates
     expect_identical(dim(boot$reps$t), c(as.integer(R), 7L))
 
@@ -180,11 +181,11 @@ for (method in methods) {
                       mean(boot$reps$t[, 3]))
     expect_equivalent(coef(boot, parm = "b", type = "boot"),
                       mean(boot$reps$t[, 5]))
-    expect_equivalent(coef(boot, parm = "Total", type = "boot"),
+    expect_equivalent(coef(boot, parm = "total", type = "boot"),
                       mean(boot$reps$t[, 7]))
-    expect_equivalent(coef(boot, parm = "Direct", type = "boot"),
+    expect_equivalent(coef(boot, parm = "direct", type = "boot"),
                       mean(boot$reps$t[, 6]))
-    expect_equivalent(coef(boot, parm = "Indirect", type = "boot"),
+    expect_equivalent(coef(boot, parm = "indirect", type = "boot"),
                       boot$indirect)
 
     # effects computed on original sample
@@ -192,11 +193,11 @@ for (method in methods) {
                       boot$fit$a)
     expect_equivalent(coef(boot, parm = "b", type = "data"),
                       boot$fit$b)
-    expect_equivalent(coef(boot, parm = "Total", type = "data"),
+    expect_equivalent(coef(boot, parm = "total", type = "data"),
                       boot$fit$total)
-    expect_equivalent(coef(boot, parm = "Direct", type = "data"),
+    expect_equivalent(coef(boot, parm = "direct", type = "data"),
                       boot$fit$direct)
-    expect_equivalent(coef(boot, parm = "Indirect", type = "data"),
+    expect_equivalent(coef(boot, parm = "indirect", type = "data"),
                       boot$fit$indirect)
 
   })
@@ -219,9 +220,9 @@ for (method in methods) {
   test_that("confint() method returns correct values of confidence intervals", {
 
     # bootstrapped confidence intervals
-    expect_equivalent(confint(boot, parm = "Indirect", type = "boot"), boot$ci)
+    expect_equivalent(confint(boot, parm = "indirect", type = "boot"), boot$ci)
     # confidence intervals based on theory (except for indirect effect)
-    expect_equivalent(confint(boot, parm = "Indirect", type = "data"), boot$ci)
+    expect_equivalent(confint(boot, parm = "indirect", type = "data"), boot$ci)
 
   })
 

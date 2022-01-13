@@ -204,7 +204,6 @@ print.boot_test_mediation <- function(x, digits = max(3, getOption("digits")-3),
   } else labels <- NULL
   # extract confidence interval
   ci <- if (nr_indirect == 1L) t(x$ci) else x$ci
-  colnames(ci) <- c("Lower", "Upper")
   # combine and print
   print(cbind(indirect, ci), digits = digits, ...)
   # print information on indirect effect paths for models with multiple

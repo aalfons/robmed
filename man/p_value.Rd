@@ -21,9 +21,12 @@ from (robust) mediation analysis.}
 down to methods.  For the methods, additional arguments are currently
 ignored.}
 
-\item{parm}{an integer, character or logical vector specifying the
-coefficients for which to extract or compute p-values, or
-\code{NULL} to extract or compute p-values for all coefficients.}
+\item{parm}{an integer, character or logical vector specifying the paths
+for which to extract or compute p-values, or \code{NULL} to extract or
+compute p-values for all coefficients.  In case of a character vector,
+possible values are \code{"a"}, \code{"b"}, \code{"d"} (only serial
+multiple mediator models), \code{"total"}, \code{"direct"}, and
+\code{"indirect"}.}
 
 \item{type}{a character string specifying how to compute the p-values of
 the effects other than the indirect effect(s).  Possible values are
@@ -60,6 +63,9 @@ method (\code{"bca"}).
 
 For Sobel tests, the p-value of the indirect effect is already stored in the
 object returned by \code{\link{test_mediation}()} and is simply extracted.
+}
+\note{
+The behavior of argument \code{parm} has changed in version 0.10.0.
 }
 \examples{
 data("BSG2014")

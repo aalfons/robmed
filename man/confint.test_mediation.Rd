@@ -14,9 +14,12 @@
 \item{object}{an object inheriting from class \code{"\link{test_mediation}"}
 containing results from (robust) mediation analysis.}
 
-\item{parm}{an integer, character or logical vector specifying the
-coefficients for which to extract or compute confidence intervals, or
-\code{NULL} to extract or compute confidence intervals for all coefficients.}
+\item{parm}{an integer, character or logical vector specifying the paths
+for which to extract or compute confidence intervals, or \code{NULL}
+to extract or compute confidence intervals for all coefficients.  In
+case of a character vector, possible values are \code{"a"}, \code{"b"},
+\code{"d"} (only serial multiple mediator models), \code{"total"},
+\code{"direct"}, and \code{"indirect"}.}
 
 \item{level}{for the \code{"boot_test_mediation"} method, this is ignored
 and the confidence level of the bootstrap confidence interval for the
@@ -44,6 +47,9 @@ A numeric matrix containing the requested confidence intervals.
 \description{
 Extract or compute confidence intervals for effects in (robust)
 mediation analysis.
+}
+\note{
+The behavior of argument \code{parm} has changed in version 0.10.0.
 }
 \examples{
 data("BSG2014")
