@@ -11,14 +11,20 @@ setup_ci_plot(object, ...)
 
 \method{setup_ci_plot}{boot_test_mediation}(
   object,
-  parm = NULL,
+  parm = c("direct", "indirect"),
   type = c("boot", "data"),
   p_value = FALSE,
   digits = 4L,
   ...
 )
 
-\method{setup_ci_plot}{sobel_test_mediation}(object, parm = NULL, level = 0.95, p_value = FALSE, ...)
+\method{setup_ci_plot}{sobel_test_mediation}(
+  object,
+  parm = c("direct", "indirect"),
+  level = 0.95,
+  p_value = FALSE,
+  ...
+)
 
 \method{setup_ci_plot}{list}(object, ...)
 }
@@ -29,9 +35,11 @@ setup_ci_plot(object, ...)
 
 \item{\dots}{additional arguments to be passed down.}
 
-\item{parm}{a character string specifying the effects to be included
-in the plot.  The default is to include the direct and the indirect
-effect(s).}
+\item{parm}{an integer, character or logical vector specifying which
+effects to include in the plot.  In case of a character vector, possible
+values are \code{"a"}, \code{"b"}, \code{"d"} (only serial multiple mediator
+models), \code{"total"}, \code{"direct"}, and \code{"indirect"}.  The
+default is to include the direct and the indirect effect(s).}
 
 \item{type}{a character string specifying which point estiamates and
 confidence intervals to plot: those based on the bootstrap distribution

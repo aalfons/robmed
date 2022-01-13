@@ -17,10 +17,12 @@
 #' @param object  an object inheriting from class
 #' \code{"\link{test_mediation}"} containing results from
 #' (robust) mediation analysis, or a list of such objects.
-#' @param parm  a character string specifying the effects to be included
-#' in the plot.  The default is to include the direct and the indirect
-#' effect(s).
-#' @param type  a character string specifying which point estiamates and
+#' @param parm  an integer, character or logical vector specifying which
+#' effects to include in the plot.  In case of a character vector, possible
+#' values are \code{"a"}, \code{"b"}, \code{"d"} (only serial multiple mediator
+#' models), \code{"total"}, \code{"direct"}, and \code{"indirect"}.  The
+#' default is to include the direct and the indirect effect(s).
+#' @param type  a character string specifying which point estimates and
 #' confidence intervals to plot: those based on the bootstrap distribution
 #' (\code{"boot"}; the default), or those based on the original data
 #' (\code{"data"}).  If \code{"boot"}, the confidence intervals of effects
@@ -100,7 +102,7 @@ ci_plot <- function(object, ...) UseMethod("ci_plot")
 #' @method ci_plot default
 #' @export
 
-ci_plot.default <- function(object, parm = NULL, ...) {
+ci_plot.default <- function(object, parm = c("direct", "indirect"), ...) {
   # extract information
   setup <- setup_ci_plot(object, parm = parm, ...)
   # call method for corresponding objects
@@ -112,7 +114,7 @@ ci_plot.default <- function(object, parm = NULL, ...) {
 #' @method ci_plot boot_test_mediation
 #' @export
 
-ci_plot.boot_test_mediation <- function(object, parm = NULL,
+ci_plot.boot_test_mediation <- function(object, parm = c("direct", "indirect"),
                                         type = c("boot", "data"),
                                         p_value = FALSE, digits = 4L,
                                         ...) {
@@ -128,8 +130,8 @@ ci_plot.boot_test_mediation <- function(object, parm = NULL,
 #' @method ci_plot sobel_test_mediation
 #' @export
 
-ci_plot.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
-                                         p_value = FALSE, ...) {
+ci_plot.sobel_test_mediation <- function(object, parm = c("direct", "indirect"),
+                                         level = 0.95, p_value = FALSE, ...) {
   # extract information
   setup <- setup_ci_plot(object, parm = parm, level = level,
                          p_value = p_value, ...)
@@ -142,8 +144,9 @@ ci_plot.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
 #' @method ci_plot list
 #' @export
 
-ci_plot.list <- function(object, parm = NULL, type = c("boot", "data"),
-                         level = 0.95, p_value = FALSE, digits = 4L, ...) {
+ci_plot.list <- function(object, parm = c("direct", "indirect"),
+                         type = c("boot", "data"), level = 0.95,
+                         p_value = FALSE, digits = 4L, ...) {
   # extract information
   setup <- setup_ci_plot(object, parm = parm, type = type, level = level,
                          p_value = p_value, digits = digits, ...)

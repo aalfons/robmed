@@ -49,8 +49,6 @@
 #'
 #' @return A numeric vector containing the requested p-values.
 #'
-#' @note The behavior of argument \code{parm} has changed in version 0.10.0.
-#'
 #' @author Andreas Alfons
 #'
 #' @seealso

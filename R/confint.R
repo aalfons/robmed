@@ -38,8 +38,6 @@
 #'
 #' @return A numeric matrix containing the requested confidence intervals.
 #'
-#' @note The behavior of argument \code{parm} has changed in version 0.10.0.
-#'
 #' @author Andreas Alfons
 #'
 #' @seealso

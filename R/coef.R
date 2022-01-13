@@ -25,8 +25,6 @@
 #'
 #' @return A numeric vector containing the requested coefficients.
 #'
-#' @note The behavior of argument \code{parm} has changed in version 0.10.0.
-#'
 #' @author Andreas Alfons
 #'
 #' @seealso \code{\link{test_mediation}()}, \code{\link{fit_mediation}()},

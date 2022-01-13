@@ -17,9 +17,11 @@
 #' @param object  an object inheriting from class
 #' \code{"\link{test_mediation}"} containing results from
 #' (robust) mediation analysis, or a list of such objects.
-#' @param parm  a character string specifying the effects to be included
-#' in the plot.  The default is to include the direct and the indirect
-#' effect(s).
+#' @param parm  an integer, character or logical vector specifying which
+#' effects to include in the plot.  In case of a character vector, possible
+#' values are \code{"a"}, \code{"b"}, \code{"d"} (only serial multiple mediator
+#' models), \code{"total"}, \code{"direct"}, and \code{"indirect"}.  The
+#' default is to include the direct and the indirect effect(s).
 #' @param type  a character string specifying which point estiamates and
 #' confidence intervals to plot: those based on the bootstrap distribution
 #' (\code{"boot"}; the default), or those based on the original data
@@ -106,25 +108,12 @@ setup_ci_plot <- function(object, ...) UseMethod("setup_ci_plot")
 #' @method setup_ci_plot boot_test_mediation
 #' @export
 
-setup_ci_plot.boot_test_mediation <- function(object, parm = NULL,
+setup_ci_plot.boot_test_mediation <- function(object,
+                                              parm = c("direct", "indirect"),
                                               type = c("boot", "data"),
                                               p_value = FALSE, digits = 4L,
                                               ...) {
   # initializations
-  p_x <- length(object$fit$x)
-  p_m <- length(object$fit$m)
-  if (is.null(parm)) {
-    if (p_x == 1L) {
-      if (p_m == 1L) parm <- c("Direct", "Indirect")
-      else {
-        parm <- c("Direct",
-                  paste("Indirect", names(object$indirect), sep = "_"))
-      }
-    } else {
-      parm <- c(paste("Direct", names(object$direct), sep = "_"),
-                paste("Indirect", names(object$indirect), sep = "_"))
-    }
-  }
   include_p_value <- isTRUE(p_value)
   # extract point estimates
   coefficients <- coef(object, parm = parm, type = type)
@@ -165,11 +154,11 @@ setup_ci_plot.boot_test_mediation <- function(object, parm = NULL,
 #' @method setup_ci_plot sobel_test_mediation
 #' @export
 
-setup_ci_plot.sobel_test_mediation <- function(object, parm = NULL,
+setup_ci_plot.sobel_test_mediation <- function(object,
+                                               parm = c("direct", "indirect"),
                                                level = 0.95, p_value = FALSE,
                                                ...) {
   # initializations
-  if (is.null(parm)) parm <- c("Direct", "Indirect")
   level <- rep(as.numeric(level), length.out = 1)
   if (is.na(level) || level < 0 || level > 1) level <- formals()$level
   include_p_value <- isTRUE(p_value)

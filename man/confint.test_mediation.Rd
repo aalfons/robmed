@@ -48,9 +48,6 @@ A numeric matrix containing the requested confidence intervals.
 Extract or compute confidence intervals for effects in (robust)
 mediation analysis.
 }
-\note{
-The behavior of argument \code{parm} has changed in version 0.10.0.
-}
 \examples{
 data("BSG2014")
 

@@ -64,9 +64,6 @@ method (\code{"bca"}).
 For Sobel tests, the p-value of the indirect effect is already stored in the
 object returned by \code{\link{test_mediation}()} and is simply extracted.
 }
-\note{
-The behavior of argument \code{parm} has changed in version 0.10.0.
-}
 \examples{
 data("BSG2014")
 

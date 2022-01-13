@@ -36,9 +36,6 @@ A numeric vector containing the requested coefficients.
 \description{
 Extract coefficients from models computed in (robust) mediation analysis.
 }
-\note{
-The behavior of argument \code{parm} has changed in version 0.10.0.
-}
 \examples{
 data("BSG2014")
 
