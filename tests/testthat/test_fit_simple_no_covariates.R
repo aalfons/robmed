@@ -125,6 +125,13 @@ for (method in methods) {
 
   })
 
+  test_that("values of coefficients are correct", {
+
+    expect_null(fit$d)
+    expect_equivalent(fit$indirect, fit$a * fit$b)
+
+  })
+
   test_that("output of coef() method has correct attributes", {
 
     coefficients <- coef(fit)
@@ -137,6 +144,7 @@ for (method in methods) {
 
     expect_equivalent(coef(fit, parm = "a"), fit$a)
     expect_equivalent(coef(fit, parm = "b"), fit$b)
+    expect_null(coef(fit, parm = "d"))
     expect_equivalent(coef(fit, parm = "total"), fit$total)
     expect_equivalent(coef(fit, parm = "direct"), fit$direct)
     expect_equivalent(coef(fit, parm = "indirect"), fit$indirect)
@@ -271,7 +279,6 @@ for (method in cov_methods) {
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(fit$indirect, fit$a * fit$b)
     expect_equivalent(fit$total, fit$indirect + fit$direct)
 
   })

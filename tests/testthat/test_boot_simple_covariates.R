@@ -175,6 +175,7 @@ for (method in methods) {
 
   test_that("values of coefficients are correct", {
 
+    expect_null(boot[["d"]])
     expect_equivalent(boot$indirect, mean(boot$reps$t[, 1]))
 
   })
@@ -199,6 +200,7 @@ for (method in methods) {
                       mean(boot$reps$t[, 3]))
     expect_equivalent(coef(boot, parm = "b", type = "boot"),
                       mean(boot$reps$t[, 7]))
+    expect_null(coef(boot, parm = "d", type = "boot"))
     expect_equivalent(coef(boot, parm = "total", type = "boot"),
                       mean(boot$reps$t[, 11]))
     expect_equivalent(coef(boot, parm = "direct", type = "boot"),
@@ -211,6 +213,7 @@ for (method in methods) {
                       boot$fit$a)
     expect_equivalent(coef(boot, parm = "b", type = "data"),
                       boot$fit$b)
+    expect_null(coef(boot, parm = "d", type = "data"))
     expect_equivalent(coef(boot, parm = "total", type = "data"),
                       boot$fit$total)
     expect_equivalent(coef(boot, parm = "direct", type = "data"),
