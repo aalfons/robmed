@@ -94,14 +94,14 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
   if (!is.null(parm)) p_value_list <- p_value_list[check_parm(parm)]
   # compute p-values of indirect effect if they are selected
   if (!is.null(p_value_list$indirect)) {
-    # number of hypothesized mediators
-    nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
-                                   model = object$fit$model)
-    contrast <- object$fit$contrast          # only implemented for regression fit
-    have_contrast <- is.character(contrast)  # but this always works
     # preparations to modify bootstrap object if contrasts are requested
     bootstrap <- object$reps
-    indices_indirect <- if (nr_indirect == 1L) 1L else seq_len(1L + nr_indirect)
+    indices_indirect <- get_index_list(length(object$fit$x),
+                                       length(object$fit$m),
+                                       length(object$fit$covariates),
+                                       model = object$fit$model)$indirect
+    contrast <- object$fit$contrast          # only implemented for regression fit
+    have_contrast <- is.character(contrast)  # but this always works
     # if contrasts are requested, modify bootstrap object to contain only
     # indirect effects and contrasts
     if (have_contrast) {

@@ -96,8 +96,8 @@ get_effect_names <- function(..., effects = list(...), sep = "_") {
 ## estimates from different models.  This utility function returns the indices
 ## that correspond to the respective models, which makes it easier to extract
 ## the desired coefficients.
-get_index_list <- function(p_x, p_m, p_covariates, indirect = TRUE,
-                           model = "parallel") {
+get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
+                           indirect = TRUE) {
   # initializations
   include_indirect <- indirect
   nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
