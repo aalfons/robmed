@@ -149,7 +149,7 @@ for (method in methods) {
     expect_length(boot$indirect, 1L)
     # only one indirect effect, so only one confidence interval
     expect_length(boot$ci, 2L)
-    expect_identical(names(boot$ci), c("Lower", "Upper"))
+    expect_named(boot$ci, c("Lower", "Upper"))
     # dimensions of bootstrap replicates
     expect_identical(dim(boot$reps$t), c(as.integer(R), 7L))
 
@@ -157,8 +157,17 @@ for (method in methods) {
 
   test_that("values of coefficients are correct", {
 
+    expect_equivalent(boot$a, mean(boot$reps$t[, 3]))
+    expect_equivalent(boot$b, mean(boot$reps$t[, 5]))
     expect_null(boot[["d"]])
+    expect_equivalent(boot$direct, mean(boot$reps$t[, 6]))
     expect_equivalent(boot$indirect, mean(boot$reps$t[, 1]))
+    expect_equivalent(boot$reps$t[, 1], boot$reps$t[, 3] * boot$reps$t[, 5])
+    # total effect
+    expect_equivalent(boot$total, mean(boot$reps$t[, 7]))
+    if (method %in% c("robust", "median", "OLS")) {
+      expect_equivalent(boot$reps$t[, 7], rowSums(boot$reps$t[, c(1, 6)]))
+    }
 
   })
 
@@ -179,14 +188,14 @@ for (method in methods) {
 
     # bootstrapped effects
     expect_equivalent(coef(boot, parm = "a", type = "boot"),
-                      mean(boot$reps$t[, 3]))
+                      boot$a)
     expect_equivalent(coef(boot, parm = "b", type = "boot"),
-                      mean(boot$reps$t[, 5]))
+                      boot$b)
     expect_null(coef(boot, parm = "d", type = "boot"))
     expect_equivalent(coef(boot, parm = "total", type = "boot"),
-                      mean(boot$reps$t[, 7]))
+                      boot$total)
     expect_equivalent(coef(boot, parm = "direct", type = "boot"),
-                      mean(boot$reps$t[, 6]))
+                      boot$direct)
     expect_equivalent(coef(boot, parm = "indirect", type = "boot"),
                       boot$indirect)
 
@@ -327,9 +336,9 @@ for (method in methods) {
 
     # bootstrapped effects
     expect_equal(summary_boot$summary$total["X", "Boot"],
-                 mean(boot$reps$t[, 7]))
+                 boot$total)
     expect_equal(summary_boot$summary$direct["X", "Boot"],
-                 mean(boot$reps$t[, 6]))
+                 boot$direct)
 
   })
 
@@ -528,9 +537,9 @@ for (method in intersect(methods, reg_methods)) {
 
     # bootstrapped effects
     expect_equivalent(summary_boot$summary$fit_mx$coefficients[2, "Boot"],
-                      mean(boot$reps$t[, 3]))
+                      boot$a)
     expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2, "Boot"],
-                      mean(boot$reps$t[, 5]))
+                     boot$b)
 
   })
 

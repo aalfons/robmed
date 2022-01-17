@@ -1,63 +1,58 @@
-context("bootstrap test: simple mediation, covariates")
+context("bootstrap test: multiple independent variables to be mediated, no covariates")
 
 
 ## load package
 library("robmed", quietly = TRUE)
 
 ## control parameters
-n <- 250            # number of observations
-a <- c <- 0.2       # true effects
-b <- 0              # true effect
-seed <- 20190201    # seed for the random number generator
+n <- 250               # number of observations
+a <- c <- c(0.2, 0.2)  # true effects
+b <- 0                 # true effect
+seed <- 20190201       # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
 
 ## generate data
-X <- rnorm(n)
-M <- a * X + rnorm(n)
-Y <- b * M + c * X + rnorm(n)
-C1 <- rnorm(n)
-C2 <- rnorm(n)
-test_data <- data.frame(X, Y, M, C1, C2)
+X1 <- rnorm(n)
+X2 <- rnorm(n)
+M <- a[1] * X1 + a[2] * X2 + rnorm(n)
+Y <- b * M + c[1] * X1 + c[2] * X2 + rnorm(n)
+test_data <- data.frame(X1, X2, Y, M)
 
 ## arguments for bootstrap tests
-R <- 100                                   # number of bootstrap samples
-level <- 0.9                               # confidence level
-type <- "perc"                             # type of confidence intervals
-ctrl <- reg_control(max_iterations = 500)  # for MM-regression estimator
+R <- 100                                 # number of bootstrap samples
+level <- 0.9                             # confidence level
+type <- "perc"                           # type of confidence intervals
+ctrl <- reg_control(efficiency <- 0.95)  # for MM-regression estimator
 
 ## perform bootstrap tests
 boot_list <- list(
   robust = {
     set.seed(seed)
-    test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   covariates = c("C1", "C2"), test = "boot",
-                   R = R, level = level, type = type,
+    test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+                   test = "boot", R = R, level = level, type = type,
                    method = "regression", robust = TRUE,
                    control = ctrl)
   },
   median = {
     set.seed(seed)
-    test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   covariates = c("C1", "C2"), test = "boot",
-                   R = R, level = level, type = type,
+    test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+                   test = "boot", R = R, level = level, type = type,
                    method = "regression", robust = "median")
   },
   OLS = {
     set.seed(seed)
-    test_mediation(test_data, x = "X", y = "Y", m = "M",
-                   covariates = c("C1", "C2"), test = "boot",
-                   R = R, level = level, type = type,
+    test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+                   test = "boot", R = R, level = level, type = type,
                    method = "regression", robust = FALSE,
                    family = "gaussian")
   # },
   # student = {
   #   set.seed(seed)
   #   suppressWarnings(
-  #     test_mediation(test_data, x = "X", y = "Y", m = "M",
-  #                    covariates = c("C1", "C2"), test = "boot",
-  #                    R = R, level = level, type = type,
+  #     test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+  #                    test = "boot", R = R, level = level, type = type,
   #                    method = "regression", robust = FALSE,
   #                    family = "student")
   #   )
@@ -65,9 +60,8 @@ boot_list <- list(
   # select = {
   #   set.seed(seed)
   #   suppressWarnings(
-  #     test_mediation(test_data, x = "X", y = "Y", m = "M",
-  #                    covariates = c("C1", "C2"), test = "boot",
-  #                    R = R, level = level, type = type,
+  #     test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+  #                    test = "boot", R = R, level = level, type = type,
   #                    method = "regression", robust = FALSE,
   #                    family = "select")
   #   )
@@ -84,7 +78,8 @@ classes <- c(robust = "summary_lmrob", median = "summary_rq",
              select = "summary_lm")
 
 ## correct values
-coef_names <- c("a", "b", "Total", "Direct", "Indirect")
+coef_names <- c("a_X1", "a_X2", "b", "Total_X1", "Total_X2", "Direct_X1",
+                "Direct_X2", "Indirect_Total", "Indirect_X1", "Indirect_X2")
 
 
 ## common tests for all model fits
@@ -102,11 +97,11 @@ for (method in methods) {
   class <- classes[method]
   family <- if (method %in% c("student", "select")) method else "gaussian"
   if (method == "student") {
-    mx_names <- c("(Intercept.DP)", "X", "C1", "C2")
-    ymx_names <- c("(Intercept.DP)", "M", "X", "C1", "C2")
+    mx_names <- c("(Intercept.DP)", "X1", "X2")
+    ymx_names <- c("(Intercept.DP)", "M", "X1", "X2")
   } else {
-    mx_names <- c("(Intercept)", "X", "C1", "C2")
-    ymx_names <- c("(Intercept)", "M", "X", "C1", "C2")
+    mx_names <- c("(Intercept)", "X1", "X2")
+    ymx_names <- c("(Intercept)", "M", "X1", "X2")
   }
 
 
@@ -137,10 +132,10 @@ for (method in methods) {
     # type of confidence intervals
     expect_identical(boot$type, type)
     # variable names
-    expect_identical(boot$fit$x, "X")
+    expect_identical(boot$fit$x, c("X1", "X2"))
     expect_identical(boot$fit$y, "Y")
     expect_identical(boot$fit$m, "M")
-    expect_identical(boot$fit$covariates, c("C1", "C2"))
+    expect_identical(boot$fit$covariates, character())
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(boot$fit$robust, "MM")
@@ -155,7 +150,7 @@ for (method in methods) {
     # assumed error distribution
     expect_identical(boot$fit$family, family)
     # mediation model
-    expect_identical(boot$fit$model, "simple")
+    expect_identical(boot$fit$model, "multiple")
     # no contrasts
     expect_false(boot$fit$contrast)
 
@@ -163,28 +158,40 @@ for (method in methods) {
 
   test_that("dimensions are correct", {
 
-    # effects are scalars
-    expect_length(boot$indirect, 1L)
-    # only one indirect effect, so only one confidence interval
-    expect_length(boot$ci, 2L)
-    expect_named(boot$ci, c("Lower", "Upper"))
+    # bootstrap effect estimates
+    expect_length(boot$a, 2L)
+    expect_named(boot$a, c("X1", "X2"))
+    expect_length(boot$b, 1L)
+    expect_length(boot$direct, 2L)
+    expect_named(boot$direct, c("X1", "X2"))
+    expect_length(boot$total, 2L)
+    expect_named(boot$total, c("X1", "X2"))
+    expect_length(boot$indirect, 3L)
+    expect_named(boot$indirect, c("Total", "X1", "X2"))
+    # bootstrap confidence interval
+    expect_identical(dim(boot$ci), c(3L, 2L))
+    expect_identical(rownames(boot$ci), names(boot$indirect))
+    expect_identical(colnames(boot$ci), c("Lower", "Upper"))
     # dimensions of bootstrap replicates
-    expect_identical(dim(boot$reps$t), c(as.integer(R), 11L))
+    expect_identical(dim(boot$reps$t), c(as.integer(R), 12L))
 
   })
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(boot$a, mean(boot$reps$t[, 3]))
-    expect_equivalent(boot$b, mean(boot$reps$t[, 7]))
+    expect_equivalent(boot$a, colMeans(boot$reps$t[, 5:6]))
+    expect_equivalent(boot$b, mean(boot$reps$t[, 8]))
     expect_null(boot[["d"]])
-    expect_equivalent(boot$direct, mean(boot$reps$t[, 8]))
-    expect_equivalent(boot$indirect, mean(boot$reps$t[, 1]))
-    expect_equivalent(boot$reps$t[, 1], boot$reps$t[, 3] * boot$reps$t[, 7])
+    expect_equivalent(boot$direct, colMeans(boot$reps$t[, 9:10]))
+    expect_equivalent(boot$indirect, colMeans(boot$reps$t[, 1:3]))
+    expect_equivalent(boot$reps$t[, 1], rowSums(boot$reps$t[, 2:3]))
+    expect_equivalent(boot$reps$t[, 2], boot$reps$t[, 5] * boot$reps$t[, 8])
+    expect_equivalent(boot$reps$t[, 3], boot$reps$t[, 6] * boot$reps$t[, 8])
     # total effect
-    expect_equivalent(boot$total, mean(boot$reps$t[, 11]))
+    expect_equivalent(boot$total, colMeans(boot$reps$t[, 11:12]))
     if (method %in% c("robust", "median", "OLS")) {
-      expect_equivalent(boot$reps$t[, 11], rowSums(boot$reps$t[, c(1, 8)]))
+      expect_equivalent(boot$reps$t[, 11], rowSums(boot$reps$t[, c(2, 9)]))
+      expect_equivalent(boot$reps$t[, 12], rowSums(boot$reps$t[, c(3, 10)]))
     }
 
   })
@@ -194,10 +201,10 @@ for (method in methods) {
     coef_boot <- coef(boot, type = "boot")
     coef_data <- coef(boot, type = "data")
     # bootstrapped effects
-    expect_length(coef_boot, 5L)
+    expect_length(coef_boot, 10L)
     expect_named(coef_boot, coef_names)
     # effects computed on original sample
-    expect_length(coef_data, 5L)
+    expect_length(coef_data, 10L)
     expect_named(coef_data, coef_names)
 
   })
@@ -237,11 +244,11 @@ for (method in methods) {
     ci_boot <- confint(boot, type = "boot")
     ci_data <- confint(boot, type = "data")
     # bootstrapped confidence intervals
-    expect_equal(dim(ci_boot), c(5L, 2L))
+    expect_equal(dim(ci_boot), c(10L, 2L))
     expect_equal(rownames(ci_boot), coef_names)
     expect_equal(colnames(ci_boot), c("5 %", "95 %"))
     # confidence intervals based on theory (except for indirect effect)
-    expect_equal(dim(ci_data), c(5L, 2L))
+    expect_equal(dim(ci_data), c(10L, 2L))
     expect_equal(rownames(ci_data), coef_names)
     expect_equal(colnames(ci_data), c("5 %", "95 %"))
 
@@ -285,7 +292,7 @@ for (method in methods) {
                               fit = c("fit_mx", "fit_ymx"),
                               stringsAsFactors = FALSE)
   # correct degrees of freedom in the numerator for F-test
-  df1 <- c(3, 3, 4, 4)
+  df1 <- c(2, 2, 3, 3)
 
   # loop over model summaries
   for (i in 1:nrow(combinations)) {
@@ -371,14 +378,14 @@ for (method in methods) {
     expect_identical(summary_boot$summary$n, as.integer(n))
     expect_identical(summary_data$summary$n, as.integer(n))
     # variable names
-    expect_identical(summary_boot$summary$x, "X")
+    expect_identical(summary_boot$summary$x, c("X1", "X2"))
     expect_identical(summary_boot$summary$y, "Y")
     expect_identical(summary_boot$summary$m, "M")
-    expect_identical(summary_boot$summary$covariates, c("C1", "C2"))
-    expect_identical(summary_data$summary$x, "X")
+    expect_identical(summary_boot$summary$covariates, character())
+    expect_identical(summary_data$summary$x, c("X1", "X2"))
     expect_identical(summary_data$summary$y, "Y")
     expect_identical(summary_data$summary$m, "M")
-    expect_identical(summary_data$summary$covariates, c("C1", "C2"))
+    expect_identical(summary_data$summary$covariates, character())
 
   })
 
@@ -386,54 +393,54 @@ for (method in methods) {
 
     # regression m ~ x
     expect_identical(dim(summary_boot$summary$fit_mx$coefficients),
-                     c(4L, 5L))
+                     c(3L, 5L))
     expect_identical(rownames(summary_boot$summary$fit_mx$coefficients),
                      mx_names)
     expect_identical(colnames(summary_boot$summary$fit_mx$coefficients)[1:2],
                      c("Data", "Boot"))
     expect_identical(dim(summary_data$summary$fit_mx$coefficients),
-                     c(4L, 4L))
+                     c(3L, 4L))
     expect_identical(rownames(summary_data$summary$fit_mx$coefficients),
                      mx_names)
     expect_identical(colnames(summary_data$summary$fit_mx$coefficients)[1],
                      "Estimate")
     # regression y ~ m + x
     expect_identical(dim(summary_boot$summary$fit_ymx$coefficients),
-                     c(5L, 5L))
+                     c(4L, 5L))
     expect_identical(rownames(summary_boot$summary$fit_ymx$coefficient),
                      ymx_names)
     expect_identical(colnames(summary_boot$summary$fit_ymx$coefficient)[1:2],
                      c("Data", "Boot"))
     expect_identical(dim(summary_data$summary$fit_ymx$coefficient),
-                     c(5L, 4L))
+                     c(4L, 4L))
     expect_identical(rownames(summary_data$summary$fit_ymx$coefficient),
                      ymx_names)
     expect_identical(colnames(summary_data$summary$fit_ymx$coefficient)[1],
                      "Estimate")
     # total effect
     expect_identical(dim(summary_boot$summary$total),
-                     c(1L, 5L))
+                     c(2L, 5L))
     expect_identical(rownames(summary_boot$summary$total),
-                     "X")
+                     c("X1", "X2"))
     expect_identical(colnames(summary_boot$summary$total)[1:2],
                      c("Data", "Boot"))
     expect_identical(dim(summary_data$summary$total),
-                     c(1L, 4L))
+                     c(2L, 4L))
     expect_identical(rownames(summary_data$summary$total),
-                     "X")
+                     c("X1", "X2"))
     expect_identical(colnames(summary_data$summary$total)[1],
                      "Estimate")
     # direct effect
     expect_identical(dim(summary_boot$summary$direct),
-                     c(1L, 5L))
+                     c(2L, 5L))
     expect_identical(rownames(summary_boot$summary$direct),
-                     "X")
+                     c("X1", "X2"))
     expect_identical(colnames(summary_boot$summary$direct)[1:2],
                      c("Data", "Boot"))
     expect_identical(dim(summary_data$summary$direct),
-                     c(1L, 4L))
+                     c(2L, 4L))
     expect_identical(rownames(summary_data$summary$direct),
-                     "X")
+                     c("X1", "X2"))
     expect_identical(colnames(summary_data$summary$direct)[1],
                      "Estimate")
 
@@ -442,31 +449,31 @@ for (method in methods) {
   test_that("effect summaries contain correct coefficient values", {
 
     # effects computed on original sample
-    expect_equivalent(summary_boot$summary$fit_mx$coefficients[2, "Data"],
+    expect_equivalent(summary_boot$summary$fit_mx$coefficients[2:3, "Data"],
                       boot$fit$a)
     expect_identical(summary_boot$summary$fit_ymx$coefficients[2, "Data"],
                      boot$fit$b)
-    expect_identical(summary_boot$summary$total["X", "Data"],
+    expect_identical(summary_boot$summary$total[c("X1", "X2"), "Data"],
                      boot$fit$total)
-    expect_identical(summary_boot$summary$direct["X", "Data"],
+    expect_identical(summary_boot$summary$direct[c("X1", "X2"), "Data"],
                      boot$fit$direct)
-    expect_equivalent(summary_data$summary$fit_mx$coefficients[2, "Estimate"],
+    expect_equivalent(summary_data$summary$fit_mx$coefficients[2:3, "Estimate"],
                       boot$fit$a)
     expect_identical(summary_data$summary$fit_ymx$coefficients[2, "Estimate"],
                      boot$fit$b)
-    expect_identical(summary_data$summary$total["X", "Estimate"],
+    expect_identical(summary_data$summary$total[c("X1", "X2"), "Estimate"],
                      boot$fit$total)
-    expect_identical(summary_data$summary$direct["X", "Estimate"],
+    expect_identical(summary_data$summary$direct[c("X1", "X2"), "Estimate"],
                      boot$fit$direct)
 
     # bootstrapped effects
-    expect_equivalent(summary_boot$summary$fit_mx$coefficients[2, "Boot"],
+    expect_equivalent(summary_boot$summary$fit_mx$coefficients[2:3, "Boot"],
                       boot$a)
     expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2, "Boot"],
                       boot$b)
-    expect_equal(summary_boot$summary$total["X", "Boot"],
+    expect_equal(summary_boot$summary$total[c("X1", "X2"), "Boot"],
                  boot$total)
-    expect_equal(summary_boot$summary$direct["X", "Boot"],
+    expect_equal(summary_boot$summary$direct[c("X1", "X2"), "Boot"],
                  boot$direct)
 
   })
@@ -477,11 +484,11 @@ for (method in methods) {
     p_boot <- p_value(boot, type = "boot", digits = digits)
     p_data <- p_value(boot, type = "data", digits = digits)
     # bootstrapped effects
-    expect_length(p_boot, 5L)
+    expect_length(p_boot, 10L)
     expect_named(p_boot, coef_names)
     expect_equal(p_boot["Indirect"], round(p_boot["Indirect"], digits = digits))
     # effects computed on original sample
-    expect_length(p_data, 5L)
+    expect_length(p_data, 10L)
     expect_named(p_data, coef_names)
     expect_equal(p_data["Indirect"], round(p_data["Indirect"], digits = digits))
 
@@ -510,16 +517,16 @@ for (method in methods) {
 #
 #     # use regression fit
 #     set.seed(seed)
-#     reg_boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
-#                                 covariates = c("C1", "C2"), test = "boot",
-#                                 method = "regression", robust = robust)
+#     reg_boot <- test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+#                                test = "boot", method = "regression",
+#                                robust = robust)
 #
 #     # try to use covariance fit with covariates (should give warning)
 #     set.seed(seed)
 #     expect_warning(
-#       cov_boot <- test_mediation(test_data, x = "X", y = "Y", m = "M",
-#                                   covariates = c("C1", "C2"), test = "boot",
-#                                   method = "covariance", robust = robust)
+#       cov_boot <- test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
+#                                  test = "boot", method = "covariance",
+#                                  robust = robust)
 #     )
 #
 #     # these should be the same

@@ -128,12 +128,16 @@ for (method in methods) {
 
   test_that("dimensions are correct", {
 
-    # effects are scalars
+    # effect estimates
     expect_length(fit$a, 2L)
+    expect_named(fit$a, c("X1", "X2"))
     expect_length(fit$b, 1L)
     expect_length(fit$direct, 2L)
+    expect_named(fit$direct, c("X1", "X2"))
     expect_length(fit$total, 2L)
+    expect_named(fit$total, c("X1", "X2"))
     expect_length(fit$indirect, 3L)
+    expect_named(fit$indirect, c("Total", "X1", "X2"))
     # individual regressions
     expect_length(coef(fit$fit_mx), 3L)
     expect_length(coef(fit$fit_ymx), 4L)
