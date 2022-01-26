@@ -337,7 +337,7 @@ get_outlier_info <- function(outliers, digits = max(3, getOption("digits")-3)) {
     # information that there is no clear outlier and minimum robustness weight
     msg <- paste("No potential outliers with weight < ",
           formatC(outliers$threshold, digits = max(2, digits-3), width = 1),
-          " detected. The minimum weight is ",
+          " detected.\nThe minimum weight is ",
           formatC(min(outliers$weights), digits = max(2, digits-3), width = 1),
           ".\n", sep = "")
     indices_to_print <- NULL
