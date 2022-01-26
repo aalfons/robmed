@@ -10,9 +10,9 @@ a business simulation game at a Western European University.
 
 The game was played for a total of 12 rounds (i.e., two separate games of 6
 rounds) as part of the capstone strategy class.  Students were randomly
-assigned to teams of four, and surveyed in three waves: prior to, during, and
-after the simulation game (with different variables being surveyed in the
-different waves).
+assigned to teams of four, and surveyed in three waves: prior to the first
+game, in between the two games, and after the second game (with different
+variables being surveyed in the different waves).
 
 The 354 students formed 92 teams, and the responses of individual students were
 aggregated to the team level.  Leaving out teams with less than 50 percent
@@ -21,30 +21,34 @@ variables are included here.
 }
 \usage{data("BSG2014")}
 \format{
-  A data frame with 89 observations on the following 7 variables.
+  A data frame with 89 observations on the following 13 variables.
   \describe{
 
-    \item{\code{ProcessConflict}}{Process conflict was measured with the three
-    item scale of Jehn (1995) and responses were aggregated.}
+    \item{\code{ProcessConflict}}{Process conflict was operationalized with the
+    three-item scale of Jehn (1995) and responses were aggregated.  Process
+    conflict was measured in the second survey (between the two games).}
 
     \item{\code{SharedExperience}}{Teams were randomly formed, no prior shared
     group experience is expected and shared group experience and training is
-    developed during the first game for the second game.  Team performance in
-    the first game, which was determined by objective performance measures, is
-    a good proxy for the level of shared group experience and training.}
+    developed during the first game for the second game.  The team's score on
+    the first game, which is determined by objective performance measures, is
+    used as a proxy for the level of shared group experience and training.}
 
     \item{\code{TaskConflict}}{Task conflict was operationalized with the
     intra-group conflict scale of Jehn (1995).  Five items on the presence of
     conflict were rated on a 5-point Likert scale (1 = none, 5 = a lot) and
-    aggregated.}
+    aggregated.  Task conflict was measured in the second survey (between the
+    two games).}
 
     \item{\code{TeamCommitment}}{Team commitment was measured by four items
-    based on Mowday, Steers & Porter (1979) and responses were aggregated.}
+    based on Mowday, Steers & Porter (1979) and responses were aggregated.
+    Team commitment was measured in the third survey (after the second game).}
 
     \item{\code{TeamPerformance}}{Team performance in the second game was
     measured subjectively by the team members’ perceptions of the team’s
-    functioning.  Hackman’s (1986) Likert scale items were thereby used to
-    operationalize team performance.}
+    functioning, using aggregated responses to Hackman’s (1986) Likert scale
+    items.  Subjective team performance was measured in the third survey (after
+    the second game).}
 
     \item{\code{TMS}}{Transactive memory systems (TMS) are defined as shared
     systems that people in relationships develop for encoding, storing, and
@@ -53,13 +57,29 @@ variables are included here.
     sub-dimensions of TMS (credibility, specialization and coordination).  Team
     members responded on a 5-point scale (1 = strongly disagree, 5 = strongly
     agree).  Following Lewis (2003), the three sub dimensions were aggregated
-    to form the TMS construct.}
+    to form the TMS construct.  TMS was measured in the second survey (between
+    the two games).}
 
     \item{\code{ValueDiversity}}{Value diversity was operationalized with the
     short version of Schwartz’s Value Survey (SVS) to measure team members’
     individual values (Lindeman & Verkasalo, 2005).  The responses were
     aggregated with the average of the coefficient of variations of each value
-    dimension among team members.}
+    dimension among team members.  Value diversity was measured in the first
+    survey (before the first game).}
+
+    \item{\code{ProceduralJustice}}{}
+
+    \item{\code{InteractionalJustice}}{}
+
+    \item{\code{SharedLeadership}}{}
+
+    \item{\code{AgeDiversity}}{}
+
+    \item{\code{GenderDiversity}}{}
+
+    \item{\code{TeamScore}}{The team's score on the second game, which is
+    determined by objective performance measures.}
+
   }
 }
 \references{
