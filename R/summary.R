@@ -147,6 +147,7 @@ get_summary.list <- function(object, ...) {
     if (inherits(x, "lmrob")) get_summary.lmrob(x, ...)
     else if (inherits(x, "lm")) get_summary.lm(x, ...)
     else if (inherits(x, "rq")) get_summary.rq(x, ...)
+    else if (inherits(x, "lmse")) get_summary.lmse(x, ...)
     else stop("not implemented yet")
   })
 }
