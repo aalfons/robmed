@@ -8,7 +8,7 @@ library("robmed", quietly = TRUE)
 n <- 250               # number of observations
 a <- c <- c(0.2, 0.2)  # true effects
 b <- 0                 # true effect
-seed <- 20150601       # seed for the random number generator
+seed <- 20190201       # seed for the random number generator
 
 ## set seed for reproducibility
 set.seed(seed)
@@ -23,70 +23,59 @@ C2 <- rnorm(n)
 test_data <- data.frame(X1, X2, Y, M, C1, C2)
 
 ## arguments for bootstrap tests
+x <- c("X1", "X2")                         # independent variables
+y <- "Y"                                   # dependent variable
+m <- "M"                                   # mediator variable
+covariates <- c("C1", "C2")                # control variables
 R <- 100                                   # number of bootstrap samples
 level <- 0.9                               # confidence level
-type <- "perc"                             # type of confidence intervals
+ci_type <- "perc"                          # type of confidence intervals
 ctrl <- reg_control(max_iterations = 500)  # for MM-regression estimator
 
 ## perform bootstrap tests
 boot_list <- list(
   robust = {
     set.seed(seed)
-    test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-                   covariates = c("C1", "C2"), test = "boot",
-                   R = R, level = level, type = type,
-                   method = "regression", robust = TRUE,
-                   control = ctrl)
+    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                   test = "boot", R = R, level = level, type = ci_type,
+                   method = "regression", robust = TRUE, control = ctrl)
   },
   median = {
     set.seed(seed)
-    test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-                   covariates = c("C1", "C2"), test = "boot",
-                   R = R, level = level, type = type,
+    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                   test = "boot", R = R, level = level, type = ci_type,
                    method = "regression", robust = "median")
   },
   OLS = {
     set.seed(seed)
-    test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-                   covariates = c("C1", "C2"), test = "boot",
-                   R = R, level = level, type = type,
-                   method = "regression", robust = FALSE,
-                   family = "gaussian")
-  # },
-  # student = {
-  #   set.seed(seed)
-  #   suppressWarnings(
-  #     test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-  #                    covariates = c("C1", "C2"), test = "boot",
-  #                    R = R, level = level, type = type,
-  #                    method = "regression", robust = FALSE,
-  #                    family = "student")
-  #   )
-  # },
-  # select = {
-  #   set.seed(seed)
-  #   suppressWarnings(
-  #     test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-  #                    covariates = c("C1", "C2"), test = "boot",
-  #                    R = R, level = level, type = type,
-  #                    method = "regression", robust = FALSE,
-  #                    family = "select")
-  #   )
+    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                   test = "boot", R = R, level = level, type = ci_type,
+                   method = "regression", robust = FALSE, family = "gaussian")
+    # },
+    # student = {
+    #   set.seed(seed)
+    #   suppressWarnings(
+    #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+    #                    test = "boot", R = R, level = level, type = ci_type,
+    #                    method = "regression", robust = FALSE, family = "student")
+    #   )
+    # },
+    # select = {
+    #   set.seed(seed)
+    #   suppressWarnings(
+    #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+    #                    test = "boot", R = R, level = level, type = ci_type,
+    #                    method = "regression", robust = FALSE, family = "select")
+    #   )
   }
 )
 
-## compute summaries
-summary_boot_list <- lapply(boot_list, summary, type = "boot")
-summary_data_list <- lapply(boot_list, summary, type = "data")
-
-## relevant information
-classes <- c(robust = "summary_lmrob", median = "summary_rq",
-             OLS = "summary_lm", student = "summary_lmse",
-             select = "summary_lm")
-
 ## correct values
-coef_names <- c("a_X1", "a_X2", "b", "Total_X1", "Total_X2", "Direct_X1",
-                "Direct_X2", "Indirect_Total", "Indirect_X1", "Indirect_X2")
+effect_names <- c("a_X1", "a_X2", "b", "Total_X1", "Total_X2", "Direct_X1",
+                  "Direct_X2", "Indirect_Total", "Indirect_X1", "Indirect_X2")
+model_summary_classes <- c(robust = "summary_lmrob", median = "summary_rq",
+                           OLS = "summary_lm", student = "summary_lmse",
+                           select = "summary_lm")
 
 
 ## common tests for all model fits
@@ -97,22 +86,14 @@ for (method in methods) {
 
   # extract information for current method
   boot <- boot_list[[method]]
-  summary_boot <- summary_boot_list[[method]]
-  summary_data <- summary_data_list[[method]]
 
-  ## correct values
-  class <- classes[method]
+  # correct values
   family <- if (method %in% c("student", "select")) method else "gaussian"
-  if (method == "student") {
-    mx_names <- c("(Intercept.DP)", "X1", "X2", "C1", "C2")
-    ymx_names <- c("(Intercept.DP)", "M", "X1", "X2", "C1", "C2")
-  } else {
-    mx_names <- c("(Intercept)", "X1", "X2", "C1", "C2")
-    ymx_names <- c("(Intercept)", "M", "X1", "X2", "C1", "C2")
-  }
+  model_summary_class <- model_summary_classes[method]
+  intercept_name <- if (method == "student") "(Intercept.DP)" else "(Intercept)"
 
 
-  ## run tests
+  # run tests
 
   test_that("output has correct structure", {
 
@@ -137,12 +118,12 @@ for (method in methods) {
     # confidence level
     expect_identical(boot$level, level)
     # type of confidence intervals
-    expect_identical(boot$type, type)
+    expect_identical(boot$type, ci_type)
     # variable names
-    expect_identical(boot$fit$x, c("X1", "X2"))
-    expect_identical(boot$fit$y, "Y")
-    expect_identical(boot$fit$m, "M")
-    expect_identical(boot$fit$covariates, c("C1", "C2"))
+    expect_identical(boot$fit$x, x)
+    expect_identical(boot$fit$y, y)
+    expect_identical(boot$fit$m, m)
+    expect_identical(boot$fit$covariates, covariates)
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(boot$fit$robust, "MM")
@@ -167,14 +148,14 @@ for (method in methods) {
 
     # bootstrap effect estimates
     expect_length(boot$a, 2L)
-    expect_named(boot$a, c("X1", "X2"))
+    expect_named(boot$a, x)
     expect_length(boot$b, 1L)
     expect_length(boot$direct, 2L)
-    expect_named(boot$direct, c("X1", "X2"))
+    expect_named(boot$direct, x)
     expect_length(boot$total, 2L)
-    expect_named(boot$total, c("X1", "X2"))
+    expect_named(boot$total, x)
     expect_length(boot$indirect, 3L)
-    expect_named(boot$indirect, c("Total", "X1", "X2"))
+    expect_named(boot$indirect, c("Total", x))
     # bootstrap confidence interval
     expect_identical(dim(boot$ci), c(3L, 2L))
     expect_identical(rownames(boot$ci), names(boot$indirect))
@@ -203,303 +184,248 @@ for (method in methods) {
 
   })
 
-  test_that("output of coef() method has correct attributes", {
 
-    coef_boot <- coef(boot, type = "boot")
-    coef_data <- coef(boot, type = "data")
-    # bootstrapped effects
-    expect_length(coef_boot, 10L)
-    expect_named(coef_boot, coef_names)
-    # effects computed on original sample
-    expect_length(coef_data, 10L)
-    expect_named(coef_data, coef_names)
+  # loop over types of estimation (bootstrap or on original data)
+  for (type in c("boot", "data")) {
 
-  })
+    # run tests
 
-  test_that("coef() method returns correct values of coefficients", {
+    test_that("output of coef() method has correct attributes", {
 
-    # bootstrapped effects
-    expect_equivalent(coef(boot, parm = "a", type = "boot"),
-                      boot$a)
-    expect_equivalent(coef(boot, parm = "b", type = "boot"),
-                      boot$b)
-    expect_null(coef(boot, parm = "d", type = "boot"))
-    expect_equivalent(coef(boot, parm = "total", type = "boot"),
-                      boot$total)
-    expect_equivalent(coef(boot, parm = "direct", type = "boot"),
-                      boot$direct)
-    expect_equivalent(coef(boot, parm = "indirect", type = "boot"),
-                      boot$indirect)
+      # extract coefficients
+      coef <- coef(boot, type = type)
+      # tests
+      expect_length(coef, 10L)
+      expect_named(coef, effect_names)
 
-    # effects computed on original sample
-    expect_equivalent(coef(boot, parm = "a", type = "data"),
-                      boot$fit$a)
-    expect_equivalent(coef(boot, parm = "b", type = "data"),
-                      boot$fit$b)
-    expect_null(coef(boot, parm = "d", type = "data"))
-    expect_equivalent(coef(boot, parm = "total", type = "data"),
-                      boot$fit$total)
-    expect_equivalent(coef(boot, parm = "direct", type = "data"),
-                      boot$fit$direct)
-    expect_equivalent(coef(boot, parm = "indirect", type = "data"),
-                      boot$fit$indirect)
+    })
 
-  })
+    test_that("coef() method returns correct values of coefficients", {
 
-  test_that("output of confint() method has correct attributes", {
+      # object containing the true values
+      true <- if (type == "boot") boot else boot$fit
+      # tests
+      expect_equivalent(coef(boot, parm = "a", type = type),
+                        true$a)
+      expect_equivalent(coef(boot, parm = "b", type = type),
+                        true$b)
+      expect_null(coef(boot, parm = "d", type = type))
+      expect_equivalent(coef(boot, parm = "total", type = type),
+                        true$total)
+      expect_equivalent(coef(boot, parm = "direct", type = type),
+                        true$direct)
+      expect_equivalent(coef(boot, parm = "indirect", type = type),
+                        true$indirect)
 
-    ci_boot <- confint(boot, type = "boot")
-    ci_data <- confint(boot, type = "data")
-    # bootstrapped confidence intervals
-    expect_equal(dim(ci_boot), c(10L, 2L))
-    expect_equal(rownames(ci_boot), coef_names)
-    expect_equal(colnames(ci_boot), c("5 %", "95 %"))
-    # confidence intervals based on theory (except for indirect effect)
-    expect_equal(dim(ci_data), c(10L, 2L))
-    expect_equal(rownames(ci_data), coef_names)
-    expect_equal(colnames(ci_data), c("5 %", "95 %"))
+    })
 
-  })
+    test_that("output of confint() method has correct attributes", {
 
-  test_that("confint() method returns correct values of confidence intervals", {
+      # extract confidence intervals
+      ci <- confint(boot, type = type)
+      # tests
+      expect_equal(dim(ci), c(10L, 2L))
+      expect_equal(rownames(ci), effect_names)
+      expect_equal(colnames(ci), c("5 %", "95 %"))
 
-    # bootstrapped confidence intervals
-    expect_equivalent(confint(boot, parm = "indirect", type = "boot"), boot$ci)
-    # confidence intervals based on theory (except for indirect effect)
-    expect_equivalent(confint(boot, parm = "indirect", type = "data"), boot$ci)
+    })
 
-  })
+    test_that("confint() method returns correct values of confidence intervals", {
 
-  test_that("summary has correct structure", {
+      expect_equivalent(confint(boot, parm = "indirect", type = type), boot$ci)
 
-    # summary
-    expect_s3_class(summary_boot, "summary_test_mediation")
-    expect_s3_class(summary_data, "summary_test_mediation")
-    # original output of test for indirect effect
-    expect_identical(summary_boot$object, boot)
-    expect_identical(summary_data$object, boot)
-    # summary of the model fit
-    expect_s3_class(summary_boot$summary, "summary_reg_fit_mediation")
-    expect_s3_class(summary_boot$summary, "summary_fit_mediation")
-    expect_s3_class(summary_data$summary, "summary_reg_fit_mediation")
-    expect_s3_class(summary_data$summary, "summary_fit_mediation")
-    # diagnostic plot only for ROBMED
-    if (method == "robust") {
-      expect_s3_class(summary_boot$plot, "gg_weight_plot")
-      expect_s3_class(summary_data$plot, "gg_weight_plot")
+    })
+
+    test_that("output of p_value() method has correct attributes", {
+
+      # extract p-value
+      digits <- 3
+      p_val <- p_value(boot, type = type, digits = digits)
+      # tests
+      expect_length(p_val, 10L)
+      expect_named(p_val, effect_names)
+      expect_equal(p_val["Indirect"], round(p_val["Indirect"], digits = digits))
+
+    })
+
+
+    # compute summary
+    summary <- summary(boot, type = type)
+
+    # correct values
+    if (type == "boot") {
+      n_col <- 5L
+      col_names <- c("Data", "Boot")
+      keep <- 1:2
     } else {
-      expect_null(summary_boot$plot)
-      expect_null(summary_data$plot)
+      n_col <- 4L
+      col_names <- "Estimate"
+      keep <- 1
     }
 
-  })
 
-  # different combinations of model summaries
-  combinations <- expand.grid(summary = c("boot", "data"),
-                              fit = c("fit_mx", "fit_ymx"),
-                              stringsAsFactors = FALSE)
-  # correct degrees of freedom in the numerator for F-test
-  df1 <- c(4, 4, 5, 5)
+    # run tests
 
-  # loop over model summaries
-  for (i in 1:nrow(combinations)) {
+    test_that("summary has correct structure", {
 
-    # extract model summary
-    fit_name <- combinations[i, "fit"]
-    model_summary <- switch(combinations[i, "summary"],
-                            boot = summary_boot$summary[[fit_name]],
-                            data = summary_data$summary[[fit_name]])
-
-    # perform tests
-    test_that("model summary has correct structure", {
-
-      # model summary
-      expect_s3_class(model_summary, class)
-      # regression standard error, R-squared, and F-test
-      if (method %in% c("robust", "OLS", "select")) {
-        # regression standard error
-        expect_type(model_summary$s, "list")
-        expect_named(model_summary$s, c("value", "df"))
-        # R-squared
-        expect_type(model_summary$R2, "list")
-        expect_named(model_summary$R2, c("R2", "adj_R2"))
-        # F-test
-        expect_type(model_summary$F_test, "list")
-        expect_named(model_summary$F_test, c("statistic", "df", "p_value"))
-        # degrees of freedom of F-test
-        df_test <- model_summary$F_test$df
-        if (method == "robust") {
-          expect_identical(df_test[1], df1[i])
-          expect_identical(df_test[2], Inf)
-        } else {
-          expect_identical(df_test[1], as.integer(df1[i]))
-          expect_identical(df_test[2], model_summary$s$df)
-        }
-      } else {
-        # regression standard error
-        expect_null(model_summary$s)
-        # R-squared
-        expect_null(model_summary$R2)
-        # F-test
-        expect_null(model_summary$F_test)
-      }
-      # additional information for robust bootstrap test
+      # summary
+      expect_s3_class(summary, "summary_test_mediation")
+      # original output of test for indirect effect
+      expect_identical(summary$object, boot)
+      # summary of the model fit
+      expect_s3_class(summary$summary, "summary_reg_fit_mediation")
+      expect_s3_class(summary$summary, "summary_fit_mediation")
+      # diagnostic plot only for ROBMED
       if (method == "robust") {
-        fit <- boot$fit[[fit_name]]
-        # information on convergence
-        expect_type(model_summary$algorithm, "list")
-        expect_named(model_summary$algorithm, c("converged", "method"))
-        expect_identical(model_summary$algorithm$converged,
-                         fit$converged)
-        expect_identical(model_summary$algorithm$method,
-                         fit$control$method)
-        # information on outliers
-        expect_type(model_summary$outliers, "list")
-        expect_named(model_summary$outliers,
-                     c("indices", "weights", "threshold"))
-        expect_type(model_summary$outliers$indices, "integer")
-        expect_identical(model_summary$outliers$weights,
-                         weights(fit, type = "robustness"))
-        expect_identical(model_summary$outliers$threshold,
-                         summary(fit)$control$eps.outlier)
+        expect_s3_class(summary$plot, "gg_weight_plot")
+      } else {
+        expect_null(summary$plot)
+      }
+      # list of objects for summaries of regressions m ~ x
+      expect_type(summary$summary$fit_mx, "list")
+
+    })
+
+    test_that("attributes are correctly passed through summary", {
+
+      # robustness
+      if (method == "robust") {
+        expect_identical(summary$summary$robust, "MM")
+      } else if (method == "median") {
+        expect_identical(summary$summary$robust, "median")
+      } else {
+        expect_false(summary$summary$robust)
+      }
+      # number of observations
+      expect_identical(summary$summary$n, as.integer(n))
+      # variable names
+      expect_identical(summary$summary$x, x)
+      expect_identical(summary$summary$y, y)
+      expect_identical(summary$summary$m, m)
+      expect_identical(summary$summary$covariates, covariates)
+
+    })
+
+
+    # loop over response variables in regression model fits
+    for (response in c(m, y)) {
+
+      # extract information on current regression model fit
+      if (response == "Y") {
+        model_summary <- summary$summary$fit_ymx
+        fit <- boot$fit$fit_ymx
+      } else {
+        model_summary <- summary$summary$fit_mx
+        fit <- boot$fit$fit_mx
+      }
+
+      # correct values
+      if (response == "Y") {
+        coef_names <- c(intercept_name, m, x, covariates)
+        n_coef <- 6L
+        df1 <- 5
+      } else {
+        coef_names <- c(intercept_name, x, covariates)
+        n_coef <- 5L
+        df1 <- 4
+      }
+
+      # run tests
+      test_that("model summary has correct structure", {
+
+        # model summary
+        expect_s3_class(model_summary, model_summary_class)
+        # tests on coefficients
+        expect_identical(dim(model_summary$coefficients), c(n_coef, n_col))
+        expect_identical(rownames(model_summary$coefficients), coef_names)
+        expect_identical(colnames(model_summary$coefficients)[keep], col_names)
+        # regression standard error, R-squared, and F-test
+        if (method %in% c("robust", "OLS", "select")) {
+          # regression standard error
+          expect_type(model_summary$s, "list")
+          expect_named(model_summary$s, c("value", "df"))
+          # R-squared
+          expect_type(model_summary$R2, "list")
+          expect_named(model_summary$R2, c("R2", "adj_R2"))
+          # F-test
+          expect_type(model_summary$F_test, "list")
+          expect_named(model_summary$F_test, c("statistic", "df", "p_value"))
+          # degrees of freedom of F-test
+          df_test <- model_summary$F_test$df
+          if (method == "robust") {
+            expect_identical(df_test[1], df1)
+            expect_identical(df_test[2], Inf)
+          } else {
+            expect_identical(df_test[1], as.integer(df1))
+            expect_identical(df_test[2], model_summary$s$df)
+          }
+        } else {
+          # regression standard error
+          expect_null(model_summary$s)
+          # R-squared
+          expect_null(model_summary$R2)
+          # F-test
+          expect_null(model_summary$F_test)
+        }
+        # additional information for robust bootstrap test
+        if (method == "robust") {
+          # information on convergence
+          expect_type(model_summary$algorithm, "list")
+          expect_named(model_summary$algorithm, c("converged", "method"))
+          expect_identical(model_summary$algorithm$converged,
+                           fit$converged)
+          expect_identical(model_summary$algorithm$method,
+                           fit$control$method)
+          # information on outliers
+          expect_type(model_summary$outliers, "list")
+          expect_named(model_summary$outliers,
+                       c("indices", "weights", "threshold"))
+          expect_type(model_summary$outliers$indices, "integer")
+          expect_identical(model_summary$outliers$weights,
+                           weights(fit, type = "robustness"))
+          expect_identical(model_summary$outliers$threshold,
+                           summary(fit)$control$eps.outlier)
+        }
+
+      })
+
+    }
+
+
+    test_that("effect summaries have correct names", {
+
+      # total effect
+      expect_identical(dim(summary$summary$total), c(2L, n_col))
+      expect_identical(rownames(summary$summary$total), x)
+      expect_identical(colnames(summary$summary$total)[keep], col_names)
+      # direct effect
+      expect_identical(dim(summary$summary$direct), c(2L, n_col))
+      expect_identical(rownames(summary$summary$direct), x)
+      expect_identical(colnames(summary$summary$direct)[keep], col_names)
+
+    })
+
+    test_that("effect summaries contain correct coefficient values", {
+
+      # effects computed on original sample
+      expect_equivalent(summary$summary$fit_mx$coefficients[x, 1], boot$fit$a)
+      expect_identical(summary$summary$fit_ymx$coefficients[m, 1], boot$fit$b)
+      expect_identical(summary$summary$total[x, 1], boot$fit$total)
+      expect_identical(summary$summary$direct[x, 1], boot$fit$direct)
+
+      # bootstrapped effects
+      if (type == "boot") {
+        expect_equivalent(summary$summary$fit_mx$coefficients[x, "Boot"],
+                          boot$a)
+        expect_equivalent(summary$summary$fit_ymx$coefficients[m, "Boot"],
+                          boot$b)
+        expect_equal(summary$summary$total[x, "Boot"], boot$total)
+        expect_equal(summary$summary$direct[x, "Boot"], boot$direct)
       }
 
     })
 
   }
-
-  test_that("attributes are correctly passed through summary", {
-
-    # robustness
-    if (method == "robust") {
-      expect_identical(summary_boot$summary$robust, "MM")
-      expect_identical(summary_data$summary$robust, "MM")
-    } else if (method == "median") {
-      expect_identical(summary_boot$summary$robust, "median")
-      expect_identical(summary_data$summary$robust, "median")
-    } else {
-      expect_false(summary_boot$summary$robust)
-      expect_false(summary_data$summary$robust)
-    }
-    # number of observations
-    expect_identical(summary_boot$summary$n, as.integer(n))
-    expect_identical(summary_data$summary$n, as.integer(n))
-    # variable names
-    expect_identical(summary_boot$summary$x, c("X1", "X2"))
-    expect_identical(summary_boot$summary$y, "Y")
-    expect_identical(summary_boot$summary$m, "M")
-    expect_identical(summary_boot$summary$covariates, c("C1", "C2"))
-    expect_identical(summary_data$summary$x, c("X1", "X2"))
-    expect_identical(summary_data$summary$y, "Y")
-    expect_identical(summary_data$summary$m, "M")
-    expect_identical(summary_data$summary$covariates, c("C1", "C2"))
-
-  })
-
-  test_that("effect summaries have correct names", {
-
-    # regression m ~ x
-    expect_identical(dim(summary_boot$summary$fit_mx$coefficients),
-                     c(5L, 5L))
-    expect_identical(rownames(summary_boot$summary$fit_mx$coefficients),
-                     mx_names)
-    expect_identical(colnames(summary_boot$summary$fit_mx$coefficients)[1:2],
-                     c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$fit_mx$coefficients),
-                     c(5L, 4L))
-    expect_identical(rownames(summary_data$summary$fit_mx$coefficients),
-                     mx_names)
-    expect_identical(colnames(summary_data$summary$fit_mx$coefficients)[1],
-                     "Estimate")
-    # regression y ~ m + x
-    expect_identical(dim(summary_boot$summary$fit_ymx$coefficients),
-                     c(6L, 5L))
-    expect_identical(rownames(summary_boot$summary$fit_ymx$coefficient),
-                     ymx_names)
-    expect_identical(colnames(summary_boot$summary$fit_ymx$coefficient)[1:2],
-                     c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$fit_ymx$coefficient),
-                     c(6L, 4L))
-    expect_identical(rownames(summary_data$summary$fit_ymx$coefficient),
-                     ymx_names)
-    expect_identical(colnames(summary_data$summary$fit_ymx$coefficient)[1],
-                     "Estimate")
-    # total effect
-    expect_identical(dim(summary_boot$summary$total),
-                     c(2L, 5L))
-    expect_identical(rownames(summary_boot$summary$total),
-                     c("X1", "X2"))
-    expect_identical(colnames(summary_boot$summary$total)[1:2],
-                     c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$total),
-                     c(2L, 4L))
-    expect_identical(rownames(summary_data$summary$total),
-                     c("X1", "X2"))
-    expect_identical(colnames(summary_data$summary$total)[1],
-                     "Estimate")
-    # direct effect
-    expect_identical(dim(summary_boot$summary$direct),
-                     c(2L, 5L))
-    expect_identical(rownames(summary_boot$summary$direct),
-                     c("X1", "X2"))
-    expect_identical(colnames(summary_boot$summary$direct)[1:2],
-                     c("Data", "Boot"))
-    expect_identical(dim(summary_data$summary$direct),
-                     c(2L, 4L))
-    expect_identical(rownames(summary_data$summary$direct),
-                     c("X1", "X2"))
-    expect_identical(colnames(summary_data$summary$direct)[1],
-                     "Estimate")
-
-  })
-
-  test_that("effect summaries contain correct coefficient values", {
-
-    # effects computed on original sample
-    expect_equivalent(summary_boot$summary$fit_mx$coefficients[2:3, "Data"],
-                      boot$fit$a)
-    expect_identical(summary_boot$summary$fit_ymx$coefficients[2, "Data"],
-                     boot$fit$b)
-    expect_identical(summary_boot$summary$total[c("X1", "X2"), "Data"],
-                     boot$fit$total)
-    expect_identical(summary_boot$summary$direct[c("X1", "X2"), "Data"],
-                     boot$fit$direct)
-    expect_equivalent(summary_data$summary$fit_mx$coefficients[2:3, "Estimate"],
-                      boot$fit$a)
-    expect_identical(summary_data$summary$fit_ymx$coefficients[2, "Estimate"],
-                     boot$fit$b)
-    expect_identical(summary_data$summary$total[c("X1", "X2"), "Estimate"],
-                     boot$fit$total)
-    expect_identical(summary_data$summary$direct[c("X1", "X2"), "Estimate"],
-                     boot$fit$direct)
-
-    # bootstrapped effects
-    expect_equivalent(summary_boot$summary$fit_mx$coefficients[2:3, "Boot"],
-                      boot$a)
-    expect_equivalent(summary_boot$summary$fit_ymx$coefficients[2, "Boot"],
-                      boot$b)
-    expect_equal(summary_boot$summary$total[c("X1", "X2"), "Boot"],
-                 boot$total)
-    expect_equal(summary_boot$summary$direct[c("X1", "X2"), "Boot"],
-                 boot$direct)
-
-  })
-
-  test_that("output of p_value() method has correct attributes", {
-
-    digits <- 3
-    p_boot <- p_value(boot, type = "boot", digits = digits)
-    p_data <- p_value(boot, type = "data", digits = digits)
-    # bootstrapped effects
-    expect_length(p_boot, 10L)
-    expect_named(p_boot, coef_names)
-    expect_equal(p_boot["Indirect"], round(p_boot["Indirect"], digits = digits))
-    # effects computed on original sample
-    expect_length(p_data, 10L)
-    expect_named(p_data, coef_names)
-    expect_equal(p_data["Indirect"], round(p_data["Indirect"], digits = digits))
-
-  })
 
 }
 
@@ -524,15 +450,15 @@ for (method in methods) {
 #
 #     # use regression fit
 #     set.seed(seed)
-#     reg_boot <- test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-#                                covariates = c("C1", "C2"), test = "boot",
+#     reg_boot <- test_mediation(test_data, x = x, y = y, m = m,
+#                                covariates = covariates, test = "boot",
 #                                method = "regression", robust = robust)
 #
-#     # try to use covariance fit with covariates (should give warning)
+#     # try to use covariance fit (should give warning)
 #     set.seed(seed)
 #     expect_warning(
-#       cov_boot <- test_mediation(test_data, x = c("X1", "X2"), y = "Y", m = "M",
-#                                  covariates = c("C1", "C2"), test = "boot",
+#       cov_boot <- test_mediation(test_data, x = x, y = y, m = m,
+#                                  covariates = covariates, test = "boot",
 #                                  method = "covariance", robust = robust)
 #     )
 #
