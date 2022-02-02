@@ -2,7 +2,10 @@ Changes in robmed version 0.10.0
 
     + Removed superfluous package MASS from Suggests.
 
-    + Updated examples and shiny app.
+    + Updated examples.
+
+    + Moved shiny app in separate package 'robmedShiny':
+      https://github.com/aalfons/robmedShiny
 
 
 

@@ -13,12 +13,6 @@ The DESCRIPTION file:
 \packageDESCRIPTION{robmed}
 \packageIndices{robmed}
 }
-\examples{
-## compare bootstrap methods for mediation analysis on simulated data
-\dontrun{
-run_shiny_app()
-}
-}
 \references{
 Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust bootstrap test
 for mediation analysis.  \emph{Organizational Research Methods},
