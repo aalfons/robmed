@@ -1,4 +1,4 @@
-context("bootstrap test: parallel multiple mediators, covariates")
+context("bootstrap test: serial multiple mediators, no covariates")
 
 
 ## load package
@@ -6,8 +6,9 @@ library("robmed", quietly = TRUE)
 
 ## control parameters
 n <- 250            # number of observations
-a <- c <- 0.2       # true effects
-b <- 0              # true effect
+a <- c(0.2, 0.2)    # true effects
+c <- d <- 0.2       # true effects
+b <- c(0, 0.2)      # true effect
 seed <- 20190201    # seed for the random number generator
 
 ## set seed for reproducibility
@@ -15,19 +16,17 @@ set.seed(seed)
 
 ## generate data
 X <- rnorm(n)
-M1 <- a * X + rnorm(n)
-M2 <- rnorm(n)
-Y <- b * M1 + c * X + rnorm(n)
-C1 <- rnorm(n)
-C2 <- rnorm(n)
-test_data <- data.frame(X, Y, M1, M2, C1, C2)
+M1 <- a[1] * X + rnorm(n)
+M2 <- d * M1 + a[2] * X + rnorm(n)
+Y <- b[1] * M1 + b[2] * M2 + c * X + rnorm(n)
+test_data <- data.frame(X, Y, M1, M2)
 
 ## arguments for bootstrap tests
 x <- "X"                                 # independent variable
 y <- "Y"                                 # dependent variable
 m <- c("M1", "M2")                       # parallel mediators
-covariates <- c("C1", "C2")              # control variables
-R <- 100                                 # number of bootstrap samples
+covariates <- character()                # control variables
+R <- 200                                 # number of bootstrap samples
 level <- 0.9                             # confidence level
 ci_type <- "perc"                        # type of confidence intervals
 ctrl <- reg_control(efficiency <- 0.95)  # for MM-regression estimator
@@ -37,46 +36,47 @@ boot_list <- list(
   robust = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level,
+                   model = "serial", test = "boot", R = R, level = level,
                    type = ci_type, method = "regression", robust = TRUE,
                    control = ctrl)
   },
   median = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level,
+                   model = "serial", test = "boot", R = R, level = level,
                    type = ci_type, method = "regression", robust = "median")
   },
   OLS = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level,
+                   model = "serial", test = "boot", R = R, level = level,
                    type = ci_type, method = "regression", robust = FALSE,
                    family = "gaussian")
-    # },
-    # student = {
-    #   set.seed(seed)
-    #   suppressWarnings(
-    #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-    #                    model = "parallel", test = "boot", R = R, level = level,
-    #                    type = ci_type,  method = "regression", robust = FALSE,
-    #                    family = "student")
-    #   )
-    # },
-    # select = {
-    #   set.seed(seed)
-    #   suppressWarnings(
-    #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-    #                    model = "parallel", test = "boot", R = R, level = level,
-    #                    type = ci_type, method = "regression", robust = FALSE,
-    #                    family = "select")
-    #   )
+  # },
+  # student = {
+  #   set.seed(seed)
+  #   suppressWarnings(
+  #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+  #                    model = "serial", test = "boot", R = R, level = level,
+  #                    type = ci_type, method = "regression", robust = FALSE,
+  #                    family = "student")
+  #   )
+  # },
+  # select = {
+  #   set.seed(seed)
+  #   suppressWarnings(
+  #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+  #                    model = "serial", test = "boot", R = R, level = level,
+  #                    type = ci_type, method = "regression", robust = FALSE,
+  #                    family = "select")
+  #   )
   }
 )
 
 ## correct values
-effect_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "Total", "Direct",
-                  "Indirect_Total", "Indirect_M1", "Indirect_M2")
+effect_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "d", "Total", "Direct",
+                  "Indirect_Total", "Indirect_M1", "Indirect_M2",
+                  "Indirect_M1->M2")
 model_summary_classes <- c(robust = "summary_lmrob", median = "summary_rq",
                            OLS = "summary_lm", student = "summary_lmse",
                            select = "summary_lm")
@@ -142,7 +142,7 @@ for (method in methods) {
     # assumed error distribution
     expect_identical(boot$fit$family, family)
     # mediation model
-    expect_identical(boot$fit$model, "parallel")
+    expect_identical(boot$fit$model, "serial")
     # no contrasts
     expect_false(boot$fit$contrast)
 
@@ -155,33 +155,36 @@ for (method in methods) {
     expect_named(boot$a, m)
     expect_length(boot$b, 2L)
     expect_named(boot$b, m)
+    expect_length(boot[["d"]], 1L)
     expect_length(boot$direct, 1L)
     expect_length(boot$total, 1L)
-    expect_length(boot$indirect, 3L)
-    expect_named(boot$indirect, c("Total", m))
+    expect_length(boot$indirect, 4L)
+    expect_named(boot$indirect, c("Total", m, paste(m, collapse="->")))
     # bootstrap confidence interval
-    expect_identical(dim(boot$ci), c(3L, 2L))
+    expect_identical(dim(boot$ci), c(4L, 2L))
     expect_identical(rownames(boot$ci), names(boot$indirect))
     expect_identical(colnames(boot$ci), c("Lower", "Upper"))
     # dimensions of bootstrap replicates
-    expect_identical(dim(boot$reps$t), c(as.integer(R), 18L))
+    expect_identical(dim(boot$reps$t), c(as.integer(R), 14L))
 
   })
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(boot$a, colMeans(boot$reps$t[, c(5, 9)]))
-    expect_equivalent(boot$b, colMeans(boot$reps$t[, 13:14]))
-    expect_null(boot[["d"]])
-    expect_equivalent(boot$direct, mean(boot$reps$t[, 15]))
-    expect_equivalent(boot$indirect, colMeans(boot$reps$t[, 1:3]))
-    expect_equivalent(boot$reps$t[, 1], rowSums(boot$reps$t[, 2:3]))
-    expect_equivalent(boot$reps$t[, 2], boot$reps$t[, 5] * boot$reps$t[, 13])
-    expect_equivalent(boot$reps$t[, 3], boot$reps$t[, 9] * boot$reps$t[, 14])
+    expect_equivalent(boot$a, colMeans(boot$reps$t[, c(6, 9)]))
+    expect_equivalent(boot$b, colMeans(boot$reps$t[, 11:12]))
+    expect_equivalent(boot[["d"]], mean(boot$reps$t[, 8]))
+    expect_equivalent(boot$direct, mean(boot$reps$t[, 13]))
+    expect_equivalent(boot$indirect, colMeans(boot$reps$t[, 1:4]))
+    expect_equivalent(boot$reps$t[, 1], rowSums(boot$reps$t[, 2:4]))
+    expect_equivalent(boot$reps$t[, 2], boot$reps$t[, 6] * boot$reps$t[, 11])
+    expect_equivalent(boot$reps$t[, 3], boot$reps$t[, 9] * boot$reps$t[, 12])
+    expect_equivalent(boot$reps$t[, 4],
+                      boot$reps$t[, 6] * boot$reps$t[, 8] * boot$reps$t[, 12])
     # total effect
-    expect_equivalent(boot$total, mean(boot$reps$t[, 18]))
+    expect_equivalent(boot$total, mean(boot$reps$t[, 14]))
     if (method %in% c("robust", "median", "OLS")) {
-      expect_equivalent(boot$reps$t[, 18], rowSums(boot$reps$t[, c(1, 15)]))
+      expect_equivalent(boot$reps$t[, 14], rowSums(boot$reps$t[, c(1, 13)]))
     }
 
   })
@@ -197,7 +200,7 @@ for (method in methods) {
       # extract coefficients
       coef <- coef(boot, type = type)
       # tests
-      expect_length(coef, 9L)
+      expect_length(coef, 11L)
       expect_named(coef, effect_names)
 
     })
@@ -211,7 +214,8 @@ for (method in methods) {
                         true$a)
       expect_equivalent(coef(boot, parm = "b", type = type),
                         true$b)
-      expect_null(coef(boot, parm = "d", type = type))
+      expect_equivalent(coef(boot, parm = "d", type = type),
+                        true[["d"]])
       expect_equivalent(coef(boot, parm = "total", type = type),
                         true$total)
       expect_equivalent(coef(boot, parm = "direct", type = type),
@@ -226,7 +230,7 @@ for (method in methods) {
       # extract confidence intervals
       ci <- confint(boot, type = type)
       # tests
-      expect_equal(dim(ci), c(9L, 2L))
+      expect_equal(dim(ci), c(11L, 2L))
       expect_equal(rownames(ci), effect_names)
       expect_equal(colnames(ci), c("5 %", "95 %"))
 
@@ -244,7 +248,7 @@ for (method in methods) {
       digits <- 3
       p_val <- p_value(boot, type = type, digits = digits)
       # check dimensions
-      expect_length(p_val, 9L)
+      expect_length(p_val, 11L)
       expect_named(p_val, effect_names)
       # check number of digits
       which <- grep("Indirect", names(p_val))
@@ -325,13 +329,17 @@ for (method in methods) {
 
       # correct values
       if (response == "Y") {
-        coef_names <- c(intercept_name, m, x, covariates)
-        n_coef <- 6L
-        df1 <- 5
-      } else {
-        coef_names <- c(intercept_name, x, covariates)
+        coef_names <- c(intercept_name, m, x)
         n_coef <- 4L
         df1 <- 3
+      } else if (response == "M2") {
+        coef_names <- c(intercept_name, m[1], x)
+        n_coef <- 3L
+        df1 <- 2
+      } else {
+        coef_names <- c(intercept_name, x)
+        n_coef <- 2L
+        df1 <- 1
       }
 
       # run tests
@@ -458,7 +466,7 @@ for (method in methods) {
 #     # use regression fit
 #     set.seed(seed)
 #     reg_boot <- test_mediation(test_data, x = x, y = y, m = m,
-#                                covariates = covariates, model = "parallel",
+#                                covariates = covariates, model = "serial",
 #                                test = "boot", method = "regression",
 #                                robust = robust)
 #
@@ -466,7 +474,7 @@ for (method in methods) {
 #     set.seed(seed)
 #     expect_warning(
 #       cov_boot <- test_mediation(test_data, x = x, y = y, m = m,
-#                                  covariates = covariates, model = "parallel",
+#                                  covariates = covariates, model = "serial",
 #                                  test = "boot", method = "covariance",
 #                                  robust = robust)
 #     )

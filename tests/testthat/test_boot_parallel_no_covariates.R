@@ -241,10 +241,12 @@ for (method in methods) {
       # extract p-value
       digits <- 3
       p_val <- p_value(boot, type = type, digits = digits)
-      # tests
+      # check dimensions
       expect_length(p_val, 9L)
       expect_named(p_val, effect_names)
-      expect_equal(p_val["Indirect"], round(p_val["Indirect"], digits = digits))
+      # check number of digits
+      which <- grep("Indirect", names(p_val))
+      expect_equal(p_val[which], round(p_val[which], digits = digits))
 
     })
 
@@ -454,15 +456,17 @@ for (method in methods) {
 #     # use regression fit
 #     set.seed(seed)
 #     reg_boot <- test_mediation(test_data, x = x, y = y, m = m,
-#                                covariates = covariates, test = "boot",
-#                                method = "regression", robust = robust)
+#                                covariates = covariates, model = "parallel",
+#                                test = "boot", method = "regression",
+#                                robust = robust)
 #
 #     # try to use covariance fit (should give warning)
 #     set.seed(seed)
 #     expect_warning(
 #       cov_boot <- test_mediation(test_data, x = x, y = y, m = m,
-#                                  covariates = covariates, test = "boot",
-#                                  method = "covariance", robust = robust)
+#                                  covariates = covariates, model = "parallel",
+#                                  test = "boot", method = "covariance",
+#                                  robust = robust)
 #     )
 #
 #     # these should be the same

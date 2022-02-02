@@ -1,4 +1,4 @@
-context("bootstrap test: multiple independent variables to be mediated, no covariates")
+context("bootstrap test: multiple independent variables, no covariates")
 
 
 ## load package
@@ -239,10 +239,12 @@ for (method in methods) {
       # extract p-value
       digits <- 3
       p_val <- p_value(boot, type = type, digits = digits)
-      # tests
+      # check dimensions
       expect_length(p_val, 10L)
       expect_named(p_val, effect_names)
-      expect_equal(p_val["Indirect"], round(p_val["Indirect"], digits = digits))
+      # check number of digits
+      which <- grep("Indirect", names(p_val))
+      expect_equal(p_val[which], round(p_val[which], digits = digits))
 
     })
 
