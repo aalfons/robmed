@@ -44,11 +44,12 @@ sobel_list <- list(
                    test = "sobel", method = "regression", robust = FALSE,
                    family = "gaussian")
   },
-  student = {
-    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   test = "sobel", method = "regression", robust = FALSE,
-                   family = "student")
-  },
+  # standard error is NA for skew-elliptical distributions
+  # student = {
+  #   test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+  #                  test = "sobel", method = "regression", robust = FALSE,
+  #                  family = "student")
+  # },
   select = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "sobel", method = "regression", robust = FALSE,
@@ -237,6 +238,63 @@ for (method in methods) {
     expect_identical(summary$summary$direct[x, "Estimate"], sobel$fit$direct)
 
   })
+
+
+  # loop over settings for retest()
+  for (setting in c("order", "less", "greater")) {
+
+    # use retest() to change one of the arguments
+    if (setting == "order") resobel <- retest(sobel, order = "second")
+    else resobel <- retest(sobel, alternative = setting)
+
+    test_that("output of retest() has correct structure", {
+
+      # bootstrap test
+      expect_identical(class(resobel), class(sobel))
+      # regression fit
+      expect_identical(resobel$fit, sobel$fit)
+      # bootstrap replicates
+      expect_identical(resobel$reps, sobel$reps)
+
+    })
+
+    test_that("arguments of retest() are correctly passed", {
+
+      # alternative hypothesis and order of approximation
+      if (setting == "order") {
+        expect_identical(resobel$alternative, sobel$alternative)
+        expect_identical(resobel$order, "second")
+      } else {
+        expect_identical(resobel$alternative, setting)
+        expect_identical(resobel$order, sobel$order)
+      }
+
+    })
+
+    test_that("retest() yields correct values", {
+
+      # standard error, test statistic, and p-value
+      if (setting == "order") {
+        expect_gt(resobel$se, sobel$se)
+        expect_lt(abs(resobel$statistic), abs(sobel$statistic))
+        expect_gt(resobel$p_value, sobel$p_value)
+      } else {
+        # standard error and test statistic
+        expect_equal(resobel$se, sobel$se)
+        expect_equal(resobel$statistic, sobel$statistic)
+        # p-value
+        is_half <- (setting == "less" && sobel$statistic < 0) ||
+          (setting == "greater" && sobel$statistic > 0)
+        if (is_half) {
+          expect_equal(resobel$p_value, sobel$p_value / 2)
+        } else {
+          expect_equal(resobel$p_value, 1 - sobel$p_value / 2)
+        }
+      }
+
+    })
+
+  }
 
 }
 

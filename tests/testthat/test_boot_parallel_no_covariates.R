@@ -26,7 +26,7 @@ y <- "Y"                                 # dependent variable
 m <- c("M1", "M2")                       # parallel mediators
 covariates <- character()                # control variables
 R <- 100                                 # number of bootstrap samples
-level <- 0.9                             # confidence level
+level <- c(0.9, 0.95)                    # confidence level
 ci_type <- "perc"                        # type of confidence intervals
 ctrl <- reg_control(efficiency <- 0.95)  # for MM-regression estimator
 
@@ -35,20 +35,20 @@ boot_list <- list(
   robust = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level,
+                   model = "parallel", test = "boot", R = R, level = level[1],
                    type = ci_type, method = "regression", robust = TRUE,
                    control = ctrl)
   },
   median = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level,
+                   model = "parallel", test = "boot", R = R, level = level[1],
                    type = ci_type, method = "regression", robust = "median")
   },
   OLS = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level,
+                   model = "parallel", test = "boot", R = R, level = level[1],
                    type = ci_type, method = "regression", robust = FALSE,
                    family = "gaussian")
   # },
@@ -56,7 +56,7 @@ boot_list <- list(
   #   set.seed(seed)
   #   suppressWarnings(
   #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-  #                    model = "parallel", test = "boot", R = R, level = level,
+  #                    model = "parallel", test = "boot", R = R, level = level[1],
   #                    type = ci_type,  method = "regression", robust = FALSE,
   #                    family = "student")
   #   )
@@ -65,7 +65,7 @@ boot_list <- list(
   #   set.seed(seed)
   #   suppressWarnings(
   #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-  #                    model = "parallel", test = "boot", R = R, level = level,
+  #                    model = "parallel", test = "boot", R = R, level = level[1],
   #                    type = ci_type, method = "regression", robust = FALSE,
   #                    family = "select")
   #   )
@@ -118,7 +118,7 @@ for (method in methods) {
     # (doesn't hold for some methods if there are computational issues)
     expect_identical(boot$R, as.integer(R))
     # confidence level
-    expect_identical(boot$level, level)
+    expect_identical(boot$level, level[1])
     # type of confidence intervals
     expect_identical(boot$type, ci_type)
     # variable names
@@ -426,6 +426,66 @@ for (method in methods) {
                           boot$b)
         expect_equal(summary$summary$total[x, "Boot"], boot$total)
         expect_equal(summary$summary$direct[x, "Boot"], boot$direct)
+      }
+
+    })
+
+  }
+
+
+  # loop over settings for retest()
+  for (setting in c("wider", "less", "greater")) {
+
+    # use retest() to change one of the arguments
+    if (setting == "wider") reboot <- retest(boot, level = level[2])
+    else reboot <- retest(boot, alternative = setting, level = level[2])
+
+    test_that("output of retest() has correct structure", {
+
+      # bootstrap test
+      expect_identical(class(reboot), class(boot))
+      # regression fit
+      expect_identical(reboot$fit, boot$fit)
+      # bootstrap replicates
+      expect_identical(reboot$reps, boot$reps)
+
+    })
+
+    test_that("arguments of retest() are correctly passed", {
+
+      # alternative hypothesis
+      if (setting == "wider") {
+        expect_identical(reboot$alternative, boot$alternative)
+      } else {
+        expect_identical(reboot$alternative, setting)
+      }
+      # confidence level
+      expect_identical(reboot$level, level[2])
+      # type of confidence intervals
+      expect_identical(reboot$type, boot$type)
+
+    })
+
+    test_that("retest() yields correct values", {
+
+      # indirect effect
+      expect_identical(reboot$indirect, boot$indirect)
+      # confidence interval
+      expect_identical(dim(reboot$ci), dim(boot$ci))
+      expect_identical(dimnames(reboot$ci), dimnames(boot$ci))
+      if (setting == "wider") {
+        expect_true(all(reboot$ci[, 1] < boot$ci[, 1]))
+        expect_true(all(reboot$ci[, 2] > boot$ci[, 2]))
+        expect_equal(colnames(confint(reboot)), c("2.5 %", "97.5 %"))
+      } else {
+        if (setting == "less") {
+          expect_equivalent(reboot$ci[, 1], rep.int(-Inf, 3))
+          expect_equal(reboot$ci[, 2], boot$ci[, 2])
+        } else {
+          expect_equal(reboot$ci[, 1], boot$ci[, 1])
+          expect_equivalent(reboot$ci[, 2], rep.int(Inf, 3))
+        }
+        expect_identical(colnames(confint(reboot)), c("Lower", "Upper"))
       }
 
     })
