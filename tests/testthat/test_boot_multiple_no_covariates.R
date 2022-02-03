@@ -26,7 +26,7 @@ y <- "Y"                                 # dependent variable
 m <- "M"                                 # mediator variable
 covariates <- character()                # control variables
 R <- 100                                 # number of bootstrap samples
-level <- c(0.9, 0.95)                     # confidence level
+level <- c(0.9, 0.95)                    # confidence level
 ci_type <- "perc"                        # type of confidence intervals
 ctrl <- reg_control(efficiency <- 0.95)  # for MM-regression estimator
 
