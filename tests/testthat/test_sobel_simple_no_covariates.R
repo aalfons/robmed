@@ -86,7 +86,7 @@ for (method in methods) {
   summary <- summary_list[[method]]
 
 
-  ## run tests
+  # run tests
 
   test_that("output has correct structure", {
 
@@ -394,7 +394,7 @@ for (method in intersect(methods, cov_methods)) {
   summary <- summary_list[[method]]
 
 
-  ## run tests
+  # run tests
 
   test_that("output has correct structure", {
 

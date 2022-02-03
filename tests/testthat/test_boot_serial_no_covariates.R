@@ -24,7 +24,7 @@ test_data <- data.frame(X, Y, M1, M2)
 ## arguments for bootstrap tests
 x <- "X"                                 # independent variable
 y <- "Y"                                 # dependent variable
-m <- c("M1", "M2")                       # parallel mediators
+m <- c("M1", "M2")                       # serial mediators
 covariates <- character()                # control variables
 R <- 200                                 # number of bootstrap samples
 level <- 0.9                             # confidence level

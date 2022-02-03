@@ -22,50 +22,48 @@ C2 <- rnorm(n)
 test_data <- data.frame(X, Y, M, C1, C2)
 
 ## control parameters for methods
-max_iterations <- 500  # for MM-regression estimator
+x <- "X"                     # independent variable
+y <- "Y"                     # dependent variable
+m <- "M"                     # mediator variable
+covariates <- c("C1", "C2")  # control variables
+max_iterations <- 500        # for MM-regression estimator
 
 ## fit mediation models
 fit_list <- list(
   robust = {
     set.seed(seed)
-    fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                  covariates = c("C1", "C2"), method = "regression",
-                  robust = TRUE, max_iterations = max_iterations)
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  method = "regression", robust = TRUE,
+                  max_iterations = max_iterations)
   },
   median = {
-    fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                  covariates = c("C1", "C2"), method = "regression",
-                  robust = "median")
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  method = "regression", robust = "median")
   },
   OLS = {
-    fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                  covariates = c("C1", "C2"), method = "regression",
-                  robust = FALSE, family = "gaussian")
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  method = "regression", robust = FALSE, family = "gaussian")
   },
   student = {
-    fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                  covariates = c("C1", "C2"), method = "regression",
-                  robust = FALSE, family = "student")
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  method = "regression", robust = FALSE, family = "student")
   },
   select = {
-    fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                  covariates = c("C1", "C2"), method = "regression",
-                  robust = FALSE, family = "select")
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  method = "regression", robust = FALSE, family = "select")
   }
 )
 
 ## compute summaries
 summary_list <- lapply(fit_list, summary)
 
-## relevant information
+## correct values
+effect_names <- c("a", "b", "Total", "Direct", "Indirect")
 classes <- c(robust = "lmrob", median = "rq", OLS = "lm",
              student = "lmse", select = "lm")
 
-## correct values
-coef_names <- c("a", "b", "Total", "Direct", "Indirect")
 
-
-## common tests for all model fits
+## run tests
 
 # loop over methods
 methods <- names(fit_list)
@@ -75,12 +73,12 @@ for (method in methods) {
   fit <- fit_list[[method]]
   summary <- summary_list[[method]]
 
-  ## correct values
+  # correct values
   class <- classes[method]
   family <- if (method %in% c("student", "select")) method else "gaussian"
 
 
-  ## run tests
+  # run tests
 
   test_that("output has correct structure", {
 
@@ -102,10 +100,10 @@ for (method in methods) {
   test_that("arguments are correctly passed", {
 
     # variable names
-    expect_identical(fit$x, "X")
-    expect_identical(fit$y, "Y")
-    expect_identical(fit$m, "M")
-    expect_identical(fit$covariates, c("C1", "C2"))
+    expect_identical(fit$x, x)
+    expect_identical(fit$y, y)
+    expect_identical(fit$m, m)
+    expect_identical(fit$covariates, covariates)
     # robust or nonrobust fit
     if (method == "robust") {
       expect_identical(fit$robust, "MM")
@@ -147,19 +145,19 @@ for (method in methods) {
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(fit$a, coef(fit$fit_mx)["X"])
-    expect_equivalent(fit$b, coef(fit$fit_ymx)["M"])
+    expect_equivalent(fit$a, coef(fit$fit_mx)[x])
+    expect_equivalent(fit$b, coef(fit$fit_ymx)[m])
     expect_null(fit$d)
-    expect_equivalent(fit$direct, coef(fit$fit_ymx)["X"])
+    expect_equivalent(fit$direct, coef(fit$fit_ymx)[x])
     expect_equivalent(fit$indirect, fit$a * fit$b)
     # total effect
     if (method %in% c("robust", "median")) {
       expect_equivalent(fit$total, fit$indirect + fit$direct)
     } else if (method == "OLS") {
-      expect_equivalent(fit$total, coef(fit$fit_yx)["X"])
+      expect_equivalent(fit$total, coef(fit$fit_yx)[x])
       expect_equivalent(fit$total, fit$indirect + fit$direct)
     } else {
-      expect_equivalent(fit$total, coef(fit$fit_yx)["X"])
+      expect_equivalent(fit$total, coef(fit$fit_yx)[x])
     }
 
   })
@@ -168,7 +166,7 @@ for (method in methods) {
 
     coefficients <- coef(fit)
     expect_length(coefficients, 5L)
-    expect_named(coefficients, coef_names)
+    expect_named(coefficients, effect_names)
 
   })
 
@@ -210,16 +208,16 @@ for (method in cov_methods) {
 
     # run regression fit
     set.seed(seed)
-    reg_fit <- fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                             covariates = c("C1", "C2"),
+    reg_fit <- fit_mediation(test_data, x = x, y = y, m = m,
+                             covariates = covariates,
                              method = "regression",
                              robust = robust)
 
     # try to run covariance fit (should give warning)
     set.seed(seed)
     expect_warning(
-      cov_fit <- fit_mediation(test_data, x = "X", y = "Y", m = "M",
-                               covariates = c("C1", "C2"),
+      cov_fit <- fit_mediation(test_data, x = x, y = y, m = m,
+                               covariates = covariates,
                                method = "covariance",
                                robust = robust)
     )

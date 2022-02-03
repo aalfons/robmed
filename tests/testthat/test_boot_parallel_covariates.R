@@ -53,24 +53,24 @@ boot_list <- list(
                    model = "parallel", test = "boot", R = R, level = level,
                    type = ci_type, method = "regression", robust = FALSE,
                    family = "gaussian")
-    # },
-    # student = {
-    #   set.seed(seed)
-    #   suppressWarnings(
-    #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-    #                    model = "parallel", test = "boot", R = R, level = level,
-    #                    type = ci_type,  method = "regression", robust = FALSE,
-    #                    family = "student")
-    #   )
-    # },
-    # select = {
-    #   set.seed(seed)
-    #   suppressWarnings(
-    #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-    #                    model = "parallel", test = "boot", R = R, level = level,
-    #                    type = ci_type, method = "regression", robust = FALSE,
-    #                    family = "select")
-    #   )
+  # },
+  # student = {
+  #   set.seed(seed)
+  #   suppressWarnings(
+  #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+  #                    model = "parallel", test = "boot", R = R, level = level,
+  #                    type = ci_type,  method = "regression", robust = FALSE,
+  #                    family = "student")
+  #   )
+  # },
+  # select = {
+  #   set.seed(seed)
+  #   suppressWarnings(
+  #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+  #                    model = "parallel", test = "boot", R = R, level = level,
+  #                    type = ci_type, method = "regression", robust = FALSE,
+  #                    family = "select")
+  #   )
   }
 )
 
