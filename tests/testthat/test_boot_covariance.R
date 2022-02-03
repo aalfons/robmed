@@ -49,7 +49,7 @@ boot_list <- list(
 effect_names <- c("a", "b", "Total", "Direct", "Indirect")
 
 
-## common tests for all model fits
+## run tests
 
 # loop over methods
 methods <- names(boot_list)

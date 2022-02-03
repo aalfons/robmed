@@ -91,7 +91,7 @@ for (method in methods) {
   intercept_name <- if (method == "student") "(Intercept.DP)" else "(Intercept)"
 
 
-  ## run tests
+  # run tests
 
   test_that("output has correct structure", {
 

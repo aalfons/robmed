@@ -76,7 +76,7 @@ model_summary_classes <- c(robust = "summary_lmrob", median = "summary_rq",
                            select = "summary_lm")
 
 
-## common tests for all model fits
+## run tests
 
 # loop over methods
 methods <- names(boot_list)
