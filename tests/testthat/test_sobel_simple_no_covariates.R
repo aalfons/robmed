@@ -296,6 +296,34 @@ for (method in methods) {
 
   }
 
+
+  # tests for weight_plot(), which is only implemented for ROBMED
+  test_that("setup_weight_plot() behaves as expected", {
+
+    if (method == "robust") {
+      # plot is inherited from model fit
+      expect_identical(setup_weight_plot(sobel), setup_weight_plot(sobel$fit))
+    } else {
+      # plot is not implemented
+      expect_error(setup_weight_plot(sobel))
+    }
+
+  })
+
+
+  # tests for ellipse_plot(), which is only implemented for some methods
+  test_that("setup_ellipse_plot() behaves as expected", {
+
+    if (method %in% c("robust", "OLS", "winsorized", "ML")) {
+      # plot is inherited from model fit
+      expect_identical(setup_ellipse_plot(sobel), setup_ellipse_plot(sobel$fit))
+    } else {
+      # plot is not implemented
+      expect_error(setup_ellipse_plot(sobel))
+    }
+
+  })
+
 }
 
 

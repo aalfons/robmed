@@ -348,4 +348,22 @@ for (method in methods) {
 
   }
 
+
+  # tests for weight_plot(), which is only implemented for ROBMED
+  test_that("setup_weight_plot() gives error", {
+
+    # plot is not implemented
+    expect_error(setup_weight_plot(boot))
+
+  })
+
+
+  # tests for ellipse_plot()
+  test_that("setup_ellipse_plot() behaves as expected", {
+
+    # plot is inherited from model fit
+    expect_identical(setup_ellipse_plot(boot), setup_ellipse_plot(boot$fit))
+
+  })
+
 }
