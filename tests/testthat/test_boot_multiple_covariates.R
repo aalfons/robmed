@@ -518,6 +518,60 @@ for (method in methods) {
   })
 
 
+  # loop over settings for ci_plot()
+  for (setting in c("default", "p_value")) {
+
+    # obtain setup object for CI plot
+    if (setting == "default") ci <- setup_ci_plot(boot)
+    else ci <- setup_ci_plot(boot, p_value = TRUE)
+
+    # run tests
+    test_that("object returned by setup_ci_plot() has correct structure", {
+
+      # check data frame for confidence interval
+      expect_s3_class(ci$ci, "data.frame")
+      # check dimensions and column names
+      if (setting == "default") {
+        expect_identical(dim(ci$ci), c(5L, 4L))
+        expect_named(ci$ci, c("Effect", "Estimate", "Lower", "Upper"))
+      } else {
+        expect_identical(dim(ci$ci), c(5L, 5L))
+        expect_named(ci$ci, c("Label", "Effect", "Estimate", "Lower", "Upper"))
+      }
+
+      # check data frame for p-value
+      if (setting == "default") {
+        # p-value not plotted
+        expect_null(ci$p_value)
+      } else {
+        # check data frame
+        expect_s3_class(ci$p_value, "data.frame")
+        # check dimensions and column names
+        expect_identical(dim(ci$p_value), c(5L, 3L))
+        expect_named(ci$p_value, c("Label", "Effect", "Value"))
+        # check that labels are correct
+        labels <- c("Confidence interval", "p-Value")
+        expect_identical(ci$ci$Label,
+                         factor(rep.int(labels[1], 5), levels = labels))
+        expect_identical(ci$p_value$Label,
+                         factor(rep.int(labels[2], 5), levels = labels))
+      }
+
+      # check that direct effect and indirect effect are plotted by default
+      names <- c("Direct_X1", "Direct_X2", "Indirect_Total",
+                 "Indirect_X1", "Indirect_X2")
+      factor <- factor(names, levels = names)
+      expect_identical(ci$ci$Effect, factor)
+      # check confidence level
+      expect_identical(ci$level, level[1])
+      # check logical for multiple methods
+      expect_false(ci$have_methods)
+
+    })
+
+  }
+
+
   # tests for density_plot()
 
   # obtain setup object for ellipse plot
