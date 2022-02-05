@@ -356,6 +356,16 @@ for (method in methods) {
 
   }
 
+
+  # tests for ci_plot() and density_plot()
+  test_that("setup_ci_plot()  and setup_density_plot() give error", {
+
+    # not meaningful
+    expect_error(setup_ci_plot(fit))
+    expect_error(setup_density_plot(fit))
+
+  })
+
 }
 
 

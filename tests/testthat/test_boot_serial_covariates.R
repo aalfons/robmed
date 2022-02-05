@@ -532,6 +532,39 @@ for (method in methods) {
 
   })
 
+
+  # tests for density_plot()
+
+  # obtain setup object for ellipse plot
+  density <- setup_density_plot(boot)
+
+  # run tests
+  test_that("object returned by setup_density_plot() has correct structure", {
+
+    # check data frame for confidence interval
+    expect_s3_class(density$density, "data.frame")
+    # check dimensions
+    expect_identical(ncol(density$density), 3L)
+    expect_gt(nrow(density$density), 0L)
+    # check column names
+    expect_named(density$density, c("Effect", "Indirect", "Density"))
+    # check data frame confidence interval
+    expect_s3_class(density$ci, "data.frame")
+    # check dimensions
+    expect_identical(dim(density$ci), c(4L, 4L))
+    # check column names
+    expect_named(density$ci, c("Effect", "Estimate", "Lower", "Upper"))
+    # check type of test
+    expect_identical(density$test, "boot")
+    # check confidence level
+    expect_identical(density$level, level[1])
+    # check logical for multiple effects
+    expect_true(density$have_effect)
+    # check logical for multiple methods
+    expect_false(density$have_methods)
+
+  })
+
 }
 
 
