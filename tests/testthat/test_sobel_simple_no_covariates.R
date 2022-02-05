@@ -327,7 +327,6 @@ for (method in methods) {
 }
 
 
-
 ## additional tests for regression fits
 
 # relevant information

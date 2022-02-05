@@ -199,6 +199,151 @@ for (method in methods) {
     expect_identical(fit, summary)
   })
 
+
+  # tests for weight_plot(), which is only implemented for ROBMED
+  if (method == "robust") {
+
+    # loop over settings for weight plot
+    for (setting in c("default", m, y)) {
+
+      # obtain setup object for weight plot
+      if (setting == "default") weight <- setup_weight_plot(fit)
+      else weight <- setup_weight_plot(fit, outcome = setting)
+
+      # run tests
+      test_that("object returned by setup_weight_plot() has correct structure", {
+
+        # check data frame for weight percentages to be plotted
+        expect_s3_class(weight$data, "data.frame")
+
+        # additional checks
+        names <- c("Outcome", "Tail", "Weights", "Threshold", "Percentage")
+        if (setting == "default") {
+          # check dimensions and column names
+          expect_identical(ncol(weight$data), 5L)
+          expect_named(weight$data, names)
+          # check if variables are passed correctly
+          expect_identical(weight$outcome, c(m, y))
+        } else {
+          # check dimensions and column names
+          expect_identical(ncol(weight$data), 4L)
+          expect_named(weight$data, names[-1])
+          # check if variables are passed correctly
+          expect_identical(weight$outcome, setting)
+        }
+
+      })
+
+    }
+
+  } else {
+
+    # run tests
+    test_that("setup_weight_plot() gives error", {
+
+      # not implemented
+      expect_error(setup_weight_plot(fit))
+
+    })
+
+  }
+
+
+  # tests for setup_ellipse_plot(), which is only implemented for some methods
+  if (method %in% c("robust", "OLS", "winsorized", "ML")) {
+
+    # loop over settings for ellipse plot
+    for (setting in c("mx", "ym", "partial")) {
+
+      # obtain setup object for ellipse plot
+      if (setting == "mx") ellipse <- setup_ellipse_plot(fit)
+      else if (setting == "ym") {
+        ellipse <- setup_ellipse_plot(fit, horizontal = m, vertical = y,
+                                      partial = FALSE)
+      } else {
+        ellipse <- setup_ellipse_plot(fit, horizontal = m, vertical = y,
+                                      partial = TRUE)
+      }
+
+      # run tests
+      test_that("object returned by setup_ellipse_plot() has correct structure", {
+
+        # check data frame for data to be plotted
+        expect_s3_class(ellipse$data, "data.frame")
+        # check dimensions and column names
+        if (method %in% c("robust", "winsorized")) {
+          expect_identical(dim(ellipse$data), c(as.integer(n), 3L))
+          expect_named(ellipse$data, c("x", "y", "Weight"))
+        } else {
+          expect_identical(dim(ellipse$data), c(as.integer(n), 2L))
+          expect_named(ellipse$data, c("x", "y"))
+        }
+
+        # check data frame for ellipse
+        expect_s3_class(ellipse$ellipse, "data.frame")
+        # check dimensions
+        expect_identical(ncol(ellipse$ellipse), 2L)
+        expect_gt(nrow(ellipse$ellipse), 0L)
+        # check column names
+        expect_named(ellipse$ellipse, c("x", "y"))
+
+        # check line to be plotted
+        if (setting == "partial") {
+          # check data frame for line representing the coefficient
+          expect_s3_class(ellipse$line, "data.frame")
+          # check dimensions
+          expect_identical(dim(ellipse$line), c(1L, 2L))
+          # check column names
+          expect_named(ellipse$line, c("intercept", "slope"))
+          # check if intercept is 0 for partial residuals
+          expect_identical(ellipse$line$intercept, 0)
+        } else {
+          # no line to be plotted
+          expect_null(ellipse$line)
+        }
+
+        # check if variables are passed correctly
+        if (setting == "mx") {
+          expect_identical(ellipse$horizontal, x[1])
+          expect_identical(ellipse$vertical, m)
+        } else {
+          expect_identical(ellipse$horizontal, m)
+          expect_identical(ellipse$vertical, y)
+        }
+
+        # check logical for partial residuals on the vertical axis
+        if (setting == "partial") {
+          expect_true(ellipse$partial)
+        } else {
+          expect_false(ellipse$partial)
+        }
+
+        # check logical for robust method
+        if (method %in% c("robust", "winsorized")) {
+          expect_true(ellipse$robust)
+        } else {
+          expect_false(ellipse$robust)
+        }
+
+        # check logical for multiple methods
+        expect_false(ellipse$have_methods)
+
+      })
+
+    }
+
+  } else {
+
+    # run tests
+    test_that("setup_ellipse_plot() gives error", {
+
+      # not implemented
+      expect_error(setup_ellipse_plot(fit))
+
+    })
+
+  }
+
 }
 
 
