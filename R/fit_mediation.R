@@ -387,10 +387,10 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
           stop("serial multiple mediator model not implemented for ",
                "more than 3 hypothesized mediators")
         }
-        if (p_x > 1L) {
-          stop("serial multiple mediator model not implemented for ",
-               "multicategorical or multiple independent variables")
-        }
+        # if (p_x > 1L) {
+        #   stop("serial multiple mediator model not implemented for ",
+        #        "multicategorical or multiple independent variables")
+        # }
       }
     }
     # check for robust method
@@ -578,59 +578,69 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                fixed.param = selm_args$fixed.param)
     }
   }
-  # extract effects a and b and compute indirect effect(s)
+  # extract effects for a and b paths and compute indirect effect(s)
   if (p_m == 1L) {
-    # extract effects a and b
+    # extract effects for a and b paths
     if (p_x == 1L) a <- unname(coef(fit_mx)[2L])
     else a <- coef(fit_mx)[1L + seq_len(p_x)]
     b <- unname(coef(fit_ymx)[2L])
     # compute indirect effect(s)
     indirect <- a * b
   } else {
-    # extract effects a and b
+    # extract effect for a path
     if (model == "serial") {
-      a <- mapply(function(fit, j) unname(coef(fit)[j]),
-                  fit = fit_mx, j = 1L + seq_len(p_m), USE.NAMES = TRUE)
-    } else if (p_x == 1L) {
-      a <- sapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+      # serial multiple mediators
+      if (p_x == 1) {
+        a <- mapply(function(fit, j) unname(coef(fit)[j]),
+                    fit = fit_mx, j = 1L + seq_len(p_m),
+                    SIMPLIFY = FALSE, USE.NAMES = TRUE)
+      } else {
+        a <- mapply(function(fit, j) coef(fit)[j + seq_len(p_x)],
+                    fit = fit_mx, j = seq_len(p_m),
+                    SIMPLIFY = FALSE, USE.NAMES = TRUE)
+      }
     } else {
-      a <- lapply(fit_mx, function(fit) coef(fit)[1L + seq_len(p_x)])
+      # parallel multiple mediators
+      if (p_x == 1L) a <- lapply(fit_mx, function(fit) unname(coef(fit)[2L]))
+      else a <- lapply(fit_mx, function(fit) coef(fit)[1L + seq_len(p_x)])
     }
+    # extract effect for b path
     b <- coef(fit_ymx)[1L + seq_len(p_m)]
-    # compute indirect effects
-    indirect_names <- get_indirect_names(x, m, model = model)
+    # list of first-level indirect effects
+    # (computation is the same for parallel and serial mediator)
+    indirect_list <- mapply(function(a_j, b_j) a_j * b_j, a_j = a, b_j = b,
+                            SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    # add higher-level indirect effects for serial mediators
     if (model == "serial") {
-      # extract effect d
-      d <- mapply(function(fit, j) coef(fit)[1L + seq_len(j)],
-                  fit = fit_mx[-1L], j = seq_len(p_m-1L),
-                  SIMPLIFY = FALSE, USE.NAMES = FALSE)
-      # compute indirect effects
+      # extract effect for d path
+      d_list <- mapply(function(fit, j) coef(fit)[1L + seq_len(j)],
+                       fit = fit_mx[-1L], j = seq_len(p_m-1L),
+                       SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      d <- unlist(d_list, use.names = FALSE)
+      names(d) <- get_d_names(m)
+      # compute higher-level indirect effects
       if (p_m == 2L) {
         # two serial mediators
-        indirect <- c(a * b, a[1] * d[[1]] * b[2])
-      } else  {
+        indirect_serial <- list(a[[1]] * d * b[2])
+      } else {
         # three serial mediators
-        indirect <- c(a * b, a[1] * d[[1]] * b[2], a[1] * d[[2]][1] * b[3],
-                      a[2] * d[[2]][2] * b[3], a[1] * d[[1]] * d[[2]][2] * b[3])
+        indirect_serial <- list(a[[1]] * d[1] * b[2],
+                                a[[1]] * d[2] * b[3],
+                                a[[2]] * d[3] * b[3],
+                                a[[1]] * d[1] * d[3] * b[3])
       }
-      # add names
-      names(indirect) <- get_indirect_names(m = m, model = "serial")
-      # make sure we have vectors
-      d <- unlist(d, use.names = FALSE)
-      names(d) <- get_d_names(m)
-    } else {
-      # list of indirect effects
-      indirect_list <- mapply(function(a_j, b_j) a_j * b_j, a_j = a, b_j = b,
-                              SIMPLIFY = FALSE, USE.NAMES = FALSE)
-      # make sure we have vectors
-      if (p_x > 1L) {
-        a <- unlist(a, use.names = FALSE)
-        names(a) <- indirect_names  # names of indirect effects reflect a path
-      }
-      indirect <- unlist(indirect_list, use.names = FALSE)
+      # add to existing list
+      indirect_list <- c(indirect_list, indirect_serial)
     }
-    # add names
+    # names to be used for indirect effects
+    indirect_names <- get_indirect_names(x, m, model = model)
+    # make sure we have vector of indirect effects and add names
+    indirect <- unlist(indirect_list, use.names = FALSE)
     names(indirect) <- indirect_names
+    # make sure we have vector for a path and add names
+    a <- unlist(a, use.names = FALSE)
+    if (model == "serial") names(a) <- indirect_names[seq_len(p_x * p_m)]
+    else names(a) <- indirect_names
   }
   # if applicable, compute total indirect effect and contrasts
   if (nr_indirect > 1L) {
@@ -648,6 +658,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   else direct <- coef(fit_ymx)[1L + p_m + seq_len(p_x)]
   # extract total effect(s)
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
+    # compute the total effect based on the indirect and direct effects
     if (p_x == 1L) {
       total <- if (p_m == 1L) indirect + direct else indirect_total + direct
     } else {
@@ -660,9 +671,11 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
       }
     }
   } else if (estimate_yx) {
+    # extract total effect from model fit
     if (p_x == 1L) total <- unname(coef(fit_yx)[2L])
     else total <- coef(fit_yx)[1L + seq_len(p_x)]
   } else {
+    # total effect not available
     if (p_x == 1L) total <- NA_real_
     else {
       total <- rep.int(NA_real_, p_x)

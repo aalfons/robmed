@@ -166,9 +166,8 @@ get_d_names <- function(m, sep = "->") {
 # obtain number of indirect effects
 get_nr_indirect <- function(p_x, p_m, model = "parallel") {
   if (!is.null(model) && model == "serial") {
-    # currently only implemented for a single independent variable and
-    # two or three hypothesized mediators
-    nr_indirect <- if (p_m == 2L) 3L else 7L
+    # currently only implemented for two or three hypothesized mediators
+    nr_indirect <- p_x * if (p_m == 2L) 3L else 7L
   } else {
     # single mediator or parallel multiple mediators
     nr_indirect <- p_x * p_m
@@ -179,34 +178,37 @@ get_nr_indirect <- function(p_x, p_m, model = "parallel") {
 
 # obtain names for indirect effects
 get_indirect_names <- function(x, m, model = "parallel", sep = "->") {
+  # initializations
+  p_x <- length(x)
   p_m <- length(m)
-  if (!is.null(model) && model == "serial") {
-    # currently only implemented for a single independent variable and
-    # two or three hypothesized mediators
-    if (p_m == 2L) {
-      # two serial mediators
-      c(m, paste(m, collapse = sep))
-    } else {
-      # three serial mediators
-      c(m, paste(m[1L], m[2L], sep = sep), paste(m[1L], m[3L], sep = sep),
-        paste(m[2L], m[3L], sep = sep), paste(m, collapse = sep))
-    }
+  # construct names for indirect effects
+  if (p_m == 1L) {
+    # single mediator: only use names in case of multiple independent variables
+    names <- if (p_x > 1L) x
   } else {
-    # single mediator or parallel multiple mediators
-    p_x <- length(x)
-    if (p_m == 1L) {
-      names <- if (p_x > 1L) x
-    } else {
-      if (p_x == 1L) names <- m
-      else {
-        names <- unlist(lapply(m, function(current_m) {
-          paste(x, current_m, sep = sep)
-        }), use.names = FALSE)
+    # prepare names involving mediators
+    if (model == "serial") {
+      # currently only implemented for two or three hypothesized mediators
+      if (p_m == 2L) {
+        # two serial mediators
+        m_names <- c(m, paste(m, collapse = sep))
+      } else {
+        # three serial mediators
+        m_names <- c(m, paste(m[1L], m[2L], sep = sep),
+                     paste(m[1L], m[3L], sep = sep),
+                     paste(m[2L], m[3L], sep = sep),
+                     paste(m, collapse = sep))
       }
+    } else m_names <- m
+    # add names for independent variables
+    if (p_x == 1L) names <- m_names
+    else {
+      name_list <- lapply(m_names, function(m_name) paste(x, m_name, sep = sep))
+      names <- unlist(name_list, use.names = FALSE)
     }
-    # return names
-    names
   }
+  # return names
+  names
 }
 
 # obtain labels for indirect effects in printed output of bootstrap tests: only
