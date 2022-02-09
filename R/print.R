@@ -150,7 +150,7 @@ print.fit_mediation <- function(x, info = TRUE, ...) {
   }
   # print information on how contrasts are computed
   # (if there are no contrasts, nothing is printed)
-  print_contrast_info(x, prefix = TRUE)
+  print_contrast_info(x)
   # return object invisibly
   invisible(x)
 }
@@ -525,7 +525,7 @@ print_indirect_info <- function(object, labels = NULL, ...) {
 ## internal function to print information on contrast definitions
 # This now expects an object of class "fit_mediation".  In future versions,
 # this could also be turned into a generic function if necessary.
-print_contrast_info <- function(object, prefix = FALSE, labels = NULL, ...) {
+print_contrast_info <- function(object, labels = NULL, ...) {
   # initializations
   contrast <- object$contrast              # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
@@ -540,7 +540,7 @@ print_contrast_info <- function(object, prefix = FALSE, labels = NULL, ...) {
     # print information on contrast definitions
     plural <- if (nr_indirect > 2L) "s" else ""
     cat(sprintf("\nIndirect effect contrast definition%s:\n", plural))
-    contrast_info <- get_contrast_info(labels, type = contrast, prefix = prefix)
+    contrast_info <- get_contrast_info(labels, type = contrast)
     print(contrast_info, right = FALSE, row.names = FALSE)
   }
 }

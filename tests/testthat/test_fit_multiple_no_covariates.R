@@ -57,7 +57,7 @@ summary_list <- lapply(fit_list, summary)
 
 ## correct values
 effect_names <- c("a_X1", "a_X2", "b", "Total_X1", "Total_X2", "Direct_X1",
-                  "Direct_X2", "Indirect_Total", "Indirect_X1", "Indirect_X2")
+                  "Direct_X2", "Indirect_X1", "Indirect_X2")
 classes <- c(robust = "lmrob", median = "rq", OLS = "lm",
              student = "lmse", select = "lm")
 
@@ -134,8 +134,8 @@ for (method in methods) {
     expect_named(fit$direct, x)
     expect_length(fit$total, 2L)
     expect_named(fit$total, x)
-    expect_length(fit$indirect, 3L)
-    expect_named(fit$indirect, c("Total", x))
+    expect_length(fit$indirect, 2L)
+    expect_named(fit$indirect, x)
     # individual regressions
     expect_length(coef(fit$fit_mx), 3L)
     expect_length(coef(fit$fit_ymx), 4L)
@@ -154,13 +154,12 @@ for (method in methods) {
     b <- unname(coef(fit$fit_ymx)[m])
     direct <- coef(fit$fit_ymx)[x]
     indirect <- a * b
-    sum_indirect <- sum(indirect)
     # compare with stored values
     expect_equivalent(fit$a, a)
     expect_equivalent(fit$b, b)
     expect_null(fit$d)
     expect_equivalent(fit$direct, direct)
-    expect_equivalent(fit$indirect, c(Total = sum_indirect, indirect))
+    expect_equivalent(fit$indirect, indirect)
     # total effect
     if (method %in% c("robust", "median")) {
       expect_equivalent(fit$total, indirect + direct)
@@ -176,7 +175,7 @@ for (method in methods) {
   test_that("output of coef() method has correct attributes", {
 
     coefficients <- coef(fit)
-    expect_length(coefficients, 10L)
+    expect_length(coefficients, 9L)
     expect_named(coefficients, effect_names)
 
   })

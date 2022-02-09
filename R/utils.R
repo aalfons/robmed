@@ -18,7 +18,15 @@ get_contrasts <- function(x, combinations = NULL, type = "estimates") {
   else if (type == "absolute") fun <- get_absolute_contrast
   else stop(sprintf("%s contrasts not implemented", type))
   # compute contrasts
-  sapply(combinations, fun, x = x)
+  contrasts <- sapply(combinations, fun, x = x)
+  if (is.vector(contrasts)) {
+    n_contrasts <- length(contrasts)
+    names(contrasts) <- get_contrast_names(n_contrasts)
+  } else {
+    n_contrasts <- ncol(contrasts)
+    colnames(contrasts) <- get_contrast_names(n_contrasts)
+  }
+  contrasts
 }
 
 # obtain indices to be used for computing contrasts
@@ -46,14 +54,12 @@ get_absolute_contrast <- function(j, x) {
 }
 
 # obtain information on how contrasts are computed
-get_contrast_info <- function(names, type = "estimates", prefix = FALSE) {
+get_contrast_info <- function(names, type = "estimates") {
   # compute combinations of names
-  if (prefix) names <- paste("Indirect", names, sep = "_")
   combinations <- combn(names, 2, simplify = FALSE)
   n_contrasts <- length(combinations)
   # obtain labels for contrasts
   labels <- get_contrast_names(n_contrasts)
-  if (prefix) labels <- paste("Indirect", labels, sep = "_")
   # obtain information on contrasts
   if (type == "estimates") {
     fun <- function(names) paste(names, collapse = " - ")
@@ -145,8 +151,7 @@ get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
 get_d_names <- function(m, sep = "->") {
   # initializations
   p_m <- length(m)
-  # currently only implemented for a single independent variable and
-  # two or three hypothesized mediators
+  # currently only implemented for two or three hypothesized mediators
   if (p_m == 2L) {
     # two serial mediators
     names <- NULL
@@ -191,21 +196,15 @@ get_indirect_names <- function(x, m, model = "parallel", sep = "->") {
       # currently only implemented for two or three hypothesized mediators
       if (p_m == 2L) {
         # two serial mediators
-        m_names <- c(m, paste(m, collapse = sep))
+        names <- c(m, paste(m, collapse = sep))
       } else {
         # three serial mediators
-        m_names <- c(m, paste(m[1L], m[2L], sep = sep),
-                     paste(m[1L], m[3L], sep = sep),
-                     paste(m[2L], m[3L], sep = sep),
-                     paste(m, collapse = sep))
+        names <- c(m, paste(m[1L], m[2L], sep = sep),
+                   paste(m[1L], m[3L], sep = sep),
+                   paste(m[2L], m[3L], sep = sep),
+                   paste(m, collapse = sep))
       }
-    } else m_names <- m
-    # add names for independent variables
-    if (p_x == 1L) names <- m_names
-    else {
-      name_list <- lapply(m_names, function(m_name) paste(x, m_name, sep = sep))
-      names <- unlist(name_list, use.names = FALSE)
-    }
+    } else names <- m  # parallel mediators
   }
   # return names
   names

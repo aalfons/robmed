@@ -387,10 +387,6 @@ fit_mediation.default <- function(object, x, y, m, covariates = NULL,
           stop("serial multiple mediator model not implemented for ",
                "more than 3 hypothesized mediators")
         }
-        # if (p_x > 1L) {
-        #   stop("serial multiple mediator model not implemented for ",
-        #        "multicategorical or multiple independent variables")
-        # }
       }
     }
     # check for robust method
@@ -434,10 +430,10 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                               model = "parallel", robust = "MM",
                               family = "gaussian", contrast = FALSE,
                               fit_yx = TRUE, control = reg_control()) {
+
   # number of variables and indirect effects
   p_x <- length(x)
   p_m <- length(m)
-  nr_indirect <- get_nr_indirect(p_x, p_m, model = model)
   # other initializations
   have_robust <- is.character(robust)
   have_contrast <- is.character(contrast)
@@ -456,6 +452,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   if (estimate_yx) {
     predictors_yx <- as.matrix(data[, c(x, covariates), drop = FALSE])
   }
+
   # compute regression models
   if (have_robust) {
     # for the robust methods, the total effect is estimated as
@@ -578,114 +575,107 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
                fixed.param = selm_args$fixed.param)
     }
   }
-  # extract effects for a and b paths and compute indirect effect(s)
-  if (p_m == 1L) {
-    # extract effects for a and b paths
-    if (p_x == 1L) a <- unname(coef(fit_mx)[2L])
-    else a <- coef(fit_mx)[1L + seq_len(p_x)]
-    b <- unname(coef(fit_ymx)[2L])
-    # compute indirect effect(s)
-    indirect <- a * b
+
+  # extract effects for b path
+  b <- extract_b(m, fit_ymx)
+  # in case of serial mediators, extract effects for d path
+  d <- if (model == "serial") extract_d(m, fit_mx)
+  # extract effects for a path and compute indirect effects
+  if (p_x == 1L) {
+    # extract effects for a path
+    a <- extract_a(x, fit_mx)
+    # compute indirect effects
+    indirect <- compute_indirect(a, b, d)
+    if (p_m > 1L) {
+      indirect_total <- sum(indirect)
+      names(indirect_total) <- "Total"
+    }
   } else {
-    # extract effect for a path
-    if (model == "serial") {
-      # serial multiple mediators
-      if (p_x == 1) {
-        a <- mapply(function(fit, j) unname(coef(fit)[j]),
-                    fit = fit_mx, j = 1L + seq_len(p_m),
-                    SIMPLIFY = FALSE, USE.NAMES = TRUE)
-      } else {
-        a <- mapply(function(fit, j) coef(fit)[j + seq_len(p_x)],
-                    fit = fit_mx, j = seq_len(p_m),
-                    SIMPLIFY = FALSE, USE.NAMES = TRUE)
-      }
+    # extract effects for a path
+    a <- lapply(x, extract_a, fit_mx)
+    # compute indirect effects
+    indirect <- lapply(a, compute_indirect, b, d)
+    if (p_m == 1L) {
+      # for models with multiple independent variables but a single mediator,
+      # make sure we have vector of indirect effects fore computing the total
+      # effects and contrasts of the indirect effects
+      indirect <- unlist(indirect, use.names = FALSE)
+      names(indirect) <- x
     } else {
-      # parallel multiple mediators
-      if (p_x == 1L) a <- lapply(fit_mx, function(fit) unname(coef(fit)[2L]))
-      else a <- lapply(fit_mx, function(fit) coef(fit)[1L + seq_len(p_x)])
+      indirect_total <- sapply(indirect, sum)
+      names(indirect_total) <- x
     }
-    # extract effect for b path
-    b <- coef(fit_ymx)[1L + seq_len(p_m)]
-    # list of first-level indirect effects
-    # (computation is the same for parallel and serial mediator)
-    indirect_list <- mapply(function(a_j, b_j) a_j * b_j, a_j = a, b_j = b,
-                            SIMPLIFY = FALSE, USE.NAMES = FALSE)
-    # add higher-level indirect effects for serial mediators
-    if (model == "serial") {
-      # extract effect for d path
-      d_list <- mapply(function(fit, j) coef(fit)[1L + seq_len(j)],
-                       fit = fit_mx[-1L], j = seq_len(p_m-1L),
-                       SIMPLIFY = FALSE, USE.NAMES = FALSE)
-      d <- unlist(d_list, use.names = FALSE)
-      names(d) <- get_d_names(m)
-      # compute higher-level indirect effects
-      if (p_m == 2L) {
-        # two serial mediators
-        indirect_serial <- list(a[[1]] * d * b[2])
-      } else {
-        # three serial mediators
-        indirect_serial <- list(a[[1]] * d[1] * b[2],
-                                a[[1]] * d[2] * b[3],
-                                a[[2]] * d[3] * b[3],
-                                a[[1]] * d[1] * d[3] * b[3])
-      }
-      # add to existing list
-      indirect_list <- c(indirect_list, indirect_serial)
-    }
-    # names to be used for indirect effects
-    indirect_names <- get_indirect_names(x, m, model = model)
-    # make sure we have vector of indirect effects and add names
-    indirect <- unlist(indirect_list, use.names = FALSE)
-    names(indirect) <- indirect_names
-    # make sure we have vector for a path and add names
-    a <- unlist(a, use.names = FALSE)
-    if (model == "serial") names(a) <- indirect_names[seq_len(p_x * p_m)]
-    else names(a) <- indirect_names
-  }
-  # if applicable, compute total indirect effect and contrasts
-  if (nr_indirect > 1L) {
-    # if requested, compute contrasts
-    if (have_contrast) {
-      contrasts <- get_contrasts(indirect, type = contrast)
-      n_contrasts <- length(contrasts)
-      names(contrasts) <- get_contrast_names(n_contrasts)
-    } else contrasts <- NULL
-    # compute total indirect effect
-    indirect_total <- sum(indirect)
   }
   # extract direct effect(s)
-  if (p_x == 1L) direct <- unname(coef(fit_ymx)[2L + p_m])
-  else direct <- coef(fit_ymx)[1L + p_m + seq_len(p_x)]
-  # extract total effect(s)
+  direct <- extract_direct(x, fit_ymx)
+  # compute or extract total effect(s)
   if (have_robust || (family == "gaussian" && !estimate_yx)) {
     # compute the total effect based on the indirect and direct effects
-    if (p_x == 1L) {
-      total <- if (p_m == 1L) indirect + direct else indirect_total + direct
-    } else {
-      if (p_m == 1L) total <- indirect + direct
-      else {
-        total <- sapply(x, function(current_x) {
-          current_indirect <- sapply(indirect_list, "[", current_x)
-          sum(current_indirect) + unname(direct[current_x])
-        })
-      }
-    }
-  } else if (estimate_yx) {
-    # extract total effect from model fit
-    if (p_x == 1L) total <- unname(coef(fit_yx)[2L])
-    else total <- coef(fit_yx)[1L + seq_len(p_x)]
+    total <- if (p_m == 1L) indirect + direct else indirect_total + direct
   } else {
-    # total effect not available
-    if (p_x == 1L) total <- NA_real_
-    else {
-      total <- rep.int(NA_real_, p_x)
-      names(total) <- x
+    # extract total effect from model fit (NAs if model fit is not available)
+    total <- extract_total(x, fit_yx)
+  }
+  # if requested, compute contrasts
+  if (have_contrast) {
+    # fit_mediation() ensures that this is only true if there are multiple
+    # independent variables or multiple mediators
+    if (p_x == 1L || p_m == 1L) {
+      # multiple independent variables or multiple mediators, but not both:
+      # compute contrasts between all individual indirect effects
+      contrasts <- get_contrasts(indirect, type = contrast)
+    } else {
+      # multiple independent variables and multiple mediators: compute
+      # contrasts separately for each independent variable such that the
+      # number of comparisons doesn't explode
+      contrasts <- lapply(indirect, get_contrasts, type = contrast)
+    }
+  } else contrasts <- NULL
+  # make sure we have vector for a path
+  if (p_x > 1L) {
+    a <- unlist(a, use.names = FALSE)
+    if (p_m == 1L) names(a) <- x
+    else names(a) <- sapply(x, paste, m, sep = "->", USE.NAMES = FALSE)
+  }
+  # finalize vector of indirect effects
+  if (p_m == 1L) {
+    # For multiple independent variables and a single mediator, the list of
+    # indirect effects has already been converted to a vector before computing
+    # contrasts.  There is also no total indirect effect to add.
+    if (p_x > 1L) indirect <- c(indirect, contrasts)
+  } else {
+    # multiple mediators: combine total indirect effect, individual indirect
+    # effects, and (if requested) contrasts
+    if (p_x == 1L) {
+      # for a single independent variable, combine vectors
+      indirect <- c(indirect_total, indirect, contrasts)
+    } else {
+      ## for multiple independent variables, lists need to be combined first
+      # add name of independent variable to names of total indirect effects
+      names(indirect_total) <- paste(names(indirect_total), "Total", sep = "_")
+      # add name of independent variable to names of individual indirect effects
+      indirect <- mapply(function(current_x, current_indirect) {
+        names(current_indirect) <- paste(current_x, names(current_indirect),
+                                         sep = "->")
+        current_indirect
+      }, x, indirect, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      # add name of independent variable to names of contrasts
+      if (!is.null(contrasts)) {
+        contrasts <- mapply(function(current_x, current_contrasts) {
+          names(current_contrasts) <- paste(current_x, names(current_contrasts),
+                                            sep = "_")
+          current_contrasts
+        }, x, contrasts, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      }
+      # combine lists
+      indirect <- lapply(seq_len(p_x), function(j) {
+        c(indirect_total[j], indirect[[j]], contrasts[[j]])
+      })
+      ## combine everything into one vector
+      indirect <- unlist(indirect)
     }
   }
-  # combine total indirect effect, individual indirect effects, and contrasts
-  if (nr_indirect > 1L) {
-    indirect <- c(Total = indirect_total, indirect, contrasts)
-  }
+
   # return results
   result <- list(a = a, b = b)
   if (model == "serial") result$d <- d
@@ -699,6 +689,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
   if (robust == "MM") result$control <- control
   class(result) <- c("reg_fit_mediation", "fit_mediation")
   result
+
 }
 
 
@@ -722,82 +713,4 @@ cov_fit_mediation <- function(data, x, y, m, robust = TRUE,
   if(robust) result$control <- control
   class(result) <- c("cov_fit_mediation", "fit_mediation")
   result
-}
-
-
-## model fitting functions that make summary() work
-# This will allow fit_mediation() to fit the regression models without a
-# formula, which is necessary to make the formula interface work.  Otherwise
-# formulas that contain log(.) or similar terms would cause errors when fitting
-# the models in fit_mediation().
-
-# OLS regression
-lm_fit <- function(x, y, intercept = TRUE) {
-  # if requested, add constant for intercept
-  if (intercept) {
-    n <- nrow(x)
-    x <- cbind("(Intercept)" = rep.int(1, n), x)
-  }
-  # fit the linear model
-  fit <- lm.fit(x, y)
-  # Add a dummy formula as a 'terms' component to make summary() method work.
-  # This 'terms' component needs to have an attribute that specifies whether
-  # the model has an intercept, that's all.  It's not used in any other way.
-  f <- as.formula(NULL)
-  attr(f, "intercept") <- as.integer(intercept)
-  fit$terms <- f
-  # add the class and return the model fit
-  class(fit) <- "lm"
-  fit
-}
-
-# MM regression
-lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
-  # if requested, add constant for intercept
-  if (intercept) {
-    n <- nrow(x)
-    x <- cbind("(Intercept)" = rep.int(1, n), x)
-  }
-  # fit the linear model
-  fit <- lmrob.fit(x, y, control = control)
-  # Add a dummy formula as a 'terms' component to make summary() method work.
-  # This 'terms' component needs to have an attribute that specifies whether
-  # the model has an intercept, that's all.  It's not used in any other way.
-  f <- as.formula(NULL)
-  attr(f, "intercept") <- as.integer(intercept)
-  fit$terms <- f
-  # class is already added in lmrob.fit(), so just return the model fit
-  fit
-}
-
-# quantile (median) regression
-rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
-  # summary() method requires data frame and formula to extract response and
-  # predictor matrix
-  data <- data.frame(y, x, check.names = FALSE)
-  formula <- if (intercept) y ~ . else y ~ 0 + .
-  # if requested, add constant for intercept
-  if (intercept) {
-    n <- nrow(x)
-    x <- cbind("(Intercept)" = rep.int(1, n), x)
-  }
-  # fit the linear model
-  fit <- rq.fit(x, y, tau = tau, method = "br")
-  fit$method <- "br"
-  # construct terms object from formula that specifies whether there is a
-  # response and an intercept
-  terms <- formula
-  attr(terms, "response") <- 1L
-  attr(terms, "intercept") <- as.integer(intercept)
-  # summary() method requires that the terms object is also an attribute of the
-  # data frame
-  attr(data, "terms") <- terms
-  # add information to model fit
-  fit$formula <- formula
-  fit$terms <- terms
-  fit$model <- data
-  fit$tau <- tau
-  # add the class and return the model fit
-  class(fit) <- "rq"
-  fit
 }
