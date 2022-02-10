@@ -20,11 +20,16 @@ get_contrasts <- function(x, combinations = NULL, type = "estimates") {
   # compute contrasts
   contrasts <- sapply(combinations, fun, x = x)
   if (is.vector(contrasts)) {
+    # When computing contrasts of the indirect effect estimates on the original
+    # data, add names to the contrasts.  This is not necessary when computing
+    # contrasts of bootstrap replicates of the indirect effects, since the
+    # "boot" object doesn't use names, and the names of the bootstrap estimates
+    # are copied from the estimates on the original data.
     n_contrasts <- length(contrasts)
     names(contrasts) <- get_contrast_names(n_contrasts)
-  } else {
-    n_contrasts <- ncol(contrasts)
-    colnames(contrasts) <- get_contrast_names(n_contrasts)
+  # } else {
+  #   n_contrasts <- ncol(contrasts)
+  #   colnames(contrasts) <- get_contrast_names(n_contrasts)
   }
   contrasts
 }
@@ -103,6 +108,38 @@ get_effect_names <- function(..., effects = list(...), sep = "_") {
 ## that correspond to the respective models, which makes it easier to extract
 ## the desired coefficients.
 get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
+                           total = TRUE) {
+  # numbers of coefficients in different models
+  if (!is.null(model) && model == "serial") {
+    p_mx <- 1L + seq.int(0L, p_m-1L) + p_x + p_covariates
+  } else p_mx <- rep.int(1L + p_x + p_covariates, p_m)
+  p_ymx <- 1L + p_m + p_x + p_covariates
+  p_total <- if (total) p_x else 0L
+  p_all <- sum(p_mx, p_ymx, p_total)
+  # indices of vector for each bootstrap replicate
+  indices <- seq_len(p_all)
+  # the first columns correspond to models m ~ x + covariates
+  first <- 1L
+  if (p_m == 1L) {
+    indices_mx <- seq.int(from = first, length.out = p_mx)
+  } else {
+    first_mx <- first + c(0L, cumsum(p_mx[-p_m]))
+    indices_mx <- mapply(seq.int, from = first_mx, length.out = p_mx,
+                         SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  }
+  # the next columns correspond to model y ~ m + x + covariates
+  first <- first + sum(p_mx)
+  indices_ymx <- seq.int(from = first, length.out = p_ymx)
+  # if applicable, the last column corresponds to the total effect of x on y
+  if (total) {
+    first <- first + p_ymx
+    indices_total <- seq.int(from = first, length.out = p_total)
+  } else indices_total <- integer()
+  # return list of indices
+  list(fit_mx = indices_mx, fit_ymx = indices_ymx, total = indices_total)
+}
+
+.get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
                            indirect = TRUE) {
   # initializations
   include_indirect <- indirect

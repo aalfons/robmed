@@ -96,7 +96,7 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
   if (!is.null(p_value_list$indirect)) {
     # preparations to modify bootstrap object if contrasts are requested
     bootstrap <- object$reps
-    indices_indirect <- get_index_list(length(object$fit$x),
+    indices_indirect <- .get_index_list(length(object$fit$x),
                                        length(object$fit$m),
                                        length(object$fit$covariates),
                                        model = object$fit$model)$indirect
@@ -313,7 +313,7 @@ get_p_value_list.reg_fit_mediation <- function(object, boot = NULL, ...) {
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
     p_covariates <- length(object$covariates)
-    index_list <- get_index_list(p_x, p_m, p_covariates, model = model)
+    index_list <- .get_index_list(p_x, p_m, p_covariates, model = model)
     # keep indices for a path in model m ~ x + covariates
     if(p_m == 1L) keep_a <- index_list$fit_mx[1L + seq_len(p_x)]
     else if (model == "serial") {

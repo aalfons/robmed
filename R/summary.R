@@ -250,7 +250,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
                           "Std. Error" = se, "z value" = z,
                           "Pr(>|z|)" = p_value)
     # get indices of rows that that correspond to the respective models
-    index_list <- get_index_list(p_x, p_m, p_covariates, model = model,
+    index_list <- .get_index_list(p_x, p_m, p_covariates, model = model,
                                  indirect = FALSE)
   }
   ## compute summary of m ~ x + covariates

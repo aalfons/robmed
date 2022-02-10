@@ -268,7 +268,7 @@ get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
     # get indices of columns of bootstrap replicates that that correspond to
     # the respective models
     p_covariates <- length(object$covariates)
-    index_list <- get_index_list(p_x, p_m, p_covariates, model = model)
+    index_list <- .get_index_list(p_x, p_m, p_covariates, model = model)
     # keep indices for a path in model m ~ x + covariates
     if (p_m == 1L) keep_a <- index_list$fit_mx[1L + seq_len(p_x)]
     else if (model == "serial") {

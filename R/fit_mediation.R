@@ -587,8 +587,8 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     # compute indirect effects
     indirect <- compute_indirect(a, b, d)
     if (p_m > 1L) {
+      # compute total indirect effect
       indirect_total <- sum(indirect)
-      names(indirect_total) <- "Total"
     }
   } else {
     # extract effects for a path
@@ -597,11 +597,11 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     indirect <- lapply(a, compute_indirect, b, d)
     if (p_m == 1L) {
       # for models with multiple independent variables but a single mediator,
-      # make sure we have vector of indirect effects fore computing the total
-      # effects and contrasts of the indirect effects
+      # ensure we have a vector of indirect effects for computing contrasts
       indirect <- unlist(indirect, use.names = FALSE)
       names(indirect) <- x
     } else {
+      # compute total indirect effect
       indirect_total <- sapply(indirect, sum)
       names(indirect_total) <- x
     }
@@ -648,7 +648,7 @@ reg_fit_mediation <- function(data, x, y, m, covariates = character(),
     # effects, and (if requested) contrasts
     if (p_x == 1L) {
       # for a single independent variable, combine vectors
-      indirect <- c(indirect_total, indirect, contrasts)
+      indirect <- c(Total = indirect_total, indirect, contrasts)
     } else {
       ## for multiple independent variables, lists need to be combined first
       # add name of independent variable to names of total indirect effects
@@ -700,13 +700,13 @@ cov_fit_mediation <- function(data, x, y, m, robust = TRUE,
   cov <- if (robust) cov_Huber(data, control = control) else cov_ML(data)
   S <- cov$cov
   # compute coefficients of mediation model
-  a <- S[m, x] / S[x, x]
   det <- S[x, x] * S[m, m] - S[m, x]^2
+  a <- S[m, x] / S[x, x]
   b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
-  direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
   total <- S[y, x] / S[x, x]
+  direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
   # return results
-  result <- list(a = a, b = b, direct = direct, total = total,
+  result <- list(a = a, b = b, total = total, direct = direct,
                  indirect = a * b, cov = cov, x = x, y = y, m = m,
                  covariates = character(), data = data,
                  robust = robust)
