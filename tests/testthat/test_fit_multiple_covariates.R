@@ -133,10 +133,11 @@ for (method in methods) {
     expect_length(fit$a, 2L)
     expect_named(fit$a, x)
     expect_length(fit$b, 1L)
-    expect_length(fit$direct, 2L)
-    expect_named(fit$direct, x)
+    expect_named(fit$b, NULL)
     expect_length(fit$total, 2L)
     expect_named(fit$total, x)
+    expect_length(fit$direct, 2L)
+    expect_named(fit$direct, x)
     expect_length(fit$indirect, 2L)
     expect_named(fit$indirect, x)
     # individual regressions
@@ -160,7 +161,7 @@ for (method in methods) {
     # compare with stored values
     expect_equivalent(fit$a, a)
     expect_equivalent(fit$b, b)
-    expect_null(fit$d)
+    expect_null(fit[["d"]])
     expect_equivalent(fit$direct, direct)
     expect_equivalent(fit$indirect, indirect)
     # total effect

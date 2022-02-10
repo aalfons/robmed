@@ -128,10 +128,15 @@ for (method in methods) {
 
     # effects are scalars
     expect_length(fit$a, 1L)
+    expect_named(fit$a, NULL)
     expect_length(fit$b, 1L)
-    expect_length(fit$direct, 1L)
+    expect_named(fit$b, NULL)
     expect_length(fit$total, 1L)
+    expect_named(fit$total, NULL)
+    expect_length(fit$direct, 1L)
+    expect_named(fit$direct, NULL)
     expect_length(fit$indirect, 1L)
+    expect_named(fit$indirect, NULL)
     # individual regressions
     expect_length(coef(fit$fit_mx), 4L)
     expect_length(coef(fit$fit_ymx), 5L)
@@ -147,7 +152,7 @@ for (method in methods) {
 
     expect_equivalent(fit$a, coef(fit$fit_mx)[x])
     expect_equivalent(fit$b, coef(fit$fit_ymx)[m])
-    expect_null(fit$d)
+    expect_null(fit[["d"]])
     expect_equivalent(fit$direct, coef(fit$fit_ymx)[x])
     expect_equivalent(fit$indirect, fit$a * fit$b)
     # total effect

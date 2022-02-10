@@ -115,10 +115,15 @@ for (method in methods) {
 
     # effects are scalars
     expect_length(fit$a, 1L)
+    expect_named(fit$a, NULL)
     expect_length(fit$b, 1L)
-    expect_length(fit$direct, 1L)
+    expect_named(fit$b, NULL)
     expect_length(fit$total, 1L)
+    expect_named(fit$total, NULL)
+    expect_length(fit$direct, 1L)
+    expect_named(fit$direct, NULL)
     expect_length(fit$indirect, 1L)
+    expect_named(fit$indirect, NULL)
     # dimensions of data
     expect_identical(dim(fit$data), c(as.integer(n), 3L))
 
@@ -126,7 +131,7 @@ for (method in methods) {
 
   test_that("values of coefficients are correct", {
 
-    expect_null(fit$d)
+    expect_null(fit[["d"]])
     expect_equivalent(fit$indirect, fit$a * fit$b)
 
   })
