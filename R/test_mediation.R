@@ -380,8 +380,6 @@ boot_test_mediation <- function(fit,
   p_covariates <- length(fit$covariates)   # number of covariates
   model <- fit$model                       # only implemented for regression fit
   have_serial <- !is.null(model) && model == "serial"  # but this always works
-  # contrast <- fit$contrast                 # only implemented for regression fit
-  # have_contrast <- is.character(contrast)  # but this always works
 
   # check whether we have a regression fit or a covariance fit
   if (inherits(fit, "reg_fit_mediation")) {

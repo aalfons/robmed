@@ -104,7 +104,6 @@ extract_total <- function(x, fit = NULL) {
 
 ## internal functions to extract bootstrap replicates of effects
 
-
 ## extract bootstrap replicates for the effects in the mediation model
 # fit .......... an object of class "reg_fit_mediation" containing a mediation
 #                model fit via regressions
@@ -112,6 +111,10 @@ extract_total <- function(x, fit = NULL) {
 #                returned by function boot()
 # index_list ... list of index vectors that indicate which columns of the
 #                bootstrap replicates correspond to the respective models
+# TODO: Add argument that allows to select for which effects to return the
+#       bootstrap replicates.  This can speed things up, for instance for
+#       summary(), where only the bootstrap replicates of the total effect
+#       need to be extracted (and we don't need to compute, e.g., contrasts).
 extract_boot <- function(fit, boot, index_list = NULL) {
   # initializations
   p_x <- length(fit$x)
