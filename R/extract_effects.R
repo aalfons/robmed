@@ -211,11 +211,15 @@ extract_boot_direct <- function(j_x, p_m, indices, bootstrap) {
 }
 
 ## extract bootstrap replicates of the direct effect(s)
-# indices ..... vector of indices of where to find the total effect in
-#               bootstrap replicates
+# j_x ......... indices of independent variables for which to extract the
+#               effect (relative to number of independent variables)
+# indices ..... vector of indices of where to find regression coefficients of
+#               y ~ x + covariates in bootstrap replicates
 # bootstrap ... an object of bootstrap replicates for regression fits as
 #               returned by "boot"
-extract_boot_total <- function(indices, bootstrap) {
+extract_boot_total <- function(j_x, indices, bootstrap) {
+  # obtain indices corresponding to direct effects
+  indices_total <- indices[1L + j_x]
   # return bootstrap replicates
-  bootstrap$t[, indices, drop = FALSE]
+  bootstrap$t[, indices_total, drop = FALSE]
 }
