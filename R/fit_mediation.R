@@ -705,9 +705,12 @@ cov_fit_mediation <- function(data, x, y, m, robust = TRUE,
   b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
   total <- S[y, x] / S[x, x]
   direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+  indirect <- a * b
   # return results
   result <- list(a = a, b = b, total = total, direct = direct,
-                 indirect = a * b, cov = cov, x = x, y = y, m = m,
+                 indirect = indirect,
+                 ab = indirect,  # for back-compatibility, will be removed
+                 cov = cov, x = x, y = y, m = m,
                  covariates = character(), data = data,
                  robust = robust)
   if(robust) result$control <- control
