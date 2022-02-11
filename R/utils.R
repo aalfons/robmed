@@ -27,9 +27,6 @@ get_contrasts <- function(x, combinations = NULL, type = "estimates") {
     # are copied from the estimates on the original data.
     n_contrasts <- length(contrasts)
     names(contrasts) <- get_contrast_names(n_contrasts)
-  # } else {
-  #   n_contrasts <- ncol(contrasts)
-  #   colnames(contrasts) <- get_contrast_names(n_contrasts)
   }
   contrasts
 }
@@ -110,7 +107,7 @@ get_effect_names <- function(..., effects = list(...), sep = "_") {
 get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
                            fit_yx = TRUE) {
   # numbers of coefficients in different models
-  if (!is.null(model) && model == "serial") {
+  if (p_m > 1L && model == "serial") {
     p_mx <- 1L + seq.int(0L, p_m-1L) + p_x + p_covariates
   } else p_mx <- rep.int(1L + p_x + p_covariates, p_m)
   p_ymx <- 1L + p_m + p_x + p_covariates
@@ -142,26 +139,26 @@ get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
 
 ## internal functions related to indirect effects
 
-# obtain names for d path in serial multiple mediator models
-get_d_names <- function(m, sep = "->") {
-  # initializations
-  p_m <- length(m)
-  # currently only implemented for two or three hypothesized mediators
-  if (p_m == 2L) {
-    # two serial mediators
-    names <- NULL
-  } else {
-    # three serial mediators
-    responses <- m[-1L]
-    predictors <- list(m[1L], m[-3L])
-    names_list <- mapply(function(current_response, current_predictors) {
-      paste(current_predictors, current_response, sep = sep)
-    }, responses, predictors, SIMPLIFY = FALSE, USE.NAMES = FALSE)
-    names <- unlist(names_list, use.names = FALSE)
-  }
-  # return names
-  names
-}
+# # obtain names for d path in serial multiple mediator models
+# get_d_names <- function(m, sep = "->") {
+#   # initializations
+#   p_m <- length(m)
+#   # currently only implemented for two or three hypothesized mediators
+#   if (p_m == 2L) {
+#     # two serial mediators
+#     names <- NULL
+#   } else {
+#     # three serial mediators
+#     responses <- m[-1L]
+#     predictors <- list(m[1L], m[-3L])
+#     names_list <- mapply(function(current_response, current_predictors) {
+#       paste(current_predictors, current_response, sep = sep)
+#     }, responses, predictors, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+#     names <- unlist(names_list, use.names = FALSE)
+#   }
+#   # return names
+#   names
+# }
 
 # # obtain number of indirect effects
 # get_nr_indirect <- function(p_x, p_m, model = "parallel") {

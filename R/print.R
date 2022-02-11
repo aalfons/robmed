@@ -83,7 +83,7 @@ print_info.summary_fit_mediation <- function(object, ...) {
   # initializations
   p_x <- length(object$x)
   p_m <- length(object$m)
-  nr_indirect <- get_nr_indirect(p_x, p_m, model = object$model)
+  have_simple <- is.null(object$model) || object$model == "simple"
   have_covariates <- length(object$covariates) > 0L
   # in case of multiple mediators, print information on type of mediation model
   if (p_m > 1L) {
@@ -91,7 +91,7 @@ print_info.summary_fit_mediation <- function(object, ...) {
     cat(prefix, "multiple mediator model\n\n")
   }
   # print information on variables
-  if (nr_indirect == 1L) {
+  if (have_simple) {
     cat(sprintf("x = %s\n", object$x))
     cat(sprintf("y = %s\n", object$y))
     cat(sprintf("m = %s\n", object$m))

@@ -104,17 +104,143 @@ extract_total <- function(x, fit = NULL) {
 
 ## internal functions to extract bootstrap replicates of effects
 
+
+## extract bootstrap replicates for the effects in the mediation model
+# fit .......... an object of class "reg_fit_mediation" containing a mediation
+#                model fit via regressions
+# boot ......... an object of bootstrap replicates for regression fits as
+#                returned by function boot()
+# index_list ... list of index vectors that indicate which columns of the
+#                bootstrap replicates correspond to the respective models
+extract_boot <- function(fit, boot, index_list = NULL) {
+  # initializations
+  p_x <- length(fit$x)
+  p_m <- length(fit$m)
+  p_covariates <- length(fit$covariates)
+  model <- fit$model
+  family <- fit$family
+  have_yx <- !is.null(fit$fit_yx)
+  contrast <- fit$contrast                 # FALSE or type of contrast
+  have_contrast <- is.character(contrast)  # indicates whether we have contrasts
+  # if not supplied, get list of index vectors that indicate which columns of
+  # the bootstrap replicates correspond to the respective models
+  if (is.null(index_list)) {
+    index_list <- get_index_list(p_x, p_m, p_covariates, model = model,
+                                 fit_yx = family != "gaussian" && have_yx)
+  }
+  # define useful sequences
+  seq_x <- seq_len(p_x)
+  seq_m <- seq_len(p_m)
+  # extract effects for b path
+  boot_b <- extract_boot_b(seq_m, indices = index_list$fit_ymx, boot = boot)
+  # in case of serial mediators, extract effects for d path
+  if (model == "serial") {
+    boot_d <- extract_boot_d(index_list$fit_mx, boot = boot)
+  } else boot_d <- NULL
+  # extract and compute bootstrap replicates for a path and indirect effects
+  if (p_x == 1L) {
+    # extract bootstrap replicates of effects for a path
+    boot_a <- extract_boot_a(1L, indices = index_list$fit_mx,
+                             boot = boot, model = model)
+    # compute bootstrap replicates of indirect effects
+    boot_indirect <- compute_boot_indirect(boot_a, boot_b, boot_d)
+    if (p_m > 1L) {
+      # compute bootstrap replicates of total indirect effect
+      boot_indirect_total <- rowSums(boot_indirect)
+    }
+  } else {
+    # extract bootstrap replicates of effects for a path
+    boot_a <- lapply(seq_x, extract_boot_a, indices = index_list$fit_mx,
+                     boot = boot, model = model)
+    # compute bootstrap replicates of indirect effects
+    boot_indirect <- lapply(boot_a, compute_boot_indirect, boot_b, boot_d)
+    if (p_m == 1L) {
+      # for models with multiple independent variables but a single mediator,
+      # ensure we have a matrix of indirect effects for computing contrasts
+      boot_indirect <- do.call(cbind, boot_indirect)
+    } else {
+      # compute total indirect effect
+      boot_indirect_total <- sapply(boot_indirect, rowSums)
+    }
+  }
+  # extract direct effect(s)
+  boot_direct <- extract_boot_direct(seq_x, p_m = p_m,
+                                     indices = index_list$fit_ymx,
+                                     boot = boot)
+  # compute or extract total effect(s)
+  if (family == "gaussian") {
+    # compute the total effect based on the indirect and direct effects
+    if (p_m == 1L) boot_total <- boot_indirect + boot_direct
+    else boot_total <- boot_indirect_total + boot_direct
+  } else if (have_yx) {
+    # extract total effect(s)
+    boot_total <- extract_boot_total(seq_x, indices = index_list$fit_yx,
+                                     boot = boot)
+  } else {
+    # total effect(s) not available
+    boot_total <- matrix(NA_real_, nrow = nrow(boot$t), ncol = p_x)
+  }
+  # if requested, compute bootstrap estimates of contrasts
+  if (have_contrast) {
+    # fit_mediation() ensures that this is only true if there are multiple
+    # independent variables or multiple mediators
+    if (p_x == 1L || p_m == 1L) {
+      # multiple independent variables or multiple mediators, but not both:
+      # compute contrasts between all individual indirect effects
+      boot_contrasts <- get_contrasts(boot_indirect, type = contrast)
+    } else {
+      # multiple independent variables and multiple mediators: compute
+      # contrasts separately for each independent variable such that the
+      # number of comparisons doesn't explode
+      boot_contrasts <- lapply(boot_indirect, get_contrasts, type = contrast)
+    }
+  } else boot_contrasts <- NULL
+  # make sure we have matrix of bootstrap replicates for a path
+  if (p_x > 1L) boot_a <- do.call(cbind, boot_a)
+  # compute bootstrap estimates for a path
+  a <- colMeans(boot_a, na.rm = TRUE)
+  # finalize matrix of bootstrap replicates of indirect effects
+  if (p_m == 1L) {
+    # For multiple independent variables and a single mediator, the list of
+    # bootstrap replicates of the indirect effects has already been converted
+    # to a matrix before computing contrasts.  There are also no bootstrap
+    # replicates of the total indirect effect to add.
+    if (p_x > 1L) boot_indirect <- cbind(boot_indirect, boot_contrasts)
+  } else {
+    # multiple mediators: combine bootstrap replicates of total indirect
+    # effect, individual indirect effects, and (if requested) contrasts
+    if (p_x == 1L) {
+      # for a single independent variable, combine vectors
+      boot_indirect <- cbind(boot_indirect_total, boot_indirect,
+                             boot_contrasts, deparse.level = 0)
+    } else {
+      # combine lists
+      boot_indirect <- lapply(seq_x, function(j) {
+        cbind(boot_indirect_total[, j, drop = FALSE], boot_indirect[[j]],
+              boot_contrasts[[j]])
+      })
+      ## combine everything into one matrix
+      boot_indirect <- do.call(cbind, boot_indirect)
+    }
+  }
+  # return list of bootstrap replicates for the different effects
+  tmp <- list(a = boot_a, b = boot_b)
+  if (model == "serial") tmp$d <- boot_d
+  c(tmp, list(total = boot_total, direct = boot_direct,
+              indirect = boot_indirect))
+}
+
 ## extract  bootstrap replicates of the effect(s) for the a path for one
 ## independent variable
-# j_x ......... index of independent variable (relative to number of
-#               independent variables)
-# indices ..... vector of indices of where to find regression coefficients of
-#               m ~ x + covariates in bootstrap replicates, or a list of such
-#               indices in case of multiple mediators
-# bootstrap ... an object of bootstrap replicates for regression fits as
-#               returned by "boot"
-# model ....... type of mediation model
-extract_boot_a <- function(j_x, indices, bootstrap, model) {
+# j_x ....... index of independent variable (relative to number of
+#             independent variables)
+# indices ... vector of indices of where to find regression coefficients of
+#             m ~ x + covariates in bootstrap replicates, or a list of such
+#             indices in case of multiple mediators
+# boot ...... an object of bootstrap replicates for regression fits as returned
+#             by function boot()
+# model ..... type of mediation model
+extract_boot_a <- function(j_x, indices, boot, model) {
   # obtain indices corresponding to effects for a path
   if (inherits(indices, "list")) {
     # multiple mediators
@@ -131,29 +257,29 @@ extract_boot_a <- function(j_x, indices, bootstrap, model) {
     indices_a <- indices[1L + j_x]
   }
   # return bootstrap replicates
-  bootstrap$t[, indices_a, drop = FALSE]
+  boot$t[, indices_a, drop = FALSE]
 }
 
 ## extract bootstrap replicates of the effect(s) for the b path
-# j_m ......... indices of mediators for which to extract the effect (relative
-#               to number of mediators)
-# indices ..... vector of indices of where to find regression coefficients of
-#               y ~ m + x + covariates in bootstrap replicates
-# bootstrap ... an object of bootstrap replicates for regression fits as
-#               returned by "boot"
-extract_boot_b <- function(j_m, indices, bootstrap) {
+# j_m ....... indices of mediators for which to extract the effect (relative
+#             to number of mediators)
+# indices ... vector of indices of where to find regression coefficients of
+#             y ~ m + x + covariates in bootstrap replicates
+# boot ...... an object of bootstrap replicates for regression fits as returned
+#             by function boot()
+extract_boot_b <- function(j_m, indices, boot) {
   # obtain indices corresponding to effects for b path
   indices_b <- indices[1L + j_m]
   # return bootstrap replicates
-  bootstrap$t[, indices_b, drop = FALSE]
+  boot$t[, indices_b, drop = FALSE]
 }
 
 ## extract bootstrap replicates of the effect(s) for the d path
 # index_list ... list of index vectors of where to find regression coefficients
 #                of m ~ x + covariates in bootstrap replicates
-# bootstrap .... an object of bootstrap replicates for regression fits as
-#                returned by "boot"
-extract_boot_d <- function(index_list, bootstrap) {
+# boot ......... an object of bootstrap replicates for regression fits as
+#                returned by function boot()
+extract_boot_d <- function(index_list, boot) {
   # initializations
   p_m <- length(index_list)
   # obtain indices corresponding to effects for d path
@@ -161,7 +287,7 @@ extract_boot_d <- function(index_list, bootstrap) {
   indices_d <- unlist(mapply("[", index_list[-1L], j_list, USE.NAMES = FALSE),
                       use.names = FALSE)
   # return bootstrap replicates
-  bootstrap$t[, indices_d, drop = FALSE]
+  boot$t[, indices_d, drop = FALSE]
 }
 
 ## compute bootstrap replicates of indirect effect(s) for one independent
@@ -196,30 +322,30 @@ compute_boot_indirect <- function(boot_a, boot_b, boot_d = NULL) {
 }
 
 ## extract bootstrap replicates of the direct effect(s)
-# j_x ......... indices of independent variables for which to extract the
-#               effect (relative to number of independent variables)
-# p_m ......... number of mediators
-# indices ..... vector of indices of where to find regression coefficients of
-#               y ~ m + x + covariates in bootstrap replicates
-# bootstrap ... an object of bootstrap replicates for regression fits as
-#               returned by "boot"
-extract_boot_direct <- function(j_x, p_m, indices, bootstrap) {
+# j_x ....... indices of independent variables for which to extract the
+#             effect (relative to number of independent variables)
+# p_m ....... number of mediators
+# indices ... vector of indices of where to find regression coefficients of
+#             y ~ m + x + covariates in bootstrap replicates
+# boot ...... an object of bootstrap replicates for regression fits as returned
+#             by function boot()
+extract_boot_direct <- function(j_x, p_m, indices, boot) {
   # obtain indices corresponding to direct effects
   indices_direct <- indices[1L + p_m + j_x]
   # return bootstrap replicates
-  bootstrap$t[, indices_direct, drop = FALSE]
+  boot$t[, indices_direct, drop = FALSE]
 }
 
 ## extract bootstrap replicates of the direct effect(s)
-# j_x ......... indices of independent variables for which to extract the
-#               effect (relative to number of independent variables)
-# indices ..... vector of indices of where to find regression coefficients of
-#               y ~ x + covariates in bootstrap replicates
-# bootstrap ... an object of bootstrap replicates for regression fits as
-#               returned by "boot"
-extract_boot_total <- function(j_x, indices, bootstrap) {
+# j_x ....... indices of independent variables for which to extract the
+#             effect (relative to number of independent variables)
+# indices ... vector of indices of where to find regression coefficients of
+#             y ~ x + covariates in bootstrap replicates
+# boot ...... an object of bootstrap replicates for regression fits as returned
+#             by function boot()
+extract_boot_total <- function(j_x, indices, boot) {
   # obtain indices corresponding to direct effects
   indices_total <- indices[1L + j_x]
   # return bootstrap replicates
-  bootstrap$t[, indices_total, drop = FALSE]
+  boot$t[, indices_total, drop = FALSE]
 }

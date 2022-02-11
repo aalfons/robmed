@@ -380,8 +380,8 @@ boot_test_mediation <- function(fit,
   p_covariates <- length(fit$covariates)   # number of covariates
   model <- fit$model                       # only implemented for regression fit
   have_serial <- !is.null(model) && model == "serial"  # but this always works
-  contrast <- fit$contrast                 # only implemented for regression fit
-  have_contrast <- is.character(contrast)  # but this always works
+  # contrast <- fit$contrast                 # only implemented for regression fit
+  # have_contrast <- is.character(contrast)  # but this always works
 
   # check whether we have a regression fit or a covariance fit
   if (inherits(fit, "reg_fit_mediation")) {
@@ -842,121 +842,24 @@ boot_test_mediation <- function(fit,
 
     }
 
-    # get indices of columns of bootstrap replicates that that correspond to
-    # the respective models
-    have_yx <- family != "gaussian" && estimate_yx
-    index_list <- get_index_list(p_x, p_m, p_covariates, model = model,
-                                 fit_yx = have_yx)
-    # define useful sequences
-    seq_x <- seq_len(p_x)
-    seq_m <- seq_len(p_m)
-    # extract effects for b path
-    boot_b <- extract_boot_b(seq_m, indices = index_list$fit_ymx,
-                             bootstrap = bootstrap)
-    b <- colMeans(boot_b, na.rm = TRUE)
-    # in case of serial mediators, extract effects for d path
-    if (model == "serial") {
-      boot_d <- extract_boot_d(index_list$fit_mx, bootstrap = bootstrap)
-      d <- colMeans(boot_d, na.rm = TRUE)
-    } else {
-      boot_d <- NULL
-      d <- NULL
-    }
-    # extract and compute bootstrap replicates for a path and indirect effects
-    if (p_x == 1L) {
-      # extract bootstrap replicates of effects for a path
-      boot_a <- extract_boot_a(1L, indices = index_list$fit_mx,
-                               bootstrap = bootstrap, model = model)
-      # compute bootstrap replicates of indirect effects
-      boot_indirect <- compute_boot_indirect(boot_a, boot_b, boot_d)
-      if (p_m > 1L) {
-        # compute bootstrap replicates of total indirect effect
-        boot_indirect_total <- rowSums(boot_indirect)
-      }
-    } else {
-      # extract bootstrap replicates of effects for a path
-      boot_a <- lapply(seq_x, extract_boot_a, indices = index_list$fit_mx,
-                       bootstrap = bootstrap, model = model)
-      # compute bootstrap replicates of indirect effects
-      boot_indirect <- lapply(boot_a, compute_boot_indirect, boot_b, boot_d)
-      if (p_m == 1L) {
-        # for models with multiple independent variables but a single mediator,
-        # ensure we have a matrix of indirect effects for computing contrasts
-        boot_indirect <- do.call(cbind, boot_indirect)
-      } else {
-        # compute total indirect effect
-        boot_indirect_total <- sapply(boot_indirect, rowSums)
-      }
-    }
-    # extract direct effect(s)
-    boot_direct <- extract_boot_direct(seq_x, p_m = p_m,
-                                       indices = index_list$fit_ymx,
-                                       bootstrap = bootstrap)
-    direct <- colMeans(boot_direct, na.rm = TRUE)
-    # compute or extract total effect(s)
-    if (family == "gaussian") {
-      # compute the total effect based on the indirect and direct effects
-      if (p_m == 1L) boot_total <- boot_indirect + boot_direct
-      else boot_total <- boot_indirect_total + boot_direct
-      total <- colMeans(boot_total, na.rm = TRUE)
-    } else if (have_yx) {
-      # extract total effect(s)
-      boot_total <- extract_boot_total(seq_x, indices = index_list$fit_yx,
-                                       bootstrap = bootstrap)
-      total <- colMeans(boot_total, na.rm = TRUE)
-    } else {
-      # total effect(s) not available
-      total <- rep.int(NA_real_, p_x)
-    }
-    # if requested, compute bootstrap estimates of contrasts
-    if (have_contrast) {
-      # fit_mediation() ensures that this is only true if there are multiple
-      # independent variables or multiple mediators
-      if (p_x == 1L || p_m == 1L) {
-        # multiple independent variables or multiple mediators, but not both:
-        # compute contrasts between all individual indirect effects
-        boot_contrasts <- get_contrasts(boot_indirect, type = contrast)
-      } else {
-        # multiple independent variables and multiple mediators: compute
-        # contrasts separately for each independent variable such that the
-        # number of comparisons doesn't explode
-        boot_contrasts <- lapply(boot_indirect, get_contrasts, type = contrast)
-      }
-    } else boot_contrasts <- NULL
-    # make sure we have matrix of bootstrap replicates for a path
-    if (p_x > 1L) boot_a <- do.call(cbind, boot_a)
-    # compute bootstrap estimates for a path
-    a <- colMeans(boot_a, na.rm = TRUE)
-    # finalize matrix of bootstrap replicates of indirect effects
-    if (p_m == 1L) {
-      # For multiple independent variables and a single mediator, the list of
-      # bootstrap replicates of the indirect effects has already been converted
-      # to a matrix before computing contrasts.  There are also no bootstrap
-      # replicates of the total indirect effect to add.
-      if (p_x > 1L) boot_indirect <- cbind(boot_indirect, boot_contrasts)
-    } else {
-      # multiple mediators: combine bootstrap replicates of total indirect
-      # effect, individual indirect effects, and (if requested) contrasts
-      if (p_x == 1L) {
-        # for a single independent variable, combine vectors
-        boot_indirect <- cbind(boot_indirect_total, boot_indirect,
-                               boot_contrasts, deparse.level = 0)
-      } else {
-        # combine lists
-        boot_indirect <- lapply(seq_x, function(j) {
-          cbind(boot_indirect_total[, j, drop = FALSE], boot_indirect[[j]],
-                boot_contrasts[[j]])
-        })
-        ## combine everything into one matrix
-        boot_indirect <- do.call(cbind, boot_indirect)
-      }
-    }
-    # compute bootstrap estimates of indirect effects
-    indirect <- colMeans(boot_indirect, na.rm = TRUE)
+    # extract bootstrap replicates for the different effects
+    boot_list <- extract_boot(fit, boot = bootstrap)
+    # compute bootstrap estimates of the different effects
+    estimate_list <- lapply(boot_list, colMeans, na.rm = TRUE)
+    # colMeans() may return NaN instead of NA when all values are NA.  Here
+    # this is the case for regression with skew-elliptical errors when the
+    # regression for the total effect is not performed.
+    is_NaN <- is.nan(estimate_list$total)
+    if (any(is_NaN)) estimate_list$total[is_NaN] <- NA_real_
+    # copy names of bootstrap estimates from estimates on original data
+    keep <- names(estimate_list)
+    name_list <- lapply(fit[keep], names)
+    estimate_list <- mapply("names<-", estimate_list, name_list,
+                            SIMPLIFY = FALSE)
     # construct "boot" object for indirect effects, which is necessary to
     # extract confidence intervals using functionality from package 'boot'
     bootstrap_indirect <- bootstrap
-    bootstrap_indirect$t <- boot_indirect
+    bootstrap_indirect$t <- boot_list$indirect
     bootstrap_indirect$t0 <- unname(fit$indirect)
     # this shouldn't be necessary, but just in case: removing the function for
     # the bootstrap replicates ensures that the empirical influence function
@@ -964,7 +867,7 @@ boot_test_mediation <- function(fit,
     # approach (jackknife) that uses the wrong function
     bootstrap_indirect$statistic <- NULL
     # compute confidence intervals for indirect effects
-    nr_indirect <- length(indirect)
+    nr_indirect <- ncol(boot_list$indirect)
     if (nr_indirect == 1L) {
       ci <- confint(bootstrap_indirect, parm = 1L, level = level,
                     alternative = alternative, type = type)
@@ -978,13 +881,6 @@ boot_test_mediation <- function(fit,
       # copy row names from point estimates on original data
       rownames(ci) <- names(fit$indirect)
     }
-    # copy names of bootstrap estimates from estimates on original data
-    names(a) <- names(fit$a)
-    names(b) <- names(fit$b)
-    if (model == "serial") names(d) <- names(fit[["d"]])
-    names(total) <- names(fit$total)
-    names(direct) <- names(fit$direct)
-    names(indirect) <- names(fit$indirect)
 
   } else if(inherits(fit, "cov_fit_mediation")) {
 
@@ -1017,11 +913,11 @@ boot_test_mediation <- function(fit,
     R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
 
     # compute bootstrap estimates of effects
-    a <- mean(bootstrap$t[, 1L], na.rm = TRUE)
-    b <- mean(bootstrap$t[, 2L], na.rm = TRUE)
-    total <- mean(bootstrap$t[, 3L], na.rm = TRUE)
-    direct <- mean(bootstrap$t[, 4L], na.rm = TRUE)
-    indirect <- mean(bootstrap$t[, 5L], na.rm = TRUE)
+    estimate_list <- list(a = mean(bootstrap$t[, 1L], na.rm = TRUE),
+                          b = mean(bootstrap$t[, 2L], na.rm = TRUE),
+                          total = mean(bootstrap$t[, 3L], na.rm = TRUE),
+                          direct = mean(bootstrap$t[, 4L], na.rm = TRUE),
+                          indirect = mean(bootstrap$t[, 5L], na.rm = TRUE))
     # compute confidence interval for indirect effect
     ci <- confint(bootstrap, parm = 5L, level = level,
                   alternative = alternative, type = type)
@@ -1029,11 +925,8 @@ boot_test_mediation <- function(fit,
   } else stop("method not implemented")
 
   # return results
-  result <- list(a = a, b = b)
-  if (have_serial) result$d <- d
-  result <- c(result,
-              list(total = total, direct = direct, indirect = indirect,
-                   ab = indirect,  # for back-compatibility, will be removed
+  result <- c(estimate_list,
+              list(ab = estimate_list$indirect,  # for back-compatibility, will be removed
                    ci = ci, reps = bootstrap, alternative = alternative,
                    R = as.integer(R[1L]), level = level, type = type,
                    fit = fit))
