@@ -375,10 +375,9 @@ boot_test_mediation <- function(fit, ...) UseMethod("boot_test_mediation")
 
 # method for regression fits
 boot_test_mediation.reg_fit_mediation <- function(fit,
-                                                  alternative = c("twosided", "less", "greater"),
+                                                  alternative = "twosided",
                                                   R = 5000, level = 0.95,
-                                                  type = c("bca", "perc"),
-                                                  ...) {
+                                                  type = "bca", ...) {
 
   # initializations
   p_x <- length(fit$x)                     # number of independent variables
@@ -869,10 +868,9 @@ boot_test_mediation.reg_fit_mediation <- function(fit,
 
 # method for regression fits
 boot_test_mediation.cov_fit_mediation <- function(fit,
-                                                  alternative = c("twosided", "less", "greater"),
+                                                  alternative = "twosided",
                                                   R = 5000, level = 0.95,
-                                                  type = c("bca", "perc"),
-                                                  ...) {
+                                                  type = "bca", ...) {
 
   # extract variable names and data
   x <- fit$x
@@ -925,9 +923,8 @@ boot_test_mediation.cov_fit_mediation <- function(fit,
 
 
 ## internal function for sobel test
-sobel_test_mediation <- function(fit,
-                                 alternative = c("twosided", "less", "greater"),
-                                 order = c("first", "second"), ...) {
+sobel_test_mediation <- function(fit, alternative = "twosided",
+                                 order = "first", ...) {
   # extract coefficients
   a <- fit$a
   b <- fit$b

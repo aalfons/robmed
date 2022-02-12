@@ -182,6 +182,7 @@ confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
 
 
 ## internal function to compute confidence intervals for estimated effects
+## other than the indirect effect
 
 get_ci_list <- function(object, level = 0.95, ...) UseMethod("get_ci_list")
 
@@ -209,10 +210,10 @@ get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
     confint_b <- confint(object$fit_ymx, parm = m, level = level)
     # compute confidence intervals of total effects
     if (have_yx) {
-      # extract confidence interval from regression model
+      # extract confidence intervals from regression model
       confint_total <- confint(object$fit_yx, parm = x, level = level)
     } else {
-      # confidence interval not available
+      # confidence intervals not available
       confint_total <- matrix(NA_real_, nrow = p_x, ncol = 2L)
     }
     # compute confidence intervals of direct effects
@@ -235,7 +236,7 @@ get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
     # extract bootstrap replicates for effects other than the indirect effect
     keep <- c("a", "b", if (have_serial) "d", "total", "direct")
     boot_list <- extract_boot(object, boot = boot)[keep]
-    # compute confidence intervals for the different effects
+    # construct list of confidence intervals for the different effects
     ci_list <- lapply(boot_list, function(boot) {
       # compute means and standard errors of bootstrap replicates
       estimates <- colMeans(boot, na.rm = TRUE)
@@ -288,11 +289,10 @@ get_ci_names <- function(level = 0.95, alternative = "twosided") {
 
 ## internal function to compute confidence interval based on normal distribution
 confint_z <- function(mean = 0, sd = 1, level = 0.95,
-                      alternative = c("twosided", "less", "greater")) {
+                      alternative = "twosided") {
   # initializations
-  alternative <- match.arg(alternative)
-  # compute confidence interval
   alpha <- 1 - level
+  # compute confidence interval
   switch(alternative,
          twosided = qnorm(c(alpha/2, 1-alpha/2), mean = mean, sd = sd),
          less = c(-Inf, qnorm(level, mean = mean, sd = sd)),
