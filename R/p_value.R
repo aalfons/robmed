@@ -107,7 +107,7 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
                                             digits = digits,
                                             alternative = object$alternative,
                                             type = object$type)
-    } else {
+    } else if (inherits(object$fit, "cov_fit_mediation")) {
       # compute p-value of indirect effects as the smallest significance
       # level where 0 is not in the confidence interval
       p_value_list$indirect <- extract_p_value(parm = 5L,
@@ -115,7 +115,7 @@ p_value.boot_test_mediation <- function(object, parm = NULL,
                                                digits = digits,
                                                alternative = object$alternative,
                                                type = object$type)
-    }
+    } else stop("not implemented for this type of model fit")
   }
   # convert list to vector
   p_values <- unlist(p_value_list, use.names = FALSE)
