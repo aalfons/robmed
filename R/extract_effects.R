@@ -226,9 +226,18 @@ extract_boot <- function(fit, boot, index_list = NULL) {
       boot_indirect <- do.call(cbind, boot_indirect)
     }
   }
+  # copy column names for bootstrap replicates from estimates on original data
+  colnames(boot_a) <- names(fit$a)
+  colnames(boot_b) <- names(fit$b)
+  colnames(boot_total) <- names(fit$total)
+  colnames(boot_direct) <- names(fit$direct)
+  colnames(boot_indirect) <- names(fit$indirect)
   # return list of bootstrap replicates for the different effects
   tmp <- list(a = boot_a, b = boot_b)
-  if (model == "serial") tmp$d <- boot_d
+  if (model == "serial") {
+    colnames(boot_d) <- names(fit[["d"]])
+    tmp$d <- boot_d
+  }
   c(tmp, list(total = boot_total, direct = boot_direct,
               indirect = boot_indirect))
 }

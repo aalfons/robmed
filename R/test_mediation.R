@@ -369,10 +369,16 @@ robmed <- function(..., test = "boot", method = "regression", robust = TRUE) {
 
 
 ## internal function for bootstrap test
-boot_test_mediation <- function(fit,
-                                alternative = c("twosided", "less", "greater"),
-                                R = 5000, level = 0.95, type = c("bca", "perc"),
-                                ...) {
+
+# generic function
+boot_test_mediation <- function(fit, ...) UseMethod("boot_test_mediation")
+
+# method for regression fits
+boot_test_mediation.reg_fit_mediation <- function(fit,
+                                                  alternative = c("twosided", "less", "greater"),
+                                                  R = 5000, level = 0.95,
+                                                  type = c("bca", "perc"),
+                                                  ...) {
 
   # initializations
   p_x <- length(fit$x)                     # number of independent variables
@@ -381,553 +387,537 @@ boot_test_mediation <- function(fit,
   model <- fit$model                       # only implemented for regression fit
   have_serial <- !is.null(model) && model == "serial"  # but this always works
 
-  # check whether we have a regression fit or a covariance fit
-  if (inherits(fit, "reg_fit_mediation")) {
+  # indices of independent variables in data matrix to be used in bootstrap
+  j_x <- match(fit$x, names(fit$data)) + 1L
+  # indices of the dependent variable in data matrix to be used in bootstrap
+  j_y <- match(fit$y, names(fit$data)) + 1L
+  # indices of mediators in data matrix to be used in bootstrap
+  j_m <- match(fit$m, names(fit$data)) + 1L
+  # indices of covariates in data matrix to be used in bootstrap
+  j_covariates <- match(fit$covariates, names(fit$data)) + 1L
+  # combine data
+  n <- nrow(fit$data)
+  z <- cbind(rep.int(1, n), as.matrix(fit$data))
 
-    # indices of independent variables in data matrix to be used in bootstrap
-    j_x <- match(fit$x, names(fit$data)) + 1L
-    # indices of the dependent variable in data matrix to be used in bootstrap
-    j_y <- match(fit$y, names(fit$data)) + 1L
-    # indices of mediators in data matrix to be used in bootstrap
-    j_m <- match(fit$m, names(fit$data)) + 1L
-    # indices of covariates in data matrix to be used in bootstrap
-    j_covariates <- match(fit$covariates, names(fit$data)) + 1L
-    # combine data
-    n <- nrow(fit$data)
-    z <- cbind(rep.int(1, n), as.matrix(fit$data))
-
-    # in case of a serial multiple mediator model, construct list containing
-    # indices of predictor variables
-    if (have_serial) {
-      j_mx <- vector("list", length = p_m)
-      j_mx[[1L]] <- c(1L, j_x, j_covariates)
-      for (j in seq_len(p_m-1L)) {
-        j_mx[[j+1L]] <- c(1L, j_m[seq_len(j)], j_x, j_covariates)
-      }
+  # in case of a serial multiple mediator model, construct list containing
+  # indices of predictor variables
+  if (have_serial) {
+    j_mx <- vector("list", length = p_m)
+    j_mx[[1L]] <- c(1L, j_x, j_covariates)
+    for (j in seq_len(p_m-1L)) {
+      j_mx[[j+1L]] <- c(1L, j_m[seq_len(j)], j_x, j_covariates)
     }
+  }
 
-    # perform (fast-and-robust) bootstrap
-    robust <- fit$robust
-    family <- fit$family
-    if (robust == "MM") {
+  # perform (fast-and-robust) bootstrap
+  robust <- fit$robust
+  family <- fit$family
+  if (robust == "MM") {
 
-      # This implementation uses the simpler approximation of
-      # Salibian-Barrera & Van Aelst (2008) rather than that of
-      # Salibian-Barrera & Zamar (2002).  The difference is that
-      # the latter also requires a correction of the residual scale.
+    # This implementation uses the simpler approximation of
+    # Salibian-Barrera & Van Aelst (2008) rather than that of
+    # Salibian-Barrera & Zamar (2002).  The difference is that
+    # the latter also requires a correction of the residual scale.
 
-      # extract regression models
-      fit_mx <- fit$fit_mx
-      fit_ymx <- fit$fit_ymx
-      # extract control object from robust regressions
-      # (necessary to compute correction matrices)
-      psi_control <- get_psi_control(fit_ymx)  # the same for all model fits
+    # extract regression models
+    fit_mx <- fit$fit_mx
+    fit_ymx <- fit$fit_ymx
+    # extract control object from robust regressions
+    # (necessary to compute correction matrices)
+    psi_control <- get_psi_control(fit_ymx)  # the same for all model fits
 
-      # extract (square root of) robustness weights and combine data
-      if (p_m == 1L) w_m <- sqrt(weights(fit_mx, type = "robustness"))
-      else w_m <- sqrt(sapply(fit_mx, weights, type = "robustness"))
-      w_y <- sqrt(weights(fit_ymx, type = "robustness"))
-      # for regression m ~ x + covariates: compute matrices for linear
-      # corrections and extract coefficients from full sample
-      if (p_m == 1L) {
-        ## single mediator
-        corr_m <- correction_matrix(z[, c(1L, j_x, j_covariates)],
-                                    weights = w_m,
-                                    residuals = residuals(fit_mx),
-                                    scale = fit_mx$scale,
-                                    control = psi_control)
-        coef_m <- coef(fit_mx)
-      } else {
-        ## multiple mediators
-        # compute matrices for linear corrections
-        if (have_serial) {
-          corr_m <- mapply(function(m, current_j_mx) {
-            correction_matrix(z[, current_j_mx], weights = w_m[, m],
-                              residuals = residuals(fit_mx[[m]]),
-                              scale = fit_mx[[m]]$scale,
-                              control = psi_control)
-          }, m = fit$m, current_j_mx = j_mx,
-          SIMPLIFY = FALSE, USE.NAMES = FALSE)
-        } else {
-          corr_m <- lapply(fit$m, function(m, z) {
-            correction_matrix(z, weights = w_m[, m],
-                              residuals = residuals(fit_mx[[m]]),
-                              scale = fit_mx[[m]]$scale,
-                              control = psi_control)
-          }, z = z[, c(1L, j_x, j_covariates)])
-        }
-        # extract coefficients
-        coef_m <- lapply(fit_mx, coef)
-      }
-      # for regression y ~ m + x + covariates: compute matrices for linear
-      # corrections and extract coefficients from full sample
-      corr_y <- correction_matrix(z[, c(1L, j_m, j_x, j_covariates)],
-                                  weights = w_y,
-                                  residuals = residuals(fit_ymx),
-                                  scale = fit_ymx$scale,
+    # extract (square root of) robustness weights and combine data
+    if (p_m == 1L) w_m <- sqrt(weights(fit_mx, type = "robustness"))
+    else w_m <- sqrt(sapply(fit_mx, weights, type = "robustness"))
+    w_y <- sqrt(weights(fit_ymx, type = "robustness"))
+    # for regression m ~ x + covariates: compute matrices for linear
+    # corrections and extract coefficients from full sample
+    if (p_m == 1L) {
+      ## single mediator
+      corr_m <- correction_matrix(z[, c(1L, j_x, j_covariates)],
+                                  weights = w_m,
+                                  residuals = residuals(fit_mx),
+                                  scale = fit_mx$scale,
                                   control = psi_control)
-      coef_y <- coef(fit_ymx)
-      # number of variables in predictor matrices of regression models
-      d_m <- if (have_serial) sapply(j_mx, length) else 1L + p_x + p_covariates
-      d_y <- 1L + p_m + p_x + p_covariates
-
-      # define function for fast-and-robust bootstrap
-      if (p_m == 1L) {
-
-        # one mediator
-        robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
-                                     w_y, corr_y, coef_y) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          w_m_i <- w_m[i]
-          w_y_i <- w_y[i]
-          # check whether there are enough observations with nonzero weights
-          if(sum(w_m_i > 0) <= d_m || sum(w_y_i > 0) <= d_y) return(NA_real_)
-          # compute coefficients from weighted regression m ~ x + covariates
-          weighted_x_i <- w_m_i * z_i[, c(1L, j_x, j_covariates)]
-          weighted_m_i <- w_m_i * z_i[, j_m]
-          coef_m_i <- solve(crossprod(weighted_x_i)) %*%
-            crossprod(weighted_x_i, weighted_m_i)
-          # compute coefficients from weighted regression y ~ m + x + covariates
-          weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
-          weighted_y_i <- w_y_i * z_i[, j_y]
-          coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
-            crossprod(weighted_mx_i, weighted_y_i)
-          # compute corrected coefficients
-          coef_m_i <- unname(drop(coef_m + corr_m %*% (coef_m_i - coef_m)))
-          coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
-          # return coefficients
-          c(coef_m_i, coef_y_i)
-        }
-
-      } else if (have_serial) {
-
-        # multiple serial mediators
-        robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
-                                     w_y, corr_y, coef_y) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          w_m_i <- w_m[i, , drop = FALSE]
-          w_y_i <- w_y[i]
-          # check whether there are enough observations with nonzero weights
-          if(any(colSums(w_m_i > 0) <= d_m) || sum(w_y_i > 0) <= d_y) {
-            return(NA_real_)
-          }
-          # compute coefficients from weighted regression m ~ x + covariates
-          coef_m_i <- mapply(function(m, current_j_mx) {
-            w_i <- w_m_i[, m]
-            weighted_mx_i <- w_i * z_i[, current_j_mx]
-            weighted_m_i <- w_i * z_i[, m]
-            solve(crossprod(weighted_mx_i)) %*%
-              crossprod(weighted_mx_i, weighted_m_i)
-          }, m = fit$m, current_j_mx = j_mx,
-          SIMPLIFY = FALSE, USE.NAMES = FALSE)
-          # compute coefficients from weighted regression y ~ m + x + covariates
-          weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
-          weighted_y_i <- w_y_i * z_i[, j_y]
-          coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
-            crossprod(weighted_mx_i, weighted_y_i)
-          # compute corrected coefficients
-          coef_m_i <- mapply(function(coef_m, coef_m_i, corr_m) {
-            unname(drop(coef_m + corr_m %*% (coef_m_i - coef_m)))
-          }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m)
-          coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
-          # make sure coefficients are vectors
-          coef_m_i <- unlist(coef_m_i, use.names = FALSE)
-          # return coefficients
-          c(coef_m_i, coef_y_i)
-        }
-
+      coef_m <- coef(fit_mx)
+    } else {
+      ## multiple mediators
+      # compute matrices for linear corrections
+      if (have_serial) {
+        corr_m <- mapply(function(m, current_j_mx) {
+          correction_matrix(z[, current_j_mx], weights = w_m[, m],
+                            residuals = residuals(fit_mx[[m]]),
+                            scale = fit_mx[[m]]$scale,
+                            control = psi_control)
+        }, m = fit$m, current_j_mx = j_mx,
+        SIMPLIFY = FALSE, USE.NAMES = FALSE)
       } else {
-
-        # multiple parallel mediators
-        robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
-                                     w_y, corr_y, coef_y) {
-          # extract bootstrap sample from the data
-          z_i <- z[i, , drop = FALSE]
-          w_m_i <- w_m[i, , drop = FALSE]
-          w_y_i <- w_y[i]
-          # check whether there are enough observations with nonzero weights
-          if(any(colSums(w_m_i > 0) <= d_m) || sum(w_y_i > 0) <= d_y) {
-            return(NA_real_)
-          }
-          # compute coefficients from weighted regression m ~ x + covariates
-          coef_m_i <- lapply(fit$m, function(m, x_i) {
-            w_i <- w_m_i[, m]
-            weighted_x_i <- w_i * x_i
-            weighted_m_i <- w_i * z_i[, m]
-            solve(crossprod(weighted_x_i)) %*%
-              crossprod(weighted_x_i, weighted_m_i)
-          }, x_i = z_i[, c(1L, j_x, j_covariates)])
-          # compute coefficients from weighted regression y ~ m + x + covariates
-          weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
-          weighted_y_i <- w_y_i * z_i[, j_y]
-          coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
-            crossprod(weighted_mx_i, weighted_y_i)
-          # compute corrected coefficients
-          coef_m_i <- unname(mapply(function(coef_m, coef_m_i, corr_m) {
-            drop(coef_m + corr_m %*% (coef_m_i - coef_m))
-          }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m))
-          coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
-          # return coefficients
-          c(coef_m_i, coef_y_i)
-        }
-
+        corr_m <- lapply(fit$m, function(m, z) {
+          correction_matrix(z, weights = w_m[, m],
+                            residuals = residuals(fit_mx[[m]]),
+                            scale = fit_mx[[m]]$scale,
+                            control = psi_control)
+        }, z = z[, c(1L, j_x, j_covariates)])
       }
+      # extract coefficients
+      coef_m <- lapply(fit_mx, coef)
+    }
+    # for regression y ~ m + x + covariates: compute matrices for linear
+    # corrections and extract coefficients from full sample
+    corr_y <- correction_matrix(z[, c(1L, j_m, j_x, j_covariates)],
+                                weights = w_y,
+                                residuals = residuals(fit_ymx),
+                                scale = fit_ymx$scale,
+                                control = psi_control)
+    coef_y <- coef(fit_ymx)
+    # number of variables in predictor matrices of regression models
+    d_m <- if (have_serial) sapply(j_mx, length) else 1L + p_x + p_covariates
+    d_y <- 1L + p_m + p_x + p_covariates
 
-      # perform fast-and-robust bootstrap
-      bootstrap <- local_boot(z, robust_bootstrap, R = R, w_m = w_m,
-                              corr_m = corr_m, coef_m = coef_m, w_y = w_y,
-                              corr_y = corr_y, coef_y = coef_y, ...)
-      R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+    # define function for fast-and-robust bootstrap
+    if (p_m == 1L) {
 
-    } else if (robust == "median") {
-
-      # define function for standard bootstrap with median regression
-      # (the fast-and-robust bootstrap does not work for median regression)
-      median_bootstrap <- function(z, i) {
+      # one mediator
+      robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
+                                   w_y, corr_y, coef_y) {
         # extract bootstrap sample from the data
         z_i <- z[i, , drop = FALSE]
-        # compute coefficients from regressions m ~ x + covariates
-        if (have_serial) {
-          # compute coefficients
-          coef_m_i <- mapply(function(current_j_m, current_j_mx) {
-            mx_i <- z_i[, current_j_mx]
-            m_i <- z_i[, current_j_m]
-            unname(rq.fit(mx_i, m_i, tau = 0.5)$coefficients)
-          }, current_j_m = j_m, current_j_mx = j_mx,
-          SIMPLIFY = FALSE, USE.NAMES = FALSE)
-          # make sure coefficients are vectors
-          coef_m_i <- unlist(coef_m_i, use.names = FALSE)
-        } else {
-          # extract predictor matrix and mediators
-          x_i <- z_i[, c(1L, j_x, j_covariates)]
-          m_i <- z_i[, j_m]
-          # compute coefficients
-          if (p_m == 1L) {
-            coef_m_i <- unname(rq.fit(x_i, m_i, tau = 0.5)$coefficients)
-          } else {
-            coef_m_i <- unname(apply(m_i, 2, function(current_m_i) {
-              rq.fit(x_i, current_m_i, tau = 0.5)$coefficients
-            }))
-          }
-        }
-        # compute coefficients from regression y ~ m + x + covariates
-        mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
-        y_i <- z_i[, j_y]
-        coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
+        w_m_i <- w_m[i]
+        w_y_i <- w_y[i]
+        # check whether there are enough observations with nonzero weights
+        if(sum(w_m_i > 0) <= d_m || sum(w_y_i > 0) <= d_y) return(NA_real_)
+        # compute coefficients from weighted regression m ~ x + covariates
+        weighted_x_i <- w_m_i * z_i[, c(1L, j_x, j_covariates)]
+        weighted_m_i <- w_m_i * z_i[, j_m]
+        coef_m_i <- solve(crossprod(weighted_x_i)) %*%
+          crossprod(weighted_x_i, weighted_m_i)
+        # compute coefficients from weighted regression y ~ m + x + covariates
+        weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
+        weighted_y_i <- w_y_i * z_i[, j_y]
+        coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
+          crossprod(weighted_mx_i, weighted_y_i)
+        # compute corrected coefficients
+        coef_m_i <- unname(drop(coef_m + corr_m %*% (coef_m_i - coef_m)))
+        coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
         # return coefficients
         c(coef_m_i, coef_y_i)
       }
 
-      # perform standard bootstrap with median regression
-      bootstrap <- local_boot(z, median_bootstrap, R = R, ...)
-      R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+    } else if (have_serial) {
 
-    } else if (family == "gaussian") {
-
-      # define function for standard bootstrap mediation test
-      standard_bootstrap <- function(z, i) {
+      # multiple serial mediators
+      robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
+                                   w_y, corr_y, coef_y) {
         # extract bootstrap sample from the data
         z_i <- z[i, , drop = FALSE]
-        # compute coefficients from regressions m ~ x + covariates
+        w_m_i <- w_m[i, , drop = FALSE]
+        w_y_i <- w_y[i]
+        # check whether there are enough observations with nonzero weights
+        if(any(colSums(w_m_i > 0) <= d_m) || sum(w_y_i > 0) <= d_y) {
+          return(NA_real_)
+        }
+        # compute coefficients from weighted regression m ~ x + covariates
+        coef_m_i <- mapply(function(m, current_j_mx) {
+          w_i <- w_m_i[, m]
+          weighted_mx_i <- w_i * z_i[, current_j_mx]
+          weighted_m_i <- w_i * z_i[, m]
+          solve(crossprod(weighted_mx_i)) %*%
+            crossprod(weighted_mx_i, weighted_m_i)
+        }, m = fit$m, current_j_mx = j_mx,
+        SIMPLIFY = FALSE, USE.NAMES = FALSE)
+        # compute coefficients from weighted regression y ~ m + x + covariates
+        weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
+        weighted_y_i <- w_y_i * z_i[, j_y]
+        coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
+          crossprod(weighted_mx_i, weighted_y_i)
+        # compute corrected coefficients
+        coef_m_i <- mapply(function(coef_m, coef_m_i, corr_m) {
+          unname(drop(coef_m + corr_m %*% (coef_m_i - coef_m)))
+        }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m)
+        coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
+        # make sure coefficients are vectors
+        coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+        # return coefficients
+        c(coef_m_i, coef_y_i)
+      }
+
+    } else {
+
+      # multiple parallel mediators
+      robust_bootstrap <- function(z, i, w_m, corr_m, coef_m,
+                                   w_y, corr_y, coef_y) {
+        # extract bootstrap sample from the data
+        z_i <- z[i, , drop = FALSE]
+        w_m_i <- w_m[i, , drop = FALSE]
+        w_y_i <- w_y[i]
+        # check whether there are enough observations with nonzero weights
+        if(any(colSums(w_m_i > 0) <= d_m) || sum(w_y_i > 0) <= d_y) {
+          return(NA_real_)
+        }
+        # compute coefficients from weighted regression m ~ x + covariates
+        coef_m_i <- lapply(fit$m, function(m, x_i) {
+          w_i <- w_m_i[, m]
+          weighted_x_i <- w_i * x_i
+          weighted_m_i <- w_i * z_i[, m]
+          solve(crossprod(weighted_x_i)) %*%
+            crossprod(weighted_x_i, weighted_m_i)
+        }, x_i = z_i[, c(1L, j_x, j_covariates)])
+        # compute coefficients from weighted regression y ~ m + x + covariates
+        weighted_mx_i <- w_y_i * z_i[, c(1L, j_m, j_x, j_covariates)]
+        weighted_y_i <- w_y_i * z_i[, j_y]
+        coef_y_i <- solve(crossprod(weighted_mx_i)) %*%
+          crossprod(weighted_mx_i, weighted_y_i)
+        # compute corrected coefficients
+        coef_m_i <- unname(mapply(function(coef_m, coef_m_i, corr_m) {
+          drop(coef_m + corr_m %*% (coef_m_i - coef_m))
+        }, coef_m = coef_m, coef_m_i = coef_m_i, corr_m = corr_m))
+        coef_y_i <- unname(drop(coef_y + corr_y %*% (coef_y_i - coef_y)))
+        # return coefficients
+        c(coef_m_i, coef_y_i)
+      }
+
+    }
+
+    # perform fast-and-robust bootstrap
+    bootstrap <- local_boot(z, robust_bootstrap, R = R, w_m = w_m,
+                            corr_m = corr_m, coef_m = coef_m, w_y = w_y,
+                            corr_y = corr_y, coef_y = coef_y, ...)
+    R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
+
+  } else if (robust == "median") {
+
+    # define function for standard bootstrap with median regression
+    # (the fast-and-robust bootstrap does not work for median regression)
+    median_bootstrap <- function(z, i) {
+      # extract bootstrap sample from the data
+      z_i <- z[i, , drop = FALSE]
+      # compute coefficients from regressions m ~ x + covariates
+      if (have_serial) {
+        # compute coefficients
+        coef_m_i <- mapply(function(current_j_m, current_j_mx) {
+          mx_i <- z_i[, current_j_mx]
+          m_i <- z_i[, current_j_m]
+          unname(rq.fit(mx_i, m_i, tau = 0.5)$coefficients)
+        }, current_j_m = j_m, current_j_mx = j_mx,
+        SIMPLIFY = FALSE, USE.NAMES = FALSE)
+        # make sure coefficients are vectors
+        coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+      } else {
+        # extract predictor matrix and mediators
+        x_i <- z_i[, c(1L, j_x, j_covariates)]
+        m_i <- z_i[, j_m]
+        # compute coefficients
+        if (p_m == 1L) {
+          coef_m_i <- unname(rq.fit(x_i, m_i, tau = 0.5)$coefficients)
+        } else {
+          coef_m_i <- unname(apply(m_i, 2, function(current_m_i) {
+            rq.fit(x_i, current_m_i, tau = 0.5)$coefficients
+          }))
+        }
+      }
+      # compute coefficients from regression y ~ m + x + covariates
+      mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+      y_i <- z_i[, j_y]
+      coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
+      # return coefficients
+      c(coef_m_i, coef_y_i)
+    }
+
+    # perform standard bootstrap with median regression
+    bootstrap <- local_boot(z, median_bootstrap, R = R, ...)
+    R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+
+  } else if (family == "gaussian") {
+
+    # define function for standard bootstrap mediation test
+    standard_bootstrap <- function(z, i) {
+      # extract bootstrap sample from the data
+      z_i <- z[i, , drop = FALSE]
+      # compute coefficients from regressions m ~ x + covariates
+      if (have_serial) {
+        # compute coefficients
+        coef_m_i <- mapply(function(current_j_m, current_j_mx) {
+          mx_i <- z_i[, current_j_mx]
+          m_i <- z_i[, current_j_m]
+          coef_m_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, m_i)))
+        }, current_j_m = j_m, current_j_mx = j_mx,
+        SIMPLIFY = FALSE, USE.NAMES = FALSE)
+        # make sure coefficients are vectors
+        coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+      } else {
+        # compute coefficients
+        x_i <- z_i[, c(1L, j_x, j_covariates)]
+        m_i <- z_i[, j_m]
+        coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
+      }
+      # compute coefficients from regression y ~ m + x + covariates
+      mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+      y_i <- z_i[, j_y]
+      coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
+      # return effects
+      c(coef_m_i, coef_y_i)
+    }
+
+    # perform standard bootstrap
+    bootstrap <- local_boot(z, standard_bootstrap, R = R, ...)
+    R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+
+  } else if (family == "select") {
+
+    # check whether to perform the regression for the total effect
+    estimate_yx <- !is.null(fit$fit_yx)
+    # obtain parameters as required for package 'sn'
+    control <- list(method = "MLE")
+
+    # use values from full sample as starting values for optimization
+    if (p_m == 1L) {
+      start <- list(mx = fit$fit_mx$start, ymx = fit$fit_ymx$start,
+                    yx = fit$fit_yx$start)
+    } else {
+      start <- list(mx = lapply(fit$fit_mx, "[[", "start"),
+                    ymx = fit$fit_ymx$start,
+                    yx = fit$fit_yx$start)
+    }
+
+    # define function for bootstrap with selection of error distribution
+    select_bootstrap <- function(z, i, start, control, estimate_yx) {
+      # extract bootstrap sample from the data
+      z_i <- z[i, , drop = FALSE]
+      # skew-t distribution can be unstable on bootstrap samples
+      tryCatch({
+        # extract predictor matrix
+        if (model != "serial" || estimate_yx) {
+          x_i <- z_i[, c(1L, j_x, j_covariates)]
+        }
+        # compute coefficients from regression m ~ x + covariates
         if (have_serial) {
           # compute coefficients
-          coef_m_i <- mapply(function(current_j_m, current_j_mx) {
+          coef_mx_i <- mapply(function(current_j_m, current_j_mx, start) {
             mx_i <- z_i[, current_j_mx]
             m_i <- z_i[, current_j_m]
-            coef_m_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, m_i)))
-          }, current_j_m = j_m, current_j_mx = j_mx,
+            lmselect_boot(mx_i, m_i, start = start, control = control)
+          }, current_j_m = j_m, current_j_mx = j_mx, start = start$mx,
           SIMPLIFY = FALSE, USE.NAMES = FALSE)
           # make sure coefficients are vectors
-          coef_m_i <- unlist(coef_m_i, use.names = FALSE)
+          coef_mx_i <- unlist(coef_mx_i, use.names = FALSE)
         } else {
           # compute coefficients
-          x_i <- z_i[, c(1L, j_x, j_covariates)]
-          m_i <- z_i[, j_m]
-          coef_m_i <- unname(drop(solve(crossprod(x_i)) %*% crossprod(x_i, m_i)))
+          if (p_m == 1L) {
+            m_i <- z_i[, j_m]
+            coef_mx_i <- lmselect_boot(x_i, m_i, start = start$mx,
+                                       control = control)
+          } else {
+            coef_mx_i <- mapply(function(j, start) {
+              m_i <- z_i[, j]
+              lmselect_boot(x_i, m_i, start = start, control = control)
+            }, j = j_m, start = start$mx)
+          }
         }
         # compute coefficients from regression y ~ m + x + covariates
         mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
         y_i <- z_i[, j_y]
-        coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
-        # return effects
-        c(coef_m_i, coef_y_i)
-      }
+        coef_ymx_i <- lmselect_boot(mx_i, y_i, start = start$ymx,
+                                    control = control)
+        # compute coefficients from regression y ~ x + covariates
+        if (estimate_yx) {
+          coef_yx_i <- lmselect_boot(x_i, y_i, start = start$yx,
+                                     control = control)
+        } else coef_yx_i <- NULL
+        # return coefficients
+        c(coef_mx_i, coef_ymx_i, coef_yx_i)
+      }, error = function(condition) NA_real_)
+    }
 
-      # perform standard bootstrap
-      bootstrap <- local_boot(z, standard_bootstrap, R = R, ...)
-      R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+    # perform bootstrap with selection of error distribution
+    bootstrap <- local_boot(z, select_bootstrap, R = R, start = start,
+                            control = control, estimate_yx = estimate_yx,
+                            ...)
+    R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
 
-    } else if (family == "select") {
+  } else {
 
-      # check whether to perform the regression for the total effect
-      estimate_yx <- !is.null(fit$fit_yx)
-      # obtain parameters as required for package 'sn'
-      control <- list(method = "MLE")
+    # check whether to perform the regression for the total effect
+    estimate_yx <- !is.null(fit$fit_yx)
+    # obtain parameters as required for package 'sn'
+    selm_args <- get_selm_args(family)
+    control <- list(method = "MLE")
 
-      # use values from full sample as starting values for optimization
+    # use values from full sample as starting values for optimization
+    if (family == "skewnormal") {
+      # starting values in centered parametrization
       if (p_m == 1L) {
-        start <- list(mx = fit$fit_mx$start, ymx = fit$fit_ymx$start,
-                      yx = fit$fit_yx$start)
+        start <- list(mx = get_cp(fit$fit_mx), ymx = get_cp(fit$fit_ymx),
+                      yx = get_cp(fit$fit_yx))
       } else {
-        start <- list(mx = lapply(fit$fit_mx, "[[", "start"),
-                      ymx = fit$fit_ymx$start,
-                      yx = fit$fit_yx$start)
+        start <- list(mx = lapply(fit$fit_mx, get_cp),
+                      ymx = get_cp(fit$fit_ymx),
+                      yx = get_cp(fit$fit_yx))
       }
-
-      # define function for bootstrap with selection of error distribution
-      select_bootstrap <- function(z, i, start, control, estimate_yx) {
-        # extract bootstrap sample from the data
-        z_i <- z[i, , drop = FALSE]
-        # skew-t distribution can be unstable on bootstrap samples
-        tryCatch({
-          # extract predictor matrix
-          if (model != "serial" || estimate_yx) {
-            x_i <- z_i[, c(1L, j_x, j_covariates)]
-          }
-          # compute coefficients from regression m ~ x + covariates
-          if (have_serial) {
-            # compute coefficients
-            coef_mx_i <- mapply(function(current_j_m, current_j_mx, start) {
-              mx_i <- z_i[, current_j_mx]
-              m_i <- z_i[, current_j_m]
-              lmselect_boot(mx_i, m_i, start = start, control = control)
-            }, current_j_m = j_m, current_j_mx = j_mx, start = start$mx,
-            SIMPLIFY = FALSE, USE.NAMES = FALSE)
-            # make sure coefficients are vectors
-            coef_mx_i <- unlist(coef_mx_i, use.names = FALSE)
-          } else {
-            # compute coefficients
-            if (p_m == 1L) {
-              m_i <- z_i[, j_m]
-              coef_mx_i <- lmselect_boot(x_i, m_i, start = start$mx,
-                                         control = control)
-            } else {
-              coef_mx_i <- mapply(function(j, start) {
-                m_i <- z_i[, j]
-                lmselect_boot(x_i, m_i, start = start, control = control)
-              }, j = j_m, start = start$mx)
-            }
-          }
-          # compute coefficients from regression y ~ m + x + covariates
-          mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
-          y_i <- z_i[, j_y]
-          coef_ymx_i <- lmselect_boot(mx_i, y_i, start = start$ymx,
-                                      control = control)
-          # compute coefficients from regression y ~ x + covariates
-          if (estimate_yx) {
-            coef_yx_i <- lmselect_boot(x_i, y_i, start = start$yx,
-                                       control = control)
-          } else coef_yx_i <- NULL
-          # return coefficients
-          c(coef_mx_i, coef_ymx_i, coef_yx_i)
-        }, error = function(condition) NA_real_)
-      }
-
-      # perform bootstrap with selection of error distribution
-      bootstrap <- local_boot(z, select_bootstrap, R = R, start = start,
-                              control = control, estimate_yx = estimate_yx,
-                              ...)
-      R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
-
     } else {
+      # starting values in direct parametrization
+      if (p_m == 1L) {
+        start <- list(mx = get_dp(fit$fit_mx), ymx = get_dp(fit$fit_ymx),
+                      yx = get_dp(fit$fit_yx))
 
-      # check whether to perform the regression for the total effect
-      estimate_yx <- !is.null(fit$fit_yx)
-      # obtain parameters as required for package 'sn'
-      selm_args <- get_selm_args(family)
-      control <- list(method = "MLE")
-
-      # use values from full sample as starting values for optimization
-      if (family == "skewnormal") {
-        # starting values in centered parametrization
-        if (p_m == 1L) {
-          start <- list(mx = get_cp(fit$fit_mx), ymx = get_cp(fit$fit_ymx),
-                        yx = get_cp(fit$fit_yx))
-        } else {
-          start <- list(mx = lapply(fit$fit_mx, get_cp),
-                        ymx = get_cp(fit$fit_ymx),
-                        yx = get_cp(fit$fit_yx))
-        }
       } else {
-        # starting values in direct parametrization
-        if (p_m == 1L) {
-          start <- list(mx = get_dp(fit$fit_mx), ymx = get_dp(fit$fit_ymx),
-                        yx = get_dp(fit$fit_yx))
-
-        } else {
-          start <- list(mx = lapply(fit$fit_mx, get_dp),
-                        ymx = get_dp(fit$fit_ymx),
-                        yx = get_dp(fit$fit_yx))
-        }
+        start <- list(mx = lapply(fit$fit_mx, get_dp),
+                      ymx = get_dp(fit$fit_ymx),
+                      yx = get_dp(fit$fit_yx))
       }
+    }
 
-      # define function for bootstrap with skew-elliptical errors
-      selm_bootstrap <- function(z, i, family, start, fixed.param,
-                                 control, estimate_yx) {
-        # extract bootstrap sample from the data
-        z_i <- z[i, , drop = FALSE]
-        # skew-t distribution can be unstable on bootstrap samples
-        tryCatch({
-          # extract predictor matrix
-          if (model != "serial" || estimate_yx) {
-            x_i <- z_i[, c(1L, j_x, j_covariates)]
-          }
-          # compute coefficients from regression m ~ x + covariates
-          if (have_serial) {
-            # compute coefficients
-            coef_mx_i <- mapply(function(current_j_m, current_j_mx, start) {
-              mx_i <- z_i[, current_j_mx]
-              m_i <- z_i[, current_j_m]
-              fit_mx_i <- selm.fit(mx_i, m_i, family = family,
+    # define function for bootstrap with skew-elliptical errors
+    selm_bootstrap <- function(z, i, family, start, fixed.param,
+                               control, estimate_yx) {
+      # extract bootstrap sample from the data
+      z_i <- z[i, , drop = FALSE]
+      # skew-t distribution can be unstable on bootstrap samples
+      tryCatch({
+        # extract predictor matrix
+        if (model != "serial" || estimate_yx) {
+          x_i <- z_i[, c(1L, j_x, j_covariates)]
+        }
+        # compute coefficients from regression m ~ x + covariates
+        if (have_serial) {
+          # compute coefficients
+          coef_mx_i <- mapply(function(current_j_m, current_j_mx, start) {
+            mx_i <- z_i[, current_j_mx]
+            m_i <- z_i[, current_j_m]
+            fit_mx_i <- selm.fit(mx_i, m_i, family = family,
+                                 start = start,
+                                 fixed.param = fixed.param,
+                                 selm.control = control)
+            unname(get_coef(fit_mx_i$param, family))
+          }, current_j_m = j_m, current_j_mx = j_mx, start = start$mx,
+          SIMPLIFY = FALSE, USE.NAMES = FALSE)
+          # make sure coefficients are vectors
+          coef_mx_i <- unlist(coef_mx_i, use.names = FALSE)
+        } else {
+          # compute coefficients
+          if (p_m == 1L) {
+            m_i <- z_i[, j_m]
+            fit_mx_i <- selm.fit(x_i, m_i, family = family,
+                                 start = start$mx,
+                                 fixed.param = fixed.param,
+                                 selm.control = control)
+            coef_mx_i <- unname(get_coef(fit_mx_i$param, family))
+          } else {
+            coef_mx_i <- mapply(function(j, start) {
+              m_i <- z_i[, j]
+              fit_mx_i <- selm.fit(x_i, m_i, family = family,
                                    start = start,
                                    fixed.param = fixed.param,
                                    selm.control = control)
               unname(get_coef(fit_mx_i$param, family))
-            }, current_j_m = j_m, current_j_mx = j_mx, start = start$mx,
-            SIMPLIFY = FALSE, USE.NAMES = FALSE)
-            # make sure coefficients are vectors
-            coef_mx_i <- unlist(coef_mx_i, use.names = FALSE)
-          } else {
-            # compute coefficients
-            if (p_m == 1L) {
-              m_i <- z_i[, j_m]
-              fit_mx_i <- selm.fit(x_i, m_i, family = family,
-                                   start = start$mx,
-                                   fixed.param = fixed.param,
-                                   selm.control = control)
-              coef_mx_i <- unname(get_coef(fit_mx_i$param, family))
-            } else {
-              coef_mx_i <- mapply(function(j, start) {
-                m_i <- z_i[, j]
-                fit_mx_i <- selm.fit(x_i, m_i, family = family,
-                                     start = start,
-                                     fixed.param = fixed.param,
-                                     selm.control = control)
-                unname(get_coef(fit_mx_i$param, family))
-              }, j = j_m, start = start$mx)
-            }
+            }, j = j_m, start = start$mx)
           }
-          # compute coefficients from regression y ~ m + x + covariates
-          mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
-          y_i <- z_i[, j_y]
-          fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
-                                start = start$ymx,
-                                fixed.param = fixed.param,
-                                selm.control = control)
-          coef_ymx_i <- unname(get_coef(fit_ymx_i$param, family))
-          # compute coefficients from regression y ~ x + covariates
-          if (estimate_yx) {
-            fit_yx_i <- selm.fit(x_i, y_i, family = family,
-                                 start = start$yx,
-                                 fixed.param = fixed.param,
-                                 selm.control = control)
-            coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
-          } else coef_yx_i <- NULL
-          # return effects
-          c(coef_mx_i, coef_ymx_i, coef_yx_i)
-        }, error = function(condition) NA_real_)
-      }
-
-      # perform bootstrap with skew-elliptical errors
-      bootstrap <- local_boot(z, selm_bootstrap, R = R,
-                              family = selm_args$family, start = start,
-                              fixed.param = selm_args$fixed.param,
-                              control = control, estimate_yx = estimate_yx,
-                              ...)
-      R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
-
+        }
+        # compute coefficients from regression y ~ m + x + covariates
+        mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
+        y_i <- z_i[, j_y]
+        fit_ymx_i <- selm.fit(mx_i, y_i, family = family,
+                              start = start$ymx,
+                              fixed.param = fixed.param,
+                              selm.control = control)
+        coef_ymx_i <- unname(get_coef(fit_ymx_i$param, family))
+        # compute coefficients from regression y ~ x + covariates
+        if (estimate_yx) {
+          fit_yx_i <- selm.fit(x_i, y_i, family = family,
+                               start = start$yx,
+                               fixed.param = fixed.param,
+                               selm.control = control)
+          coef_yx_i <- unname(get_coef(fit_yx_i$param, family))
+        } else coef_yx_i <- NULL
+        # return effects
+        c(coef_mx_i, coef_ymx_i, coef_yx_i)
+      }, error = function(condition) NA_real_)
     }
 
-    # extract bootstrap replicates for the different effects
-    boot_list <- extract_boot(fit, boot = bootstrap)
-    # compute bootstrap estimates of the different effects
-    estimate_list <- lapply(boot_list, colMeans, na.rm = TRUE)
-    # colMeans() may return NaN instead of NA when all values are NA.  Here
-    # this is the case for regression with skew-elliptical errors when the
-    # regression for the total effect is not performed.
-    is_NaN <- is.nan(estimate_list$total)
-    if (any(is_NaN)) estimate_list$total[is_NaN] <- NA_real_
-    # copy names of bootstrap estimates from estimates on original data
-    keep <- names(estimate_list)
-    name_list <- lapply(fit[keep], names)
-    estimate_list <- mapply("names<-", estimate_list, name_list,
-                            SIMPLIFY = FALSE)
-    # construct "boot" object for indirect effects, which is necessary to
-    # extract confidence intervals using functionality from package 'boot'
-    bootstrap_indirect <- bootstrap
-    bootstrap_indirect$t <- boot_list$indirect
-    bootstrap_indirect$t0 <- unname(fit$indirect)
-    # this shouldn't be necessary, but just in case: removing the function for
-    # the bootstrap replicates ensures that the empirical influence function
-    # for BCa confidence intervals is not computed with another resampling
-    # approach (jackknife) that uses the wrong function
-    bootstrap_indirect$statistic <- NULL
-    # compute confidence intervals for indirect effects
-    nr_indirect <- ncol(boot_list$indirect)
-    if (nr_indirect == 1L) {
-      ci <- confint(bootstrap_indirect, parm = 1L, level = level,
-                    alternative = alternative, type = type)
-    } else {
-      # extract all confidence intervals
-      ci <- lapply(seq_len(nr_indirect), function(j) {
-        confint(bootstrap_indirect, parm = j, level = level,
-                alternative = alternative, type = type)
-      })
-      ci <- do.call(rbind, ci)
-      # copy row names from point estimates on original data
-      rownames(ci) <- names(fit$indirect)
-    }
+    # perform bootstrap with skew-elliptical errors
+    bootstrap <- local_boot(z, selm_bootstrap, R = R,
+                            family = selm_args$family, start = start,
+                            fixed.param = selm_args$fixed.param,
+                            control = control, estimate_yx = estimate_yx,
+                            ...)
+    R <- colSums(!is.na(bootstrap$t))  # adjust number of replicates for NAs
 
-  } else if(inherits(fit, "cov_fit_mediation")) {
+  }
 
-    # extract data and variable names
-    x <- fit$x
-    y <- fit$y
-    m <- fit$m
-    data <- fit$data
-    # check if the robust transformation of Zu & Yuan (2010) should be applied
-    if(fit$robust) {
-      cov <- fit$cov
-      data[] <- mapply("-", data, cov$center, SIMPLIFY=FALSE, USE.NAMES=FALSE)
-      data <- weights(cov, type="consistent") * data
-    }
-
-    # perform bootstrap
-    bootstrap <- local_boot(data, function(z, i) {
-      # extract bootstrap sample from the data
-      z_i <- z[i, , drop = FALSE]
-      # compute MLE of covariance matrix on bootstrap sample
-      S <- cov_ML(z_i)$cov
-      # compute effects
-      det <- S[x, x] * S[m, m] - S[m, x]^2
-      a <- S[m, x] / S[x, x]
-      b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
-      total <- S[y, x] / S[x, x]
-      direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
-      c(a, b, total, direct, a * b)
-    }, R = R, ...)
-    R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
-
-    # compute bootstrap estimates of effects
-    estimate_list <- list(a = mean(bootstrap$t[, 1L], na.rm = TRUE),
-                          b = mean(bootstrap$t[, 2L], na.rm = TRUE),
-                          total = mean(bootstrap$t[, 3L], na.rm = TRUE),
-                          direct = mean(bootstrap$t[, 4L], na.rm = TRUE),
-                          indirect = mean(bootstrap$t[, 5L], na.rm = TRUE))
-    # compute confidence interval for indirect effect
-    ci <- confint(bootstrap, parm = 5L, level = level,
-                  alternative = alternative, type = type)
-
-  } else stop("method not implemented")
+  # extract bootstrap replicates for the different effects
+  boot_list <- extract_boot(fit, boot = bootstrap)
+  # compute bootstrap estimates of the different effects
+  estimate_list <- lapply(boot_list, colMeans, na.rm = TRUE)
+  # colMeans() may return NaN instead of NA when all values are NA.  Here
+  # this is the case for regression with skew-elliptical errors when the
+  # regression for the total effect is not performed.
+  fix_total <- is.nan(estimate_list$total)
+  if (any(fix_total)) estimate_list$total[fix_total] <- NA_real_
+  # compute confidence intervals of indirect effects
+  ci <- boot_ci(fit$indirect, boot_list$indirect, object = bootstrap,
+                level = level, alternative = alternative, type = type)
 
   # return results
-  result <- c(estimate_list,
-              list(ab = estimate_list$indirect,  # for back-compatibility, will be removed
-                   ci = ci, reps = bootstrap, alternative = alternative,
-                   R = as.integer(R[1L]), level = level, type = type,
-                   fit = fit))
+  result <- list(ab = estimate_list$indirect,  # for back-compatibility, will be removed
+                 ci = ci, reps = bootstrap, alternative = alternative,
+                 R = as.integer(R[1L]), level = level, type = type,
+                 fit = fit)
+  result <- c(estimate_list, result)
+  class(result) <- c("boot_test_mediation", "test_mediation")
+  result
+
+}
+
+# method for regression fits
+boot_test_mediation.cov_fit_mediation <- function(fit,
+                                                  alternative = c("twosided", "less", "greater"),
+                                                  R = 5000, level = 0.95,
+                                                  type = c("bca", "perc"),
+                                                  ...) {
+
+  # extract variable names and data
+  x <- fit$x
+  y <- fit$y
+  m <- fit$m
+  data <- fit$data
+  # check if the robust transformation of Zu & Yuan (2010) should be applied
+  if (fit$robust) {
+    cov <- fit$cov
+    data[] <- mapply("-", data, cov$center, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    data <- weights(cov, type = "consistent") * data
+  }
+
+  # perform bootstrap
+  bootstrap <- local_boot(data, function(z, i) {
+    # extract bootstrap sample from the data
+    z_i <- z[i, , drop = FALSE]
+    # compute MLE of covariance matrix on bootstrap sample
+    S <- cov_ML(z_i)$cov
+    # compute effects
+    det <- S[x, x] * S[m, m] - S[m, x]^2
+    a <- S[m, x] / S[x, x]
+    b <- (-S[m, x] * S[y, x] + S[x, x] * S[y, m]) / det
+    total <- S[y, x] / S[x, x]
+    direct <- (S[m, m] * S[y, x] - S[m, x] * S[y, m]) / det
+    c(a, b, total, direct, a * b)
+  }, R = R, ...)
+  R <- nrow(bootstrap$t)  # make sure that number of replicates is correct
+
+  # compute bootstrap estimates of effects
+  a <- mean(bootstrap$t[, 1L], na.rm = TRUE)
+  b <- mean(bootstrap$t[, 2L], na.rm = TRUE)
+  total <- mean(bootstrap$t[, 3L], na.rm = TRUE)
+  direct <- mean(bootstrap$t[, 4L], na.rm = TRUE)
+  indirect <- mean(bootstrap$t[, 5L], na.rm = TRUE)
+  # compute confidence interval for indirect effect
+  ci <- extract_ci(parm = 5L, object = bootstrap, alternative = alternative,
+                   level = level, type = type)
+
+  # return results
+  result <- list(a = a, b = b, total = total, direct = direct,
+                 indirect = indirect,
+                 ab = indirect,  # for back-compatibility, will be removed
+                 ci = ci, reps = bootstrap, alternative = alternative,
+                 R = R, level = level, type = type, fit = fit)
   class(result) <- c("boot_test_mediation", "test_mediation")
   result
 
@@ -962,24 +952,4 @@ sobel_test_mediation <- function(fit,
                  fit = fit)
   class(result) <- c("sobel_test_mediation", "test_mediation")
   result
-}
-
-
-# ## wrapper function for boot() that ignores unused arguments, but allows
-# ## arguments for parallel computing to be passed down
-# local_boot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
-
-
-## get control arguments for psi function as used in a given model fit
-get_psi_control <- function(object) object$control[c("tuning.psi", "psi")]
-
-## compute matrix for linear correction
-# (see Salibian-Barrera & Van Aelst, 2008)
-# The definition of the weigths in Salibian-Barrera & Van Aelst (2008) does not
-# include the residual scale, whereas the robustness weights in lmrob() do.
-# Hence the residual scale shows up in Equation (16) of Salibian-Barrera & Van
-# Aelst (2008), but here the residual scale is already included in the weights.
-correction_matrix <- function(X, weights, residuals, scale, control) {
-  tmp <- Mpsi(residuals/scale, cc=control$tuning.psi, psi=control$psi, deriv=1)
-  solve(crossprod(X, tmp * X)) %*% crossprod(weights * X)
 }

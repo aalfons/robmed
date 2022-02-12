@@ -113,10 +113,76 @@ local_boot <- function(data, statistic, R, indices = NULL, ...,
 }
 
 
-### simple version of function boot.array() from package 'boot'
-#
+# ## wrapper function for boot() that ignores unused arguments, but allows
+# ## arguments for parallel computing to be passed down
+# local_boot <- function(..., sim, stype, L, m, ran.gen, mle) boot(...)
+
+# ## simple version of function boot.array() from package 'boot'
 # boot.array <- function(boot.out, indices = FALSE) {
 #   out <- boot.out$indices
 #   if(!indices) out <- freq.array(out)
 #   out
 # }
+
+
+## internal function to compute confidence intervals from bootstrap results
+# For regression fits, only the bootstrap replicates of the regression
+# coefficients are stored, and the bootstrap replicates of the effects in the
+# mediation model are subsequently extracted.  Hence the former object of class
+# "boot" needs to be used as a donor for computing confidence intervals.
+# t0 ....... point estimates on the original sample
+# t ........ a matrix of bootstrap replicates
+# object ... an object of class "boot" to be used as donor
+# index .... integer vector of columns for which to compute confidence interval
+boot_ci <- function(t0, t, object, parm = NULL, ...) {
+  # copy original point estimates and bootstrap replicates to donor object
+  object$t0 <- t0
+  object$t <- t
+  # this shouldn't be necessary, but just in case: removing the function for
+  # the bootstrap replicates ensures that the empirical influence function
+  # for BCa confidence intervals is not computed with another resampling
+  # approach (jackknife) that uses the wrong function
+  object$statistic <- NULL
+  # compute confidence intervals
+  if (is.null(parm)) parm <- seq_along(t0)
+  if (length(parm) == 1L) ci <- extract_ci(parm, object = object, ...)
+  else {
+    # extract all confidence intervals
+    ci <- lapply(parm, extract_ci, object = object, ...)
+    ci <- do.call(rbind, ci)
+    # copy row names from point estimates on original data
+    rownames(ci) <- names(t0)
+  }
+  # return confidence intervals
+  ci
+}
+
+## internal function compute a confidence interval from bootstrap results
+# parm ..... integer index of a single column of bootstrap replicates
+# object ... object of class "boot" containing bootstrap replicates
+extract_ci <- function(parm = 1L, object,
+                       alternative = c("twosided", "less", "greater"),
+                       level = 0.95, type = c("bca", "perc"), ...) {
+  # initializations
+  alternative <- match.arg(alternative)
+  type <- match.arg(type)
+  which <- if(type == "perc") "percent" else type
+  # extract confidence interval
+  if (level == 0) {
+    ci <- rep.int(mean(object$t[, parm], na.rm = TRUE), 2L)
+  } else if (level == 1) {
+    ci <- c(-Inf, Inf)
+  } else if (alternative == "twosided") {
+    ci <- boot.ci(object, conf = level, type = type,
+                  index = parm)[[which]][4:5]
+  } else {
+    alpha <- 1 - level
+    ci <- boot.ci(object, conf = 1-2*alpha, type = type,
+                  index = parm)[[which]][4:5]
+    if (alternative == "less") ci[1] <- -Inf
+    else ci[2] <- Inf
+  }
+  # add names for confidence bounds and return confidence interval
+  names(ci) <- c("Lower", "Upper")
+  ci
+}

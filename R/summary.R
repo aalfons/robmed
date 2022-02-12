@@ -300,14 +300,14 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
     summary_ymx$coefficients <- coefficients[keep, , drop = FALSE]
   }
   ## extract direct effect of x on y
-  direct <- summary_ymx$coefficients[1L + p_m + seq_len(p_x), , drop = FALSE]
+  direct <- summary_ymx$coefficients[x, , drop = FALSE]
   # summary of total effect of x on y
   if (have_boot) {
     total <- coefficients[indices_total, , drop = FALSE]
   } else if (have_yx) {
     # compute summary of y ~ x + covariates and extract summary of total effect
     summary_yx <- get_summary(object$fit_yx)
-    total <- coef(summary_yx)[1L + seq_len(p_x), , drop = FALSE]
+    total <- coef(summary_yx)[x, , drop = FALSE]
   } else {
     # standard errors and t-test not available
     total <- cbind(object$total, matrix(NA_real_, nrow = p_x, ncol = 3L))
@@ -329,8 +329,11 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
   # extract coefficients
   a <- object$a
   b <- object$b
-  direct <- object$direct
   total <- object$total
+  direct <- object$direct
+  # the order of how coefficients are displayed changed in version 0.10.0, but
+  # the computation of the standard error via the delta method (based on the
+  # original data) requires the old order of coefficients
   coefficients <- c(a, b, direct, total)
   # extract covariance matrix
   S <- object$cov$cov[c(x, m, y), c(x, m, y)]
@@ -354,12 +357,12 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
                       0, -b/s_epsilon_mx, a*b/s_epsilon_mx, 0, 1, b^2,
                       0, 1/s_epsilon_mx, -a/s_epsilon_mx, 0, 0, -2*b,
                       0, 0, 0, 0, 0, 1),
-                    nrow=6, ncol=6)
+                    nrow = 6, ncol = 6)
     Omega_Theta <- h_dot %*% Omega_Sigma %*% t(h_dot)
     # total effect
     Omega_Sigma_yx <- Omega_Sigma[c(1, 3, 6), c(1, 3, 6)]
     h_dot_yx <- matrix(c(-total/S[x,x], 1, 0, 1/S[x,x], 0, -1, 0, 0, 1),
-                       nrow=3, ncol=3)
+                       nrow = 3, ncol = 3)
     Omega_Theta_yx <- h_dot_yx %*% Omega_Sigma_yx %*% t(h_dot_yx)
     # compute standard errors and z-statistics
     means <- NULL
@@ -380,7 +383,7 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
   dimnames(coefficients) <- list(c(x, m, x, x), tn)
   # # residual standard error as list (for compatibility with regression method)
   # s_epsilon_ymx <- S[y,y] - b^2*S[m,m] - direct^2*S[x,x] - 2*b*direct*S[m,x]
-  # s <- list(value=s_epsilon_ymx)
+  # s <- list(value = s_epsilon_ymx)
   # return results
   result <- list(a = coefficients[1, , drop = FALSE],
                  b = coefficients[2, , drop = FALSE],

@@ -4,6 +4,23 @@
 # --------------------------------------
 
 
+## internal functions required for fast-and-robust bootstrap
+
+## get control arguments for psi function as used in a given model fit
+get_psi_control <- function(object) object$control[c("tuning.psi", "psi")]
+
+## compute matrix for linear correction
+# (see Salibian-Barrera & Van Aelst, 2008)
+# The definition of the weigths in Salibian-Barrera & Van Aelst (2008) does not
+# include the residual scale, whereas the robustness weights in lmrob() do.
+# Hence the residual scale shows up in Equation (16) of Salibian-Barrera & Van
+# Aelst (2008), but here the residual scale is already included in the weights.
+correction_matrix <- function(X, weights, residuals, scale, control) {
+  tmp <- Mpsi(residuals/scale, cc=control$tuning.psi, psi=control$psi, deriv=1)
+  solve(crossprod(X, tmp * X)) %*% crossprod(weights * X)
+}
+
+
 ## internal functions to compute contrasts
 
 # compute contrasts

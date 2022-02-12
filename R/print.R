@@ -434,7 +434,7 @@ print.summary_cov_fit_mediation <- function(x, digits = max(3, getOption("digits
   printCoefmat(x$a, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   # print summary of direct effect of m on y
-  cat("\nDirect effect of m on y:\n")
+  cat("\nPartial effect of m on y:\n")
   printCoefmat(x$b, digits = digits, signif.stars = signif.stars,
                signif.legend = FALSE, ...)
   # print summary of total and direct effects of x on y
@@ -486,7 +486,7 @@ print_indirect_info <- function(object, labels = NULL, ...) {
   y <- object$y
   model <- object$model  # only implemented for regression fit
   # label for independent variable
-  x_label <- if (p_x == 1L) x else "X"
+  x_label <- if (p_x == 1L) x else "x"
   # get information on indirect effect paths
   if (model == "serial") {
     # currently only implemented for two or three hypothesized mediators
