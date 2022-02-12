@@ -114,4 +114,3 @@ check_parm <- function(parm = NULL) {
   # return checked object
   parm
 }
-

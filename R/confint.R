@@ -185,79 +185,46 @@ confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
 
 get_ci_list <- function(object, level = 0.95, ...) UseMethod("get_ci_list")
 
-get_ci_list.cov_fit_mediation <- function(object, level = 0.95,
-                                          boot = NULL, ...) {
-  # initializations
-  alpha <- 1 - level
-  # extract point estimates and standard errors
-  if(is.null(boot)) {
-    # combine point estimates
-    estimates <- c(object$a, object$b, object$direct, object$total)
-    # compute standard errors
-    summary <- get_summary(object)
-    se <- c(summary$a[1, 2], summary$b[1, 2], summary$direct[1, 2],
-            summary$total[1, 2])
-  } else {
-    # compute means and standard errors from bootstrap replicates
-    keep <- c(3L, 5L:7L)
-    estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
-    se <- apply(boot$t[, keep], 2, sd, na.rm = TRUE)
-  }
-  # compute confidence intervals and combine into list
-  list(a = confint_z(estimates[1], se[1], level = level),
-       b = confint_z(estimates[2], se[2], level = level),
-       total = confint_z(estimates[4], se[4], level = level),
-       direct = confint_z(estimates[3], se[3], level = level))
-}
-
 get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
                                           boot = NULL, ...) {
   # initializations
-  alpha <- 1 - level
-  p_x <- length(object$x)
-  p_m <- length(object$m)
-  model <- object$model
-  # compute confidence intervals
+  have_serial <- object$model == "serial"
+  # either extract confidence intervals from regression models or compute
+  # bootstrap confidence intervals using the normal approximation
   if (is.null(boot)) {
-    # compute confidence intervals for a path
-    if (p_m == 1L) {
-      # single mediator
-      confint_a <- confint(object$fit_mx, parm = 1L + seq_len(p_x),
-                           level = level)
-    } else {
-      # multiple mediators
-      if (model == "serial") {
-        confint_a <- mapply(confint, object$fit_mx, parm = 1L + seq_len(p_m),
-                            SIMPLIFY = FALSE, USE.NAMES = FALSE)
-      } else {
-        confint_a <- lapply(object$fit_mx, confint, parm = 1L + seq_len(p_x),
-                            level = level)
-      }
+    # further initializations
+    alpha <- 1 - level
+    x <- object$x
+    p_x <- length(x)
+    m <- object$m
+    p_m <- length(m)
+    have_yx <- !is.null(object$fit_yx)
+    # compute confidence intervals of effects for a path
+    if (p_m == 1L) confint_a <- confint(object$fit_mx, parm = x, level = level)
+    else {
+      confint_a <- lapply(object$fit_mx, confint, parm = x, level = level)
       confint_a <- do.call(rbind, confint_a)
     }
-    # for serial multiple mediators, compute confidence intervals for d path
-    if (model == "serial") {
+    # compute confidence intervals of effects for b path
+    confint_b <- confint(object$fit_ymx, parm = m, level = level)
+    # compute confidence intervals of total effects
+    if (have_yx) {
+      # extract confidence interval from regression model
+      confint_total <- confint(object$fit_yx, parm = x, level = level)
+    } else {
+      # confidence interval not available
+      confint_total <- matrix(NA_real_, nrow = p_x, ncol = 2L)
+    }
+    # compute confidence intervals of direct effects
+    confint_direct <- confint(object$fit_ymx, parm = x, level = level)
+    # construct list of confidence intervals
+    if (have_serial) {
+      # compute confidence intervals of effects for d path
       j_list <- lapply(seq_len(p_m-1L), function(j) 1L + seq_len(j))
       confint_d <- mapply(confint, object$fit_mx[-1L], parm = j_list,
                           SIMPLIFY = FALSE, USE.NAMES = FALSE)
       confint_d <- do.call(rbind, confint_d)
-    }
-    # compute confidence intervals for b path and direct effect
-    confint_b <- confint(object$fit_ymx, parm = 1L + seq_len(p_m),
-                         level = level)
-    confint_direct <- confint(object$fit_ymx, parm = 1L + p_m + seq_len(p_x),
-                              level = level)
-    # compute confidence intervals for total effect
-    if (is.null(object$fit_yx)) {
-      # confidence interval not available
-      confint_total <- matrix(NA_real_, nrow = p_x, ncol = 2L)
-    } else {
-      # extract confidence interval from regression model
-      confint_total <- confint(object$fit_yx, parm = 1L + seq_len(p_x),
-                               level = level)
-    }
-    # combine confidence intervals into list
-    if (model == "serial") {
+      # construct list
       ci_list <- list(a = confint_a, b = confint_b, d = confint_d,
                       total = confint_total, direct = confint_direct)
     } else {
@@ -265,39 +232,15 @@ get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
                       direct = confint_direct)
     }
   } else {
-    # get indices of columns of bootstrap replicates that that correspond to
-    # the respective models
-    p_covariates <- length(object$covariates)
-    index_list <- .get_index_list(p_x, p_m, p_covariates, model = model)
-    # keep indices for a path in model m ~ x + covariates
-    if (p_m == 1L) keep_a <- index_list$fit_mx[1L + seq_len(p_x)]
-    else if (model == "serial") {
-      keep_a <- mapply("[", index_list$fit_mx, 1L + seq_len(p_m))
-    } else keep_a <- sapply(index_list$fit_mx, "[", 1L + seq_len(p_x))
-    # for serial multiple mediators, keep indices for d path
-    if (model == "serial") {
-      j_list <- lapply(seq_len(p_m-1L), function(j) 1L + seq_len(j))
-      keep_d <- unlist(mapply("[", index_list$fit_mx[-1L], parm = j_list,
-                              SIMPLIFY = FALSE, USE.NAMES = FALSE))
-    }
-    # keep indeces of b path and direct effect in model y ~ m + x + covariates
-    keep_b <- index_list$fit_ymx[1L + seq_len(p_m)]
-    keep_direct <- index_list$fit_ymx[1L + p_m + seq_len(p_x)]
-    # create list of indices to keep for each path
-    # (index of total effect is stored separately in 'index_list')
-    if (model == "serial") {
-      keep_list <- list(a = keep_a, b = keep_b, d = keep_d,
-                        total = index_list$total, direct = keep_direct)
-    } else {
-      keep_list <- list(a = keep_a, b = keep_b, total = index_list$total,
-                        direct = keep_direct)
-    }
-    # construct list of confidence intervals
-    ci_list <- lapply(keep_list, function(keep) {
-      # compute means and standard errors from bootstrap replicates
-      estimates <- colMeans(boot$t[, keep, drop = FALSE], na.rm = TRUE)
-      se <- apply(boot$t[, keep, drop = FALSE], 2L, sd, na.rm = TRUE)
-      # compute confidence intervals and combine into one matrix
+    # extract bootstrap replicates for effects other than the indirect effect
+    keep <- c("a", "b", if (have_serial) "d", "total", "direct")
+    boot_list <- extract_boot(object, boot = boot)[keep]
+    # compute confidence intervals for the different effects
+    ci_list <- lapply(boot_list, function(boot) {
+      # compute means and standard errors of bootstrap replicates
+      estimates <- colMeans(boot, na.rm = TRUE)
+      se <- apply(boot, 2L, sd, na.rm = TRUE)
+      # compute confidence intervals
       tmp <- mapply(confint_z, mean = estimates, sd = se,
                     MoreArgs = list(level = level),
                     SIMPLIFY = FALSE, USE.NAMES = FALSE)
@@ -306,6 +249,31 @@ get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
   }
   # return list of confidence intervals
   ci_list
+}
+
+get_ci_list.cov_fit_mediation <- function(object, level = 0.95,
+                                          boot = NULL, ...) {
+  # initializations
+  alpha <- 1 - level
+  # extract point estimates and standard errors
+  if(is.null(boot)) {
+    # combine point estimates
+    estimates <- c(object$a, object$b, object$total, object$direct)
+    # compute standard errors
+    summary <- get_summary(object)
+    se <- c(summary$a[1, 2], summary$b[1, 2], summary$total[1, 2],
+            summary$direct[1, 2])
+  } else {
+    # compute means and standard errors from bootstrap replicates
+    keep <- 1:4
+    estimates <- colMeans(boot$t[, keep], na.rm = TRUE)
+    se <- apply(boot$t[, keep], 2, sd, na.rm = TRUE)
+  }
+  # compute confidence intervals and combine into list
+  list(a = confint_z(estimates[1], se[1], level = level),
+       b = confint_z(estimates[2], se[2], level = level),
+       total = confint_z(estimates[3], se[3], level = level),
+       direct = confint_z(estimates[4], se[4], level = level))
 }
 
 
