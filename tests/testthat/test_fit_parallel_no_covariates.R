@@ -39,20 +39,20 @@ fit_list <- list(
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                   model = "parallel", method = "regression", robust = "median")
   },
-  OLS = {
+  skewnormal = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                   model = "parallel", method = "regression", robust = FALSE,
-                  family = "gaussian")
-  },
-  student = {
-    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                  model = "parallel", method = "regression", robust = FALSE,
-                  family = "student")
+                  family = "skewnormal")
   },
   select = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                   model = "parallel", method = "regression", robust = FALSE,
                   family = "select")
+  },
+  OLS = {
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  model = "parallel", method = "regression", robust = FALSE,
+                  family = "gaussian")
   }
 )
 
@@ -62,8 +62,8 @@ summary_list <- lapply(fit_list, summary)
 ## correct values
 effect_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "Total", "Direct",
                   "Indirect_Total", "Indirect_M1", "Indirect_M2")
-classes <- c(robust = "lmrob", median = "rq", OLS = "lm",
-             student = "lmse", select = "lm")
+classes <- c(robust = "lmrob", median = "rq", skewnormal = "lmse",
+             select = "lm", OLS = "lm")
 
 
 ## run tests
@@ -78,7 +78,7 @@ for (method in methods) {
 
   # correct values
   class <- classes[method]
-  family <- if (method %in% c("student", "select")) method else "gaussian"
+  family <- if (method %in% c("skewnormal", "select")) method else "gaussian"
 
 
   # run tests

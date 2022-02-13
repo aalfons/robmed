@@ -40,21 +40,20 @@ sobel_list <- list(
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "sobel", method = "regression", robust = "median")
   },
-  OLS = {
+  skewnormal = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "sobel", method = "regression", robust = FALSE,
-                   family = "gaussian")
+                   family = "skewnormal")
   },
-  # standard error is NA for skew-elliptical distributions
-  # student = {
-  #   test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-  #                  test = "sobel", method = "regression", robust = FALSE,
-  #                  family = "student")
-  # },
   select = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "sobel", method = "regression", robust = FALSE,
                    family = "select")
+  },
+  OLS = {
+    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                   test = "sobel", method = "regression", robust = FALSE,
+                   family = "gaussian")
   }
 )
 
@@ -67,8 +66,8 @@ level <- 0.9
 ## correct values
 effect_names <- c("a", "b", "Total", "Direct", "Indirect")
 model_summary_classes <- c(robust = "summary_lmrob", median = "summary_rq",
-                           OLS = "summary_lm", student = "summary_lmse",
-                           select = "summary_lm")
+                           skewnormal = "summary_lmse", select = "summary_lm",
+                           OLS = "summary_lm")
 
 
 ## run tests
@@ -83,8 +82,8 @@ for (method in methods) {
 
   # correct values
   model_summary_class <- model_summary_classes[method]
-  family <- if (method %in% c("student", "select")) method else "gaussian"
-  intercept_name <- if (method == "student") "(Intercept.DP)" else "(Intercept)"
+  family <- if (method %in% c("skewnormal", "select")) method else "gaussian"
+  intercept_name <- if (method == "skewnormal") "(Intercept.CP)" else "(Intercept)"
 
 
   # run tests
@@ -165,17 +164,18 @@ for (method in methods) {
 
   test_that("confint() method returns correct values of confidence intervals", {
 
+    # mean of confidence intervals should equal point estimate
+    if (method %in% c("robust", "median")) {
+      keep <- c("a", "b", "direct", "indirect")
+    } else keep <- c("a", "b", "total", "direct", "indirect")
+    ci <- confint(sobel, parm = keep)
+    coef <- coef(sobel, parm = keep)
+    expect_equivalent(rowMeans(ci), coef)
+    # default (95%) CI should be wider thn 90% CI
+    ci_default <- confint(sobel, parm = "indirect")
     ci_90 <- confint(sobel, parm = "indirect", level = level)
-    if (method == "student") {
-      # Sobel test not meaningful as higher moments may not exist
-      expect_true(is.na(ci_90["Indirect", 1]))
-      expect_true(is.na(ci_90["Indirect", 2]))
-    } else {
-      # default CI should be wider
-      ci_default <- confint(sobel, parm = "indirect")  # should be 95%
-      expect_lt(ci_default["Indirect", 1], ci_90["Indirect", 1])
-      expect_gt(ci_default["Indirect", 2], ci_90["Indirect", 2])
-    }
+    expect_lt(ci_default["Indirect", 1], ci_90["Indirect", 1])
+    expect_gt(ci_default["Indirect", 2], ci_90["Indirect", 2])
 
   })
 

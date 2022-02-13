@@ -113,21 +113,21 @@ for (method in methods) {
     expect_length(boot$ci, 2L)
     expect_named(boot$ci, c("Lower", "Upper"))
     # dimensions of bootstrap replicates
-    expect_identical(dim(boot$reps$t), c(as.integer(R), 7L))
+    expect_identical(dim(boot$reps$t), c(as.integer(R), 5L))
 
   })
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(boot$a, mean(boot$reps$t[, 3]))
-    expect_equivalent(boot$b, mean(boot$reps$t[, 5]))
+    expect_equivalent(boot$a, mean(boot$reps$t[, 1]))
+    expect_equivalent(boot$b, mean(boot$reps$t[, 2]))
     expect_null(boot[["d"]])
-    expect_equivalent(boot$direct, mean(boot$reps$t[, 6]))
-    expect_equivalent(boot$indirect, mean(boot$reps$t[, 1]))
-    expect_equivalent(boot$reps$t[, 1], boot$reps$t[, 3] * boot$reps$t[, 5])
+    expect_equivalent(boot$direct, mean(boot$reps$t[, 4]))
+    expect_equivalent(boot$indirect, mean(boot$reps$t[, 5]))
+    expect_equivalent(boot$reps$t[, 5], boot$reps$t[, 1] * boot$reps$t[, 2])
     # total effect
-    expect_equivalent(boot$total, mean(boot$reps$t[, 7]))
-    expect_equivalent(boot$reps$t[, 7], rowSums(boot$reps$t[, c(1, 6)]))
+    expect_equivalent(boot$total, mean(boot$reps$t[, 3]))
+    expect_equivalent(boot$reps$t[, 3], rowSums(boot$reps$t[, 4:5]))
 
   })
 
@@ -180,7 +180,14 @@ for (method in methods) {
 
     test_that("confint() method returns correct values of confidence intervals", {
 
-      expect_equivalent(confint(boot, parm = "indirect", type = type), boot$ci)
+      # confidence interval of indirect effect
+      ci_indirect <- confint(boot, parm = "indirect", type = type)
+      expect_equivalent(ci_indirect, boot$ci)
+      # extract confidence intervals for other effects
+      keep <- c("a", "b", "total", "direct")
+      ci_other <- confint(boot, parm = keep, type = type)
+      coef_other <- coef(boot, parm = keep, type = type)
+      expect_equivalent(rowMeans(ci_other), coef_other)
 
     })
 
@@ -278,8 +285,8 @@ for (method in methods) {
 
       # bootstrapped effects
       if (type == "boot") {
-        expect_equal(summary$summary$a[x, "Boot"], mean(boot$reps$t[, 3]))
-        expect_equal(summary$summary$b[m, "Boot"], mean(boot$reps$t[, 5]))
+        expect_equal(summary$summary$a[x, "Boot"], boot$a)
+        expect_equal(summary$summary$b[m, "Boot"], boot$b)
         expect_equal(summary$summary$total[x, "Boot"], boot$total)
         expect_equal(summary$summary$direct[x, "Boot"], boot$direct)
       }

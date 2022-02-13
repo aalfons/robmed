@@ -38,17 +38,17 @@ fit_list <- list(
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                   method = "regression", robust = "median")
   },
-  OLS = {
+  skewnormal = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                  method = "regression", robust = FALSE, family = "gaussian")
-  },
-  student = {
-    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                  method = "regression", robust = FALSE, family = "student")
+                  method = "regression", robust = FALSE, family = "skewnormal")
   },
   select = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                   method = "regression", robust = FALSE, family = "select")
+  },
+  OLS = {
+    fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                  method = "regression", robust = FALSE, family = "gaussian")
   },
   winsorized = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
@@ -322,9 +322,9 @@ for (method in methods) {
 ## additional tests for regression fits
 
 # relevant information
-reg_methods <- c("robust", "median", "OLS", "student", "select")
-classes <- c(robust = "lmrob", median = "rq", OLS = "lm",
-             student = "lmse", select = "lm")
+reg_methods <- c("robust", "median", "OLS", "skewnormal", "select")
+classes <- c(robust = "lmrob", median = "rq", skewnormal = "lmse",
+             select = "lm", OLS = "lm")
 
 # loop over methods
 for (method in reg_methods) {
@@ -335,7 +335,7 @@ for (method in reg_methods) {
 
   # correct values
   class <- classes[method]
-  family <- if (method %in% c("student", "select")) method else "gaussian"
+  family <- if (method %in% c("skewnormal", "select")) method else "gaussian"
 
 
   # run tests

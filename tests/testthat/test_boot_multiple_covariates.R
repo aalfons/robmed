@@ -46,18 +46,13 @@ boot_list <- list(
                    test = "boot", R = R, level = level[1], type = ci_type,
                    method = "regression", robust = "median")
   },
-  OLS = {
-    set.seed(seed)
-    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   test = "boot", R = R, level = level[1], type = ci_type,
-                   method = "regression", robust = FALSE, family = "gaussian")
-  # },
-  # student = {
+  # skewnormal = {
   #   set.seed(seed)
   #   suppressWarnings(
   #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
   #                    test = "boot", R = R, level = level[1], type = ci_type,
-  #                    method = "regression", robust = FALSE, family = "student")
+  #                    method = "regression", robust = FALSE,
+  #                    family = "skewnormal")
   #   )
   # },
   # select = {
@@ -67,15 +62,21 @@ boot_list <- list(
   #                    test = "boot", R = R, level = level[1], type = ci_type,
   #                    method = "regression", robust = FALSE, family = "select")
   #   )
+  # },
+  OLS = {
+    set.seed(seed)
+    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                   test = "boot", R = R, level = level[1], type = ci_type,
+                   method = "regression", robust = FALSE, family = "gaussian")
   }
 )
 
 ## correct values
 effect_names <- c("a_X1", "a_X2", "b", "Total_X1", "Total_X2", "Direct_X1",
-                  "Direct_X2", "Indirect_Total", "Indirect_X1", "Indirect_X2")
+                  "Direct_X2", "Indirect_X1", "Indirect_X2")
 model_summary_classes <- c(robust = "summary_lmrob", median = "summary_rq",
-                           OLS = "summary_lm", student = "summary_lmse",
-                           select = "summary_lm")
+                           skewnormal = "summary_lmse", select = "summary_lm",
+                           OLS = "summary_lm")
 
 
 ## run tests
@@ -88,9 +89,9 @@ for (method in methods) {
   boot <- boot_list[[method]]
 
   # correct values
-  family <- if (method %in% c("student", "select")) method else "gaussian"
+  family <- if (method %in% c("skewnormal", "select")) method else "gaussian"
   model_summary_class <- model_summary_classes[method]
-  intercept_name <- if (method == "student") "(Intercept.DP)" else "(Intercept)"
+  intercept_name <- if (method == "skewnormal") "(Intercept.CP)" else "(Intercept)"
 
 
   # run tests
@@ -150,37 +151,40 @@ for (method in methods) {
     expect_length(boot$a, 2L)
     expect_named(boot$a, x)
     expect_length(boot$b, 1L)
+    expect_named(boot$b, NULL)
     expect_length(boot$direct, 2L)
     expect_named(boot$direct, x)
     expect_length(boot$total, 2L)
     expect_named(boot$total, x)
-    expect_length(boot$indirect, 3L)
-    expect_named(boot$indirect, c("Total", x))
+    expect_length(boot$indirect, 2L)
+    expect_named(boot$indirect, x)
     # bootstrap confidence interval
-    expect_identical(dim(boot$ci), c(3L, 2L))
+    expect_identical(dim(boot$ci), c(2L, 2L))
     expect_identical(rownames(boot$ci), names(boot$indirect))
     expect_identical(colnames(boot$ci), c("Lower", "Upper"))
     # dimensions of bootstrap replicates
-    expect_identical(dim(boot$reps$t), c(as.integer(R), 16L))
+    n_coef <- if (method %in% c("robust", "median", "OLS")) 11L else 16L
+    expect_identical(dim(boot$reps$t), c(as.integer(R), n_coef))
 
   })
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(boot$a, colMeans(boot$reps$t[, 5:6]))
-    expect_equivalent(boot$b, mean(boot$reps$t[, 10]))
-    expect_null(boot[["d"]])
-    expect_equivalent(boot$direct, colMeans(boot$reps$t[, 11:12]))
-    expect_equivalent(boot$indirect, colMeans(boot$reps$t[, 1:3]))
-    expect_equivalent(boot$reps$t[, 1], rowSums(boot$reps$t[, 2:3]))
-    expect_equivalent(boot$reps$t[, 2], boot$reps$t[, 5] * boot$reps$t[, 10])
-    expect_equivalent(boot$reps$t[, 3], boot$reps$t[, 6] * boot$reps$t[, 10])
-    # total effect
-    expect_equivalent(boot$total, colMeans(boot$reps$t[, 15:16]))
+    # extract bootstrap replicates
+    boot_a <- boot$reps$t[, 2:3]
+    boot_b <- boot$reps$t[, 7]
+    boot_direct <- boot$reps$t[, 8:9]
+    boot_indirect <- boot_a * boot_b
     if (method %in% c("robust", "median", "OLS")) {
-      expect_equivalent(boot$reps$t[, 15], rowSums(boot$reps$t[, c(2, 11)]))
-      expect_equivalent(boot$reps$t[, 16], rowSums(boot$reps$t[, c(3, 12)]))
-    }
+      boot_total <- boot_indirect + boot_direct
+    } else boot_total <- boot$reps$t[, 13:14]
+    # check bootstrap estimates
+    expect_equivalent(boot$a, colMeans(boot_a))
+    expect_equivalent(boot$b, mean(boot_b))
+    expect_null(boot[["d"]])
+    expect_equivalent(boot$total, colMeans(boot_total))
+    expect_equivalent(boot$direct, colMeans(boot_direct))
+    expect_equivalent(boot$indirect, colMeans(boot_indirect))
 
   })
 
@@ -195,7 +199,7 @@ for (method in methods) {
       # extract coefficients
       coef <- coef(boot, type = type)
       # tests
-      expect_length(coef, 10L)
+      expect_length(coef, 9L)
       expect_named(coef, effect_names)
 
     })
@@ -224,7 +228,7 @@ for (method in methods) {
       # extract confidence intervals
       ci <- confint(boot, type = type)
       # tests
-      expect_equal(dim(ci), c(10L, 2L))
+      expect_equal(dim(ci), c(9L, 2L))
       expect_equal(rownames(ci), effect_names)
       expect_equal(colnames(ci), c("5 %", "95 %"))
 
@@ -232,7 +236,15 @@ for (method in methods) {
 
     test_that("confint() method returns correct values of confidence intervals", {
 
-      expect_equivalent(confint(boot, parm = "indirect", type = type), boot$ci)
+      # confidence interval of indirect effect
+      ci_indirect <- confint(boot, parm = "indirect", type = type)
+      expect_equivalent(ci_indirect, boot$ci)
+      # extract confidence intervals for other effects
+      if (type == "boot") keep <- c("a", "b", "total", "direct")
+      else keep <- c("a", "b", "direct")
+      ci_other <- confint(boot, parm = keep, type = type)
+      coef_other <- coef(boot, parm = keep, type = type)
+      expect_equivalent(rowMeans(ci_other), coef_other)
 
     })
 
@@ -242,7 +254,7 @@ for (method in methods) {
       digits <- 3
       p_val <- p_value(boot, type = type, digits = digits)
       # check dimensions
-      expect_length(p_val, 10L)
+      expect_length(p_val, 9L)
       expect_named(p_val, effect_names)
       # check number of digits
       which <- grep("Indirect", names(p_val))
@@ -476,11 +488,11 @@ for (method in methods) {
         expect_equal(colnames(confint(reboot)), c("2.5 %", "97.5 %"))
       } else {
         if (setting == "less") {
-          expect_equivalent(reboot$ci[, 1], rep.int(-Inf, 3))
+          expect_equivalent(reboot$ci[, 1], rep.int(-Inf, 2))
           expect_equal(reboot$ci[, 2], boot$ci[, 2])
         } else {
           expect_equal(reboot$ci[, 1], boot$ci[, 1])
-          expect_equivalent(reboot$ci[, 2], rep.int(Inf, 3))
+          expect_equivalent(reboot$ci[, 2], rep.int(Inf, 2))
         }
         expect_identical(colnames(confint(reboot)), c("Lower", "Upper"))
       }
@@ -532,10 +544,10 @@ for (method in methods) {
       expect_s3_class(ci$ci, "data.frame")
       # check dimensions and column names
       if (setting == "default") {
-        expect_identical(dim(ci$ci), c(5L, 4L))
+        expect_identical(dim(ci$ci), c(4L, 4L))
         expect_named(ci$ci, c("Effect", "Estimate", "Lower", "Upper"))
       } else {
-        expect_identical(dim(ci$ci), c(5L, 5L))
+        expect_identical(dim(ci$ci), c(4L, 5L))
         expect_named(ci$ci, c("Label", "Effect", "Estimate", "Lower", "Upper"))
       }
 
@@ -547,19 +559,18 @@ for (method in methods) {
         # check data frame
         expect_s3_class(ci$p_value, "data.frame")
         # check dimensions and column names
-        expect_identical(dim(ci$p_value), c(5L, 3L))
+        expect_identical(dim(ci$p_value), c(4L, 3L))
         expect_named(ci$p_value, c("Label", "Effect", "Value"))
         # check that labels are correct
         labels <- c("Confidence interval", "p-Value")
         expect_identical(ci$ci$Label,
-                         factor(rep.int(labels[1], 5), levels = labels))
+                         factor(rep.int(labels[1], 4), levels = labels))
         expect_identical(ci$p_value$Label,
-                         factor(rep.int(labels[2], 5), levels = labels))
+                         factor(rep.int(labels[2], 4), levels = labels))
       }
 
       # check that direct effect and indirect effect are plotted by default
-      names <- c("Direct_X1", "Direct_X2", "Indirect_Total",
-                 "Indirect_X1", "Indirect_X2")
+      names <- c("Direct_X1", "Direct_X2", "Indirect_X1", "Indirect_X2")
       factor <- factor(names, levels = names)
       expect_identical(ci$ci$Effect, factor)
       # check confidence level
@@ -590,7 +601,7 @@ for (method in methods) {
     # check data frame confidence interval
     expect_s3_class(density$ci, "data.frame")
     # check dimensions
-    expect_identical(dim(density$ci), c(3L, 4L))
+    expect_identical(dim(density$ci), c(2L, 4L))
     # check column names
     expect_named(density$ci, c("Effect", "Estimate", "Lower", "Upper"))
     # check type of test

@@ -125,7 +125,7 @@ boot_list <- list(
 )
 
 ## stuff needed to check correctness
-indirect_names <- c("Total", x, "Contrast")
+indirect_names <- c(x, "Contrast")
 
 
 ## run tests
@@ -163,7 +163,7 @@ for (contrast in contrasts) {
     expect_equal(fit[keep], fit_without[keep])
 
     # multiple indirect effects have correct dimensions and names
-    expect_length(fit$indirect, 4L)
+    expect_length(fit$indirect, 3L)
     expect_identical(names(fit$indirect), indirect_names)
 
     # contrasts computed correctly
@@ -193,11 +193,11 @@ for (contrast in contrasts) {
     expect_equal(boot$reps[keep], boot_without$reps[keep])
 
     # multiple indirect effects have correct dimensions and names
-    expect_length(boot$indirect, 4L)
+    expect_length(boot$indirect, 3L)
     expect_named(boot$indirect, indirect_names)
 
     # confidence intervals have correct dimensions and names
-    expect_identical(dim(boot$ci), c(4L, 2L))
+    expect_identical(dim(boot$ci), c(3L, 2L))
     expect_identical(rownames(boot$ci), indirect_names)
     expect_identical(colnames(boot$ci), colnames(boot_without$ci))
 

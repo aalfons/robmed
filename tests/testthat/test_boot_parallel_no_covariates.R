@@ -45,20 +45,13 @@ boot_list <- list(
                    model = "parallel", test = "boot", R = R, level = level[1],
                    type = ci_type, method = "regression", robust = "median")
   },
-  OLS = {
-    set.seed(seed)
-    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   model = "parallel", test = "boot", R = R, level = level[1],
-                   type = ci_type, method = "regression", robust = FALSE,
-                   family = "gaussian")
-  # },
-  # student = {
+  # skewnormal = {
   #   set.seed(seed)
   #   suppressWarnings(
   #     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
   #                    model = "parallel", test = "boot", R = R, level = level[1],
   #                    type = ci_type,  method = "regression", robust = FALSE,
-  #                    family = "student")
+  #                    family = "skewnormal")
   #   )
   # },
   # select = {
@@ -69,6 +62,13 @@ boot_list <- list(
   #                    type = ci_type, method = "regression", robust = FALSE,
   #                    family = "select")
   #   )
+  # },
+  OLS = {
+    set.seed(seed)
+    test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
+                   model = "parallel", test = "boot", R = R, level = level[1],
+                   type = ci_type, method = "regression", robust = FALSE,
+                   family = "gaussian")
   }
 )
 
@@ -76,8 +76,8 @@ boot_list <- list(
 effect_names <- c("a_M1", "a_M2", "b_M1", "b_M2", "Total", "Direct",
                   "Indirect_Total", "Indirect_M1", "Indirect_M2")
 model_summary_classes <- c(robust = "summary_lmrob", median = "summary_rq",
-                           OLS = "summary_lm", student = "summary_lmse",
-                           select = "summary_lm")
+                           skewnormal = "summary_lmse", select = "summary_lm",
+                           OLS = "summary_lm")
 
 
 ## run tests
@@ -90,9 +90,9 @@ for (method in methods) {
   boot <- boot_list[[method]]
 
   # correct values
-  family <- if (method %in% c("student", "select")) method else "gaussian"
+  family <- if (method %in% c("skewnormal", "select")) method else "gaussian"
   model_summary_class <- model_summary_classes[method]
-  intercept_name <- if (method == "student") "(Intercept.DP)" else "(Intercept)"
+  intercept_name <- if (method == "skewnormal") "(Intercept.CP)" else "(Intercept)"
 
 
   # run tests
@@ -154,7 +154,9 @@ for (method in methods) {
     expect_length(boot$b, 2L)
     expect_named(boot$b, m)
     expect_length(boot$direct, 1L)
+    expect_named(boot$direct, NULL)
     expect_length(boot$total, 1L)
+    expect_named(boot$total, NULL)
     expect_length(boot$indirect, 3L)
     expect_named(boot$indirect, c("Total", m))
     # bootstrap confidence interval
@@ -162,25 +164,30 @@ for (method in methods) {
     expect_identical(rownames(boot$ci), names(boot$indirect))
     expect_identical(colnames(boot$ci), c("Lower", "Upper"))
     # dimensions of bootstrap replicates
-    expect_identical(dim(boot$reps$t), c(as.integer(R), 12L))
+    n_coef <- if (method %in% c("robust", "median", "OLS")) 8L else 10L
+    expect_identical(dim(boot$reps$t), c(as.integer(R), n_coef))
 
   })
 
   test_that("values of coefficients are correct", {
 
-    expect_equivalent(boot$a, colMeans(boot$reps$t[, c(5, 7)]))
-    expect_equivalent(boot$b, colMeans(boot$reps$t[, 9:10]))
-    expect_null(boot[["d"]])
-    expect_equivalent(boot$direct, mean(boot$reps$t[, 11]))
-    expect_equivalent(boot$indirect, colMeans(boot$reps$t[, 1:3]))
-    expect_equivalent(boot$reps$t[, 1], rowSums(boot$reps$t[, 2:3]))
-    expect_equivalent(boot$reps$t[, 2], boot$reps$t[, 5] * boot$reps$t[, 9])
-    expect_equivalent(boot$reps$t[, 3], boot$reps$t[, 7] * boot$reps$t[, 10])
-    # total effect
-    expect_equivalent(boot$total, mean(boot$reps$t[, 12]))
+    # extract bootstrap replicates
+    boot_a <- boot$reps$t[, c(2, 4)]
+    boot_b <- boot$reps$t[, 6:7]
+    boot_direct <- boot$reps$t[, 8]
+    boot_indirect <- boot_a * boot_b
+    boot_indirect_total <- rowSums(boot_indirect)
+    boot_indirect <- cbind(boot_indirect_total, boot_indirect)
     if (method %in% c("robust", "median", "OLS")) {
-      expect_equivalent(boot$reps$t[, 12], rowSums(boot$reps$t[, c(1, 11)]))
-    }
+      boot_total <- boot_indirect_total + boot_direct
+    } else boot_total <- boot$reps$t[, 10]
+    # check bootstrap estimates
+    expect_equivalent(boot$a, colMeans(boot_a))
+    expect_equivalent(boot$b, colMeans(boot_b))
+    expect_null(boot[["d"]])
+    expect_equivalent(boot$total, mean(boot_total))
+    expect_equivalent(boot$direct, mean(boot_direct))
+    expect_equivalent(boot$indirect, colMeans(boot_indirect))
 
   })
 
@@ -232,7 +239,15 @@ for (method in methods) {
 
     test_that("confint() method returns correct values of confidence intervals", {
 
-      expect_equivalent(confint(boot, parm = "indirect", type = type), boot$ci)
+      # confidence interval of indirect effect
+      ci_indirect <- confint(boot, parm = "indirect", type = type)
+      expect_equivalent(ci_indirect, boot$ci)
+      # extract confidence intervals for other effects
+      if (type == "boot") keep <- c("a", "b", "total", "direct")
+      else keep <- c("a", "b", "direct")
+      ci_other <- confint(boot, parm = keep, type = type)
+      coef_other <- coef(boot, parm = keep, type = type)
+      expect_equivalent(rowMeans(ci_other), coef_other)
 
     })
 
