@@ -41,7 +41,7 @@
 #' @return An object of the same class as \code{object} with updated test
 #' results (see \code{\link{test_mediation}()}).
 #'
-#' @note From version 0.8.0 onwards, the behavior of this function changed.
+#' @note From version 0.9.0 onwards, the behavior of this function changed.
 #' For arguments that are not supplied, the corresponding values of
 #' \code{object} are now used as defaults.
 #'

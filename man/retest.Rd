@@ -58,7 +58,7 @@ settings, as it avoids having to re-run the bootstrap procedure.  It must
 not be abused for \eqn{p}{p}-hacking.
 }
 \note{
-From version 0.8.0 onwards, the behavior of this function changed.
+From version 0.9.0 onwards, the behavior of this function changed.
 For arguments that are not supplied, the corresponding values of
 \code{object} are now used as defaults.
 }
