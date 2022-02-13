@@ -242,8 +242,8 @@ extract_p_value <- function(parm = 1L, object, digits = 4L,
       lower <- alpha
       alpha <- alpha + step
       # retest at current significance level and extract confidence interval
-      ci <- extract_ci(parm, object = object, level = 1 - alpha,
-                       alternative = alternative, type = type)
+      ci <- extract_ci(parm, object = object, alternative = alternative,
+                       level = 1 - alpha, type = type)
       # reject if 0 is not in the confidence interval
       reject <- prod(ci) > 0
     }

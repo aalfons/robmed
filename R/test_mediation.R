@@ -853,7 +853,7 @@ boot_test_mediation.reg_fit_mediation <- function(fit,
   if (any(fix_total)) estimate_list$total[fix_total] <- NA_real_
   # compute confidence intervals of indirect effects
   ci <- boot_ci(fit$indirect, boot_list$indirect, object = bootstrap,
-                level = level, alternative = alternative, type = type)
+                alternative = alternative, level = level, type = type)
 
   # return results
   result <- list(ab = estimate_list$indirect,  # for back-compatibility, will be removed

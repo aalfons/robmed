@@ -76,42 +76,39 @@ retest <- function(object, ...) UseMethod("retest")
 retest.boot_test_mediation <- function(object, alternative, level,
                                        type, contrast, ...) {
   # initializations
-  nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
-                                 model = object$fit$model)
+  defaults <- list(alternative = c("twosided", "less", "greater"),
+                   type = c("bca", "perc"),
+                   contrast = c("estimates", "absolute"))
   # check alternative hypothesis
   if (missing(alternative)) alternative <- object$alternative
-  else {
-    alternative <- match.arg(alternative,
-                             choices = c("twosided", "less", "greater"))
-  }
+  else alternative <- match.arg(alternative, choices = defaults$alternative)
   # check confidence level
   if (missing(level)) level <- object$level
   else {
-    level <- rep(as.numeric(level), length.out = 1)
+    level <- rep(as.numeric(level), length.out = 1L)
     if(is.na(level) || level < 0 || level > 1) level <- object$level
   }
   # check type of confidence intervals
   if (missing(type)) type <- object$type
-  else type <- match.arg(type, choices = c("bca", "perc"))
+  else type <- match.arg(type, choices = defaults$type)
   # check contrasts of indirect effect
-  if (inherits(object$fit, "reg_fit_mediation")) {
+  fit <- object$fit
+  if (inherits(fit, "reg_fit_mediation")) {
+    # further initializations
+    model <- fit$model
     # regression model fit (multiple mediators and contrasts are supported)
-    if (missing(contrast)) contrast <- object$fit$contrast
+    if (missing(contrast)) contrast <- fit$contrast
     else {
-      if (nr_indirect == 1L) contrast <- FALSE
+      if (model == "simple") contrast <- FALSE
       else if (is.logical(contrast)) {
         contrast <- isTRUE(contrast)
-        if (contrast) contrast <- "estimates"
-      } else {
-        contrast <- match.arg(contrast, choices = c("estimates", "absolute"))
-      }
+        if (contrast) contrast <- defaults$contrast[1L]
+      } else contrast <- match.arg(contrast, choices = defaults$contrast)
     }
-    had_contrast <- is.character(object$fit$contrast)
-    have_contrast <- is.character(contrast)
-    update_contrast <- contrast != object$fit$contrast
-  } else if (inherits(object$fit, "cov_fit_mediation")) {
+    update_contrast <- contrast != fit$contrast
+  } else if (inherits(fit, "cov_fit_mediation")) {
     # covariance model fit (only implemented for a simple mediation model)
-    had_contrast <- have_contrast <- update_contrast <- FALSE
+    update_contrast <- FALSE
   } else stop("not implemented for this type of model fit")
   # check for any new arguments
   update_alternative <- alternative != object$alternative
@@ -120,85 +117,42 @@ retest.boot_test_mediation <- function(object, alternative, level,
   update <- update_alternative || update_level || update_type || update_contrast
   # reperform test if necessary
   if (update) {
-    # recompute confidence interval
-    if(nr_indirect == 1L) {
-      # only one mediator
-      ci <- confint(object$reps, parm = 1L, level = level,
-                    alternative = alternative, type = type)
-    } else {
-      # multiple mediators
-      indices_indirect <- seq_len(1L + nr_indirect)
-      bootstrap <- object$reps
-      ci <- lapply(indices_indirect, function(j) {
-        confint(bootstrap, parm = j, level = level,
-                alternative = alternative, type = type)
-      })
-      ci <- do.call(rbind, ci)
-      # if requested, compute contrasts of indirect effects
-      if (have_contrast) {
-        # list of all combinations of indices of the relevant indirect effects
-        combinations <- combn(indices_indirect[-1L], 2, simplify = FALSE)
-        # prepare "boot" object for the calculation of the confidence intervals
-        contrast_bootstrap <- bootstrap
-        contrast_bootstrap$t0 <- get_contrasts(bootstrap$t0, combinations,
-                                               type = contrast)
-        contrast_bootstrap$t <- get_contrasts(bootstrap$t, combinations,
-                                              type = contrast)
-        # compute confidence intervals of contrasts
-        n_contrasts <- length(combinations)
-        indices_contrasts <- seq_len(n_contrasts)
-        contrast_ci <- lapply(indices_contrasts, function(j) {
-          confint(contrast_bootstrap, parm = j, level = level,
-                  alternative = alternative, type = type)
-        })
-        contrast_ci <- do.call(rbind, contrast_ci)
-        # combine confidence intervals of indirect effects and contrasts
-        ci <- rbind(ci, contrast_ci)
-        # add rownames to conficence intervals
-        indirect_names <- rownames(object$ci)
-        if (!had_contrast) {
-          indirect_names <- c(indirect_names, get_contrast_names(n_contrasts))
-        }
-        rownames(ci) <- indirect_names
-        # compute estimates of the contrasts
-        if (update_contrast) {
-          # compute bootstrap estimates
-          indirect_boot <- c(object$indirect[indices_indirect],
-                             colMeans(contrast_bootstrap$t, na.rm = TRUE))
-          # compute estimates on original data
-          indirect_data <- object$fit$indirect[indices_indirect]
-          contrasts_indirect <- get_contrasts(indirect_data, combinations,
-                                              type = contrast)
-          indirect_data <- c(indirect_data, contrasts_indirect)
-          # add names
-          names(indirect_boot) <- names(indirect_data) <- indirect_names
-        }
-      } else if (update_contrast) {
-        ## the new object doesn't have contrasts, but the old object did
-        # add rownames to conficence intervals
-        rownames(ci) <- rownames(object$ci[indices_indirect])
-        # removing contrasts from estimates
-        indirect_boot <- object$indirect[indices_indirect]
-        indirect_data <- object$fit$indirect[indices_indirect]
-      } else {
-        ## neither the old nor the new object had contrasts
-        # add rownames to conficence intervals
-        rownames(ci) <- rownames(object$ci)
-      }
+    # if applicable, extract bootstrap replicates of the indirect effects
+    if (inherits(fit, "reg_fit_mediation") || update_contrast) {
+      boot_indirect <- extract_boot(fit, boot = object$reps)$indirect
     }
-    # modify object
+    # if contrasts are updated, first recompute the point estimates
+    if (update_contrast) {
+      # extract estimates of the indirect effects
+      indirect_data <- extract_effects(fit$x, fit$m, family = fit$family,
+                                       model = model, contrast = contrast,
+                                       fit_mx = fit$fit_mx,
+                                       fit_ymx = fit$fit_ymx,
+                                       fit_yx = fit$fit_yx)$indirect
+      # update the object for the model fit
+      fit$indirect <- fit$ab <- indirect_data
+      fit$contrast <- contrast
+      # recompute bootstrap estimates of the indirect effects
+      indirect_boot <- colMeans(boot_indirect, na.rm = TRUE)
+      # update the object for the bootstrap test
+      object$indirect <- object$ab <- indirect_boot
+      object$fit <- fit
+    }
+    # recompute confidence intervals of indirect effects
+    if (inherits(fit, "reg_fit_mediation")) {
+      # compute confidence intervals of indirect effects
+      ci <- boot_ci(fit$indirect, boot_indirect, object = object$reps,
+                    alternative = alternative, level = level, type = type)
+    } else if (inherits(fit, "cov_fit_mediation")) {
+      ci <- extract_ci(parm = 5L, object = object$reps,
+                       alternative = alternative,
+                       level = level, type = type)
+    } else stop("not implemented for this type of model fit")
+    # update the object for the bootstrap test
     object$ci <- ci
     if (update_alternative) object$alternative <- alternative
     if (update_level) object$level <- level
     if (update_type) object$type <- type
-    if (update_contrast) {
-      # FIXME: when the component 'ab' is removed from objects returned by
-      #        fit_mediation() and test_mediation(), it must also be removed
-      #        here
-      object$indirect <- object$ab <- indirect_boot
-      object$fit$indirect <- object$fit$ab <- indirect_data
-      object$fit$contrast <- contrast
-    }
   } else warning("no new argument values; returning original object")
   # return modified object
   object
@@ -211,13 +165,12 @@ retest.boot_test_mediation <- function(object, alternative, level,
 
 retest.sobel_test_mediation <- function(object, alternative, order, ...) {
   # initializations
+  defaults <- list(alternative = c("twosided", "less", "greater"),
+                   order = c("first", "second"))
   if (missing(alternative)) alternative <- object$alternative
-  else {
-    alternative <- match.arg(alternative,
-                             choices = c("twosided", "less", "greater"))
-  }
+  else alternative <- match.arg(alternative, choices = defaults$alternative)
   if (missing(order)) order <- object$order
-  else order <- match.arg(order, choices = c("first", "second"))
+  else order <- match.arg(order, choices = defaults$order)
   # reperform test if necessary
   if (order != object$order) {
     # entire test needs to be re-run (standard error and test statistic change)

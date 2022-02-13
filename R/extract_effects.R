@@ -6,6 +6,122 @@
 
 ## internal functions to extract effects from regression fits
 
+## extract effects of the mediation model from regressions
+# TODO: Add argument that allows to select which effects to return.  This can
+#       speed things up slightly for retest(), where only the indirect effects
+#       need to be extracted in the case of updated contrasts.
+extract_effects <- function(x, m, family = "gaussian", model = "simple",
+                            contrast = FALSE, fit_mx, fit_ymx, fit_yx = NULL) {
+  # initializations
+  p_x <- length(x)
+  p_m <- length(m)
+  have_contrast <- is.character(contrast)
+  # extract effects for b path
+  b <- extract_b(m, fit_ymx)
+  # in case of serial mediators, extract effects for d path
+  d <- if (model == "serial") extract_d(m, fit_mx)
+  # extract effects for a path and compute indirect effects
+  if (p_x == 1L) {
+    # extract effects for a path
+    a <- extract_a(x, fit_mx)
+    # compute indirect effects
+    indirect <- compute_indirect(a, b, d)
+    if (p_m > 1L) {
+      # compute total indirect effect
+      indirect_total <- sum(indirect)
+    }
+  } else {
+    # extract effects for a path
+    a <- lapply(x, extract_a, fit_mx)
+    # compute indirect effects
+    indirect <- lapply(a, compute_indirect, b, d)
+    if (p_m == 1L) {
+      # for models with multiple independent variables but a single mediator,
+      # ensure we have a vector of indirect effects for computing contrasts
+      indirect <- unlist(indirect, use.names = FALSE)
+      names(indirect) <- x
+    } else {
+      # compute total indirect effect
+      indirect_total <- sapply(indirect, sum)
+      names(indirect_total) <- x
+    }
+  }
+  # extract direct effect(s)
+  direct <- extract_direct(x, fit_ymx)
+  # compute or extract total effect(s)
+  if (family == "gaussian" && is.null(fit_yx)) {
+    # compute the total effect based on the indirect and direct effects
+    total <- if (p_m == 1L) indirect + direct else indirect_total + direct
+  } else {
+    # extract total effect from model fit (NAs if model fit is not available)
+    total <- extract_total(x, fit_yx)
+  }
+  # if requested, compute contrasts
+  if (have_contrast) {
+    # fit_mediation() ensures that this is only true if there are multiple
+    # independent variables or multiple mediators
+    if (p_x == 1L || p_m == 1L) {
+      # multiple independent variables or multiple mediators, but not both:
+      # compute contrasts between all individual indirect effects
+      contrasts <- get_contrasts(indirect, type = contrast)
+    } else {
+      # multiple independent variables and multiple mediators: compute
+      # contrasts separately for each independent variable such that the
+      # number of comparisons doesn't explode
+      contrasts <- lapply(indirect, get_contrasts, type = contrast)
+    }
+  } else contrasts <- NULL
+  # make sure we have vector for a path
+  if (p_x > 1L) {
+    a <- unlist(a, use.names = FALSE)
+    if (p_m == 1L) names(a) <- x
+    else names(a) <- sapply(x, paste, m, sep = "->", USE.NAMES = FALSE)
+  }
+  # finalize vector of indirect effects
+  if (p_m == 1L) {
+    # For multiple independent variables and a single mediator, the list of
+    # indirect effects has already been converted to a vector before computing
+    # contrasts.  There is also no total indirect effect to add.
+    if (p_x > 1L) indirect <- c(indirect, contrasts)
+  } else {
+    # multiple mediators: combine total indirect effect, individual indirect
+    # effects, and (if requested) contrasts
+    if (p_x == 1L) {
+      # for a single independent variable, combine vectors
+      indirect <- c(Total = indirect_total, indirect, contrasts)
+    } else {
+      ## for multiple independent variables, lists need to be combined first
+      # add name of independent variable to names of total indirect effects
+      names(indirect_total) <- paste(names(indirect_total), "Total", sep = "_")
+      # add name of independent variable to names of individual indirect effects
+      indirect <- mapply(function(current_x, current_indirect) {
+        names(current_indirect) <- paste(current_x, names(current_indirect),
+                                         sep = "->")
+        current_indirect
+      }, x, indirect, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      # add name of independent variable to names of contrasts
+      if (!is.null(contrasts)) {
+        contrasts <- mapply(function(current_x, current_contrasts) {
+          names(current_contrasts) <- paste(current_x, names(current_contrasts),
+                                            sep = "_")
+          current_contrasts
+        }, x, contrasts, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      }
+      # combine lists
+      indirect <- lapply(seq_len(p_x), function(j) {
+        c(indirect_total[j], indirect[[j]], contrasts[[j]])
+      })
+      ## combine everything into one vector
+      indirect <- unlist(indirect)
+    }
+  }
+  # return list of effects
+  tmp <- list(a = a, b = b)
+  if (model == "serial") tmp$d <- d
+  c(tmp, list(total = total, direct = direct, indirect = indirect))
+}
+
+
 # extract effect(s) for a path for one independent variable
 extract_a <- function(x, fit) {
   if (inherits(fit, "list")) {
@@ -120,11 +236,11 @@ extract_boot <- function(fit, boot, index_list = NULL) {
   p_x <- length(fit$x)
   p_m <- length(fit$m)
   p_covariates <- length(fit$covariates)
-  model <- fit$model
   family <- fit$family
-  have_yx <- !is.null(fit$fit_yx)
+  model <- fit$model
   contrast <- fit$contrast                 # FALSE or type of contrast
   have_contrast <- is.character(contrast)  # indicates whether we have contrasts
+  have_yx <- !is.null(fit$fit_yx)
   # if not supplied, get list of index vectors that indicate which columns of
   # the bootstrap replicates correspond to the respective models
   if (is.null(index_list)) {
