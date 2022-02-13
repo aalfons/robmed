@@ -117,11 +117,8 @@ retest.boot_test_mediation <- function(object, alternative, level,
   update <- update_alternative || update_level || update_type || update_contrast
   # reperform test if necessary
   if (update) {
-    # if applicable, extract bootstrap replicates of the indirect effects
-    if (inherits(fit, "reg_fit_mediation") || update_contrast) {
-      boot_indirect <- extract_boot(fit, boot = object$reps)$indirect
-    }
-    # if contrasts are updated, first recompute the point estimates
+    # if contrasts are updated, first recompute the point estimates of the
+    # indirect effects before recomputing bootstrap replicates
     if (update_contrast) {
       # extract estimates of the indirect effects
       indirect_data <- extract_effects(fit$x, fit$m, family = fit$family,
@@ -133,21 +130,25 @@ retest.boot_test_mediation <- function(object, alternative, level,
       fit$indirect <- fit$ab <- indirect_data
       fit$contrast <- contrast
       # recompute bootstrap estimates of the indirect effects
+      boot_indirect <- extract_boot(fit, boot = object$reps)$indirect
       indirect_boot <- colMeans(boot_indirect, na.rm = TRUE)
       # update the object for the bootstrap test
       object$indirect <- object$ab <- indirect_boot
       object$fit <- fit
+    } else if (inherits(fit, "reg_fit_mediation")) {
+      # extract bootstrap replicates of the indirect effects
+      boot_indirect <- extract_boot(fit, boot = object$reps)$indirect
     }
-    # recompute confidence intervals of indirect effects
+    # recompute confidence intervals of indirect effects with updated arguments
     if (inherits(fit, "reg_fit_mediation")) {
       # compute confidence intervals of indirect effects
       ci <- boot_ci(fit$indirect, boot_indirect, object = object$reps,
                     alternative = alternative, level = level, type = type)
-    } else if (inherits(fit, "cov_fit_mediation")) {
+    } else {
       ci <- extract_ci(parm = 5L, object = object$reps,
                        alternative = alternative,
                        level = level, type = type)
-    } else stop("not implemented for this type of model fit")
+    }
     # update the object for the bootstrap test
     object$ci <- ci
     if (update_alternative) object$alternative <- alternative
