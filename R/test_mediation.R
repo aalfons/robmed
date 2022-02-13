@@ -57,7 +57,7 @@
 #' @param data  for the \code{formula} method, a data frame containing the
 #' variables.
 #' @param x  a character, integer or logical vector specifying the columns of
-#' \code{object} containing the independent variables.
+#' \code{object} containing the independent variables of interest.
 #' @param y  a character string, an integer or a logical vector specifying the
 #' column of \code{object} containing the dependent variable.
 #' @param m  a character, integer or logical vector specifying the columns of
@@ -118,7 +118,10 @@
 #' (such that it is tested whether two indirect effects are equal in
 #' magnitude).  This is only relevant for models with multiple indirect
 #' effects, which are currently only implemented for estimation via
-#' regressions (\code{method = "regression"}).
+#' regressions (\code{method = "regression"}).  For models with multiple
+#' independent variables of interest and multiple hypothesized mediators,
+#' contrasts are only computed between indirect effects corresponding to
+#' the same independent variable.
 #' @param fit_yx  a logical indicating whether to fit the regression model
 #' \code{y ~ x + covariates} to estimate the total effect (the default is
 #' \code{TRUE}).  This is only relevant if \code{method = "regression"} and

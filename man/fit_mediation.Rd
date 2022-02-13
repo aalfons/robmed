@@ -48,7 +48,7 @@ examples), and any optional control variables should be wrapped in a call to
 variables.}
 
 \item{x}{a character, integer or logical vector specifying the columns of
-\code{object} containing the independent variables.}
+\code{object} containing the independent variables of interest.}
 
 \item{y}{a character string, an integer or a logical vector specifying the
 column of \code{object} containing the dependent variable.}
@@ -96,7 +96,10 @@ differences of the indirect effects, and \code{"absolute"} for computing the
 pairwise differences of the absolute values of the indirect effects.  This
 is only relevant for models with multiple indirect effects, which are
 currently only implemented for estimation via regressions
-(\code{method = "regression"}).}
+(\code{method = "regression"}).  For models with multiple independent
+variables of interest and multiple hypothesized mediators, contrasts are
+only computed between indirect effects corresponding to the same independent
+variable.}
 
 \item{fit_yx}{a logical indicating whether to fit the regression model
 \code{y ~ x + covariates} to estimate the total effect (the default is
