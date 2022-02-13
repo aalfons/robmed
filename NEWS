@@ -1,11 +1,16 @@
 Changes in robmed version 0.10.0
 
-    + Removed superfluous package MASS from Suggests.
-
-    + Updated examples.
+    + Added support for the serial multiple mediator model in bootstrap tests
+      based on regressions.
 
     + Moved shiny app in separate package 'robmedShiny':
       https://github.com/aalfons/robmedShiny
+
+    + Updated BSG2014 data with more variables.
+
+    + Updated examples.
+
+    + Removed superfluous package MASS from Suggests.
 
 
 
