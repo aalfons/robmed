@@ -199,40 +199,6 @@ p_value.rq <- function(object, parm = NULL, ...) {
 }
 
 
-# # extract p-value from bootstrap results
-# # (argument 'parm' specifies a single column of bootstrap replicates)
-# p_value.boot <- function(object, parm = 1L, digits = 4L,
-#                          alternative = c("twosided", "less", "greater"),
-#                          type = c("bca", "perc"), ...) {
-#   # set lower bound of significance level to 0
-#   lower <- 0
-#   # loop over the number of digits and determine the corresponding digit after
-#   # the comma of the p-value
-#   for (digit in seq_len(digits)) {
-#     # set step size
-#     step <- 1 / 10^digit
-#     # reset the significance level to the lower bound as we continue from there
-#     # with a smaller stepsize
-#     alpha <- lower
-#     # there is no rejection at the lower bound, so increase significance level
-#     # until there is rejection
-#     reject <- FALSE
-#     while (!reject) {
-#       # update lower bound and significance level
-#       lower <- alpha
-#       alpha <- alpha + step
-#       # retest at current significance level and extract confidence interval
-#       ci <- confint(object, parm = parm, level = 1 - alpha,
-#                     alternative = alternative, type = type)
-#       # reject if 0 is not in the confidence interval
-#       reject <- prod(ci) > 0
-#     }
-#   }
-#   # return smallest significance level where 0 is not in the confidence interval
-#   alpha
-# }
-
-
 ## internal function to compute p-values for estimated effects other than the
 ## indirect effect
 

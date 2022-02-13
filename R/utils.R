@@ -156,40 +156,6 @@ get_index_list <- function(p_x, p_m, p_covariates, model = "parallel",
 
 ## internal functions related to indirect effects
 
-# # obtain names for d path in serial multiple mediator models
-# get_d_names <- function(m, sep = "->") {
-#   # initializations
-#   p_m <- length(m)
-#   # currently only implemented for two or three hypothesized mediators
-#   if (p_m == 2L) {
-#     # two serial mediators
-#     names <- NULL
-#   } else {
-#     # three serial mediators
-#     responses <- m[-1L]
-#     predictors <- list(m[1L], m[-3L])
-#     names_list <- mapply(function(current_response, current_predictors) {
-#       paste(current_predictors, current_response, sep = sep)
-#     }, responses, predictors, SIMPLIFY = FALSE, USE.NAMES = FALSE)
-#     names <- unlist(names_list, use.names = FALSE)
-#   }
-#   # return names
-#   names
-# }
-
-# # obtain number of indirect effects
-# get_nr_indirect <- function(p_x, p_m, model = "parallel") {
-#   if (!is.null(model) && model == "serial") {
-#     # currently only implemented for two or three hypothesized mediators
-#     nr_indirect <- p_x * if (p_m == 2L) 3L else 7L
-#   } else {
-#     # single mediator or parallel multiple mediators
-#     nr_indirect <- p_x * p_m
-#   }
-#   # return number of indirect effects
-#   nr_indirect
-# }
-
 # obtain names for indirect effects
 get_indirect_names <- function(x, m, model = "parallel", sep = "->") {
   # initializations

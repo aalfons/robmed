@@ -345,7 +345,7 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
   ## perform mediation analysis
   if (test == "boot") {
     # further inizializations
-    level <- rep(as.numeric(level), length.out = 1)
+    level <- rep(as.numeric(level), length.out = 1L)
     if (is.na(level) || level < 0 || level > 1) level <- formals()$level
     type <- match.arg(type)
     # perform bootstrap test

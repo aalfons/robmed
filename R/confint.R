@@ -105,7 +105,7 @@ confint.boot_test_mediation <- function(object, parm = NULL, level = NULL,
 confint.sobel_test_mediation <- function(object, parm = NULL, level = 0.95,
                                          ...) {
   # initializations
-  level <- rep(as.numeric(level), length.out = 1)
+  level <- rep(as.numeric(level), length.out = 1L)
   if(is.na(level) || level < 0 || level > 1) level <- formals()$level
   # confidence intervals of other effects
   ci_list <- get_ci_list(object$fit, level = level)
@@ -151,34 +151,6 @@ confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
   ci[] <- coef[parm] + se[parm] %o% q
   ci
 }
-
-
-# # internal function compute a confidence interval from bootstrap results
-# # (argument 'parm' specifies a single column of bootstrap replicates)
-# confint.boot <- function(object, parm = 1L, level = 0.95,
-#                          alternative = c("twosided", "less", "greater"),
-#                          type = c("bca", "perc"), ...) {
-#   # initializations
-#   alternative <- match.arg(alternative)
-#   type <- match.arg(type)
-#   which <- if(type == "perc") "percent" else type
-#   # extract confidence interval
-#   if(level == 0) {
-#     ci <- rep.int(mean(object$t[, parm], na.rm=TRUE), 2L)
-#   } else if(level == 1) {
-#     ci <- c(-Inf, Inf)
-#   } else if(alternative == "twosided") {
-#     ci <- boot.ci(object, conf=level, type=type, index=parm)[[which]][4:5]
-#   } else {
-#     alpha <- 1 - level
-#     ci <- boot.ci(object, conf=1-2*alpha, type=type, index=parm)[[which]][4:5]
-#     if(alternative == "less") ci[1] <- -Inf
-#     else ci[2] <- Inf
-#   }
-#   # add names for confidence bounds and return confidence interval
-#   names(ci) <- c("Lower", "Upper")
-#   ci
-# }
 
 
 ## internal function to compute confidence intervals for estimated effects
