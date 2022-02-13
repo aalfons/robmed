@@ -97,44 +97,36 @@ setup_density_plot <- function(object, ...) UseMethod("setup_density_plot")
 
 setup_density_plot.boot_test_mediation <- function(object, ...) {
   # initialization
-  nr_indirect <- get_nr_indirect(length(object$fit$x), length(object$fit$m),
-                                 model = object$fit$model)
-  have_effects <- nr_indirect > 1L
-  contrast <- object$fit$contrast          # only implemented for regression fit
+  fit <- object$fit
+  have_effects <- !is.null(fit$model) && fit$model != "simple"
+  contrast <- fit$contrast                 # only implemented for regression fit
   have_contrast <- is.character(contrast)  # but this always works
   # extract point estimate and confidence interval
   indirect <- object$indirect
   ci <- object$ci
+  # extract bootstrap replicates of the indirect effects
+  if (inherits(fit, "reg_fit_mediation")) {
+    boot_indirect <- extract_boot(fit, boot = object$reps)$indirect
+  } else if (inherits(fit, "cov_fit_mediation")) {
+    boot_indirect <- object$reps$t[, 5L, drop = FALSE]
+  } else stop("not implemented for this type of model fit")
   # extract information to be plotted
   if (have_effects) {
     # information on indirect effects
     effect_labels <- names(indirect)
     effects <- factor(effect_labels, levels = effect_labels)
-    # compute bootstrap densities
-    indices <- seq_len(1L + nr_indirect)
-    pdf_list <- lapply(indices, function(j, x) density(x[, j], na.rm = TRUE),
-                       x = object$reps$t)
-    # add densities of contrasts (if applicable)
-    if (have_contrast) {
-      bootstrap_contrasts <- get_contrasts(object$reps$t[, indices[-1L]],
-                                           type = contrast)
-      n_contrasts <- ncol(bootstrap_contrasts)
-      bootstrap_pdf_list <- lapply(seq_len(n_contrasts),
-                                   function(j, x) density(x[, j], na.rm = TRUE),
-                                   x = bootstrap_contrasts)
-      pdf_list <- c(pdf_list, bootstrap_pdf_list)
-    }
-    # construct data frame containing bootstrap densities
-    density_list <- mapply(function(pdf, effect) {
+    # compute bootstrap densities and construct data frame
+    density_list <- lapply(effects, function(effect) {
+      pdf <- density(boot_indirect[, effect], na.rm = TRUE)
       data.frame(Effect = effect, Indirect = pdf$x, Density = pdf$y)
-    }, pdf = pdf_list, effect = effects, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    })
     density <- do.call(rbind, density_list)
     # construct data frame containing confidence interval
     ci <- data.frame(Effect = effects, Estimate = unname(indirect),
                      Lower = unname(ci[, 1L]), Upper = unname(ci[, 2L]))
   } else {
     # construct data frame containing bootstrap density
-    pdf <- density(object$reps$t[, 1L], na.rm = TRUE)
+    pdf <- density(boot_indirect, na.rm = TRUE)
     density <- data.frame(Indirect = pdf$x, Density = pdf$y)
     # construct data frame containing confidence interval
     ci <- data.frame(Estimate = indirect, Lower = ci[1L], Upper = ci[2L])
@@ -154,7 +146,7 @@ setup_density_plot.boot_test_mediation <- function(object, ...) {
 setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
                                                     level = 0.95, ...) {
   # initializations
-  level <- rep(as.numeric(level), length.out = 1)
+  level <- rep(as.numeric(level), length.out = 1L)
   if (is.na(level) || level < 0 || level > 1) level <- formals()$level
   # extract point estimate and standard error
   indirect <- object$fit$indirect
@@ -168,7 +160,7 @@ setup_density_plot.sobel_test_mediation <- function(object, grid = NULL,
   density <- data.frame(Indirect = grid, Density = y)
   # construct data frame containing confidence interval
   ci <- confint_z(indirect, se, level = level, alternative = object$alternative)
-  ci <- data.frame(Estimate = indirect, Lower = ci[1], Upper = ci[2])
+  ci <- data.frame(Estimate = indirect, Lower = ci[1L], Upper = ci[2L])
   # return density and confidence interval
   out <- list(density = density, ci = ci, test = "sobel", level = level,
               have_effects = FALSE, have_methods = FALSE)

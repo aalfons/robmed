@@ -131,12 +131,12 @@ setup_ci_plot.boot_test_mediation <- function(object,
     # labels for facets
     labels <- c("Confidence interval", "p-Value")
     labels <- factor(labels, levels = labels)
+    # add column to CI data frame for facetting
+    ci <- cbind(Label = labels[1L], ci)
     # construct data frame for p-values
     p_values <- p_value(object, parm = parm, type = type, digits = digits)
-    p_value <- data.frame(Label = labels[2], Effect = effects,
+    p_value <- data.frame(Label = labels[2L], Effect = effects,
                           Value = unname(p_values[effects]))
-    # add column to CI data frame for facetting
-    ci <- cbind(Label = labels[1], ci)
     # return object contains confidence intervals and p-values
     out <- list(ci = ci, p_value = p_value, level = object$level,
                 have_methods = FALSE)
@@ -159,7 +159,7 @@ setup_ci_plot.sobel_test_mediation <- function(object,
                                                level = 0.95, p_value = FALSE,
                                                ...) {
   # initializations
-  level <- rep(as.numeric(level), length.out = 1)
+  level <- rep(as.numeric(level), length.out = 1L)
   if (is.na(level) || level < 0 || level > 1) level <- formals()$level
   include_p_value <- isTRUE(p_value)
   # extract point estimates
