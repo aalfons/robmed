@@ -211,7 +211,9 @@ may be removed as soon as the next version.}}
 containing the bootstrap confidence intervals for the indirect effects
 (only \code{"boot_test_mediation"}).}
 \item{reps}{an object of class \code{"\link[boot]{boot}"} containing
-the bootstrap replicates of the effects (only \code{"boot_test_mediation"}).}
+the bootstrap replicates (only \code{"boot_test_mediation"}).  For
+regression model fits, bootstrap replicates of the coefficients in the
+individual regression models are stored.}
 \item{se}{numeric; the standard error of the indirect effect according
 to Sobel's formula (only \code{"sobel_test_mediation"}).}
 \item{statistic}{numeric; the test statistic for Sobel's test (only
