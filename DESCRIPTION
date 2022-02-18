@@ -21,6 +21,7 @@ License: GPL (>= 2)
 URL: https://github.com/aalfons/robmed
 BugReports: https://github.com/aalfons/robmed/issues
 LazyData: yes
+VignetteBuilder: knitr
 Authors@R: 
     c(person("Andreas", "Alfons", 
              email = "alfons@ese.eur.nl", 

@@ -1,5 +1,7 @@
 Changes in robmed version 0.10.0
 
+    + Added package vignette.
+
     + Added support for the serial multiple mediator model in bootstrap tests
       based on regressions.
 
