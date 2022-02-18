@@ -66,11 +66,18 @@ boot_absolute <- test_mediation(test_data, x = x, y = y, m = m,
 
 test_that("simple mediation yields no contrasts", {
 
-  # there should be no contrasts, so objects should be the same
-  expect_equal(boot_estimates, boot_without)
-  expect_equal(boot_absolute, boot_without)
+  ## there should be no contrasts, so objects should be the same
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_without), "reps")
+  expect_equal(boot_estimates[keep], boot_without[keep])
+  expect_equal(boot_absolute[keep], boot_without[keep])
+  # check that "boot" object is the same
+  keep <- setdiff(names(boot_without$reps), "statistic")
+  expect_equal(boot_estimates$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_absolute$reps[keep], boot_without$reps[keep])
 
-  # retest() should produce warning
+  ## retest() should produce warning
   expect_warning(retest(boot_without, contrast = "estimates"))
   expect_warning(retest(boot_without, contrast = "absolute"))
 })

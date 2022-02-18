@@ -63,10 +63,18 @@ boot_f3 <- test_mediation(Y ~ med + X1, data = test_data, test = "boot",
 
 test_that("formula interface works correctly", {
 
-  # check that results are the same as with default method
-  expect_equal(boot_f1, boot_without)
-  expect_equal(boot_f2, boot_without)
-  expect_equal(boot_f3, boot_without)
+  ## check that results are the same as with default method
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_without), "reps")
+  expect_equal(boot_f1[keep], boot_without[keep])
+  expect_equal(boot_f2[keep], boot_without[keep])
+  expect_equal(boot_f3[keep], boot_without[keep])
+  # check that "boot" object is the same
+  keep <- setdiff(names(boot_without$reps), "statistic")
+  expect_equal(boot_f1$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f2$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f3$reps[keep], boot_without$reps[keep])
 
 })
 
@@ -111,10 +119,18 @@ boot_f3 <- test_mediation(Y ~ med + X1 + X2, data = test_data, test = "boot",
 
 test_that("formula interface works correctly", {
 
-  # check that results are the same as with default method
-  expect_equal(boot_f1, boot_without)
-  expect_equal(boot_f2, boot_without)
-  expect_equal(boot_f3, boot_without)
+  ## check that results are the same as with default method
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_without), "reps")
+  expect_equal(boot_f1[keep], boot_without[keep])
+  expect_equal(boot_f2[keep], boot_without[keep])
+  expect_equal(boot_f3[keep], boot_without[keep])
+  # check that "boot" object is the same
+  keep <- setdiff(names(boot_without$reps), "statistic")
+  expect_equal(boot_f1$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f2$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f3$reps[keep], boot_without$reps[keep])
 
 })
 
@@ -159,10 +175,18 @@ boot_f3 <- test_mediation(Y ~ med + X1, data = test_data, test = "boot",
 
 test_that("formula interface works correctly", {
 
-  # check that results are the same as with default method
-  expect_equal(boot_f1, boot_without)
-  expect_equal(boot_f2, boot_without)
-  expect_equal(boot_f3, boot_without)
+  ## check that results are the same as with default method
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_without), "reps")
+  expect_equal(boot_f1[keep], boot_without[keep])
+  expect_equal(boot_f2[keep], boot_without[keep])
+  expect_equal(boot_f3[keep], boot_without[keep])
+  # check that "boot" object is the same
+  keep <- setdiff(names(boot_without$reps), "statistic")
+  expect_equal(boot_f1$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f2$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f3$reps[keep], boot_without$reps[keep])
 
 })
 
@@ -207,9 +231,17 @@ boot_f3 <- test_mediation(Y ~ med + X1, data = test_data, test = "boot",
 
 test_that("formula interface works correctly", {
 
-  # check that results are the same as with default method
-  expect_equal(boot_f1, boot_without)
-  expect_equal(boot_f2, boot_without)
-  expect_equal(boot_f3, boot_without)
+  ## check that results are the same as with default method
+  # ("boot" object should also be the same but needs to be checked separately
+  # because of the function that is stored)
+  keep <- setdiff(names(boot_without), "reps")
+  expect_equal(boot_f1[keep], boot_without[keep])
+  expect_equal(boot_f2[keep], boot_without[keep])
+  expect_equal(boot_f3[keep], boot_without[keep])
+  # check that "boot" object is the same
+  keep <- setdiff(names(boot_without$reps), "statistic")
+  expect_equal(boot_f1$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f2$reps[keep], boot_without$reps[keep])
+  expect_equal(boot_f3$reps[keep], boot_without$reps[keep])
 
 })
