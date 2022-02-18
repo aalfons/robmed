@@ -67,26 +67,65 @@ variables are included here.
     dimension among team members.  Value diversity was measured in the first
     survey (before the first game).}
 
-    \item{\code{ProceduralJustice}}{}
+    \item{\code{ProceduralJustice}}{Procedural justice was measured by the
+    intra-unit procedural justice climate items of Li & Cropanzano (2009).
+    Respondents indicated the extent to which they agree or disagree with
+    these items on a 5-point Likert scale (1 = strongly disagree, 5 = strongly
+    agree), and the items were aggregated to the team level.  Procedural
+    justice was measured in the third survey (after the second game).}
 
-    \item{\code{InteractionalJustice}}{}
+    \item{\code{InteractionalJustice}}{Interactional justice was measured by
+    the intra-unit interactional justice climate items of Li & Cropanzano
+    (2009).  Respondents indicated the extent to which they agree or disagree
+    with these items on a 5-point Likert scale (1 = strongly disagree, 5 =
+    strongly agree), and the items were aggregated to the team level.
+    Interactional justice was measured in the third survey (after the second
+    game).}
 
-    \item{\code{SharedLeadership}}{}
+    \item{\code{SharedLeadership}}{Shared leadership was measured following
+    Carson, Tesluk & Marrone (2007). Every team member assessed each of their
+    peers on a 5-point Likert scale (1 = not at all, 5 = to a very great
+    extent) on the question of \sQuote{To what degree does your team rely on
+    this individual for leadership?}.  To operationalize shared leadership, we
+    then summed all ratings of each other’s leadership and divide it by the
+    total number of possible relationships among team members.  Shared
+    leadership was measured in the second survey (between the two games).}
 
-    \item{\code{AgeDiversity}}{}
+    \item{\code{AgeDiversity}}{Following Harrison & Klein (2007), age diversity
+    was operationalized with the coefficient of variation of the team members'
+    ages.}
 
-    \item{\code{GenderDiversity}}{}
+    \item{\code{GenderDiversity}}{Gender diversity was measured with Blau's
+    index, \eqn{1 - \sum_{i} p_{i}^{2}}{1 - the sum of the squared values of
+    p_i}, where \eqn{p_{i}}{p_i} is the proportion of team members in the
+    \eqn{i}{i}-th category (Blau, 1977).}
 
-    \item{\code{TeamScore}}{The team's score on the second game, which is
-    determined by objective performance measures.}
+    \item{\code{TeamScore}}{The team performance scores on the second game
+    were computed at the end of the simulation through a mix of five objective
+    performance measures: return on equity, earnings-per-share, stock price,
+    credit rating, and image rating.  The scores are automatically computed by
+    the simulation game software, and scores ranged from 49 to 110.  See
+    Mathieu & Rapp (2009) for more information. The scores were communicated
+    to the teams only after the third survey.}
 
   }
 }
 \references{
+Blau, P.M. (1977) \emph{Inequality and Heterogeneity: A Primitive Theory of
+Social Structure}. New York, NY: Free Press.
+
+Carson, J.B., Tesluk, P.E. and Marrone, J.A. (2007) Shared Leadership in Teams:
+An Investigation of Antecedent Conditions and Performance. \emph{Academy of
+Management Journal}, \bold{50}(5), 1217--1234.
+
 Hackman, J.R. (1986) The Psychology of Self-Management in Organizations.  In
 Pallack, M.S and Perloff, R.O. (Eds.), \emph{Psychology and Work: Productivity,
 Change, and Employment}, 89--136.  Washington, DC: American Psychological
 Association.
+
+Harrison, D.A. and Klein, K.J. (2007) What's the Difference? Diversity
+Constructs as Separation, Variety, or Disparity in Organizations. \emph{Academy
+of Management Review}, \bold{32}(4): 1199--1228.
 
 Jehn, K.A. (1995) A Multi-Method Examination of the Benefits and Detriments of
 Intra-Group Conflict.  \emph{Administrative Science Quarterly}, \bold{40}(2),
@@ -96,9 +135,17 @@ Lewis, K. (2003) Measuring Transactive Memory Systems in the Field: Scale
 Development and Validation.  \emph{Journal of Applied Psychology},
 \bold{88}(4), 587--604.
 
+Li, A. and Cropanzano, R. (2009) Fairness at the Group Level: Justice Climate
+and Intraunit Justice Climate. \emph{Journal of Management}, \bold{35}(3),
+564--599.
+
 Lindeman, M. and Verkasalo, M. (2005) Measuring Values With the Short
 Schwartz's Value Survey.  \emph{Journal of Personality Assessment},
 \bold{85}(2), 170--178.
+
+Mathieu, J.E. and Rapp, T.L. (2009).  Laying the Foundation for Successful
+Team Performance Trajectories: The Roles of Team Charters and Performance
+Strategies. \emph{Journal of Applied Psychology}, \bold{94}(1), 90--103.
 
 Mowday, R.T., Steers, R.M. and Porter, L.W. (1979) The Measurement of
 Organizational Commitment.  \emph{Journal of Vocational Behavior},
