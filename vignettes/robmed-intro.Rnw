@@ -153,7 +153,7 @@ and the same holds for the corresponding OLS estimates.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.5\textwidth]{figures/simple_mediation}
+\includegraphics[width=0.5\textwidth]{static-figures/simple-mediation}
 \end{center}
 \caption{Diagram visualizing a simple mediation model.}
 \label{fig:simple}
@@ -304,7 +304,7 @@ mediators are scaled similarly.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.6\textwidth]{figures/parallel_mediation}
+\includegraphics[width=0.6\textwidth]{static-figures/parallel-mediation}
 \end{center}
 \caption{Diagram visualizing a parallel multiple mediator model.}
 \label{fig:parallel}
@@ -349,7 +349,7 @@ indirect effects in the case of three serial mediators.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.7\textwidth]{figures/serial_mediation}
+\includegraphics[width=0.7\textwidth]{static-figures/serial-mediation}
 \end{center}
 \caption{Diagram visualizing a serial multiple mediator model with two
 mediators.}
@@ -393,7 +393,7 @@ pairwise comparisons between the indirect effects or their absolute values.
 
 \begin{figure}[t!]
 \begin{center}
-\includegraphics[width=0.525\textwidth]{figures/multiple_mediation}
+\includegraphics[width=0.525\textwidth]{static-figures/multiple-mediation}
 \end{center}
 \caption{Diagram visualizing a mediation model with multiple independent
 variables.}
@@ -689,10 +689,16 @@ and the resulting weight function are displayed in Figure~\ref{fig:loss}, which
 also includes the loss function and weight function from ordinary least-squares
 (OLS) regression for comparison.
 
+\begin{Schunk}
 \begin{figure}[t]
-{\centering \includegraphics[width=0.975\textwidth]{figures/figure-loss-1}}
+
+{\centering \includegraphics[width=0.975\textwidth]{static-figures/loss}
+
+}
+
 \caption[Loss function (\emph{left}) and corresponding weight function (\emph{right}) for OLS regression and the robust MM-estimator of regression]{Loss function (\emph{left}) and corresponding weight function (\emph{right}) for OLS regression and the robust MM-estimator of regression.}\label{fig:loss}
 \end{figure}
+\end{Schunk}
 
 
 \subsubsection{Fast-and-robust bootstrap}
