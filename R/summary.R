@@ -397,7 +397,7 @@ get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
 
 
 ## compute duplication matrix according to Magnus & Neudecker (1999, p.49)
-## (required for computing the Fischer information matrix of a mediation model
+## (required for computing the Fisher information matrix of a mediation model
 ## fit based on a scatter matrix)
 duplication_matrix <- function(p){
   D <- diag(p)
