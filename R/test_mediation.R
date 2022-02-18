@@ -622,7 +622,7 @@ boot_test_mediation.reg_fit_mediation <- function(fit,
       # compute coefficients from regression y ~ m + x + covariates
       mx_i <- z_i[, c(1L, j_m, j_x, j_covariates)]
       y_i <- z_i[, j_y]
-      coef_y_i <- unname(drop(solve(crossprod(mx_i)) %*% crossprod(mx_i, y_i)))
+      coef_y_i <- unname(rq.fit(mx_i, y_i, tau = 0.5)$coefficients)
       # return coefficients
       c(coef_m_i, coef_y_i)
     }
