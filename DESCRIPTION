@@ -15,6 +15,7 @@ Imports:
     sn (>= 1.5-4),
     utils
 Suggests:
+    knitr,
     testthat
 Description: Perform mediation analysis via a (fast and robust) bootstrap test.
 License: GPL (>= 2)
