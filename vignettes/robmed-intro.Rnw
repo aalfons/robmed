@@ -690,7 +690,7 @@ also includes the loss function and weight function from ordinary least-squares
 (OLS) regression for comparison.
 
 \begin{Schunk}
-\begin{figure}[t]
+\begin{figure}[b!]
 
 {\centering \includegraphics[width=0.975\textwidth]{static-figures/loss}
 
