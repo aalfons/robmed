@@ -48,7 +48,7 @@ or more intervening variables, which are called mediators.  The analysis is
 often carried out via a series of linear regressions, in which case the
 indirect effects can be computed as products of coefficients from those
 regressions.  Statistical significance of the indirect effects is typically
-assessed via a bootstrap test based on ordinary least squares estimates.
+assessed via a bootstrap test based on ordinary least-squares estimates.
 However, this test is sensitive to outliers or other deviations from normality
 assumptions, which poses a serious threat to empirical testing of theory about
 mediation mechanisms.  The \proglang{R} package \pkg{robmed} implements a
@@ -149,7 +149,7 @@ coefficients $ab$ is called the \emph{indirect effect} of $X$ on $Y$ and
 constitutes the main parameter of interest in mediation analysis.  Under the
 usual assumption of independent and normally distributed error terms $e_{1}$,
 $e_{2}$ and $e_{3}$, it holds that $c' = ab + c$ \citep[e.g.,][]{mackinnon95},
-and the same holds for the corresponding OLS estimates.
+and the same holds for the corresponding ordinary least-squares (OLS) estimates.
 
 \begin{figure}[t]
 \begin{center}
@@ -202,7 +202,7 @@ Bayesian multilevel mediation models can be estimated with package \pkg{bmlm}
 general multiple mediation analysis with continuous or binary/categorical
 variables.  In addition, general purpose software for structural equation
 modeling such as \proglang{Mplus} \citep{Mplus} or the \proglang{R} packages
-\code{sem} \citep{sem} and \pkg{lavaan} \citep{lavaan} can be used for
+\pkg{sem} \citep{sem} and \pkg{lavaan} \citep{rosseel12} can be used for
 mediation analysis.  The former also allows for maximum likelihood
 estimation with skew-normal, $t$, or skew-$t$ error distributions
 \citep{asparouhov16}.
@@ -576,9 +576,9 @@ empirical analyses.}
 
 
 A bootstrap test is considered state-of-the art for mediation analysis, with
-many authors advocating to use the bootstrap with OLS estimation of the
-coefficients in the mediation model \citep{bollen90, shrout02, mackinnon04,
-preacher04, preacher08}.
+many authors advocating to use the bootstrap with ordinary least-squares (OLS)
+estimation of the coefficients in the mediation model \citep{bollen90,
+shrout02, mackinnon04, preacher04, preacher08}.
 However, a bootstrap test can easily be applied to other methods of estimation.
 For instance, the mediation model can also be estimated via regressions with
 more flexible error distributions such as the skew-normal, $t$, or skew-$t$
@@ -686,8 +686,8 @@ deviates, as an observation with a large residual (large deviation) receives a
 weight of 0 or close to 0, while an observation with a small residual (small
 deviation) receives a weight close to 1. The loss function from \eqref{eq:loss}
 and the resulting weight function are displayed in Figure~\ref{fig:loss}, which
-also includes the loss function and weight function from ordinary least-squares
-(OLS) regression for comparison.
+also includes the loss function and weight function from OLS regression for
+comparison.
 
 \begin{Schunk}
 \begin{figure}[b!]
@@ -789,13 +789,20 @@ the class structure of package \pkg{robmed} in Section~\ref{sec:classes}.
 
 The equations in the mediation model follow a specific structure regarding
 which variable is used as the response variable and which variables are the
-explanatory variables.  Some \proglang{R} package for mediation analysis
-require the user to specify one formula for each equation (e.g.,
-\pkg{mediation}), which can be tedious and prone to mistakes, in particular for
-models with multiple mediators and multiple independent variables or control
-variables.  Other packages do not provide a formula interface at all (e.g.,
-\pkg{psych} or \pkg{MBESS}), despite formulas being the standard way of
-describing models in \proglang{R}.
+explanatory variables.
+% Some \proglang{R} packages for mediation analysis require the user to specify
+% one formula for each equation (e.g., \pkg{mediation}), which can be tedious
+% and prone to mistakes, in particular for models with multiple mediators and
+% multiple independent variables or control variables.  Other packages do not
+% provide a formula interface at all (e.g., \pkg{psych} or \pkg{MBESS}), despite
+% formulas being the standard way of describing models in \proglang{R}.
+Some \proglang{R} packages for mediation analysis, e.g., \pkg{mediation}
+\citep{tingley14}, require the user to specify one formula for each equation,
+which can be tedious and prone to mistakes, in particular for models with
+multiple mediators and multiple independent variables or control variables.
+Other packages, e.g., \pkg{psych} \citep{psych} or \pkg{MBESS} \citep{MBESS},
+do not provide a formula interface at all, despite formulas being the standard
+way of describing models in \proglang{R}.
 
 For package \pkg{robmed}, we designed a formula interface that builds upon the
 standard formula interface in \proglang{R}, but allows to specify the
@@ -1023,7 +1030,7 @@ confidence interval is strictly negative.
 
 Note that the output corresponding to the regression models is similar to
 that of the \code{summary()} method for \code{"lmrob"} objects from package
-\code{robustbase} \citep{robustbase}, but it is shortened as the output is
+\pkg{robustbase} \citep{robustbase}, but it is shortened as the output is
 already rather long.  In particular, we emphasize that the indices of
 potential outliers are displayed for each regression model.
 % , which is important diagnostic output \citep[see][for a detailed discussion
@@ -1063,12 +1070,12 @@ weight_plot(robust_boot_simple) +
 @
 
 It should also be noted that the output from \code{summary()} is structured
-in a similar way as the output of the widely-used \proglang{SPSS} macro
-\code{PROCESS} \citep{hayes18}, which implements the OLS bootstrap test for
-conditional process models such as the mediation model.  The intention is to
-facilitate the use of package \pkg{robmed} for users of the \code{PROCESS}
-macro.  While \code{PROCESS} constructs a bootstrap confidence interval for
-the indirect effect, it reports estimates on the original data and the usual
+in a similar way as the output of the widely-used macro \code{PROCESS}
+\citep{hayes18}, which implements the OLS bootstrap test for conditional
+process models such as the mediation model.  The intention is to facilitate
+the use of package \pkg{robmed} for users of the \code{PROCESS} macro.
+While \code{PROCESS} constructs a bootstrap confidence interval for the
+indirect effect, it reports estimates on the original data and the usual
 normal-theory $t$ tests for all other effects.  In \pkg{robmed}, the same
 can be achieved by setting the argument \code{type = "data"} in the
 \code{summary()} method.  The results from the regressions are then summarized
@@ -1448,10 +1455,10 @@ Finally, a graphical user interface (GUI) could be beneficial for less
 proficient \proglang{R} users.  Developing such a GUI, for instance as a web
 application based on package \pkg{shiny} \citep{shiny}, is future work.
 In the meantime, we provide the \proglang{R} extension bundle \pkg{ROBMED}
-for \proglang{SPSS}, which links to the \proglang{R} package \pkg{robmed}
-and allows to use its main functionality through a GUI from within
-\proglang{SPSS}.  Interested readers can obtain the extension bundle from
-\url{https://github.com/aalfons/ROBMED-RSPSS}.
+for \proglang{SPSS} \citep{SPSS}, which links to the \proglang{R} package
+\pkg{robmed} and allows to use its main functionality through a GUI from
+within \proglang{SPSS}.  Interested readers can obtain the extension bundle
+from \url{https://github.com/aalfons/ROBMED-RSPSS}.
 
 
 %% -- Optional special unnumbered sections -------------------------------------
@@ -1468,10 +1475,11 @@ and allows to use its main functionality through a GUI from within
 The results in this paper were obtained using \proglang{R}
 version~\Sexpr{paste(R.Version()[c("major", "minor")], collapse = ".")}
 \citep{R} with package \pkg{robmed} version~\Sexpr{packageVersion("robmed")}
-and its dependencies \pkg{boot} version~\Sexpr{packageVersion("boot")}
-\citep{boot}, \pkg{ggplot2} version~\Sexpr{packageVersion("ggplot2")}
-\citep{wickham16}, and \pkg{robustbase}
-version~\Sexpr{packageVersion("robustbase")} \citep{robustbase}.
+\citep{robmed} and its dependencies \pkg{boot}
+version~\Sexpr{packageVersion("boot")} \citep{boot},
+\pkg{ggplot2} version~\Sexpr{packageVersion("ggplot2")} \citep{wickham16},
+and \pkg{robustbase} version~\Sexpr{packageVersion("robustbase")}
+\citep{robustbase}.
 Package \pkg{robmed} also builds upon packages \pkg{quantreg} \citep{quantreg}
 %, \pkg{sn} \citep{sn}, and \pkg{shiny} \citep{shiny}
 and \pkg{sn} \citep{sn} for functionality not shown in this paper, as well as
@@ -1710,7 +1718,7 @@ Figure~\ref{fig:summary-parallel} contains the resulting diagnostic plot.
 <<summary-parallel, fig.width=5, fig.height = 6, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
 summary(robust_boot_parallel)
 @
-
+\newpage  % make sure affiliation is printed fully after diagnostic plot
 
 %% -----------------------------------------------------------------------------
 
