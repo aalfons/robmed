@@ -1076,7 +1076,7 @@ process models such as the mediation model.  The intention is to facilitate
 the use of package \pkg{robmed} for users of the \code{PROCESS} macro.
 While \code{PROCESS} constructs a bootstrap confidence interval for the
 indirect effect, it reports estimates on the original data and the usual
-normal-theory $t$ tests for all other effects.  In \pkg{robmed}, the same
+normal-theory $t$~tests for all other effects.  In \pkg{robmed}, the same
 can be achieved by setting the argument \code{type = "data"} in the
 \code{summary()} method.  The results from the regressions are then summarized
 in the usual way, as shown below for the OLS bootstrap.
@@ -1135,7 +1135,7 @@ p_value(robust_boot_simple, parm = "Indirect")
 p_value(ols_boot_simple, parm = "Indirect")
 @
 %
-Here, the $p$ value for the robust bootstrap test shows strong evidence against
+Here, the $p$~value for the robust bootstrap test shows strong evidence against
 the null hypothesis of no mediation, whereas the OLS bootstrap fails to do so.
 
 Several plots are implemented to visualize the results of mediation analysis.
