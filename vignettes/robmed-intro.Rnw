@@ -1455,10 +1455,10 @@ Finally, a graphical user interface (GUI) could be beneficial for less
 proficient \proglang{R} users.  Developing such a GUI, for instance as a web
 application based on package \pkg{shiny} \citep{shiny}, is future work.
 In the meantime, we provide the \proglang{R} extension bundle \pkg{ROBMED}
-for \proglang{SPSS} \citep{SPSS}, which links to the \proglang{R} package
-\pkg{robmed} and allows to use its main functionality through a GUI from
-within \proglang{SPSS}.  Interested readers can obtain the extension bundle
-from \url{https://github.com/aalfons/ROBMED-RSPSS}.
+\citep{ROBMED-RSPSS} for \proglang{SPSS} \citep{SPSS}, which links to the
+\proglang{R} package \pkg{robmed} and allows to use its main functionality
+through a GUI from within \proglang{SPSS}.  Interested readers can obtain the
+extension bundle from \url{https://github.com/aalfons/ROBMED-RSPSS}.
 
 
 %% -- Optional special unnumbered sections -------------------------------------
