@@ -1143,7 +1143,8 @@ They can be applied to each object individually, but it is also possible to
 combine multiple objects from mediation analysis into a list in order to
 compare different methods graphically.  If names are given to the list
 elements, those names will be used by the plots to identify the different
-methods.
+methods.  Note that we use the name \code{"ROBMED"} here to refer to the robust
+bootstrap test.
 %
 <<>>=
 boot_list <- list("OLS bootstrap" = ols_boot_simple,
