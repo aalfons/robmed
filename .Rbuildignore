@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 tests/verified_results/*
 LICENSE
+README.md

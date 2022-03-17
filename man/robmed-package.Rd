@@ -16,7 +16,7 @@ The DESCRIPTION file:
 \references{
 Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust bootstrap test
 for mediation analysis.  \emph{Organizational Research Methods},
-\doi{10.1177/1094428121999096}.
+doi: 10.1177/1094428121999096.
 }
 \author{
 \packageAuthor{robmed}
