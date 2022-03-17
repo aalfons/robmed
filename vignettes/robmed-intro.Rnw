@@ -123,10 +123,10 @@ library("robmed")
 
 \section{Introduction} \label{sec:intro}
 
-In the social, behavioral, and medical sciences, \emph{mediation analysis} is a
-popular statistical technique for studying how an \emph{independent variable}
-affects a \emph{dependent variable} indirectly through an intervening variable
-called a \emph{mediator}.
+In the social, behavioral, and medical sciences, mediation analysis is a
+popular statistical technique for studying how an independent variable
+affects a dependent variable indirectly through an intervening variable
+called a mediator.
 For instance, \citet{erreygers18} find that poor sleep quality in adolescents
 explains cyberbullying through anger, and \citet{gaudiano10} report that the
 believability of hallucinations after treatment for psychotic disorders
@@ -143,13 +143,13 @@ Y &= i_{3} + c' X + e_{3}, \label{eq:simpleY'}
 where $Y$ denotes the dependent variable, $X$ the independent variable, $M$ the
 hypothesized mediator, $i_{1}$, $i_{2}$, $i_{3}$, $a$, $b$, $c$, and $c'$ are
 regression coefficients to be estimated, and $e_{1}$, $e_{2}$, and $e_{3}$ are
-random error terms.  The coefficients $c$ and $c'$ are called the \emph{direct
-effect} and \emph{total effect}, respectively, of $X$ on $Y$.  The product of
-coefficients $ab$ is called the \emph{indirect effect} of $X$ on $Y$ and
-constitutes the main parameter of interest in mediation analysis.  Under the
-usual assumption of independent and normally distributed error terms $e_{1}$,
-$e_{2}$ and $e_{3}$, it holds that $c' = ab + c$ \citep[e.g.,][]{mackinnon95},
-and the same holds for the corresponding ordinary least-squares (OLS) estimates.
+random error terms.  The coefficients $c$ and $c'$ are called the direct effect
+and total effect, respectively, of $X$ on $Y$.  The product of coefficients
+$ab$ is called the indirect effect of $X$ on $Y$ and constitutes the main
+parameter of interest in mediation analysis.  Under the usual assumption of
+independent and normally distributed error terms $e_{1}$, $e_{2}$ and $e_{3}$,
+it holds that $c' = ab + c$ \citep[e.g.,][]{mackinnon95}, and the same holds
+for the corresponding ordinary least-squares (OLS) estimates.
 
 \begin{figure}[t]
 \begin{center}
@@ -278,7 +278,7 @@ mediated.  All those extensions may include additional control variables
 
 \subsubsection{Parallel multiple mediator model}
 
-In the \emph{parallel multiple mediator model}, an independent variable $X$ is
+In the parallel multiple mediator model, an independent variable $X$ is
 hypothesized to influence a dependent variable $Y$ through multiple mediators
 $M_{1}, \dots, M_{k}$, while the mediator variables do not influence each
 other.
@@ -315,9 +315,9 @@ mediators are scaled similarly.
 
 % A distinctive feature of the parallel multiple mediator model is that the
 % hypothesized mediators $M_{1}, \dots, M_{k}$ do not affect one another.
-% In contrast, the \emph{serial multiple mediator model} allows that the mediators
+% In contrast, the serial multiple mediator model allows that the mediators
 % influence each other in a sequential manner.
-A distinctive feature of the \emph{serial multiple mediator model} is that the
+A distinctive feature of the serial multiple mediator model is that the
 hypothesized mediators $M_{1}, \dots, M_{k}$ may influence each other in a
 sequential manner, unlike the parallel multiple mediator model in which the
 mediators do not affect one another.
@@ -371,8 +371,8 @@ terms.
 
 \subsubsection{Multiple independent variables to be mediated}
 
-Instead of having multiple mediators, one can also allow for \emph{multiple
-independent variables} $X_{1}, \dots, X_{l}$ to influence the dependent
+Instead of having multiple mediators, one can also allow for multiple
+independent variables $X_{1}, \dots, X_{l}$ to influence the dependent
 variable $Y$ through a hypothesized mediator $M$.  The resulting model
 is visualized in Figure~\ref{fig:multiple} and defined by the equations
 \begin{align}
@@ -414,7 +414,7 @@ independent variable is represented by a group of dummy variables.
 
 In many study designs, it is necessary to isolate the effects of the
 independent variables of interest from other factors.  For this purpose,
-\emph{control variables} should be added to all regression equations of a
+control variables should be added to all regression equations of a
 mediation model.  This means that there is no intrinsic difference between
 independent variables of interest and control variables in terms of the model
 or its estimation.  The difference is purely conceptual in nature: for the
@@ -696,7 +696,7 @@ comparison.
 
 }
 
-\caption[Loss function (\emph{left}) and corresponding weight function (\emph{right}) for OLS regression and the robust MM-estimator of regression]{Loss function (\emph{left}) and corresponding weight function (\emph{right}) for OLS regression and the robust MM-estimator of regression.}\label{fig:loss}
+\caption[Loss function (left) and corresponding weight function (right) for OLS regression and the robust MM-estimator of regression.]{Loss function (left) and corresponding weight function (right) for OLS regression and the robust MM-estimator of regression.}\label{fig:loss}
 \end{figure}
 \end{Schunk}
 
@@ -848,9 +848,9 @@ Note that different variables within \code{m()}, \code{parallel_m()},
 \subsection{Main functions and class structure} \label{sec:classes}
 
 The two main functions of package \pkg{robmed} are \code{fit_mediation()},
-which implements various methods for the \emph{estimation} of a mediation
-model, and \code{test_mediation()}, which performs \emph{statistical tests}
-on the indirect effects in the mediation model.
+which implements various methods for the estimation of a mediation model,
+and \code{test_mediation()}, which performs statistical tests on the indirect
+effects in the mediation model.
 
 % Function \code{fit_mediation()} implements various methods for the estimation
 % of a mediation model.  It is mainly used internally, but it is also useful for
