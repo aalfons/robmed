@@ -92,7 +92,7 @@ summary.boot_test_mediation <- function(object, type = c("boot", "data"),
   # component 'boot' only exists for bootstrap test, otherwise NULL
   type <- match.arg(type)
   fit <- object$fit
-  if(type == "boot") summary <- get_summary(fit, boot = object$reps)
+  if (type == "boot") summary <- get_summary(fit, boot = object$reps)
   else summary <- get_summary(fit)
   # construct return object
   result <- list(object = object, summary = summary)
@@ -316,7 +316,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   # return results
   result <- list(fit_mx = summary_mx, fit_ymx = summary_ymx, total = total,
                  direct = direct, x = x, y = y, m = m, covariates = covariates,
-                 n = n, robust = robust, model = model)
+                 n = n, robust = robust, family = family, model = model)
   class(result) <- c("summary_reg_fit_mediation", "summary_fit_mediation")
   result
 }
