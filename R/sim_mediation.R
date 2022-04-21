@@ -9,27 +9,6 @@
 #' @export
 sim_mediation <- function(object, n, ...) UseMethod("sim_mediation")
 
-#'
-sim_mediation.default <- function(object, n, model = "simple",
-                                  family = "gaussian", ...) {
-  # 'object' should be a list of effects? or the original data set?
-}
-
-#' @export
-sim_mediation.fit_mediation <- function(object, n = NULL, ...) {
-  # get summary of model fit to obtain standard deviations and standard errors
-  summary <- get_summary(object)
-  if (is.null(n)) n <- summary$n
-  # temporarily return summary
-  summary
-}
-
-#' @export
-sim_mediation.test_mediation <- function(object, n = NULL, ...) {
-  # call method for model fit
-  sim_mediation(object$fit, n = n, ...)
-}
-
 #' @export
 # explanatory ... character string indicating whether to draw the explanatory
 #                 variables from a (normal) distribution, or whether to
@@ -37,37 +16,33 @@ sim_mediation.test_mediation <- function(object, n = NULL, ...) {
 # errors ........ character string indicating whether to draw the error terms
 #                 from the fitted model distribution, or whether to bootstrap
 #                 the error terms from the observed residuals.
-sim_mediation.boot_test_mediation <- function(object, n = NULL,
-                                              explanatory = c("sim", "boot"),
-                                              errors = c("sim", "boot"),
-                                              ...) {
+sim_mediation.fit_mediation <- function(object, n = NULL,
+                                        explanatory = c("sim", "boot"),
+                                        errors = c("sim", "boot"), ...) {
 
   # initializations
   explanatory <- match.arg(explanatory)
   errors <- match.arg(errors)
-  # get summary of model fit to obtain standard deviations and standard errors
-  # component 'boot' only exists for bootstrap test, otherwise NULL
-  fit <- object$fit
-  if (is.null(n)) n <- nrow(fit$data)
+  if (is.null(n)) n <- nrow(object$data)
   # extract relevant information
-  x <- fit$x
-  y <- fit$y
-  m <- fit$m
-  p_m <- length(fit$m)
-  covariates <- fit$covariates
-  model <- fit$model
+  x <- object$x
+  y <- object$y
+  m <- object$m
+  p_m <- length(object$m)
+  covariates <- object$covariates
+  model <- object$model
   if (is.null(model)) model <- "simple"
 
   # simulate or bootstrap explanatory variables
-  if (explanatory == "sim") X <- sim_explanatory(fit, n = n)
-  else X <- boot_explanatory(fit, n = n)
+  if (explanatory == "sim") X <- sim_explanatory(object, n = n)
+  else X <- boot_explanatory(object, n = n)
 
   # simulate or bootstrap error terms
-  if (errors == "sim") e <- sim_errors(fit, n = n)
-  else e <- boot_errors(fit, n = n)
+  if (errors == "sim") e <- sim_errors(object, n = n)
+  else e <- boot_errors(object, n = n)
 
   # extract coefficients
-  coef <- get_coefficients(fit)
+  coef <- get_coefficients(object)
 
   # simulate mediators under the model
   if (model == "parallel") {
@@ -100,6 +75,12 @@ sim_mediation.boot_test_mediation <- function(object, n = NULL,
   # return simulated data with variables in same order as 'data' component
   data.frame(X[, x, drop = FALSE], Y, M, X[, covariates, drop = FALSE])
 
+}
+
+#' @export
+sim_mediation.test_mediation <- function(object, n = NULL, ...) {
+  # call method for model fit
+  sim_mediation(object$fit, n = n, ...)
 }
 
 
