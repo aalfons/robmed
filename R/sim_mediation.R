@@ -48,7 +48,7 @@ sim_mediation.boot_test_mediation <- function(object, n = NULL,
   # get summary of model fit to obtain standard deviations and standard errors
   # component 'boot' only exists for bootstrap test, otherwise NULL
   fit <- object$fit
-  if (is.null(n)) n <- nobs(fit)
+  if (is.null(n)) n <- nrow(fit$data)
   # extract relevant information
   x <- fit$x
   y <- fit$y
@@ -60,11 +60,11 @@ sim_mediation.boot_test_mediation <- function(object, n = NULL,
 
   # simulate or bootstrap explanatory variables
   if (explanatory == "sim") X <- sim_explanatory(fit, n = n)
-  else stop("not implemented yet")
+  else X <- boot_explanatory(fit, n = n)
 
   # simulate or bootstrap error terms
   if (errors == "sim") e <- sim_errors(fit, n = n)
-  else stop("not implemented yet")
+  else e <- boot_errors(fit, n = n)
 
   # extract coefficients
   coef <- get_coefficients(fit)
@@ -168,8 +168,7 @@ sim_errors <- function(object, n) UseMethod("sim_errors")
 
 sim_errors.reg_fit_mediation <- function(object, n) {
   # initializations
-  m <- object$m
-  p_m <- length(m)
+  p_m <- length(object$m)
   family <- object$family
   # draw error terms from the respective error distributions
   if (family == "gaussian") {
@@ -273,4 +272,60 @@ get_scale.lm <- function(object) {
 get_scale.rq <- function(object) {
   if (object$tau != 0.5) stop("only implemented for median regression")
   mad(residuals(object), center = 0)  # MAD with median residual set to 0
+}
+
+
+## bootstrap explanatory variables from a mediation model fit
+boot_explanatory <- function(object, n) {
+  # initializations
+  data <- as.matrix(object$data, rownames.force = FALSE)
+  n_data <- nrow(data)
+  predictors <- c(object$x, object$covariates)
+  # draw bootstrap sample of explanatory variables
+  i <- sample.int(n_data, size = n, replace = TRUE)
+  data[i, predictors, drop = FALSE]
+}
+
+
+## bootstrap error terms from residuals of a mediation model fit
+
+boot_errors <- function(object, n) UseMethod("boot_errors")
+
+boot_errors.reg_fit_mediation <- function(object, n) {
+  # initializations
+  p_m <- length(object$m)
+  # extract residuals and bootstrap errors for mediators
+  if (p_m == 1L) {
+    residuals_M <- unname(residuals(object$fit_mx))
+    e_M <- sample(residuals_M, size = n, replace = TRUE)
+  } else {
+    e_M <- lapply(object$fit_mx, function(fit) {
+      residuals_M <- unname(residuals(fit))
+      sample(residuals_M, size = n, replace = TRUE)
+    })
+  }
+  # extract residuals and bootstrap errors for dependent variable
+  residuals_Y <- unname(residuals(object$fit_ymx))
+  e_Y <- sample(residuals_Y, size = n, replace = TRUE)
+  # return list of errors
+  list(M = e_M, Y = e_Y)
+}
+
+boot_errors.cov_fit_mediation <- function(object, n) {
+  # initializations
+  x <- object$x
+  y <- object$y
+  m <- object$m
+  data <- as.matrix(object$data, rownames.force = FALSE)
+  # extract coefficients
+  coef <- get_coefficients(object)
+  # compute residuals and bootstrap errors for mediators
+  residuals_M <- data[, m] - coef$M[1] - coef$M[x] * data[, x]
+  e_M <- sample(residuals_M, size = n, replace = TRUE)
+  # compute residuals and bootstrap errors for dependent variable
+  mx <- c(m, x)
+  residuals_Y <- data[, y] - coef$Y[1] - drop(data[, mx] %*% coef$Y[mx])
+  e_Y <- sample(residuals_Y, size = n, replace = TRUE)
+  # return list of errors
+  list(M = e_M, Y = e_Y)
 }

@@ -3,16 +3,6 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
-## extract number of observations from regression model fits
-#' @export
-#' @import stats
-nobs.reg_fit_mediation <- function(object, ...) nobs(object$fit_ymx)
-
-## extract number of observations from covariance model fits
-#' @export
-#' @import stats
-nobs.cov_fit_mediation <- function(object, ...) nobs(object$cov)
-
 ## extract number of observations from median regression
 #' @export
 #' @import stats
