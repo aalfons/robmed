@@ -31,83 +31,71 @@ sim_mediation.test_mediation <- function(object, n = NULL, ...) {
 }
 
 #' @export
-# fitted ... character string indicating whether to simulate the fitted values
-#            based on drawing the explanatory variables from a distribution and
-#            the observed coefficient estimates, or whether to bootstrap the
-#            fitted values from the model estimates.
-# ('fitted' is not the best name for this, as this refers to the fitted values
-# under the true simulated model, and not to the fitted values of an estimated
-# model.)
-# errors ... character string indicating whether to simulate the error terms
-#            from the fitted model distribution, or whether to bootstrap the
-#            error terms from the observed residuals.
+# explanatory ... character string indicating whether to draw the explanatory
+#                 variables from a (normal) distribution, or whether to
+#                 bootstrap the explanatory variables.
+# errors ........ character string indicating whether to draw the error terms
+#                 from the fitted model distribution, or whether to bootstrap
+#                 the error terms from the observed residuals.
 sim_mediation.boot_test_mediation <- function(object, n = NULL,
-                                              type = c("boot", "data"),
                                               explanatory = c("sim", "boot"),
                                               errors = c("sim", "boot"),
                                               ...) {
 
   # initializations
-  type <- match.arg(type)
   explanatory <- match.arg(explanatory)
   errors <- match.arg(errors)
   # get summary of model fit to obtain standard deviations and standard errors
   # component 'boot' only exists for bootstrap test, otherwise NULL
   fit <- object$fit
-  if (type == "boot") summary <- get_summary(fit, boot = object$reps)
-  else summary <- get_summary(fit)
-  if (is.null(n)) n <- summary$n
+  if (is.null(n)) n <- nobs(fit)
   # extract relevant information
   x <- fit$x
+  y <- fit$y
+  m <- fit$m
+  p_m <- length(fit$m)
   covariates <- fit$covariates
+  model <- fit$model
+  if (is.null(model)) model <- "simple"
 
   # simulate or bootstrap explanatory variables
   if (explanatory == "sim") X <- sim_explanatory(fit, n = n)
   else stop("not implemented yet")
 
   # simulate or bootstrap error terms
-  if (errors == "sim") e <- sim_errors(summary, n = n)
+  if (errors == "sim") e <- sim_errors(fit, n = n)
   else stop("not implemented yet")
 
-  # which type of coefficients to be used as true values
-  which <- switch(type, boot = "Boot", data = "Estimate")
   # extract coefficients
-  if (inherits(fit, "reg_fit_mediation")) {
-    # additional information
-    y <- fit$y
-    m <- fit$m
-    p_m <- length(m)
-    model <- fit$model
-    # compute the mediators under the model
-    if (model == "parallel") {
-      # parallel mediators
-      M <- sapply(seq_len(p_m), function(j) {
-        coef_M <- summary$fit_mx[[j]]$coefficients[, which]
-        coef_M[1] + X %*% coef_M[-1] + e$M[, j]
-      })
-    } else if (model == "serial") {
-      # serial mediators
-      M <- matrix(NA_real_, nrow = n, ncol = p_m)
-      for (j in seq_len(p_m)) {
-        coef_M <- summary$fit_mx[[j]]$coefficients[, which]
-        MX <- cbind(M[, seq_len(j-1)], X)
-        M[, j] <- coef_M[1] + MX %*% coef_M[-1] + e$M[, j]
-      }
-    } else {
-      # single mediator
-      coef_M <- summary$fit_mx$coefficients[, which]
-      M <- coef_M[1] + X %*% coef_M[-1] + e$M
+  coef <- get_coefficients(fit)
+
+  # simulate mediators under the model
+  if (model == "parallel") {
+    # parallel mediators
+    M <- sapply(seq_len(p_m), function(j) {
+      coef_M <- coef$M[[j]]
+      coef_M[1] + X %*% coef_M[-1] + e$M[[j]]
+    })
+  } else if (model == "serial") {
+    # serial mediators
+    M <- matrix(NA_real_, nrow = n, ncol = p_m)
+    for (j in seq_len(p_m)) {
+      coef_M <- coef$M[[j]]
+      MX <- cbind(M[, seq_len(j-1)], X)
+      M[, j] <- coef_M[1] + MX %*% coef_M[-1] + e$M[[j]]
     }
-    # add column names to mediators
-    colnames(M) <- m
-    # compute the dependent variable under the model
-    coef_Y <- summary$fit_ymx$coefficients[, which]
-    MX <- cbind(M, X)
-    Y <- coef_Y[1] + MX %*% coef_Y[-1] + e$Y
-    colnames(Y) <- y
-  } else if (inherits(fit, "cov_fit_mediation")) {
-    stop("not implemented yet")
-  } else stop("not implemented for this type of model fit")
+  } else {
+    # single mediator
+    coef_M <- coef$M
+    M <- coef_M[1] + X %*% coef_M[-1] + e$M
+  }
+  # add column names to mediators
+  colnames(M) <- m
+  # compute the dependent variable under the model
+  coef_Y <- coef$Y
+  MX <- cbind(M, X)
+  Y <- coef_Y[1] + MX %*% coef_Y[-1] + e$Y
+  colnames(Y) <- y
 
   # return simulated data with variables in same order as 'data' component
   data.frame(X[, x, drop = FALSE], Y, M, X[, covariates, drop = FALSE])
@@ -120,10 +108,7 @@ sim_mediation.boot_test_mediation <- function(object, n = NULL,
 rmediation <- function(n, object, ...) sim_mediation(object, n = n, ...)
 
 
-
-## utility functions
-
-# simulate explanatory variables based on a mediation model fit
+## simulate explanatory variables based on a mediation model fit
 
 sim_explanatory <- function(object, n) UseMethod("sim_explanatory")
 
@@ -177,36 +162,75 @@ sim_explanatory.cov_fit_mediation <- function(object, n) {
 }
 
 
-# simulate error terms based on a mediation model fit
+## simulate error terms based on a mediation model fit
 
 sim_errors <- function(object, n) UseMethod("sim_errors")
 
-sim_errors.summary_reg_fit_mediation <- function(object, n) {
+sim_errors.reg_fit_mediation <- function(object, n) {
   # initializations
   m <- object$m
   p_m <- length(m)
-  robust <- object$robust
   family <- object$family
   # draw error terms from the respective error distributions
-  if (robust == "median") {
-    stop("not implemented yet")
-  } else if (family == "gaussian") {
-    # extract residual scales for mediators
-    if (p_m == 1L) sigma_M <- object$fit_mx$s$value
-    else sigma_M <- sapply(object$fit_mx, function(fit) fit$s$value)
-    # draw errors for mediators
-    e_M <- mapply(rnorm, n, sd = sigma_M)
-    colnames(e_M) <- m
+  if (family == "gaussian") {
+    # extract residual scales and draw errors for mediators
+    if (p_m == 1L) {
+      sigma_M <- get_scale(object$fit_mx)
+      e_M <- rnorm(n, sd = sigma_M)
+    } else {
+      e_M <- lapply(object$fit_mx, function(fit) {
+        sigma_M <- get_scale(fit)
+        rnorm(n, sd = sigma_M)
+      })
+    }
     # extract residual scale and draw errors for dependent variable
-    sigma_Y <- object$fit_ymx$s$value
+    sigma_Y <- get_scale(object$fit_ymx)
     e_Y <- rnorm(n, sd = sigma_Y)
   } else {
     stop("not implemented yet")
   }
-  # return errors
+  # return list of errors
   list(M = e_M, Y = e_Y)
 }
 
-sim_errors.summary_cov_fit_mediation <- function(object, n) {
+sim_errors.cov_fit_mediation <- function(object, n) {
   stop("not implemented yet")
+}
+
+
+## extract coefficients
+
+get_coefficients <- function(object) UseMethod("get_coefficients")
+
+get_coefficients.reg_fit_mediation <- function(object) {
+  # initializations
+  p_m <- length(object$m)
+  # extract coefficients of models for mediators
+  if (p_m == 1L) coef_M <- coef(object$fit_mx)
+  else coef_M <- lapply(object$fit_mx, coef)
+  # extract coefficients of model for dependent variable
+  coef_Y <- coef(object$fit_ymx)
+  # return list of coefficients
+  list(M = coef_M, Y = coef_Y)
+}
+
+get_coefficients.cov_fit_mediation <- function(object) {
+  stop("not implemented yet")
+}
+
+
+## extract residual scale
+
+get_scale <- function(object) UseMethod("get_scale")
+
+get_scale.lmrob <- function(object) object$scale
+
+get_scale.lm <- function(object) {
+  rss <- sum(residuals(object)^2)  # residual sum of squares
+  sqrt(rss / object$df.residual)   # residual scale
+}
+
+get_scale.rq <- function(object) {
+  if (object$tau != 0.5) stop("only implemented for median regression")
+  mad(residuals(object), center = 0)  # MAD with median residual set to 0
 }
