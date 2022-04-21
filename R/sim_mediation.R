@@ -194,7 +194,31 @@ sim_errors.reg_fit_mediation <- function(object, n) {
 }
 
 sim_errors.cov_fit_mediation <- function(object, n) {
-  stop("not implemented yet")
+  # -----
+  # Note: since Zu & Yuan (2010) use the maximum likelihood estimator of the
+  # covariance matrix, we get the maximum likelihood estimates of the residual
+  # scale.  For the nonrobust version, the resulting scales therefore differ
+  # slightly from those of the OLS regression fit.
+  # -----
+  # initializations
+  x <- object$x
+  y <- object$y
+  m <- object$m
+  # extract variances of the variables
+  cov <- object$cov$cov
+  # extract effects
+  a <- object$a
+  b <- object$b
+  direct <- object$direct
+  # extract residual scales and draw errors for mediators
+  sigma_M <- sqrt(cov[m, m] - a^2 * cov[x, x])
+  e_M <- rnorm(n, sd = sigma_M)
+  # extract residual scales and draw errors for dependent variable
+  sigma_Y <- sqrt(cov[y, y] - b^2 * cov[m, m] - direct^2 * cov[x, x] -
+                    b * direct * cov[m, x])
+  e_Y <- rnorm(n, sd = sigma_Y)
+  # return list of errors
+  list(M = e_M, Y = e_Y)
 }
 
 
@@ -215,7 +239,23 @@ get_coefficients.reg_fit_mediation <- function(object) {
 }
 
 get_coefficients.cov_fit_mediation <- function(object) {
-  stop("not implemented yet")
+  # initializations
+  x <- object$x
+  y <- object$y
+  m <- object$m
+  # extract means of variables
+  centers <- object$cov$center
+  # extract coefficients of model for mediator
+  a <- object$a
+  coef_M <- c(centers[m] - a * centers[x], a)
+  names(coef_M) <- c("(Intercept)", x)
+  # extract coefficients of model for dependent variable
+  b <- object$b
+  direct <- object$direct
+  coef_Y <- c(centers[y] - b * centers[m] - direct * centers[x], b, direct)
+  names(coef_Y) <- c("(Intercept)", m, x)
+  # return list of coefficients
+  list(M = coef_M, Y = coef_Y)
 }
 
 
