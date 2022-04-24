@@ -188,6 +188,7 @@ sim_errors.lm <- function(object, n) {
   rnorm(n, mean = 0, sd = sigma)           # return error terms
 }
 
+#' @importFrom sn rsn rst
 sim_errors.lmse <- function(object, n) {
   # family specification as in package 'sn' (not 'robmed'): either "SN" or "ST"
   which <- object$family
