@@ -20,6 +20,9 @@ sim_mediation.fit_mediation <- function(object, n = NULL,
                                         explanatory = c("sim", "boot"),
                                         errors = c("sim", "boot"), ...) {
 
+  # TODO: variables with only a few unique values should be drawn from a
+  #       multinomial distribution with the observed probabilities
+
   # initializations
   explanatory <- match.arg(explanatory)
   errors <- match.arg(errors)
@@ -49,7 +52,7 @@ sim_mediation.fit_mediation <- function(object, n = NULL,
     # parallel mediators
     M <- sapply(seq_len(p_m), function(j) {
       coef_M <- coef$M[[j]]
-      coef_M[1] + X %*% coef_M[-1] + e$M[[j]]
+      coef_M[1L] + X %*% coef_M[-1L] + e$M[[j]]
     })
   } else if (model == "serial") {
     # serial mediators
@@ -57,19 +60,19 @@ sim_mediation.fit_mediation <- function(object, n = NULL,
     for (j in seq_len(p_m)) {
       coef_M <- coef$M[[j]]
       MX <- cbind(M[, seq_len(j-1)], X)
-      M[, j] <- coef_M[1] + MX %*% coef_M[-1] + e$M[[j]]
+      M[, j] <- coef_M[1L] + MX %*% coef_M[-1L] + e$M[[j]]
     }
   } else {
     # single mediator
     coef_M <- coef$M
-    M <- coef_M[1] + X %*% coef_M[-1] + e$M
+    M <- coef_M[1L] + X %*% coef_M[-1L] + e$M
   }
   # add column names to mediators
   colnames(M) <- m
   # compute the dependent variable under the model
   coef_Y <- coef$Y
   MX <- cbind(M, X)
-  Y <- coef_Y[1] + MX %*% coef_Y[-1] + e$Y
+  Y <- coef_Y[1L] + MX %*% coef_Y[-1L] + e$Y
   colnames(Y) <- y
 
   # return simulated data with variables in same order as 'data' component
@@ -96,34 +99,43 @@ sim_explanatory <- function(object, n) UseMethod("sim_explanatory")
 sim_explanatory.reg_fit_mediation <- function(object, n) {
   # initializations
   data <- object$data
+  n_data <- nrow(data)
   predictors <- c(object$x, object$covariates)
-  have_robust <- is_robust(fit)
+  robust <- object$robust
   family <- object$family
-  # extract relevant parameters and draw from respective distribution
-  if (family == "gaussian") {
-    if (have_robust) {
-      # TODO: use the corresponding regression method with each variable as
-      # response and a constant term as explanatory variable to determine the
-      # centers and scales of the normal distribution
-      centers <- sapply(data[, predictors, drop = FALSE], median)
-      scales <- sapply(data[, predictors, drop = FALSE], mad)
-    } else {
-      # compute the mean and standard deviations of explanatory variables to
-      # determine the parameters of the normal distributions
-      centers <- sapply(data[, predictors, drop = FALSE], mean)
-      scales <- sapply(data[, predictors, drop = FALSE], sd)
-    }
-    # draw explanatory variables from normal distributions
-    X <- mapply(rnorm, n, mean = centers, sd = scales)
+  # perform separate regressions with each explanatory variable as response
+  # variable and no explanatory variables (just an intercept)
+  null_matrix <- matrix(NA_real_, nrow = n_data, ncol = 0)
+  if (robust == "MM") {
+    # MM-estimator for robust regression
+    fits <- lapply(predictors, function(y) {
+      lmrob_fit(null_matrix, data[, y], control = object$control)
+    })
+  } else if (robust == "median") {
+    # LAD-estimator for median regression
+    fits <- lapply(predictors, function(y) {
+      rq_fit(null_matrix, data[, y], tau = 0.5)
+    })
+  } else if (family == "gaussian") {
+    # OLS estimator
+    fits <- lapply(predictors, function(y) lm_fit(null_matrix, data[, y]))
+  } else if (family == "select") {
+    # select among normal, skew-normal, t and skew-t errors
+    fits <- lapply(predictors, function(y) lmselect_fit(null_matrix, data[, y]))
   } else {
-    stop("not implemented yet")
-    # TODO: use the corresponding regression method with each variable as
-    # response and a constant term as explanatory variable to determine the
-    # parameters to draw from the respective distribution
-    # TODO: draw explanatory variables from skew-elliptical distributions
+    # obtain parameters as required for package 'sn'
+    selm_args <- get_selm_args(family)
+    # perform regression with skew-elliptical errors
+    fits <- lapply(predictors, function(y) {
+      selm_fit(null_matrix, data[, y], family = selm_args$family,
+               fixed.param = selm_args$fixed.param)
+    })
   }
+  # add names to list of regression fits
+  names(fits) <- predictors
+  # draw explanatory variables by drawing error terms and adding intercept
+  X <- sapply(fits, function(fit) unname(coef(fit)) + sim_errors(fit, n = n))
   # return explanatory variables
-  colnames(X) <- predictors
   X
 }
 
@@ -150,27 +162,52 @@ sim_errors <- function(object, n) UseMethod("sim_errors")
 sim_errors.reg_fit_mediation <- function(object, n) {
   # initializations
   p_m <- length(object$m)
-  family <- object$family
-  # draw error terms from the respective error distributions
-  if (family == "gaussian") {
-    # extract residual scales and draw errors for mediators
-    if (p_m == 1L) {
-      sigma_M <- get_scale(object$fit_mx)
-      e_M <- rnorm(n, sd = sigma_M)
-    } else {
-      e_M <- lapply(object$fit_mx, function(fit) {
-        sigma_M <- get_scale(fit)
-        rnorm(n, sd = sigma_M)
-      })
-    }
-    # extract residual scale and draw errors for dependent variable
-    sigma_Y <- get_scale(object$fit_ymx)
-    e_Y <- rnorm(n, sd = sigma_Y)
-  } else {
-    stop("not implemented yet")
-  }
+  # draw errors for mediators
+  if (p_m == 1L) e_M <- sim_errors(object$fit_mx, n = n)
+  else e_M <- lapply(object$fit_mx, sim_errors, n = n)
+  # draw errors for dependent variable
+  e_Y <- sim_errors(object$fit_ymx, n = n)
   # return list of errors
   list(M = e_M, Y = e_Y)
+}
+
+sim_errors.lmrob <- function(object, n) {
+  sigma <- object$scale           # residual scale
+  rnorm(n, mean = 0, sd = sigma)  # return error terms
+}
+
+sim_errors.rq <- function(object, n) {
+  if (object$tau != 0.5) stop("only implemented for median regression")
+  sigma <- mad(residuals(object), center = 0)  # residual scale
+  rnorm(n, mean = 0, sd = sigma)               # return error terms
+}
+
+sim_errors.lm <- function(object, n) {
+  rss <- sum(residuals(object)^2)          # residual sum of squares
+  sigma <- sqrt(rss / object$df.residual)  # residual scale
+  rnorm(n, mean = 0, sd = sigma)           # return error terms
+}
+
+sim_errors.lmse <- function(object, n) {
+  # family specification as in package 'sn' (not 'robmed'): either "SN" or "ST"
+  which <- object$family
+  param <- object$param
+  family <- get_family(which, param)
+  # extract parameters of residual distribution
+  dp <- get_dp(object)
+  # draw error terms with fitted parameters in direct parametrization
+  if (which == "SN") {
+    e <- rsn(n, xi = 0, omega = dp["omega"], alpha = dp["alpha"])
+  } else {
+    e <- rst(n, xi = 0, omega = dp["omega"], alpha = dp["alpha"], nu = dp["nu"])
+  }
+  # remove attributes since rsn() and rst() store family and parameters
+  attributes(e) <- NULL
+  # transform to centered parametrization
+  # (doesn't matter for the symmetric t-distribution, where 'mu0' is zero)
+  if (family != "student") e <- e - unname(param$mu0)
+  # return error terms
+  e
 }
 
 sim_errors.cov_fit_mediation <- function(object, n) {
@@ -192,11 +229,11 @@ sim_errors.cov_fit_mediation <- function(object, n) {
   direct <- object$direct
   # extract residual scales and draw errors for mediators
   sigma_M <- sqrt(cov[m, m] - a^2 * cov[x, x])
-  e_M <- rnorm(n, sd = sigma_M)
+  e_M <- rnorm(n, mean = 0, sd = sigma_M)
   # extract residual scales and draw errors for dependent variable
   sigma_Y <- sqrt(cov[y, y] - b^2 * cov[m, m] - direct^2 * cov[x, x] -
                     b * direct * cov[m, x])
-  e_Y <- rnorm(n, sd = sigma_Y)
+  e_Y <- rnorm(n, mean = 0, sd = sigma_Y)
   # return list of errors
   list(M = e_M, Y = e_Y)
 }
@@ -239,21 +276,21 @@ get_coefficients.cov_fit_mediation <- function(object) {
 }
 
 
-## extract residual scale
-
-get_scale <- function(object) UseMethod("get_scale")
-
-get_scale.lmrob <- function(object) object$scale
-
-get_scale.lm <- function(object) {
-  rss <- sum(residuals(object)^2)  # residual sum of squares
-  sqrt(rss / object$df.residual)   # residual scale
-}
-
-get_scale.rq <- function(object) {
-  if (object$tau != 0.5) stop("only implemented for median regression")
-  mad(residuals(object), center = 0)  # MAD with median residual set to 0
-}
+# ## extract residual scale
+#
+# get_scale <- function(object) UseMethod("get_scale")
+#
+# get_scale.lmrob <- function(object) object$scale
+#
+# get_scale.lm <- function(object) {
+#   rss <- sum(residuals(object)^2)  # residual sum of squares
+#   sqrt(rss / object$df.residual)   # residual scale
+# }
+#
+# get_scale.rq <- function(object) {
+#   if (object$tau != 0.5) stop("only implemented for median regression")
+#   mad(residuals(object), center = 0)  # MAD with median residual set to 0
+# }
 
 
 ## bootstrap explanatory variables from a mediation model fit
@@ -301,11 +338,11 @@ boot_errors.cov_fit_mediation <- function(object, n) {
   # extract coefficients
   coef <- get_coefficients(object)
   # compute residuals and bootstrap errors for mediators
-  residuals_M <- data[, m] - coef$M[1] - coef$M[x] * data[, x]
+  residuals_M <- data[, m] - coef$M[1L] - coef$M[x] * data[, x]
   e_M <- sample(residuals_M, size = n, replace = TRUE)
   # compute residuals and bootstrap errors for dependent variable
   mx <- c(m, x)
-  residuals_Y <- data[, y] - coef$Y[1] - drop(data[, mx] %*% coef$Y[mx])
+  residuals_Y <- data[, y] - coef$Y[1L] - drop(data[, mx] %*% coef$Y[mx])
   e_Y <- sample(residuals_Y, size = n, replace = TRUE)
   # return list of errors
   list(M = e_M, Y = e_Y)

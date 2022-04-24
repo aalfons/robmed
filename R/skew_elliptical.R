@@ -76,28 +76,129 @@ get_coef <- function(param, family) {
     remove <- c("omega", "alpha", "nu")
   } else {
     coefficients <- param$cp
+    remove <- c("s.d.", "gamma1", "gamma2")
     if (is.null(coefficients)) {
       # sometimes the centered parametrization of the skew-t distribution
-      # doesn't exist (this is a hack to make bootstrap work; it may not be
-      # fully justified, but it only affects the intercept)
+      # doesn't exist
       coefficients <- param[["pseudo-cp"]]
-      names(coefficients) <- gsub("~", "", names(coefficients))
+      remove <- paste0(remove, "~")
+      # the centered parametrization does not exist when the higher moments
+      # of the skew-t distribution do not exist, but we can still get a correct
+      # estimate of the intercept that yields centered residuals
+      coefficients <- c(unname(param$dp[1]) + param$mu0, coefficients[-1])
     }
-    remove <- c("s.d.", "gamma1", "gamma2")
   }
+  # regression coefficients without parameters of the residual distribution
   keep <- setdiff(names(coefficients), remove)
   coefficients[keep]
 }
 
+
 ## method to extract regression coefficients from 'lmse' objects
 #' @export
 coef.lmse <- function(object, ...) get_coef(object$param, object$family)
+# coef.lmse <- function(object, ...) {
+#   # type of parametrization to use
+#   type <- list(...)$param.type
+#   if (is.null(type)) {
+#     # call get_coef() as in previous versions
+#     get_coef(object$param, object$family)
+#   } else {
+#     # -----
+#     # Note: There is some redundancy with get_coef().  As get_coef() is also
+#     # called internally in the bootstrap procedure, it was left unchanged for
+#     # now.  If the conversion to the S4 object were moved to get_coef(), it
+#     # would create unnecessary overhead in the bootstrap procedure.  But
+#     # perhaps the two functions can be re-implemented at some point.
+#     # -----
+#     # convert object to S4 class "selm" as used in package 'sn'
+#     objectS4 <- to_selm(object)
+#     # call method for S4 class "selm" from package 'sn'
+#     coefficients <- coef(objectS4, param.type = type)
+#     # remove parameters of residual distribution
+#     remove <- c("omega", "alpha", "nu", "s.d.", "gamma1", "gamma2",
+#                 "s.d.~", "gamma1~", "gamma2~")
+#     keep <- setdiff(names(coefficients), remove)
+#     coefficients[keep]
+#   }
+# }
 
+
+## method to extract fitted values from 'lmse' objects
+#' @export
+fitted.lmse <- function(object, ...) {
+  # initializations
+  param <- object$param
+  family <- get_family(object$family, param)
+  fitted_dp <- object$fitted.values.dp
+  # return fitted values in the suitable parametrization
+  if (family == "student") fitted_dp
+  else fitted_dp + unname(param$mu0)
+}
+# fitted.lmse <- function(object, ...) {
+#   # convert object to S4 class "selm" as used in package 'sn'
+#   objectS4 <- to_selm(object)
+#   # type of parametrization to use
+#   # (the centered parametrization can be used for fitted values and it is more
+#   # meaningful than the pseudo-centered paramatrization)
+#   type <- list(...)$param.type
+#   if (is.null(type)) type <- get_param_type(object, pseudo = FALSE)
+#   # call method for S4 class "selm" from package 'sn'
+#   fitted(objectS4, param.type = type)
+# }
+
+
+## method to extract residuals from 'lmse' objects
+#' @export
+residuals.lmse <- function(object, ...) {
+  # initializations
+  param <- object$param
+  family <- get_family(object$family, param)
+  residuals_dp <- object$residuals.dp
+  # return fitted values in the suitable parametrization
+  if (family == "student") residuals_dp
+  else residuals_dp - unname(param$mu0)
+}
+# residuals.lmse <- function(object, ...) {
+#   # convert object to S4 class "selm" as used in package 'sn'
+#   objectS4 <- to_selm(object)
+#   # type of parametrization to use
+#   # (the centered parametrization can be used for residuals and it is more
+#   # meaningful than the pseudo-centered paramatrization)
+#   type <- list(...)$param.type
+#   if (is.null(type)) type <- get_param_type(object, pseudo = FALSE)
+#   # call method for S4 class "selm" from package 'sn'
+#   residuals(objectS4, param.type = type)
+# }
+
+
+## convert S3 object of class "lmse" into S4 object of class "selm"
+to_selm <- function(object) {
+  new("selm", call = call("selm"), family = object$family,
+      logL = object$logL, method = object$method,
+      param = object$param, param.var = object$param.var,
+      size = object$size, residuals.dp = object$residuals.dp,
+      fitted.values.dp = object$fitted.values.dp,
+      control = object$control, input = object$control,
+      opt.method = object$opt.method)
+}
 
 ## functions to extract all parameters in direct or centered parametrization
 ## (this is needed to extract starting values for bootstrap replicates)
 get_dp <- function(object) object$param$dp
 get_cp <- function(object) object$param$cp
+
+## get type of parametrization to use for a certain error distribution
+get_param_type <- function(object, pseudo = TRUE) {
+  # extract some relevant information
+  family <- get_family(object$family, object$param)
+  have_student <- family == "student"
+  missing_cp <- is.null(get_cp(object))
+  # return type of parametrization
+  if (have_student) "DP"
+  else if (pseudo && missing_cp) "pseudo-CP"
+  else "CP"
+}
 
 
 ## summary of regression with skew-elliptical errors: return list that contains
@@ -106,25 +207,10 @@ get_cp <- function(object) object$param$cp
 #' @importFrom sn summary
 get_summary.lmse <- function(object, ...) {
   # construct S4 object as in package 'sn'
-  objectS4 <- new("selm", call = call("selm"), family = object$family,
-                  logL = object$logL, method = object$method,
-                  param = object$param, param.var = object$param.var,
-                  size = object$size, residuals.dp = object$residuals.dp,
-                  fitted.values.dp = object$fitted.values.dp,
-                  control = object$control, input = object$control,
-                  opt.method = object$opt.method)
-  # extract some relevant information
-  family <- get_family(object$family, object$param)
-  have_student <- family == "student"
-  missing_cp <- is.null(object$param$cp)
+  objectS4 <- to_selm(object)
   # use summary method from package 'sn'
-  if (have_student) summary <- summary(objectS4, param.type = "DP")
-  else if (missing_cp) {
-    # sometimes the centered parametrization of the skew-t distribution
-    # doesn't exist (this is a hack to make Sobel test work; it may not be
-    # fully justified, but it only affects the intercept)
-    summary <- summary(objectS4, param.type = "pseudo-CP")
-  } else summary <- summary(objectS4, param.type = "CP")
+  type <- get_param_type(object)
+  summary <- summary(objectS4, param.type = type)
   # extract coefficients
   param_table <- summary@param.table
   # change column names to be consistent with other models
@@ -167,13 +253,7 @@ nobs.lmse <- function(object, ...) as.integer(object$size["n.obs"])
 #' @export
 confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
   # construct S4 object as in package 'sn'
-  objectS4 <- new("selm", call = call("selm"), family = object$family,
-                  logL = object$logL, method = object$method,
-                  param = object$param, param.var = object$param.var,
-                  size = object$size, residuals.dp = object$residuals.dp,
-                  fitted.values.dp = object$fitted.values.dp,
-                  control = object$control, input = object$control,
-                  opt.method = object$opt.method)
+  objectS4 <- to_selm(object)
   # -----
   # # use confint method from package 'sn'
   # family <- get_family(object$family, object$param)
@@ -189,18 +269,9 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
   # object created above.  Therefore the confidence intervals are computed
   # based on the standard errors from the summary() method.
   # -----
-  # extract some relevant information
-  family <- get_family(object$family, object$param)
-  have_student <- family == "student"
-  missing_cp <- is.null(object$param$cp)
   # use summary method from package 'sn'
-  if (have_student) summary <- summary(objectS4, param.type = "DP")
-  else if (missing_cp) {
-    # sometimes the centered parametrization of the skew-t distribution
-    # doesn't exist (this is a hack to make Sobel test work; it may not be
-    # fully justified, but it only affects the intercept)
-    summary <- summary(objectS4, param.type = "pseudo-CP")
-  } else summary <- summary(objectS4, param.type = "CP")
+  type <- get_param_type(object)
+  summary <- summary(objectS4, param.type = type)
   # extract coefficients
   param_table <- summary@param.table
   # split up in regression coefficients and parameters of error distribution
@@ -233,25 +304,10 @@ confint.lmse <- function(object, parm = NULL, level = 0.95, ...) {
 #' @export
 p_value.lmse <- function(object, parm = NULL, ...) {
   # construct S4 object as in package 'sn'
-  objectS4 <- new("selm", call = call("selm"), family = object$family,
-                  logL = object$logL, method = object$method,
-                  param = object$param, param.var = object$param.var,
-                  size = object$size, residuals.dp = object$residuals.dp,
-                  fitted.values.dp = object$fitted.values.dp,
-                  control = object$control, input = object$control,
-                  opt.method = object$opt.method)
-  # extract some relevant information
-  family <- get_family(object$family, object$param)
-  have_student <- family == "student"
-  missing_cp <- is.null(object$param$cp)
+  objectS4 <- to_selm(object)
   # use summary method from package 'sn'
-  if (have_student) summary <- summary(objectS4, param.type = "DP")
-  else if (missing_cp) {
-    # sometimes the centered parametrization of the skew-t distribution
-    # doesn't exist (this is a hack to make Sobel test work; it may not be
-    # fully justified, but it only affects the intercept)
-    summary <- summary(objectS4, param.type = "pseudo-CP")
-  } else summary <- summary(objectS4, param.type = "CP")
+  type <- get_param_type(object)
+  summary <- summary(objectS4, param.type = type)
   # extract coefficients
   param_table <- summary@param.table
   # split up in regression coefficients and parameters of error distribution
