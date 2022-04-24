@@ -276,23 +276,6 @@ get_coefficients.cov_fit_mediation <- function(object) {
 }
 
 
-# ## extract residual scale
-#
-# get_scale <- function(object) UseMethod("get_scale")
-#
-# get_scale.lmrob <- function(object) object$scale
-#
-# get_scale.lm <- function(object) {
-#   rss <- sum(residuals(object)^2)  # residual sum of squares
-#   sqrt(rss / object$df.residual)   # residual scale
-# }
-#
-# get_scale.rq <- function(object) {
-#   if (object$tau != 0.5) stop("only implemented for median regression")
-#   mad(residuals(object), center = 0)  # MAD with median residual set to 0
-# }
-
-
 ## bootstrap explanatory variables from a mediation model fit
 boot_explanatory <- function(object, n) {
   # initializations

@@ -97,31 +97,6 @@ get_coef <- function(param, family) {
 ## method to extract regression coefficients from 'lmse' objects
 #' @export
 coef.lmse <- function(object, ...) get_coef(object$param, object$family)
-# coef.lmse <- function(object, ...) {
-#   # type of parametrization to use
-#   type <- list(...)$param.type
-#   if (is.null(type)) {
-#     # call get_coef() as in previous versions
-#     get_coef(object$param, object$family)
-#   } else {
-#     # -----
-#     # Note: There is some redundancy with get_coef().  As get_coef() is also
-#     # called internally in the bootstrap procedure, it was left unchanged for
-#     # now.  If the conversion to the S4 object were moved to get_coef(), it
-#     # would create unnecessary overhead in the bootstrap procedure.  But
-#     # perhaps the two functions can be re-implemented at some point.
-#     # -----
-#     # convert object to S4 class "selm" as used in package 'sn'
-#     objectS4 <- to_selm(object)
-#     # call method for S4 class "selm" from package 'sn'
-#     coefficients <- coef(objectS4, param.type = type)
-#     # remove parameters of residual distribution
-#     remove <- c("omega", "alpha", "nu", "s.d.", "gamma1", "gamma2",
-#                 "s.d.~", "gamma1~", "gamma2~")
-#     keep <- setdiff(names(coefficients), remove)
-#     coefficients[keep]
-#   }
-# }
 
 
 ## method to extract fitted values from 'lmse' objects
@@ -135,17 +110,6 @@ fitted.lmse <- function(object, ...) {
   if (family == "student") fitted_dp
   else fitted_dp + unname(param$mu0)
 }
-# fitted.lmse <- function(object, ...) {
-#   # convert object to S4 class "selm" as used in package 'sn'
-#   objectS4 <- to_selm(object)
-#   # type of parametrization to use
-#   # (the centered parametrization can be used for fitted values and it is more
-#   # meaningful than the pseudo-centered paramatrization)
-#   type <- list(...)$param.type
-#   if (is.null(type)) type <- get_param_type(object, pseudo = FALSE)
-#   # call method for S4 class "selm" from package 'sn'
-#   fitted(objectS4, param.type = type)
-# }
 
 
 ## method to extract residuals from 'lmse' objects
@@ -159,17 +123,6 @@ residuals.lmse <- function(object, ...) {
   if (family == "student") residuals_dp
   else residuals_dp - unname(param$mu0)
 }
-# residuals.lmse <- function(object, ...) {
-#   # convert object to S4 class "selm" as used in package 'sn'
-#   objectS4 <- to_selm(object)
-#   # type of parametrization to use
-#   # (the centered parametrization can be used for residuals and it is more
-#   # meaningful than the pseudo-centered paramatrization)
-#   type <- list(...)$param.type
-#   if (is.null(type)) type <- get_param_type(object, pseudo = FALSE)
-#   # call method for S4 class "selm" from package 'sn'
-#   residuals(objectS4, param.type = type)
-# }
 
 
 ## convert S3 object of class "lmse" into S4 object of class "selm"
@@ -189,14 +142,14 @@ get_dp <- function(object) object$param$dp
 get_cp <- function(object) object$param$cp
 
 ## get type of parametrization to use for a certain error distribution
-get_param_type <- function(object, pseudo = TRUE) {
+get_param_type <- function(object) {
   # extract some relevant information
   family <- get_family(object$family, object$param)
   have_student <- family == "student"
   missing_cp <- is.null(get_cp(object))
   # return type of parametrization
   if (have_student) "DP"
-  else if (pseudo && missing_cp) "pseudo-CP"
+  else if (missing_cp) "pseudo-CP"
   else "CP"
 }
 
