@@ -18,15 +18,17 @@ sim_mediation <- function(object, n, ...) UseMethod("sim_mediation")
 #                 the error terms from the observed residuals.
 sim_mediation.fit_mediation <- function(object, n = NULL,
                                         explanatory = c("sim", "boot"),
-                                        errors = c("sim", "boot"), ...) {
-
-  # TODO: variables with only a few unique values should be drawn from a
-  #       multinomial distribution with the observed probabilities
+                                        errors = c("sim", "boot"),
+                                        num_discrete = 10, ...) {
 
   # initializations
+  if (is.null(n)) n <- nrow(object$data)
+  else {
+    n <- rep(as.integer(n), length.out = 1L)
+    if (is.na(n) || n <= 0L) stop("'n' must be a positive integer")
+  }
   explanatory <- match.arg(explanatory)
   errors <- match.arg(errors)
-  if (is.null(n)) n <- nrow(object$data)
   # extract relevant information
   x <- object$x
   y <- object$y
@@ -37,8 +39,11 @@ sim_mediation.fit_mediation <- function(object, n = NULL,
   if (is.null(model)) model <- "simple"
 
   # simulate or bootstrap explanatory variables
-  if (explanatory == "sim") X <- sim_explanatory(object, n = n)
-  else X <- boot_explanatory(object, n = n)
+  if (explanatory == "sim") {
+    # explanatory variables are simulated independently from each other and
+    # therefore there are no correlations between them
+    X <- sim_explanatory(object, n = n, num_discrete = num_discrete)
+  } else X <- boot_explanatory(object, n = n)
 
   # simulate or bootstrap error terms
   if (errors == "sim") e <- sim_errors(object, n = n)
@@ -94,52 +99,96 @@ rmediation <- function(n, object, ...) sim_mediation(object, n = n, ...)
 
 ## simulate explanatory variables based on a mediation model fit
 
-sim_explanatory <- function(object, n) UseMethod("sim_explanatory")
+sim_explanatory <- function(object, n, ...) UseMethod("sim_explanatory")
 
-sim_explanatory.reg_fit_mediation <- function(object, n) {
+sim_explanatory.reg_fit_mediation <- function(object, n, num_discrete = 10,
+                                              ...) {
+
   # initializations
+  num_discrete <- rep(as.integer(num_discrete), length.out = 1L)
+  if (is.na(num_discrete) || num_discrete <= 0L) {
+    num_discrete <- formals()$num_discrete
+  }
+  # extract relevant information
   data <- object$data
   n_data <- nrow(data)
   predictors <- c(object$x, object$covariates)
   robust <- object$robust
   family <- object$family
-  # perform separate regressions with each explanatory variable as response
-  # variable and no explanatory variables (just an intercept)
-  null_matrix <- matrix(NA_real_, nrow = n_data, ncol = 0)
-  if (robust == "MM") {
-    # MM-estimator for robust regression
-    fits <- lapply(predictors, function(y) {
-      lmrob_fit(null_matrix, data[, y], control = object$control)
-    })
-  } else if (robust == "median") {
-    # LAD-estimator for median regression
-    fits <- lapply(predictors, function(y) {
-      rq_fit(null_matrix, data[, y], tau = 0.5)
-    })
-  } else if (family == "gaussian") {
-    # OLS estimator
-    fits <- lapply(predictors, function(y) lm_fit(null_matrix, data[, y]))
-  } else if (family == "select") {
-    # select among normal, skew-normal, t and skew-t errors
-    fits <- lapply(predictors, function(y) lmselect_fit(null_matrix, data[, y]))
-  } else {
-    # obtain parameters as required for package 'sn'
-    selm_args <- get_selm_args(family)
-    # perform regression with skew-elliptical errors
-    fits <- lapply(predictors, function(y) {
-      selm_fit(null_matrix, data[, y], family = selm_args$family,
-               fixed.param = selm_args$fixed.param)
+  # check which explanatory variables are discrete
+  is_discrete <- sapply(data[, predictors, drop = FALSE], function(x) {
+    length(unique(x)) <= num_discrete
+  })
+  discrete <- predictors[is_discrete]
+  continuous <- predictors[!is_discrete]
+
+  # for continuous explanatory variables, perform separate regressions of each
+  # variable on just a constant term (intercept-only model) and draw from the
+  # fitted model
+  if (length(continuous) == 0L) X_continuous <- NULL
+  else {
+    null_matrix <- matrix(NA_real_, nrow = n_data, ncol = 0)
+    if (robust == "MM") {
+      # MM-estimator for robust regression
+      fits <- lapply(continuous, function(y) {
+        lmrob_fit(null_matrix, data[, y], control = object$control)
+      })
+    } else if (robust == "median") {
+      # LAD-estimator for median regression
+      fits <- lapply(continuous, function(y) {
+        rq_fit(null_matrix, data[, y], tau = 0.5)
+      })
+    } else if (family == "gaussian") {
+      # OLS estimator
+      fits <- lapply(continuous, function(y) lm_fit(null_matrix, data[, y]))
+    } else if (family == "select") {
+      # select among normal, skew-normal, t and skew-t errors
+      fits <- lapply(continuous, function(y) lmselect_fit(null_matrix, data[, y]))
+    } else {
+      # obtain parameters as required for package 'sn'
+      selm_args <- get_selm_args(family)
+      # perform regression with skew-elliptical errors
+      fits <- lapply(continuous, function(y) {
+        selm_fit(null_matrix, data[, y], family = selm_args$family,
+                 fixed.param = selm_args$fixed.param)
+      })
+    }
+    # add names to list of regression fits
+    names(fits) <- continuous
+    # draw explanatory variables by drawing error terms and adding intercept
+    X_continuous <- sapply(fits, function(fit) {
+      unname(coef(fit)) + sim_errors(fit, n = n)
     })
   }
-  # add names to list of regression fits
-  names(fits) <- predictors
-  # draw explanatory variables by drawing error terms and adding intercept
-  X <- sapply(fits, function(fit) unname(coef(fit)) + sim_errors(fit, n = n))
+
+  # draw discrete explanatory variables from multinomial distributions
+  if (length(discrete) == 0L) X_discrete <- NULL
+  else {
+    X_discrete <- sapply(discrete, function(x) {
+      # Note: tabulate(as.factor(.)) can give a different number of elements from
+      # unique(.) as the latter seems to be more sensitive to numerical precision
+      # -----
+      # # obtain observed frequencies
+      # frequencies <- tabulate(as.factor(data[, x]))
+      # -----
+      # obtain unique values
+      unique <- sort(unique(data[, x]))
+      # draw from unique values based on observed frequencies
+      if (length(unique) == 1L) rep.int(unique, n)
+      else {
+        frequencies <- sapply(unique, function(value) sum(data[, x] == value))
+        sample(unique, size = n, replace = TRUE, prob = frequencies)
+      }
+    })
+  }
+
   # return explanatory variables
-  X
+  X <- cbind(X_continuous, X_discrete)
+  X[, predictors, drop = FALSE]
+
 }
 
-sim_explanatory.cov_fit_mediation <- function(object, n) {
+sim_explanatory.cov_fit_mediation <- function(object, n, ...) {
   # initializations
   x <- object$x
   # extract means and standard deviations of the independent variable from
@@ -160,16 +209,33 @@ sim_explanatory.cov_fit_mediation <- function(object, n) {
 sim_errors <- function(object, n) UseMethod("sim_errors")
 
 sim_errors.reg_fit_mediation <- function(object, n) {
-  # initializations
-  p_m <- length(object$m)
   # draw errors for mediators
-  if (p_m == 1L) e_M <- sim_errors(object$fit_mx, n = n)
-  else e_M <- lapply(object$fit_mx, sim_errors, n = n)
+  e_M <- sim_errors(object$fit_mx, n = n)
   # draw errors for dependent variable
   e_Y <- sim_errors(object$fit_ymx, n = n)
   # return list of errors
   list(M = e_M, Y = e_Y)
 }
+
+# -----
+# FIXME: I think the code below only works when the function is exported
+# -----
+# sim_errors.list <- function(object, ...) lapply(object, sim_errors, ...)
+# -----
+# dirty hack:
+sim_errors.list <- function(object, n) {
+  lapply(object, function(x, n) {
+    # FIXME: this throws error when MM-estimator doesn't converge
+    #        The reason is that the (unconverged) object has class "lmrob.S"
+    #        instead of class "lmrob".
+    if (inherits(x, "lmrob")) sim_errors.lmrob(x, n)
+    else if (inherits(x, "rq")) sim_errors.rq(x, n)
+    else if (inherits(x, "lm")) sim_errors.lm(x, n)
+    else if (inherits(x, "lmse")) sim_errors.lmse(x, n)
+    else stop("not implemented yet")
+  }, n = n)
+}
+# -----
 
 sim_errors.lmrob <- function(object, n) {
   sigma <- object$scale           # residual scale
