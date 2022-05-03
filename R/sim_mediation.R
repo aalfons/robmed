@@ -4,18 +4,104 @@
 # --------------------------------------
 
 
-## function to simulate data from a fitted mediation model
+## Some notes to put in the 'Details' section:
+##
+## For simulating the explanatory variables, regressions of each variable on a
+## constant term are used to determine a location estimate and the parameters
+## of the respective error distribution.
+## Values are then drawn from this error distribution and added to the location
+## estimate in order to simulate the values of the corresponding variable.
+## It is important to note that all explanatory variables are simulated
+## independently from each other, hence there are no correlations between the
+## explanatory variables.  In order to generate correlated explanatory
+## variables, it is recommended bootstrap the explanatory variables from the
+## observed data (\code{explanatory = "boot"}).
+##
+## For results of a bootstrap test, the data generation always uses the
+## regression coefficient estimates obtained on the original data, not the
+## bootstrap estimates.  The bootstrap estimates are means over the bootstrap
+## estimates, therefore the bootstrap estimate of the indirect effect does not
+## equal the product of the bootstrap estimates of the corresponding regression
+## coefficients.  However, the true value of the indirect estimate for the
+## generated data is the latter product of regression coefficients, and
+## therefore it would not be equal to the reported bootstrap estimate, which
+## could lead to confusion.  For the estimates on the original data, we of
+## course have that the estimate of indirect effect is the product of the
+## corresponding regression coefficients.
+##
+## sim_mediation() has the object containing the results from mediation
+## analysis as its first argument such that it can easily be used with the
+## pipe operator.
+##
+## rmediation() is a wrapper to conform with the \R naming convention for
+## functions generating data, as well as the convention of those function to
+## have the number of observations as the first argument.
 
+
+#' Generate data from a fitted mediation model
+#'
+#' Generate data from a fitted mediation model, using the obtained coefficient
+#' estimates as the true model coefficients for data generation.
+#'
+#' @param object  an object inheriting from class \code{"\link{fit_mediation}"}
+#' or \code{"\link{test_mediation}"} containing results from (robust) mediation
+#' analysis.
+#' @param n  an integer giving the number of observations to be generated.  If
+#' \code{NULL} (the default), the number of observations is taken from the data
+#' set used in the fitted mediation model from \code{object}.
+#' @param explanatory  a character string specifying how to generate the
+#' explanatory variables (i.e., the independent variables and additional
+#' covariates).  Possible values are \code{"sim"} to draw each explanatory
+#' variable independently from a certain distribution (the default), or
+#' \code{"boot"} to bootstrap the explanatory variables from the observed data
+#' (i.e., random sampling with replacement).  See \sQuote{Details} for more
+#' information on how the data are generated.
+#' @param errors  a character string specifying how to generate the error terms
+#' in the linear models for the mediators and the dependent variable.  Possible
+#' values are \code{"sim"} to draw the error terms independently from the
+#' respective fitted model distribution (the default), or \code{"boot"} to
+#' bootstrap the error terms from the observed residuals in the respective
+#' fitted model (i.e., random sampling with replacement).  See \sQuote{Details}
+#' for more information on how the data are generated.
+#' @param num_discrete  integer; if the explanatory variables are drawn
+#' from distributions (\code{explanatory} = "sim"), variables that take
+#' \code{num_discrete} or fewer values are considered discrete (the default is
+#' 10).  In that case, the corresponding variables are drawn from multinomial
+#' distributions with the relative frequencies from the observed data.  This is
+#' only relevant if the mediation model was fitted via regressions and ignored
+#' if the mediation model was fitted via the covariance matrix, as the latter
+#' method assumes multivariate normality.
+#' @param \dots additional arguments to be passed down.
+#'
+#' @return A data frame with \code{n} observations containing simulated data
+#' for the variables of the fitted mediation model.
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso
+#' \code{\link{fit_mediation}()}, \code{\link{test_mediation}()}
+#'
+#' @examples
+#' data("BSG2014")
+#'
+#' # fit a mediation model
+#' fit <- fit_mediation(BSG2014,
+#'                      x = "ValueDiversity",
+#'                      y = "TeamCommitment",
+#'                      m = "TaskConflict")
+#'
+#' # simulate data from the fitted mediation model
+#' simulated_data <- sim_mediation(fit, n = 100)
+#' head(simulated_data)
+#'
 #' @export
+
 sim_mediation <- function(object, n, ...) UseMethod("sim_mediation")
 
+
+#' @rdname sim_mediation
 #' @export
-# explanatory ... character string indicating whether to draw the explanatory
-#                 variables from a (normal) distribution, or whether to
-#                 bootstrap the explanatory variables.
-# errors ........ character string indicating whether to draw the error terms
-#                 from the fitted model distribution, or whether to bootstrap
-#                 the error terms from the observed residuals.
+
 sim_mediation.fit_mediation <- function(object, n = NULL,
                                         explanatory = c("sim", "boot"),
                                         errors = c("sim", "boot"),
@@ -85,7 +171,10 @@ sim_mediation.fit_mediation <- function(object, n = NULL,
 
 }
 
+
+#' @rdname sim_mediation
 #' @export
+
 sim_mediation.test_mediation <- function(object, n = NULL, ...) {
   # call method for model fit
   sim_mediation(object$fit, n = n, ...)
@@ -93,7 +182,9 @@ sim_mediation.test_mediation <- function(object, n = NULL, ...) {
 
 
 ## wrapper to conform to R convention regarding name and first argument
+#' @rdname sim_mediation
 #' @export
+
 rmediation <- function(n, object, ...) sim_mediation(object, n = n, ...)
 
 
