@@ -1,3 +1,10 @@
+Changes in robmed version 0.11.0
+
+    + Added function sim_mediation() and wrapper rmediation() to generate data
+      from a fitted mediation model.
+
+
+
 Changes in robmed version 0.10.1
 
     + Updated package vignette.

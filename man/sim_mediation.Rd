@@ -66,18 +66,108 @@ for the variables of the fitted mediation model.
 Generate data from a fitted mediation model, using the obtained coefficient
 estimates as the true model coefficients for data generation.
 }
+\details{
+The data generating process consists of three basic steps:
+\enumerate{
+  \item{Generate the explanatory variables (i.e., the independent variables
+  and additional covariates).}
+  \item{Generate the error terms of the different regression models.}
+  \item{Generate the mediators and the dependent variable from the
+  respective regression models, using the coefficient estimates from the
+  fitted mediation model as the true model coefficients.}
+}
+
+If \code{explanatory = "sim"}, the explanatory variables are simulated as
+follows.  For each variable, a regression on a constant term is performed,
+using the same estimator and assumed error distribution as in the fitted
+mediation model from \code{object}.  Typically, the assumed error
+distribution is normal, but it can also be a skew-normal, \eqn{t}, or
+skew-\eqn{t} distribution, or a selection of the best-fitting error
+distribution.  Using the obtained location estimate and parameter estimates
+of the assumed error distribution, values are drawn from this error
+distribution and added to the location estimate.  It is important to note
+that all explanatory variables are simulated independently from each other,
+hence there are no correlations between the explanatory variables.
+
+In order to generate correlated explanatory variables, it is recommended
+bootstrap the explanatory variables from the observed data by setting
+\code{explanatory = "boot"}.
+
+If \code{errors = "sim"}, the error terms of the different regression models
+are drawn from the assumed error distribution in the fitted mediation model
+from \code{object}, using the respective parameter estimates.  Typically,
+the assumed error distribution is normal, but it can also be a skew-normal,
+\eqn{t}, or skew-\eqn{t} distribution, or a selection of the best-fitting
+error distribution.
+
+If \code{errors = "boot"}, bootstrapping the error terms from the observed
+residuals is done independently for the different regression models and,
+if also \code{explanatory = "boot"}, independently from bootstrapping the
+explanatory variables.
+
+The \code{"boot_test_mediation"} method for results of a bootstrap test
+always uses the regression coefficient estimates obtained on the original
+data for data generation, not the bootstrap estimates.  Keep in mind that
+all bootstrap estimates are the means of the respective bootstrap
+replicates.  If the bootstrap estimates of the regression coefficients were
+used to generate the data, the true values of the indirect effects for the
+generated data (i.e., the products of the corresponding bootstrap
+coefficient estimates) would not be equal to the reported bootstrap
+estimates of the indirect effects in \code{object}, which could lead to
+confusion.  For the estimates on the original data, it of course holds that
+the estimates of indirect effects are the products of the corresponding
+coefficient estimates.
+}
+\note{
+Function \code{sim_mediation()} takes the object containing results from
+mediation analysis as its first argument so that it can easily be used with
+the pipe operator (\R's built-in \code{|>} or \pkg{magrittr}'s \code{\%>\%}).
+
+Function \code{rmediation()} is a wrapper conforming with the naming
+convention for functions that generate data, as well as the convention of
+those function to take the number of observations as the first argument.
+}
 \examples{
 data("BSG2014")
 
-# fit a mediation model
-fit <- fit_mediation(BSG2014,
-                     x = "ValueDiversity",
-                     y = "TeamCommitment",
-                     m = "TaskConflict")
-
+## simple mediation
+# fit the mediation model
+fit_simple <- fit_mediation(BSG2014,
+                            x = "ValueDiversity",
+                            y = "TeamCommitment",
+                            m = "TaskConflict")
 # simulate data from the fitted mediation model
-simulated_data <- sim_mediation(fit, n = 100)
-head(simulated_data)
+sim_simple <- sim_mediation(fit_simple, n = 100)
+head(sim_simple)
+
+## serial multiple mediators
+# fit the mediation model
+fit_serial <- fit_mediation(BSG2014,
+                            x = "ValueDiversity",
+                            y = "TeamScore",
+                            m = c("TaskConflict",
+                                  "TeamCommitment"),
+                            model = "serial")
+# simulate data from the fitted mediation model
+sim_serial <- sim_mediation(fit_serial, n = 100)
+head(sim_serial)
+
+## parallel multiple mediators and control variables
+# fit the mediation model
+fit_parallel <- fit_mediation(BSG2014,
+                              x = "SharedLeadership",
+                              y = "TeamPerformance",
+                              m = c("ProceduralJustice",
+                                    "InteractionalJustice"),
+                              covariates = c("AgeDiversity",
+                                             "GenderDiversity"),
+                              model = "parallel")
+# simulate data from the fitted mediation model
+# (here the explanatory variables are bootstrapped
+# to maintain the correlations between them)
+sim_parallel <- sim_mediation(fit_parallel, n = 100,
+                              explanatory = "boot")
+head(sim_parallel)
 
 }
 \seealso{
