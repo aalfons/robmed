@@ -279,7 +279,91 @@ proposed correction of Salibian-Barrera & Zamar (2002).
 
 The formula interface is still experimental and may change in future
 versions.
+
+The default method takes a data frame its first argument so that it can
+easily be used with the pipe operator (\R's built-in \code{|>} or
+\pkg{magrittr}'s \code{\%>\%}).
 }
+\section{Mediation models}{
+
+The following mediation models are implemented.  In the regression equations
+below, the \eqn{i_j} are intercepts and the \eqn{e_j} are random error terms.
+
+\itemize{
+
+  \item{\emph{Simple mediation model}: The mediatiom model in its simplest
+  form is given by the equations
+  \deqn{M = i_1 + aX + e_1,}
+  \deqn{Y = i_2 + bM + cX + e_2,}
+  \deqn{Y = i_3 + c'X + e_3,}
+  where \eqn{Y} denotes the dependent variable, \eqn{X} the independent
+  variable, and \eqn{M} the hypothesized mediator.  The main parameter of
+  interest is the product of coefficients \eqn{ab}, called the indirect
+  effect.  The coefficients \eqn{c} and \eqn{c'} are called the direct and
+  total effect, respectively.}
+
+  \item{\emph{Parallel multiple mediator model}: The simple mediation model
+  can be extended with multiple mediators \eqn{M_1, \dots, M_k} in the
+  following way:
+  \deqn{M_1 = i_1 + a_1 X + e_1,}
+  \deqn{\vdots}{\dots}
+  \deqn{M_k = i_k + a_k X + e_k,}
+  \deqn{Y = i_{k+1} + b_1 M_1 + \dots + b_k M_k + c X + e_{k+1},}
+  \deqn{Y = i_{k+2} + c' X + e_{k+2}.}
+  The main parameters of interest are the individual indirect effects
+  \eqn{a_1 b_1, \dots, a_k b_k}.}
+
+  \item{\emph{Serial multiple mediator model}: It differs from the parallel
+  multiple mediator model in that it allows the hypothesized mediators
+  \eqn{M_1, \dots, M_k} to influence each other in a sequential manner.
+  It is given by the equations
+  \deqn{M_1 = i_1 + a_1 X + e_1,}
+  \deqn{M_2 = i_1 + d_{21} M_1 + a_2 X + e_2,}
+  \deqn{\vdots}{\dots}
+  \deqn{M_k = i_k + d_{k1} M_1 + \dots +  d_{k,k-1} M_{k-1} + a_k X + e_k,}
+  \deqn{Y = i_{k+1} + b_1 M_1 + \dots + b_k M_k + c X + e_{k+1},}
+  \deqn{Y = i_{k+2} + c' X + e_{k+2}.}
+  The serial multiple mediator model quickly grows in complexity with
+  increasing number of mediators due to the combinatorial increase in
+  indirect paths through the mediators.  It is therefore only implemented
+  for two and three mediators to maintain a focus on easily interpretable
+  models.  For two serial mediators, the three indirect effects
+  \eqn{a_1 b_1}, \eqn{a_2 b_2}, and \eqn{a_1 d_{21} b_2} are the main
+  parameters of interest.  For three serial mediators, there are already
+  seven indirect effects: \eqn{a_1 b_1}, \eqn{a_2 b_2}, \eqn{a_3 b_3},
+  \eqn{a_1 d_{21} b_2}, \eqn{a_1 d_{31} b_3}, \eqn{a_2 d_{32} b_3}, and
+  \eqn{a_1 d_{21} d_{32} b_3}.}
+
+  \item{\emph{Multiple independent variables to be mediated}: The simple
+  mediation model can also be extended by allowing multiple independent
+  variables \eqn{X_1, \dots, X_l} instead of multiple mediators.  It is
+  defined by the equations
+  \deqn{M = i_1 + a_1 X_1 + \dots + a_l X_l + e_1,}
+  \deqn{Y = i_2 + b M + c_1 X_1 + \dots + c_l X_l + e_2,}
+  \deqn{Y = i_3 + c_1' X_1 + \dots + c_l' X_l + e_3.}
+  The indirect effects \eqn{a_1 b, \dots, a_l b} are the main parameters of
+  interest.  Note that an important special case of this model occurs when a
+  categorical independent variable is represented by a group of dummy
+  variables.}
+
+  \item{\emph{Control variables}: To isolate the effects of the independent
+  variables of interest from other factors, control variables can be added
+  to all regression equations of a mediation model.  Note that that there is
+  no intrinsic difference between independent variables of interest and
+  control variables in terms of the model or its estimation.  The difference
+  is purely conceptual in nature: for the control variables, the estimates
+  of the direct and indirect paths are not of particular interest to the
+  researcher.  Control variables can therefore be specified separately from
+  the independent variables of interest.  Only for the latter, results for
+  the indirect effects are included in the output.}
+
+  \item{\emph{More complex models}: Some of the models described above can
+  be combined, for instance parallel and serial multiple mediator models
+  support multiple independent variables of interest.}
+
+}
+}
+
 \examples{
 data("BSG2014")
 

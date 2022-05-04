@@ -3,6 +3,9 @@ Changes in robmed version 0.11.0
     + Added function sim_mediation() and wrapper rmediation() to generate data
       from a fitted mediation model.
 
+    + Updated documentation of fit_mediation() and test_mediation() with a
+      brief description of the implemented mediation models.
+
 
 
 Changes in robmed version 0.10.1

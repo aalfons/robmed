@@ -93,6 +93,8 @@
 #' @return A data frame with \code{n} observations containing simulated data
 #' for the variables of the fitted mediation model.
 #'
+#' @inheritSection fit_mediation Mediation models
+#'
 #' @note
 #' Function \code{sim_mediation()} takes the object containing results from
 #' mediation analysis as its first argument so that it can easily be used with
