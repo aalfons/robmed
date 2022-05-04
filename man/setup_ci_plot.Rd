@@ -108,13 +108,13 @@ control over what information to display or how to display that information.
 data("BSG2014")
 
 # run fast-and-robust bootstrap test
-test <- test_mediation(BSG2014,
+boot <- test_mediation(BSG2014,
                        x = "ValueDiversity",
                        y = "TeamCommitment",
                        m = "TaskConflict")
 
 # set up information for plot
-setup <- setup_ci_plot(test, parm = "Indirect")
+setup <- setup_ci_plot(boot, parm = "Indirect")
 
 # plot only density and confidence interval
 ggplot() +

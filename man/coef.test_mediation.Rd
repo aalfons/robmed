@@ -47,9 +47,9 @@ fit <- fit_mediation(BSG2014,
 coef(fit)
 
 # run fast-and-robust bootstrap test and extract coefficients
-test <- test_mediation(fit)
-coef(test, type = "data")  # from original sample
-coef(test, type = "boot")  # means of bootstrap replicates
+boot <- test_mediation(fit)
+coef(boot, type = "data")  # from original sample
+coef(boot, type = "boot")  # means of bootstrap replicates
 
 }
 \seealso{

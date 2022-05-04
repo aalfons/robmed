@@ -63,19 +63,49 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' @examples
 #' data("BSG2014")
 #'
-#' # set seed of the random number generator
-#' set.seed(20211117)
+#' ## seed to be used for the random number generator
+#' seed <- 20211117
 #'
-#' ## The results in Alfons et al. (2021) were obtained with an
-#' ## older version of the random number generator.  To reproduce
-#' ## those results, uncomment the two lines below.
+#' ## simple mediation
+#' # set seed of the random number generator
+#' set.seed(seed)
+#' # The results in Alfons et al. (2021) were obtained with an
+#' # older version of the random number generator.  To reproduce
+#' # those results, uncomment the two lines below.
 #' # RNGversion("3.5.3")
 #' # set.seed(20150601)
-#'
 #' # perform mediation analysis
-#' test <- test_mediation(TeamCommitment ~ m(TaskConflict) + ValueDiversity,
-#'                        data = BSG2014)
-#' summary(test)
+#' boot_simple <- test_mediation(TeamCommitment ~
+#'                                 m(TaskConflict) +
+#'                                   ValueDiversity,
+#'                               data = BSG2014)
+#' summary(boot_simple)
+#'
+#' \donttest{
+#' ## serial multiple mediators
+#' # set seed of the random number generator
+#' set.seed(seed)
+#' # perform mediation analysis
+#' boot_serial <- test_mediation(TeamScore ~
+#'                                 serial_m(TaskConflict,
+#'                                          TeamCommitment) +
+#'                                 ValueDiversity,
+#'                               data = BSG2014)
+#' summary(boot_serial)
+#'
+#' ## parallel multiple mediators and control variables
+#' # set seed of the random number generator
+#' set.seed(seed)
+#' # perform mediation analysis
+#' boot_parallel <- test_mediation(TeamPerformance ~
+#'                                   parallel_m(ProceduralJustice,
+#'                                              InteractionalJustice) +
+#'                                   SharedLeadership +
+#'                                   covariates(AgeDiversity,
+#'                                              GenderDiversity),
+#'                                 data = BSG2014)
+#' summary(boot_parallel)
+#' }
 #'
 #' @keywords utilities
 

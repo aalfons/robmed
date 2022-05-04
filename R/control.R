@@ -44,12 +44,12 @@
 #'
 #' # run fast-and-robust bootstrap test
 #' ctrl <- reg_control(efficiency = 0.95)
-#' test <- test_mediation(BSG2014,
+#' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
 #'                        m = "TaskConflict",
 #'                        control = ctrl)
-#' summary(test)
+#' summary(boot)
 #'
 #' @keywords regression
 #'
@@ -117,13 +117,13 @@ reg_control <- function(efficiency = 0.85, max_iterations = 200,
 #'
 #' # run bootstrap test after winsorization
 #' ctrl <- cov_control(prob = 0.95)
-#' test <- test_mediation(BSG2014,
+#' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
 #'                        m = "TaskConflict",
 #'                        method = "covariance",
 #'                        control = ctrl)
-#' summary(test)
+#' summary(boot)
 #'
 #' @keywords multivariate
 #'

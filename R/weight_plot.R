@@ -59,18 +59,18 @@
 #' data("BSG2014")
 #'
 #' # run fast-and-robust bootstrap test
-#' test <- test_mediation(BSG2014,
+#' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
 #'                        m = "TaskConflict")
 #'
 #' # create diagnostic plot of robust regression weights
-#' weight_plot(test) +
+#' weight_plot(boot) +
 #'   scale_color_manual("", values = c("black", "#00BFC4")) +
 #'   theme(legend.position = "top")
 #'
 #' # plot only the regression model for the hypothesized mediator
-#' weight_plot(test, outcome = "TaskConflict") +
+#' weight_plot(boot, outcome = "TaskConflict") +
 #'   scale_color_manual("", values = c("black", "#00BFC4")) +
 #'   theme(legend.position = "top")
 #'

@@ -28,13 +28,13 @@ data("BSG2014")
 
 # run bootstrap test after winsorization
 ctrl <- cov_control(prob = 0.95)
-test <- test_mediation(BSG2014,
+boot <- test_mediation(BSG2014,
                        x = "ValueDiversity",
                        y = "TeamCommitment",
                        m = "TaskConflict",
                        method = "covariance",
                        control = ctrl)
-summary(test)
+summary(boot)
 
 }
 \references{

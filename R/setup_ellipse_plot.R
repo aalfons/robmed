@@ -91,13 +91,13 @@
 #' data("BSG2014")
 #'
 #' # run fast-and-robust bootstrap test
-#' test <- test_mediation(BSG2014,
+#' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
 #'                        m = "TaskConflict")
 #'
 #' # set up information for plot
-#' setup <- setup_ellipse_plot(test)
+#' setup <- setup_ellipse_plot(boot)
 #'
 #' # plot only data and tolerance ellipse
 #' ggplot() +

@@ -66,14 +66,14 @@ For arguments that are not supplied, the corresponding values of
 data("BSG2014")
 
 # run fast-and-robust bootstrap test
-test <- test_mediation(BSG2014,
+boot <- test_mediation(BSG2014,
                        x = "ValueDiversity",
                        y = "TeamCommitment",
                        m = "TaskConflict")
-summary(test)
+summary(boot)
 
 # now compute 97.5\% confidence interval
-retest(test, level = 0.975)
+retest(boot, level = 0.975)
 
 }
 \seealso{

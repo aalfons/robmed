@@ -87,19 +87,20 @@
 #' ellipse_plot(robust_boot, horizontal = "TaskConflict",
 #'              vertical = "TeamCommitment", partial = TRUE)
 #'
-#' # run standard bootstrap test
-#' standard_boot <- test_mediation(BSG2014,
-#'                                 x = "ValueDiversity",
-#'                                 y = "TeamCommitment",
-#'                                 m = "TaskConflict",
-#'                                 robust = FALSE)
+#' # run OLS bootstrap test
+#' ols_boot <- test_mediation(BSG2014,
+#'                            x = "ValueDiversity",
+#'                            y = "TeamCommitment",
+#'                            m = "TaskConflict",
+#'                            robust = FALSE)
 #'
-#' # compare robust and standard tests
-#' tests <- list(OLS = standard_boot, Robust = robust_boot)
-#' ellipse_plot(tests)
+#' # compare robust and OLS bootstrap tests
+#' boot_list <- list("OLS bootstrap" = ols_boot,
+#'                   "ROBMED" = robust_boot)
+#' ellipse_plot(boot_list)
 #'
 #' # the plot can be customized in the usual way
-#' ellipse_plot(tests) + theme_bw() +
+#' ellipse_plot(boot_list) + theme_bw() +
 #'   labs(title = "OLS vs robust estimation")
 #'
 #' @keywords hplot

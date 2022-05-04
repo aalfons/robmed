@@ -52,20 +52,21 @@
 #' density_plot(robust_boot)
 #' density_plot(robust_boot, color = "#00BFC4", fill = "#00BFC4")
 #'
-#' # run standard bootstrap test
-#' standard_boot <- test_mediation(BSG2014,
+#' # run OLS bootstrap test
+#' ols_boot <- test_mediation(BSG2014,
 #'                                 x = "ValueDiversity",
 #'                                 y = "TeamCommitment",
 #'                                 m = "TaskConflict",
 #'                                 robust = FALSE)
 #'
-#' # compare robust and standard tests
-#' tests <- list(Standard = standard_boot, Robust = robust_boot)
-#' density_plot(tests)
+#' # compare robust and OLS bootstrap tests
+#' boot_list <- list("OLS bootstrap" = ols_boot,
+#'                   "ROBMED" = robust_boot)
+#' density_plot(boot_list)
 #'
 #' # the plot can be customized in the usual way
-#' density_plot(tests) + theme_bw() +
-#'   labs(title = "Standard vs robust bootstrap test")
+#' density_plot(boot_list) + theme_bw() +
+#'   labs(title = "OLS bootstrap vs ROBMED")
 #'
 #' @keywords hplot
 #'

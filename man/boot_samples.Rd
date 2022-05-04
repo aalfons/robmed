@@ -23,7 +23,7 @@ samples were drawn}
 \description{
 Draw bootstrap samples to be used for (fast-and-robust) bootstrap tests
 for mediation analysis.  Note that this function is intended for use in
-simulation studies, it is not expected to be called by the user.
+simulation studies by experienced users.
 }
 \examples{
 \donttest{
@@ -45,11 +45,11 @@ robust_boot <- test_mediation(simulated_data,
                               robust = TRUE,
                               indices = indices)
 summary(robust_boot)
-standard_boot <- test_mediation(simulated_data,
-                                x = "x", y = "y", m = "m",
-                                robust = FALSE,
-                                indices = indices)
-summary(standard_boot)
+ols_boot <- test_mediation(simulated_data,
+                           x = "x", y = "y", m = "m",
+                           robust = FALSE,
+                           indices = indices)
+summary(ols_boot)
 }
 
 }

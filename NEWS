@@ -6,6 +6,8 @@ Changes in robmed version 0.11.0
     + Updated documentation of fit_mediation() and test_mediation() with a
       brief description of the implemented mediation models.
 
+    + Updated and added more examples in help files.
+
 
 
 Changes in robmed version 0.10.1

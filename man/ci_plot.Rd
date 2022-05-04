@@ -111,22 +111,23 @@ robust_boot <- test_mediation(BSG2014,
 ci_plot(robust_boot)
 ci_plot(robust_boot, color = "#00BFC4")
 
-# run standard bootstrap test
-standard_boot <- test_mediation(BSG2014,
-                                x = "ValueDiversity",
-                                y = "TeamCommitment",
-                                m = "TaskConflict",
-                                robust = FALSE)
+# run OLS bootstrap test
+ols_boot <- test_mediation(BSG2014,
+                           x = "ValueDiversity",
+                           y = "TeamCommitment",
+                           m = "TaskConflict",
+                           robust = FALSE)
 
-# compare robust and standard tests
-tests <- list(Standard = standard_boot, Robust = robust_boot)
-ci_plot(tests)
+# compare robust and OLS bootstrap tests
+boot_list <- list("OLS bootstrap" = ols_boot,
+                  "ROBMED" = robust_boot)
+ci_plot(boot_list)
 
 # the plot can be customized in the usual way
-ci_plot(tests) +
+ci_plot(boot_list) +
   geom_hline(yintercept = 0, color = "darkgrey") +
   coord_flip() + theme_bw() +
-  labs(title = "Standard vs robust bootstrap test")
+  labs(title = "OLS bootstrap vs ROBMED")
 
 }
 \seealso{

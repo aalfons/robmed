@@ -56,13 +56,13 @@
 #'                               robust = TRUE)
 #' confint(robust_boot, type = "boot")
 #'
-#' # run standard bootstrap test
-#' standard_boot <- test_mediation(BSG2014,
-#'                                 x = "ValueDiversity",
-#'                                 y = "TeamCommitment",
-#'                                 m = "TaskConflict",
-#'                                 robust = FALSE)
-#' confint(standard_boot, type = "data")
+#' # run OLS bootstrap test
+#' ols_boot <- test_mediation(BSG2014,
+#'                            x = "ValueDiversity",
+#'                            y = "TeamCommitment",
+#'                            m = "TaskConflict",
+#'                            robust = FALSE)
+#' confint(ols_boot, type = "data")
 #'
 #' @keywords utilities
 
