@@ -38,10 +38,12 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' for mediation analysis via a bootstrap test, where significance of the
 #' indirect effect is always assessed via a percentile-based confidence
 #' interval due to the asymmetry of its distribution.
-#' @param plot  a logical indicating whether to produce a diagnostic plot of
+#' @param plot  a logical indicating whether to include a diagnostic plot of
 #' robust regression weights (see \code{\link{weight_plot}()}).  This is only
 #' used for mediation analysis objects fitted with the robust MM-estimator (see
-#' \code{\link{test_mediation}()}).
+#' \code{\link{test_mediation}()}).  Note that the diagnostic plot is only
+#' shown when the returned object is printed in order to maintain a clear
+#' separation between computing results and printing/plotting them.
 #' @param \dots  additional arguments are currently ignored.
 #'
 #' @return An object of class \code{"summary_test_mediation"} with the
@@ -50,6 +52,8 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' contains the results from testing the indirect effect(s).}
 #' \item{summary}{an object containing all necessary information to summarize
 #' the effects other than the indirect effect(s).}
+#' \item{plot}{if applicable, an object inheriting from class
+#' \code{"\link[ggplot2]{ggplot}"} containing the diagnostic plot.}
 #'
 #' @author Andreas Alfons
 #'
@@ -58,7 +62,7 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' for mediation analysis.  \emph{Organizational Research Methods},
 #' doi: 10.1177/1094428121999096.
 #'
-#' @seealso \code{\link{test_mediation}}
+#' @seealso \code{\link{test_mediation}()}, \code{\link{weight_plot}()}
 #'
 #' @examples
 #' data("BSG2014")
@@ -80,6 +84,10 @@ summary.reg_fit_mediation <- function(object, ...) object
 #'                                   ValueDiversity,
 #'                               data = BSG2014)
 #' summary(boot_simple)
+#' # the diagnostic plot is not shown when the summary is
+#' # computed, only when the resulting object is printed
+#' summary_simple <- summary(boot_simple)  # does not show plot
+#' summary_simple                          # shows output and plot
 #'
 #' \donttest{
 #' ## serial multiple mediators
