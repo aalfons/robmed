@@ -54,10 +54,10 @@
 #'
 #' # run OLS bootstrap test
 #' ols_boot <- test_mediation(BSG2014,
-#'                                 x = "ValueDiversity",
-#'                                 y = "TeamCommitment",
-#'                                 m = "TaskConflict",
-#'                                 robust = FALSE)
+#'                            x = "ValueDiversity",
+#'                            y = "TeamCommitment",
+#'                            m = "TaskConflict",
+#'                            robust = FALSE)
 #'
 #' # compare robust and OLS bootstrap tests
 #' boot_list <- list("OLS bootstrap" = ols_boot,
