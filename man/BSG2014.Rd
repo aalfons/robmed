@@ -20,8 +20,8 @@ A data frame with 89 observations on the following 13 variables.
   used as a proxy for the level of shared group experience and training.}
 
   \item{\code{TaskConflict}}{Task conflict was operationalized with the
-  intra-group conflict scale of Jehn (1995).  Five items on the presence of
-  conflict were rated on a 5-point Likert scale (1 = none, 5 = a lot) and
+  intra-group conflict scale of Jehn (1995).  Five items on the presence
+  of conflict were rated on a 5-point scale (1 = none, 5 = a lot) and
   aggregated.  Task conflict was measured in the second survey (between the
   two games).}
 
@@ -69,9 +69,9 @@ A data frame with 89 observations on the following 13 variables.
 
   \item{\code{SharedLeadership}}{Shared leadership was measured following
   Carson, Tesluk & Marrone (2007). Every team member assessed each of their
-  peers on a 5-point Likert scale (1 = not at all, 5 = to a very great
-  extent) on the question of \sQuote{To what degree does your team rely on
-  this individual for leadership?}.  To operationalize shared leadership, we
+  peers on a 5-point scale (1 = not at all, 5 = to a very great extent) on
+  the question of \sQuote{To what degree does your team rely on this
+  individual for leadership?}.  To operationalize shared leadership, we
   then summed all ratings of each other’s leadership and divide it by the
   total number of possible relationships among team members.  Shared
   leadership was measured in the second survey (between the two games).}
@@ -163,6 +163,6 @@ Strategies. \emph{Journal of Applied Psychology}, \bold{94}(1), 90--103.
 
 Mowday, R.T., Steers, R.M. and Porter, L.W. (1979) The Measurement of
 Organizational Commitment.  \emph{Journal of Vocational Behavior},
-\bold{14}(2), 224--47.
+\bold{14}(2), 224--247.
 }
 \keyword{datasets}
