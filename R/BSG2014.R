@@ -38,11 +38,11 @@
 #'   the first game, which is determined by objective performance measures, is
 #'   used as a proxy for the level of shared group experience and training.}
 #'
-#'   \item{\code{TaskConflict}}{Task conflict was operationalized with the
-#'   intra-group conflict scale of Jehn (1995).  Five items on the presence
-#'   of conflict were rated on a 5-point scale (1 = none, 5 = a lot) and
-#'   aggregated.  Task conflict was measured in the second survey (between the
-#'   two games).}
+#'   \item{\code{TaskConflict}}{Using the intra-group conflict scale of Jehn
+#'   (1995), the team members rated five items on the presence of conflict on
+#'   a 5-point scale (1 = none, 5 = a lot).  The individual responses were
+#'   aggregated by taking the average across items and team members.  Task
+#'   conflict was measured in the second survey (between the two games).}
 #'
 #'   \item{\code{TeamCommitment}}{Team commitment was measured by four items
 #'   based on Mowday, Steers & Porter (1979) and responses were aggregated.
@@ -64,52 +64,54 @@
 #'   aggregated to form the TMS construct.  TMS was measured in the second
 #'   survey (between the two games).}
 #'
-#'   \item{\code{ValueDiversity}}{Value diversity was operationalized with the
-#'   short version of Schwartz’s Value Survey (SVS) to measure team members’
-#'   individual values (Lindeman & Verkasalo, 2005).  The responses were
-#'   aggregated with the average of the coefficient of variations of each value
-#'   dimension among team members.  Value diversity was measured in the first
-#'   survey (before the first game).}
+#'   \item{\code{ValueDiversity}}{Using the short Schwartz’s value survey
+#'   (Lindeman & Verkasalo, 2005), the team members rated ten items on the
+#'   importance of certain values (1 = not important, 10 = highly important).
+#'   For each value item, the coefficient of variation of the individual
+#'   responses across team members was computed, and the resulting coefficients
+#'   of variation were averaged across the value items.  Value diversity was
+#'   measured in the first survey (before the first game).}
 #'
-#'   \item{\code{ProceduralJustice}}{Procedural justice was measured by the
-#'   intra-unit procedural justice climate items of Li & Cropanzano (2009).
-#'   Respondents indicated the extent to which they agree or disagree with
-#'   these items on a 5-point Likert scale (1 = strongly disagree, 5 = strongly
-#'   agree), and the items were aggregated to the team level.  Procedural
-#'   justice was measured in the third survey (after the second game).}
+#'   \item{\code{ProceduralJustice}}{Using the intra-unit procedural justice
+#'   climate scale of Li & Cropanzano (2009), the team members indicated the
+#'   extent to which they agree or disagree with five items on a 5-point Likert
+#'   scale (1 = strongly disagree, 5 = strongly agree).  The individual
+#'   responses were aggregated by taking the average across items and team
+#'   members.  Procedural justice was measured in the third survey (after the
+#'   second game).}
 #'
-#'   \item{\code{InteractionalJustice}}{Interactional justice was measured by
-#'   the intra-unit interactional justice climate items of Li & Cropanzano
-#'   (2009).  Respondents indicated the extent to which they agree or disagree
-#'   with these items on a 5-point Likert scale (1 = strongly disagree, 5 =
-#'   strongly agree), and the items were aggregated to the team level.
-#'   Interactional justice was measured in the third survey (after the second
-#'   game).}
+#'   \item{\code{InteractionalJustice}}{Using the intra-unit interactional
+#'   justice climate scale of Li & Cropanzano (2009), the team members
+#'   indicated the extent to which they agree or disagree with four items on a
+#'   5-point Likert scale (1 = strongly disagree, 5 = strongly agree).  The
+#'   individual responses were aggregated by taking the average across items
+#'   and team members.  Interactional justice was measured in the third survey
+#'   (after the second game).}
 #'
-#'   \item{\code{SharedLeadership}}{Shared leadership was measured following
-#'   Carson, Tesluk & Marrone (2007). Every team member assessed each of their
-#'   peers on a 5-point scale (1 = not at all, 5 = to a very great extent) on
-#'   the question of \sQuote{To what degree does your team rely on this
-#'   individual for leadership?}.  To operationalize shared leadership, we
-#'   then summed all ratings of each other’s leadership and divide it by the
-#'   total number of possible relationships among team members.  Shared
-#'   leadership was measured in the second survey (between the two games).}
+#'   \item{\code{SharedLeadership}}{Following Carson, Tesluk & Marrone (2007),
+#'   every team member assessed each of their peers on the question of
+#'   \sQuote{To what degree does your team rely on this individual for
+#'   leadership?} using a 5-point scale (1 = not at all, 5 = to a very great
+#'   extent).  The leadership ratings were aggregated by taking the sum and
+#'   dividing it by the number of pairwise relationships among team members.
+#'   Shared leadership was measured in the second survey (between the two
+#'   games).}
 #'
 #'   \item{\code{AgeDiversity}}{Following Harrison & Klein (2007), age
-#'   diversity was operationalized with the coefficient of variation of the
+#'   diversity was operationalized by the coefficient of variation of the
 #'   team members' ages.}
 #'
 #'   \item{\code{GenderDiversity}}{Gender diversity was measured with Blau's
-#'   index, \eqn{1 - \sum_{i} p_{i}^{2}}{1 - the sum of the squared values of
-#'   p_i}, where \eqn{p_{i}}{p_i} is the proportion of team members in the
-#'   \eqn{i}{i}-th category (Blau, 1977).}
+#'   index, \eqn{1 - \sum_{j} p_{j}^{2}}{1 - the sum of the squared values of
+#'   p_j}, where \eqn{p_{j}}{p_j} is the proportion of team members in the
+#'   \eqn{j}{j}-th category (Blau, 1977).}
 #'
 #'   \item{\code{TeamScore}}{The team performance scores on the second game
 #'   were computed at the end of the simulation through a mix of five objective
 #'   performance measures: return on equity, earnings-per-share, stock price,
-#'   credit rating, and image rating.  The scores are automatically computed by
-#'   the simulation game software, and scores ranged from 49 to 110.  See
-#'   Mathieu & Rapp (2009) for more information. The scores were communicated
+#'   credit rating, and image rating. The computation of the scores is handled
+#'   by the simulation game software, and details can be found in Mathieu &
+#'   Rapp (2009).  The scores ranged from 49 to 110, and they were communicated
 #'   to the teams only after the third survey.}
 #'
 #' }
