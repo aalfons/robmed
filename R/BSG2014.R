@@ -27,42 +27,57 @@
 #' A data frame with 89 observations on the following 13 variables.
 #' \describe{
 #'
-#'   \item{\code{ProcessConflict}}{Process conflict was operationalized with
-#'   the three-item scale of Jehn (1995) and responses were aggregated.
-#'   Process conflict was measured in the second survey (between the two
-#'   games).}
+#'   \item{\code{ProcessConflict}}{Based on Shah & Jehn (1993), the team
+#'   members rated three items on the presence of conflict related to the
+#'   process of working together, using a 5-point scale (1 = none, 5 = a lot).
+#'   The individual responses were aggregated by taking the average across
+#'   items and team members.  Process conflict was measured in the second
+#'   survey (between the two games).}
 #'
-#'   \item{\code{SharedExperience}}{Teams were randomly formed, no prior shared
-#'   group experience is expected and shared group experience and training is
-#'   developed during the first game for the second game.  The team's score on
-#'   the first game, which is determined by objective performance measures, is
-#'   used as a proxy for the level of shared group experience and training.}
+#'   \item{\code{SharedExperience}}{As teams were randomly formed, no prior
+#'   shared group experience is expected, and shared group experience and
+#'   training is developed during the first game for the second game.  Hence
+#'   the team performance score on the first game is used as a proxy for the
+#'   level of shared group experience and training.  Those scores were computed
+#'   through a mix of five objective performance measures: return on equity,
+#'   earnings-per-share, stock price, credit rating, and image rating.  The
+#'   computation of the scores is handled by the simulation game software, and
+#'   details can be found in Mathieu & Rapp (2009).  The scores ranged from 57
+#'   to 111, and they were communicated to the teams only after the third
+#'   survey.}
 #'
 #'   \item{\code{TaskConflict}}{Using the intra-group conflict scale of Jehn
-#'   (1995), the team members rated five items on the presence of conflict on
-#'   a 5-point scale (1 = none, 5 = a lot).  The individual responses were
-#'   aggregated by taking the average across items and team members.  Task
-#'   conflict was measured in the second survey (between the two games).}
+#'   (1995), the team members rated four items on the presence of conflict
+#'   regarding the work on a 5-point scale (1 = none, 5 = a lot).
+#'   The individual responses were aggregated by taking the average across
+#'   items and team members.  Task conflict was measured in the second survey
+#'   (between the two games).}
 #'
-#'   \item{\code{TeamCommitment}}{Team commitment was measured by four items
-#'   based on Mowday, Steers & Porter (1979) and responses were aggregated.
+#'   \item{\code{TeamCommitment}}{The team members indicated the extent to
+#'   which they agree or disagree with four items on commitment to the team,
+#'   which are based on Mowday, Steers & Porter (1979), using a 5-point scale
+#'   (1 = strongly disagree, 5 = strongly agree).  The individual responses
+#'   were aggregated by taking the average across items and team members.
 #'   Team commitment was measured in the third survey (after the second game).}
 #'
-#'   \item{\code{TeamPerformance}}{Team performance in the second game was
-#'   measured subjectively by the team members’ perceptions of the team’s
-#'   functioning, using aggregated responses to Hackman’s (1986) Likert scale
-#'   items.  Subjective team performance was measured in the third survey
-#'   (after the second game).}
+#'   \item{\code{TeamPerformance}}{Following Hackman (1986), the team members
+#'   indicated the extent to which they agree or disagree with four items on
+#'   the team's functioning, using a 5-point scale (1 = strongly disagree, 5 =
+#'   strongly agree).  The individual responses were aggregated by taking the
+#'   average across items and team members.  Subjective team performance was
+#'   measured in the third survey (after the second game).}
 #'
 #'   \item{\code{TMS}}{Transactive memory systems (TMS) are defined as shared
 #'   systems that people in relationships develop for encoding, storing, and
 #'   retrieving information about different substantive domains.  TMS was
 #'   operationalized with Lewis’ (2003) 15-item scale that measures the three
-#'   sub-dimensions of TMS (credibility, specialization and coordination).
-#'   Team members responded on a 5-point scale (1 = strongly disagree, 5 =
-#'   strongly agree).  Following Lewis (2003), the three sub dimensions were
-#'   aggregated to form the TMS construct.  TMS was measured in the second
-#'   survey (between the two games).}
+#'   sub-dimensions of TMS (specialization, credibility, and coordination).
+#'   For each item, the team members responded on a 5-point scale (1 = strongly
+#'   disagree, 5 = strongly agree).  Following Lewis (2003), the three sub
+#'   dimensions were aggregated to form the TMS construct.  That is, the
+#'   individual responses were aggregated by taking the average across all 15
+#'   items and team members.  TMS was measured in the second survey (between
+#'   the two games).}
 #'
 #'   \item{\code{ValueDiversity}}{Using the short Schwartz’s value survey
 #'   (Lindeman & Verkasalo, 2005), the team members rated ten items on the
@@ -72,26 +87,26 @@
 #'   of variation were averaged across the value items.  Value diversity was
 #'   measured in the first survey (before the first game).}
 #'
-#'   \item{\code{ProceduralJustice}}{Using the intra-unit procedural justice
+#'   \item{\code{ProceduralJustice}}{Based on the intra-unit procedural justice
 #'   climate scale of Li & Cropanzano (2009), the team members indicated the
-#'   extent to which they agree or disagree with five items on a 5-point Likert
-#'   scale (1 = strongly disagree, 5 = strongly agree).  The individual
-#'   responses were aggregated by taking the average across items and team
-#'   members.  Procedural justice was measured in the third survey (after the
-#'   second game).}
+#'   extent to which they agree or disagree with four items on a 5-point scale
+#'   (1 = strongly disagree, 5 = strongly agree).  The individual responses
+#'   were aggregated by taking the average across items and team members.
+#'   Procedural justice was measured in the third survey (after the second
+#'   game).}
 #'
 #'   \item{\code{InteractionalJustice}}{Using the intra-unit interactional
 #'   justice climate scale of Li & Cropanzano (2009), the team members
 #'   indicated the extent to which they agree or disagree with four items on a
-#'   5-point Likert scale (1 = strongly disagree, 5 = strongly agree).  The
-#'   individual responses were aggregated by taking the average across items
-#'   and team members.  Interactional justice was measured in the third survey
-#'   (after the second game).}
+#'   5-point scale (1 = strongly disagree, 5 = strongly agree).  The individual
+#'   responses were aggregated by taking the average across items and team
+#'   members.  Interactional justice was measured in the third survey (after
+#'   the second game).}
 #'
 #'   \item{\code{SharedLeadership}}{Following Carson, Tesluk & Marrone (2007),
 #'   every team member assessed each of their peers on the question of
 #'   \sQuote{To what degree does your team rely on this individual for
-#'   leadership?} using a 5-point scale (1 = not at all, 5 = to a very great
+#'   leadership?} using a 5-point scale (1 = not at all, 5 = to a very large
 #'   extent).  The leadership ratings were aggregated by taking the sum and
 #'   dividing it by the number of pairwise relationships among team members.
 #'   Shared leadership was measured in the second survey (between the two
@@ -115,6 +130,9 @@
 #'   to the teams only after the third survey.}
 #'
 #' }
+#'
+#' @source The data were collected and provided by Nufer Y. Ates
+#' (\url{https://orcid.org/0000-0003-4572-4101}).
 #'
 #' @references
 #' Blau, P.M. (1977) \emph{Inequality and Heterogeneity: A Primitive Theory of
@@ -156,6 +174,10 @@
 #' Mowday, R.T., Steers, R.M. and Porter, L.W. (1979) The Measurement of
 #' Organizational Commitment.  \emph{Journal of Vocational Behavior},
 #' \bold{14}(2), 224--247.
+#'
+#' Shah, P.P. and Jehn, K.A. (1993) Do Friends Perform Better than
+#' Acquaintances? The Interaction of Friendship, Conflict, and Task.
+#' \emph{Group Decision and Negotiation}, \bold{2}(2), 149--165.
 #'
 #' @examples
 #' data("BSG2014")
