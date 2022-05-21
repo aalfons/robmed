@@ -162,8 +162,8 @@ Harrison, D.A. and Klein, K.J. (2007) What's the Difference? Diversity
 Constructs as Separation, Variety, or Disparity in Organizations.
 \emph{Academy of Management Review}, \bold{32}(4): 1199--1228.
 
-Jehn, K.A. (1995) A Multi-Method Examination of the Benefits and Detriments
-of Intra-Group Conflict.  \emph{Administrative Science Quarterly},
+Jehn, K.A. (1995) A Multimethod Examination of the Benefits and Detriments
+of Intragroup Conflict.  \emph{Administrative Science Quarterly},
 \bold{40}(2), 256--285.
 
 Lewis, K. (2003) Measuring Transactive Memory Systems in the Field: Scale
