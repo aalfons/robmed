@@ -211,9 +211,6 @@ this covariance-based approach is less robust than the approach based on
 robust MM-regressions described above.
 }
 \note{
-The formula interface is still experimental and may change in future
-versions.
-
 The default method takes a data frame its first argument so that it can
 easily be used with the pipe operator (\R's built-in \code{|>} or
 \pkg{magrittr}'s \code{\%>\%}).

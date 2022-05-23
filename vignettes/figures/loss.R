@@ -1,3 +1,8 @@
+# --------------------------------------
+# Author: Andreas Alfons
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
+
 # load packages
 library("dplyr")
 library("ggplot2")
@@ -41,7 +46,7 @@ robust_weight <- data.frame(x = x,
 df <- rbind(OLS_loss, robust_loss, OLS_weight, robust_weight) %>% filter(y <= 4)
 
 # write plot to file
-pdf(file = "vignettes/static-figures/loss.pdf", width = 8.5, height = 3.6)
+pdf(file = "vignettes/figures/loss.pdf", width = 8.5, height = 3.5)
 ggplot() +
   geom_line(aes(x = x, y = y, color = Method, linetype = Method),
             data = df, size = line_size) +
@@ -56,4 +61,3 @@ ggplot() +
                      legend.title = element_text(size = 13),
                      strip.text = element_text(size = 12))
 dev.off()
-

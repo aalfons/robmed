@@ -30,9 +30,6 @@
 #' and \code{covariates()} returns an object of class \code{"covariates"}.
 #' Typically, these inherit from class \code{"matrix"}.
 #'
-#' @note The formula interface is still experimental and may change in future
-#' versions.
-#'
 #' @author Andreas Alfons
 #'
 #' @seealso \code{\link{fit_mediation}()}, \code{\link{test_mediation}()}

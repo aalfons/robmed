@@ -45,10 +45,6 @@ class(es) of the resulting object.
 \code{parallel_m()} and \code{serial_m()} are wrappers for \code{m()} with
 the respective value for argument \code{.model}.
 }
-\note{
-The formula interface is still experimental and may change in future
-versions.
-}
 \examples{
 data("BSG2014")
 

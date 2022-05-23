@@ -277,9 +277,6 @@ For the fast-and-robust bootstrap, the simpler correction of
 Salibian-Barrera & Van Aelst (2008) is used rather than the originally
 proposed correction of Salibian-Barrera & Zamar (2002).
 
-The formula interface is still experimental and may change in future
-versions.
-
 The default method takes a data frame its first argument so that it can
 easily be used with the pipe operator (\R's built-in \code{|>} or
 \pkg{magrittr}'s \code{\%>\%}).

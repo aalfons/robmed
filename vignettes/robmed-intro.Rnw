@@ -20,6 +20,10 @@
 \newcommand{\cor}{\mathrm{cor}}               % correlation
 \newcommand{\argmin}{\mathop{\text{argmin}}}  % argmin
 
+%% stronger penalty of widow and orphan lines
+\widowpenalty=10000
+\clubpenalty=10000
+
 
 %% -- Article metainformation (author, title, ...) -----------------------------
 
@@ -83,6 +87,7 @@ for diagnostics or visual representation of the results.
   URL: \url{https://personal.eur.nl/alfons/}
 }
 
+
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Robust Mediation Analysis: The R Package robmed}
 %\VignetteDepends{robmed}
@@ -100,11 +105,10 @@ for diagnostics or visual representation of the results.
 <<include=FALSE>>=
 library("knitr")
 options(prompt="R> ", continue = "+  ", width = 75, useFancyQuotes = FALSE)
-opts_chunk$set(fig.path = "figures/figure-", fig.align = "center",
+opts_chunk$set(fig.path = "knitr-figures/figure-", fig.align = "center",
                fig.lp = "fig:", fig.pos = "t", tidy = FALSE)
 render_sweave()             # use Sweave environments
 set_header(highlight = "")  # do not use the Sweave.sty package
-library("robmed")
 @
 
 
@@ -132,7 +136,6 @@ explains cyberbullying through anger, and \citet{gaudiano10} report that the
 believability of hallucinations after treatment for psychotic disorders
 mediates the relationship between the type of treatment and distress after
 treatment.
-% In its simplest form, the mediation model is given by the equations
 Figure~\ref{fig:simple} shows a diagram of the mediation model in its
 simplest form, which is given by the equations
 \begin{align}
@@ -147,17 +150,31 @@ random error terms.  The coefficients $c$ and $c'$ are called the direct effect
 and total effect, respectively, of $X$ on $Y$.  The product of coefficients
 $ab$ is called the indirect effect of $X$ on $Y$ and constitutes the main
 parameter of interest in mediation analysis.  Under the usual assumption of
-independent and normally distributed error terms $e_{1}$, $e_{2}$ and $e_{3}$,
+independent and normally distributed error terms $e_{1}$, $e_{2}$, and $e_{3}$,
 it holds that $c' = ab + c$ \citep[e.g.,][]{mackinnon95}, and the same holds
 for the corresponding ordinary least-squares (OLS) estimates.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.5\textwidth]{static-figures/simple-mediation}
+\includegraphics[width=0.5\textwidth]{figures/mediation-simple}
 \end{center}
 \caption{Diagram visualizing a simple mediation model.}
 \label{fig:simple}
 \end{figure}
+
+The indirect effect $ab$ can be interpreted in the following way: a change of
+one unit in $X$ explains a change of $a$ units in $M$, which in turn explains a
+change of $ab$ units in $Y$.  It is therefore an important question whether or
+not to standardize the variables in some way.  If the scales of the variables
+differ by orders of magnitude, certain coefficients may dominate the
+relationship $c' = ab + c$.  However, variables used in mediation analysis
+often measure constructs that are aggregated from several rating-scale items
+(e.g., on a scale of 1--5).  In such cases, a researcher may prefer not to
+standardize to keep the interpretation in terms of the original measurement
+scales.  Similarly, a researcher may prefer not to standardize a binary $X$
+variable to keep the interpretation in terms of a change from one group to the
+other.  For a more detailed discussion on whether or not to use standardized
+coefficients in mediation analysis, we refer to \citet[p.~519]{hayes18}.
 
 Mediation analysis goes back to \citet{judd81} and \citet{baron86}, however
 their stepwise approach has been superseded by approaches that focus on the
@@ -193,19 +210,15 @@ concentrate on mediation analysis or specific aspects thereof.  Package
 \pkg{mediation} \citep{tingley14} is focused on causal mediation analysis
 in a potential outcome framework, and package \pkg{medflex} \citep{steen17}
 implements recent developments in mediation analysis embedded within the
-counterfactual framework.
-% Methods for mediation analysis with missing data are available in package
-% \pkg{bmem} \citep{bmem}, while package \pkg{bmlm} \citep{bmlm} offers
-% functionality for Bayesian multilevel mediation models.
-Bayesian multilevel mediation models can be estimated with package \pkg{bmlm}
-\citep{bmlm}, while package \pkg{mma} \citep{mma} offers functionality for
-general multiple mediation analysis with continuous or binary/categorical
-variables.  In addition, general purpose software for structural equation
-modeling such as \proglang{Mplus} \citep{Mplus} or the \proglang{R} packages
-\pkg{sem} \citep{sem} and \pkg{lavaan} \citep{rosseel12} can be used for
-mediation analysis.  The former also allows for maximum likelihood
-estimation with skew-normal, $t$, or skew-$t$ error distributions
-\citep{asparouhov16}.
+counterfactual framework.  Bayesian multilevel mediation models can be
+estimated with package \pkg{bmlm} \citep{bmlm}, while package \pkg{mma}
+\citep{mma} offers functionality for general multiple mediation analysis
+with continuous or binary/categorical variables.  In addition, general
+purpose software for structural equation modeling such as \proglang{Mplus}
+\citep{Mplus} or the \proglang{R} packages \pkg{sem} \citep{sem} and
+\pkg{lavaan} \citep{rosseel12} can be used for mediation analysis.  The
+former also allows for maximum likelihood estimation with skew-normal,
+$t$, or skew-$t$ error distributions \citep{asparouhov16}.
 
 Despite the growing number of \proglang{R} packages that address mediation
 analysis, there are no common interfaces or class structures.  Instead, each
@@ -216,16 +229,20 @@ for robust mediation analysis.
 Package \pkg{robmed} \citep{robmed} aims to address these issues.  Its main
 functionality is the robust bootstrap procedure proposed in \citet{alfonsXXa},
 which is highly robust to outliers and other deviations from normality
-assumptions.
-Furthermore, \pkg{robmed} implements various other methods of estimating
-mediation models, as well as different tests for the indirect effects.  All
-implemented methods share the same function interface and a clear class
-structure.  In addition, \pkg{robmed} introduces a simple formula interface
-for specifying mediation models, and provides several plots for diagnostics
-or visualization of the results from mediation analysis.
+assumptions.  Furthermore, \pkg{robmed} implements various other methods of
+estimating mediation models, as well as different tests for the indirect
+effects.  All implemented methods share the same function interface and a
+clear class structure.  In addition, \pkg{robmed} introduces a simple formula
+interface for specifying mediation models, and provides several plots for
+diagnostics or visualization of the results from mediation analysis.
+% Finally, we take advantage of the \proglang{R} integration plug-in for
+% \proglang{SPSS} and provide the extension bundle \pkg{ROBMED}, which allows
+% to use the main functionality of the \proglang{R} package \pkg{robmed} from
+% within \proglang{SPSS}.
 
-Package \pkg{robmed} is available on CRAN (the Comprehensive \proglang{R} Archive Network, \url{https://CRAN.R-project.org/}) and can be installed from
-the \proglang{R} console with the following command:
+Package \pkg{robmed} is available on CRAN (the Comprehensive \proglang{R}
+Archive Network, \url{https://CRAN.R-project.org/}) and can be installed
+from the \proglang{R} console with the following command:
 %
 <<eval=FALSE>>=
 install.packages("robmed")
@@ -236,8 +253,7 @@ discusses various extensions of the simple mediation model, as well as the
 implemented methodology for estimation and testing.
 Implementation details are provided in Section~\ref{sec:implementation}, while
 Section~\ref{sec:illustrations} illustrates the use of package \pkg{robmed}
-with code examples.
-The final Section~\ref{sec:summary} concludes.
+with code examples. The final Section~\ref{sec:summary} concludes.
 
 
 %% -- Manuscript ---------------------------------------------------------------
@@ -266,10 +282,7 @@ technical details of the robust bootstrap procedure of \citet{alfonsXXa}.
 
 \subsection{Extensions of the simple mediation model} \label{sec:models}
 
-% The simple mediation model \eqref{eq:simpleM}-\eqref{eq:simpleY'} can easily
-% be extended in various ways, for instance by adding additional mediators,
-% additional independent variables of interest, or control variables.
-The simple mediation model \eqref{eq:simpleM}-\eqref{eq:simpleY'} can easily
+The simple mediation model \eqref{eq:simpleM}--\eqref{eq:simpleY'} can easily
 be extended in various ways, for instance with (i) multiple parallel mediators,
 (ii) multiple serial mediators, and (iii) multiple independent variables to be
 mediated.  All those extensions may include additional control variables
@@ -281,9 +294,8 @@ mediated.  All those extensions may include additional control variables
 In the parallel multiple mediator model, an independent variable $X$ is
 hypothesized to influence a dependent variable $Y$ through multiple mediators
 $M_{1}, \dots, M_{k}$, while the mediator variables do not influence each
-other.
-A diagram of the model is displayed in Figure~\ref{fig:parallel}, and the
-corresponding regression equations are
+other.  A diagram of the model is displayed in Figure~\ref{fig:parallel}, and
+the corresponding regression equations are
 \begin{align}
 M_{j} &= i_{j} + a_{j} X + e_{j},
 \qquad j = 1, \dots, k, \label{eq:parallelM} \\
@@ -293,18 +305,17 @@ Y &= i_{k+2} + c' X + e_{k+2}, \label{eq:parallelY'}
 \end{align}
 where $i_{1}, \dots, i_{k+2}$, $a_{1}, \dots, a_{k}$, $b_{1}, \dots, b_{k}$,
 $c$, and $c'$ are regression coefficients to be estimated, and $e_{1}, \dots,
-e_{k+2}$ are random error terms.
-With the usual assumptions of independent and normally distributed error terms,
-we now have that $c' = \sum_{j = 1}^{k} a_{j} b_{j} + c$.
-The main parameters of interest are the individual indirect effects
-$a_{1}b_{1}, \dots, a_{k}b_{k}$, and it can also be of interest to make
-pairwise comparisons between the individual indirect effects or their
-absolute values \citep[e.g.,][Chapter~5.1]{hayes18} if the hypothesized
-mediators are scaled similarly.
+e_{k+2}$ are random error terms.  With the usual assumptions of independent
+and normally distributed error terms, we now have that $c' = \sum_{j = 1}^{k}
+a_{j} b_{j} + c$.  The main parameters of interest are the individual indirect
+effects $a_{1}b_{1}, \dots, a_{k}b_{k}$, and it can also be of interest to make
+pairwise comparisons between the individual indirect effects or their absolute
+values \citep[e.g.,][Chapter~5.1]{hayes18} if the hypothesized mediators are
+scaled similarly.
 
-\begin{figure}[t]
+\begin{figure}[b]
 \begin{center}
-\includegraphics[width=0.6\textwidth]{static-figures/parallel-mediation}
+\includegraphics[width=0.6\textwidth]{figures/mediation-parallel}
 \end{center}
 \caption{Diagram visualizing a parallel multiple mediator model.}
 \label{fig:parallel}
@@ -313,16 +324,12 @@ mediators are scaled similarly.
 
 \subsubsection{Serial multiple mediator model}
 
-% A distinctive feature of the parallel multiple mediator model is that the
-% hypothesized mediators $M_{1}, \dots, M_{k}$ do not affect one another.
-% In contrast, the serial multiple mediator model allows that the mediators
-% influence each other in a sequential manner.
 A distinctive feature of the serial multiple mediator model is that the
 hypothesized mediators $M_{1}, \dots, M_{k}$ may influence each other in a
 sequential manner, unlike the parallel multiple mediator model in which the
-mediators do not affect one another.
-Figure~\ref{fig:serial} contains a diagram of the model with two serial
-mediators, while the model in its general form is given by
+mediators do not affect one another.  Figure~\ref{fig:serial} contains a
+diagram of the model with two serial mediators, while the model in its general
+form is given by
 \begin{align}
 \begin{split}
 M_{1} &= i_{1} + a_{1} X + e_{1}, \\
@@ -349,7 +356,7 @@ indirect effects in the case of three serial mediators.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.7\textwidth]{static-figures/serial-mediation}
+\includegraphics[width=0.7\textwidth]{figures/mediation-serial}
 \end{center}
 \caption{Diagram visualizing a serial multiple mediator model with two
 mediators.}
@@ -363,10 +370,9 @@ $a_{1}d_{21}b_{2}$ ($X \rightarrow M_{1} \rightarrow M_{2} \rightarrow Y$)
 are the main parameters of interest.  However, not all pairwise comparisons
 of the indirect effects may be meaningful (even if the mediators are scaled
 similarly), as $a_{1}d_{21}b_{2}$ can be expected to be different in magnitude
-from $a_{1}b_{1}$ and $a_{2}b_{2}$.
-Finally, we have that $c' = a_{1}b_{1} + a_{2}b_{2} + a_{1}d_{21}b_{2} + c$
-under the usual assumptions of independent and normally distributed error
-terms.
+from $a_{1}b_{1}$ and $a_{2}b_{2}$.  Finally, we have that $c' = a_{1}b_{1} +
+a_{2}b_{2} + a_{1}d_{21}b_{2} + c$ under the usual assumptions of independent
+and normally distributed error terms.
 
 
 \subsubsection{Multiple independent variables to be mediated}
@@ -393,7 +399,7 @@ pairwise comparisons between the indirect effects or their absolute values.
 
 \begin{figure}[t!]
 \begin{center}
-\includegraphics[width=0.525\textwidth]{static-figures/multiple-mediation}
+\includegraphics[width=0.525\textwidth]{figures/mediation-multiple}
 \end{center}
 \caption{Diagram visualizing a mediation model with multiple independent
 variables.}
@@ -405,24 +411,25 @@ This model is commonly used when the hypothesized mediator is the main
 Furthermore, an important special case of this model occurs when a categorical
 independent variable is represented by a group of dummy variables.
 
-% We emphasize that this model is fully supported by package \pkg{robmed}, even
-% though our examples in Section~\ref{sec:illustrations} focus on a single
-% independent variable to be mediated.
-
 
 \subsubsection{Control variables}
 
-In many study designs, it is necessary to isolate the effects of the
-independent variables of interest from other factors.  For this purpose,
-control variables should be added to all regression equations of a
-mediation model.  This means that there is no intrinsic difference between
-independent variables of interest and control variables in terms of the model
-or its estimation.  The difference is purely conceptual in nature: for the
-control variables, the estimates of the direct and indirect paths are not of
-particular interest to the researcher.  Package \pkg{robmed} therefore allows
-to specify control variables separately from the independent variables of
-interest.  Only for the latter, results for the indirect effects are included
-in the output.
+In many study designs, it may be necessary to isolate the effects of the
+independent variables of interest from other factors.  For instance, consider
+a study on whether exercise-induced feelings such as physical exhaustion
+mediate the relationship between physical activity and depression
+\citep[cf.][]{pickett12}.  If the participants vary in demographics such as
+age and gender, the researcher may need to control for the effects of those
+variables \citep[e.g., older people may be less capable of engaging in
+strenuous activities;][]{cerin09}.  Such control variables should be added to
+all regression equations of a mediation model.  This means that there is no
+intrinsic difference between independent variables of interest and control
+variables in terms of the model or its estimation.  The difference is purely
+conceptual in nature: for the control variables, the estimates of the direct
+and indirect paths are not of particular interest to the researcher.  Package
+\pkg{robmed} therefore allows to specify control variables separately from the
+independent variables of interest.  Only for the latter, results for the
+indirect effects are included in the output.
 
 While we omitted control variables from the above equations and diagrams for
 notational simplicity, package \pkg{robmed} supports additional control
@@ -433,23 +440,14 @@ variables in all implemented models.
 
 The models described above do not exist in isolation and some of them can be
 combined.  For instance, \pkg{robmed} supports parallel and serial multiple
-mediator models with multiple independent variables of interest.
-Other variations of the mediation model, such as the moderated mediation and
-mediated moderation models \citep[e.g.,][]{muller05} are out of scope for this
-paper. They are not yet implemented in package \pkg{robmed} but we aim to add
-support in future versions.
+mediator models with multiple independent variables of interest.  Other
+variations of the mediation model, such as the moderated mediation and
+mediated moderation models \citep[e.g.,][]{muller05} are out of scope for
+this paper. They are not yet implemented in package \pkg{robmed} but we aim
+to add support in future versions.
 
 
 \subsection{Overview of implemented methods} \label{sec:methods}
-
-While package \pkg{robmed} is focused on the fast-and-robust bootstrap
-procedure for mediation analysis introduced by \citet{alfonsXXa},
-% (see also Section~\ref{sec:ROBMED} for a brief description),
-various other methods are available as well.
-Tables~\ref{tab:methods-boot} and~\ref{tab:methods-sobel} provide an
-overview of the available methods together with the corresponding argument
-values to use in function \code{test_mediation()}, which implements mediation
-analysis in \pkg{robmed}.
 
 
 \begin{sidewaystable}
@@ -537,9 +535,6 @@ regressions. &
 \noalign{\medskip}
 %
 \code{"sobel"} & \code{"regression"} & \code{FALSE} & \code{"gaussian"} &
-% The test proposed by \citet{sobel82} is based on OLS estimation and assumes a
-% normal distribution of the indirect effect $\widehat{ab}$. The standard error
-% is thereby computed via an approximation. &
 A variation of the Sobel test based on coefficient estimation via OLS
 regressions. &
 \checkmark & & & & \checkmark \\
@@ -574,6 +569,14 @@ empirical analyses.}
 \label{tab:methods-sobel}
 \end{sidewaystable}
 
+
+While package \pkg{robmed} is focused on the fast-and-robust bootstrap
+procedure for mediation analysis introduced by \citet{alfonsXXa}, various
+other methods are available as well.  Tables~\ref{tab:methods-boot}
+and~\ref{tab:methods-sobel} provide an overview of the available methods
+together with the corresponding argument values to use in function
+\code{test_mediation()}, which implements mediation analysis in
+\pkg{robmed}.
 
 A bootstrap test is considered state-of-the art for mediation analysis, with
 many authors advocating to use the bootstrap with ordinary least-squares (OLS)
@@ -642,9 +645,23 @@ $i = 1, \dots, n$, the MM-estimate of regression with loss function $\rho$
 \end{equation}
 where $r_{i}(\vect{\beta}) = y_{i} - \obs{x}_{i}^\top \vect{\beta}$,
 $i = 1, \dots, n$, are the residuals, and $\hat{\sigma}_{n}$ is an initial
-estimate of the residual scale. We take $\hat{\sigma}_{n}$ from a highly robust
-but inefficient S-estimator of regression \citep{rousseeuw84, salibian06},
-and we use Tukey's bisquare loss function defined as
+estimate of the residual scale.  We take $\hat{\sigma}_{n}$ from a highly
+robust but inefficient S-estimator of regression \citep{rousseeuw84,
+salibian06}, i.e.,
+\begin{equation*}
+\hat{\sigma}_{n} = \min_{\vect{\beta}} \hat{\sigma}_{n}(\vect{\beta}),
+\end{equation*}
+where $\hat{\sigma}_{n}(\vect{\beta})$ is defined implicitly as the solution of
+\begin{equation*}
+\frac{1}{n} \sum_{i=1}^{n} \rho_{S}
+\left( \frac{r_{i}(\vect{\beta})}{\hat{\sigma}_{n}(\vect{\beta})} \right) =
+\delta
+\end{equation*}
+with loss function $\rho_{S}$ and $\delta = E \left[ \rho_{S} \left(
+\frac{X}{\sigma} \right) \right]$ for %a normal distribution
+a random variable $X \sim N(0, \sigma^{2})$.
+For both $\rho$ and $\rho_{S}$, we use Tukey's bisquare loss function defined
+as
 \begin{equation} \label{eq:loss}
 \rho(x) = \left\{
 \begin{array}{ll}
@@ -654,16 +671,18 @@ and we use Tukey's bisquare loss function defined as
 \noalign{\smallskip}
 \displaystyle
 \frac{c^{2}}{6},
- & \text{if } |x| > c,
+ & \text{if } |x| > c.
 \end{array}
 \right.
 \end{equation}
-where $c$ is a tuning constant that determines the efficiency of the estimator.
-We set $c = 3.443689$, which results in 85\% efficiency at the model with
-normally distributed errors.
+The value of the tuning constant $c$ in $\rho_{S}$ determines the robustness
+of the MM-estimator, and the value of $c$ in $\rho$ determines the efficiency
+\citep[cf.][]{yohai87}.  By default, we set $c = 1.54764$ in $\rho_{S}$ for
+maximal robustness and $c = 3.443689$ in $\rho$ for 85\% efficiency at the
+model with normally distributed errors.
 
-Taking the derivative of \eqref{eq:MM} and equating to $\vect{0}$ yields the
-system of equations
+Taking the derivative of the objective function in~\eqref{eq:MM} and equating
+the derivative to~$\vect{0}$ yields the system of equations
 \begin{equation} \label{eq:EstEq}
 \sum_{i=1}^{n} \rho' \left( \frac{r_{i}(\vect{\beta})}{\hat{\sigma}_{n}} \right)
 \obs{x}_{i} = \vect{0}.
@@ -689,24 +708,38 @@ and the resulting weight function are displayed in Figure~\ref{fig:loss}, which
 also includes the loss function and weight function from OLS regression for
 comparison.
 
-\begin{Schunk}
-\begin{figure}[b!]
-
-{\centering \includegraphics[width=0.975\textwidth]{static-figures/loss}
-
-}
-
-\caption[Loss function (left) and corresponding weight function (right) for OLS regression and the robust MM-estimator of regression.]{Loss function (left) and corresponding weight function (right) for OLS regression and the robust MM-estimator of regression.}\label{fig:loss}
+\begin{figure}[t!]
+\begin{center}
+\includegraphics[width=0.975\textwidth]{figures/loss}
+\caption{Loss function (left) and corresponding weight function (right) for OLS
+regression and the robust MM-estimator of regression.}
+\label{fig:loss}
+\end{center}
 \end{figure}
-\end{Schunk}
 
 
 \subsubsection{Fast-and-robust bootstrap}
 
 Here we briefly present the main idea of the fast-and-robust bootstrap.  For
-complete derivations, the reader is referred to \citet{salibian02} and
-\citet{salibian08}.
-Note that the solution of \eqref{eq:wEstEq} can be written as
+a detailed discussion and complete derivations, the reader is referred to
+\citet{salibian02} and \citet{salibian08}.  There are two concerns with
+bootstrapping robust estimators:
+\begin{enumerate}
+  \item Outliers may be oversampled in some bootstrap samples to the extent
+  that those samples contain more outliers than the robust estimator can
+  handle, in which case bootstrap confidence intervals become unreliable.
+  \item Robust estimators typically have higher computational complexity
+  than their nonrobust counterparts, which is amplified when computing many
+  bootstrap replicates.
+\end{enumerate}
+In many empirical applications of mediation analysis, the first concern is
+unlikely to be an issue when using the MM-estimator of regression due to its
+high robustness.  We therefore use the fast-and-robust bootstrap mainly for
+its computational efficiency, although the extra robustness does  provide
+additional peace of mind.
+
+To derive the fast-and-robust bootstrap for the MM-estimator, note that the
+solution of \eqref{eq:wEstEq} can be written as
 \begin{equation*}
 \vect{\hat{\beta}}_{n} =
 \left( \sum_{i=1}^{n} w_{i} \obs{x}_{i} \obs{x}_{i}^\top \right)^{-1}
@@ -719,9 +752,8 @@ For a bootstrap sample $(y_{i}^{*}, {\obs{x}_{i}^{*}}^\top)^\top$, $i = 1,
 It is important to note that $\vect{\hat{\beta}}_{n}$ and $\hat{\sigma}_{n}$
 are computed in advance on the original sample such that the robustness
 weights $w_{i}^{*}$ are inherited from the respective observations in the
-original sample.
-Then only a weighted least-squares fit is computed on the bootstrap sample to
-obtain
+original sample.  Then only a weighted least-squares fit is computed on the
+bootstrap sample to obtain
 \begin{equation} \label{eq:WLS}
 \vect{\hat{\beta}}_{n}^{\text{WLS}} =
 \left( \sum_{i=1}^{n} w_{i}^{*} \obs{x}_{i}^{*} {\obs{x}_{i}^{*}}^\top
@@ -729,11 +761,10 @@ obtain
 \end{equation}
 However, using \eqref{eq:WLS} for the bootstrap distribution would not capture
 all the variability in the MM-estimator, as the robustness weights are not
-recomputed on the bootstrap samples.
-Nevertheless, a linear correction of the coefficients can be applied to
-overcome this loss of variability.
-The correction matrix only needs to be computed once based on the original
-sample and is given by
+recomputed on the bootstrap samples.  Nevertheless, a linear correction of
+the coefficients can be applied to overcome this loss of variability.  The
+correction matrix only needs to be computed once based on the original sample
+and is given by
 \begin{equation*}
 \mat{K}_{n} =
 \left( \sum_{i=1}^{n} \rho''(r_{i}/\hat{\sigma}_{n}) \obs{x}_{i}
@@ -743,14 +774,13 @@ sample and is given by
 Then the fast-and-robust bootstrap replicate on the given bootstrap sample is
 computed as
 \begin{equation} \label{eq:FRB}
-\vect{\hat{\beta}}_{n}^{*} = \vect{\hat{\beta}}_{n} +
-\mat{K}_{n} (\vect{\hat{\beta}}_{n}^{\text{WLS}} - \vect{\hat{\beta}}_{n}).
+\vect{\hat{\beta}}_{n}^{*} = \vect{\hat{\beta}}_{n} + \mat{K}_{n}
+\left( \vect{\hat{\beta}}_{n}^{\text{WLS}} - \vect{\hat{\beta}}_{n} \right).
 \end{equation}
 Since the MM-estimator $\vect{\hat{\beta}}_{n}$ is consistent for
-$\vect{\beta}$ \citep{yohai87},
-$\sqrt{n} (\vect{\hat{\beta}}_{n}^{*} - \vect{\hat{\beta}}_{n})$ has the same
-asymptotic distribution as $\sqrt{n} (\vect{\hat{\beta}}_{n} - \vect{\beta})$
-\citep{salibian08, salibian02}.
+$\vect{\beta}$ \citep{yohai87}, $\sqrt{n} (\vect{\hat{\beta}}_{n}^{*} -
+\vect{\hat{\beta}}_{n})$ has the same asymptotic distribution as $\sqrt{n}
+(\vect{\hat{\beta}}_{n} - \vect{\beta})$ \citep{salibian08, salibian02}.
 
 
 \subsubsection{Bootstrapping the indirect effects in mediation analysis}
@@ -760,49 +790,138 @@ from~\eqref{eq:simpleM}--\eqref{eq:simpleY'}. Similar calculations apply to the
 indirect effects in the mediation models described in Section~\ref{sec:models}.
 On each bootstrap sample, \eqref{eq:FRB} is used to obtain estimates $\hat{a}$,
 $\hat{b}$, and $\hat{c}$ of the coefficients in~\eqref{eq:simpleM}
-and~\eqref{eq:simpleY},
-% of the mediation model,
-and therefore estimates $\hat{a}\hat{b}$ of the indirect effect.  Note that we
-do not perform the regression corresponding to~\eqref{eq:simpleY'} and instead
-estimate the total effect by $\hat{c}' = \hat{a}\hat{b} + \hat{c}$.
-% where $\hat{c}$ denotes the estimate of the direct effect
-% in~\eqref{eq:simpleY}.
-With the empirical distribution of the indirect effect over the bootstrap
-samples, we construct a percentile-based confidence interval.  By default, we
-report a bias-corrected and accelerated confidence interval \citep{davison97}.
-Furthermore, we advocate to report the mean over the bootstrap distribution as
-the final point estimates of the indirect effect.
+and~\eqref{eq:simpleY}, and therefore estimates $\hat{a}\hat{b}$ of the
+indirect effect.  Note that we do not perform the regression corresponding
+to~\eqref{eq:simpleY'} and instead estimate the total effect by $\hat{c}' =
+\hat{a}\hat{b} + \hat{c}$.  With the empirical distribution of the indirect
+effect over the bootstrap samples, we construct a percentile-based confidence
+interval.  By default, we report a bias-corrected and accelerated confidence
+interval \citep{davison97}.  Furthermore, we advocate to report the mean over
+the bootstrap distribution as the final point estimates of the indirect effect.
 
 
 % --------------
 % implementation
 % --------------
 
-\section{Implementation} \label{sec:implementation}
+\section{Package contents and implementation} \label{sec:implementation}
 
-We introduce the formula interface for specifying mediation models in
-Section~\ref{sec:formula}, and briefly discuss the main functions as well as
-the class structure of package \pkg{robmed} in Section~\ref{sec:classes}.
+We describe the included data set in Section~\ref{sec:data}, introduce the
+formula interface for specifying mediation models in Section~\ref{sec:formula},
+and briefly discuss the main functions as well as the class structure of
+package \pkg{robmed} in Section~\ref{sec:classes}.  Moreover, we load the
+package and the data in order to use them in code examples.
+%
+<<results='hide', message=FALSE, warning=FALSE>>=
+library("robmed")
+data("BSG2014")
+@
+
+
+\subsection{Example data} \label{sec:data}
+
+The \code{BSG2014} data included in package \pkg{robmed} come from a business
+simulation game that was played by senior business administration students as
+part of a course at a Western European university.  The simulation game was
+played twice, and a survey was conducted in three waves (before the first game,
+in between the two games, and after the second game).  A total of 354 students
+formed 92 randomly assigned teams, and the responses of the individual students
+were aggregated to the team level. Leaving out teams with less than 50 percent
+response rate yields a sample size of $n = 89$ teams.
+
+Below, we provide an overview of the variables that are used later on in the
+case studies in Section~\ref{sec:illustrations}.  For a complete description
+of the data, we refer to its \proglang{R} help file, which can be accessed
+from the console with \code{?BSG2014}.
+
+\begin{description}
+  %
+  \item{\code{ValueDiversity}:}
+  Using the short Schwartz’s value survey \citep{lindeman05}, the team members
+  rated ten items on the importance of certain values (1~= not important, 10 =
+  highly important).  For each value item, the coefficient of variation of the
+  individual responses across team members was computed, and the resulting
+  coefficients of variation were averaged across the value items.
+  %
+  \item{\code{TaskConflict}:} Using the intra-group conflict scale of
+  \citet{jehn95}, the team members rated four items on the presence of conflict
+  regarding the work on a 5-point scale (1~= none, 5~= a lot).  The individual
+  responses were aggregated by taking the average across items and team
+  members.
+  %
+  \item{\code{TeamCommitment}:} The team members indicated the extent to which
+  they agree or disagree with four items on commitment to the team, which are
+  based on \citet{mowday79}, using a 5-point scale (1~= strongly disagree,
+  5~= strongly agree).  The individual responses were aggregated by taking the
+  average across items and team members.
+  %
+  \item{\code{TeamScore}:} The team performance scores on the second game were
+  computed at the end of the simulation through a mix of five objective
+  performance measures: return on equity, earnings-per-share, stock price,
+  credit rating, and image rating. The computation of the scores is handled by
+  the simulation game software, and details can be found in \citet{mathieu09}.
+  %
+  \item{\code{SharedLeadership}:} Following \citet{carson07}, every team member
+  assessed each of their peers on the question of ``To what degree does your
+  team rely on this individual for leadership?'' using a 5-point scale (1~= not
+  at all, 5~= to a very large extent).  The leadership ratings were aggregated
+  by taking the sum and dividing it by the number of pairwise relationships
+  among team members.
+  %
+  \item{\code{AgeDiversity}:} Following \citet{harrison07}, age diversity was
+  operationalized by the coefficient of variation of the team members' ages.
+  %
+  \item{\code{GenderDiversity}:} Gender diversity was measured with Blau's
+  index, $1 - \sum_{j} p_{j}^{2}$, where $p_{j}$ is the proportion of team
+  members in the $j$-th category \citep{blau77}.
+  %
+  \item{\code{ProceduralJustice}:} Based on the intra-unit procedural justice
+  climate scale of \citet{li09}, the team members indicated the extent to which
+  they agree or disagree with four items on a 5-point scale (1~= strongly
+  disagree, 5~= strongly agree).  The individual responses were aggregated by
+  taking the average across items and team members.
+  %
+  \item{\code{InteractionalJustice}:} Using the intra-unit interactional
+  justice climate scale of \citet{li09}, the team members indicated the
+  extent to which they agree or disagree with four items on a 5-point scale
+  (1~= strongly disagree, 5~= strongly agree).  The individual responses were
+  aggregated by taking the average across items and team members.
+  %
+  \item{\code{TeamPerformance}:} Following \citet{hackman86}, the team members
+  indicated the extent to which they agree or disagree with four items on the
+  team's functioning, using a 5-point scale (1~= strongly disagree, 5~=
+  strongly agree).  The individual responses were aggregated by taking the
+  average across items and team members.
+  %
+\end{description}
+
+To gain some insight into the distribution of those variables (including their
+ranges), we extract them from the data set and produce a summary:
+%
+<<>>=
+keep <- c("ValueDiversity", "TaskConflict", "TeamCommitment", "TeamScore",
+          "SharedLeadership", "AgeDiversity", "GenderDiversity",
+          "ProceduralJustice", "InteractionalJustice", "TeamPerformance")
+summary(BSG2014[, keep])
+@
+%
+For instance, the objective team performance scores in variable
+\code{TeamScore} range from~$\Sexpr{min(BSG2014$TeamScore)}$
+to~$\Sexpr{max(BSG2014$TeamScore)}$.
 
 
 \subsection{Formula interface} \label{sec:formula}
 
 The equations in the mediation model follow a specific structure regarding
 which variable is used as the response variable and which variables are the
-explanatory variables.
-% Some \proglang{R} packages for mediation analysis require the user to specify
-% one formula for each equation (e.g., \pkg{mediation}), which can be tedious
-% and prone to mistakes, in particular for models with multiple mediators and
-% multiple independent variables or control variables.  Other packages do not
-% provide a formula interface at all (e.g., \pkg{psych} or \pkg{MBESS}), despite
-% formulas being the standard way of describing models in \proglang{R}.
-Some \proglang{R} packages for mediation analysis, e.g., \pkg{mediation}
-\citep{tingley14}, require the user to specify one formula for each equation,
-which can be tedious and prone to mistakes, in particular for models with
-multiple mediators and multiple independent variables or control variables.
-Other packages, e.g., \pkg{psych} \citep{psych} or \pkg{MBESS} \citep{MBESS},
-do not provide a formula interface at all, despite formulas being the standard
-way of describing models in \proglang{R}.
+explanatory variables.  Some \proglang{R} packages for mediation analysis,
+e.g., \pkg{mediation} \citep{tingley14}, require the user to specify one
+formula for each equation, which can be tedious and prone to mistakes, in
+particular for models with multiple mediators and multiple independent
+variables or control variables.  Other packages, e.g., \pkg{psych}
+\citep{psych} or \pkg{MBESS} \citep{MBESS}, do not provide a formula
+interface at all, despite formulas being the standard way of describing
+models in \proglang{R}.
 
 For package \pkg{robmed}, we designed a formula interface that builds upon the
 standard formula interface in \proglang{R}, but allows to specify the
@@ -850,13 +969,9 @@ Note that different variables within \code{m()}, \code{parallel_m()},
 The two main functions of package \pkg{robmed} are \code{fit_mediation()},
 which implements various methods for the estimation of a mediation model,
 and \code{test_mediation()}, which performs statistical tests on the indirect
-effects in the mediation model.
+effects in the mediation model.  Furthermore, \pkg{robmed} follows a clear
+object-oriented design using \code{S3} classes \citep{chambers92}.
 
-% Function \code{fit_mediation()} implements various methods for the estimation
-% of a mediation model.  It is mainly used internally, but it is also useful for
-% a user who wants to compare different tests on the indirect effects for the
-% same method of estimation, such that the estimation on the given sample only
-% has to be performed once.
 Function \code{fit_mediation()} is mainly intended to be used internally by
 \code{test_mediation()}, but it is also useful for a user who wants to compare
 different tests on the indirect effects for the same method of estimation, such
@@ -867,19 +982,16 @@ model was estimated via a series of regressions, and \code{"cov_fit_mediation"}
 if the model was estimated based on the covariance matrix of the involved
 variables.
 
-% The main function of the package, \code{test_mediation()}, performs
-% significance tests on the indirect effects in the mediation model.
 We expect most users to find it more convenient to use \code{test_mediation()}
 directly in order to perform model estimation and testing the indirect effects
-with one function call.
-See Tables~\ref{tab:methods-boot} and~\ref{tab:methods-sobel} for an overview
-of which argument values to use in \code{test_mediation()} for the various
-available methods.
-Furthermore, function \code{robmed()} is a wrapper function for the
-fast-and-robust bootstrap test of \citet{alfonsXXa}.  The results are returned
-as an object inheriting from class \code{"test_mediation"}.  The currently
-available subclasses are \code{"boot_test_mediation"} for bootstrap tests, and
-\code{"sobel_test_mediation} for tests based on the normal approximation of
+with one function call.  See Tables~\ref{tab:methods-boot}
+and~\ref{tab:methods-sobel} for an overview of which argument values to use
+in \code{test_mediation()} for the various available methods.  Furthermore,
+function \code{robmed()} is a wrapper function for the fast-and-robust
+bootstrap test of \citet{alfonsXXa}.  The results are returned as an object
+inheriting from class \code{"test_mediation"}.  The currently available
+subclasses are \code{"boot_test_mediation"} for bootstrap tests, and
+\code{"sobel_test_mediation"} for tests based on the normal approximation of
 \citet{sobel82}.  Among other information, the component \code{fit} stores the
 estimation results as an object inheriting from class \code{"fit_mediation"}.
 Objects of class \code{"boot_test_mediation"} also contain a component
@@ -889,14 +1001,29 @@ Objects of class \code{"boot_test_mediation"} also contain a component
 \code{boot()} implies that the user can easily take advantage of parallel
 computing to reduce computation time.
 
+Functions \code{fit_mediation()} and \code{test_mediation()} are implemented
+as generic functions.  Two methods are available for both functions: one method
+uses the formula interface described in Section~\ref{sec:formula}, while the
+default method provides an alternative way of specifying mediation models.
+Additionally, \code{test_mediation()} has a method for objects inheriting from
+class \code{"fit_mediation"}, as returned by \code{fit_mediation()}.  The
+default methods take the data set as their first argument in order to work
+nicely with the pipe operator, i.e., \code{|>} introduced in \proglang{R}
+version~4.1.0 or \code{\%>\%} from package \pkg{magrittr} \citep{magrittr}.
+Arguments \code{x}, \code{y}, \code{m}, and \code{covariates} take character,
+integer, or logical vectors to select the independent variables, the dependent
+variable, the hypothesized mediators, and any additional control variables,
+respectively, from the data set.  Note that this interface offers various ways
+to select the variables in a programmable manner.  In case of multiple
+mediators, argument \code{model} allows to specify whether multiple mediators
+are treated as parallel or serial mediators.
+
 Package \pkg{robmed} provides various accessor functions to extract relevant
 information from the returned objects, such as \code{coef()} and
 \code{confint()} methods.  In addition, it contains the plot functions
-\code{weight_plot()} and \code{ellipse_plot()} for
-diagnostics, as well as \code{ci_plot()} and \code{density_plot()} for visual
-representation of the results.
-% The \code{plot()} method thereby allows to select one of those available plots.
-All of this functionality is showcased via case studies in the next section.
+\code{weight_plot()} and \code{ellipse_plot()} for diagnostics, as well as
+\code{ci_plot()} to visualize confidence intervals and \code{density_plot()}
+to plot density estimates of the indirect effect estimators.
 
 
 %% -- Illustrations ------------------------------------------------------------
@@ -923,23 +1050,11 @@ All of this functionality is showcased via case studies in the next section.
 {Illustrations: Using package \pkg{robmed}} \label{sec:illustrations}
 
 We demonstrate the use of package \pkg{robmed} in three illustrative mediation
-analyses using the included example data set.  We start by loading the package
-and the data.
-%
-<<results='hide', message=FALSE, warning=FALSE>>=
-library("robmed")
-data("BSG2014")
-@
-%
-The data come from a business strategy game that was played by senior business
-administration students as part of a course at a Western European university.
-For more information on the data (including measurement scales), we refer
-to %\citet{alfonsXXb} or
-its \proglang{R} help file, which can be accessed from the console with
-\code{?BSG2014}.
-
-We also store the seed to be used for the random number generator in an object,
-as it will be needed in all examples for the purpose of replicating the results.
+analyses using the included data set \code{BSG2014} (see
+Section~\ref{sec:data}).  While the package and the data have already been
+loaded in Section~\ref{sec:implementation}, we store the seed to be used for
+the random number generator in an object, as it will be needed in all examples
+for the purpose of replicating the results.
 %
 <<>>=
 seed <- 20211117
@@ -951,44 +1066,36 @@ model (Section~\ref{sec:simple}), a serial multiple mediator model
 with additional control variables (Section~\ref{sec:parallel}).
 
 
+\vspace{5ex}  % avoid that the header is left dangling at the bottom of the page
 \subsection{Simple mediation} \label{sec:simple}
 
 In the first code example, we replicate parts of the empirical example of
 \citet{alfonsXXa}.  The illustrative hypothesis to be investigated is that
-task conflict mediates the relationship between team value diversity and team
-commitment.
-Using \pkg{robmed}'s formula interface (see Section~\ref{sec:formula}), we
-specify a simple mediation model with dependent variable \code{TeamCommitment}
-on the left hand side.  On the right hand side, we have the hypothesized
-mediator \code{TaskConflict}, which is wrapped in a call to function
-\code{m()}, as well as the independent variable \code{ValueDiversity}.
-As we will compare the robust bootstrap test of \citet{alfonsXXa} with the OLS
-bootstrap test \citep[e.g.,][]{preacher04, preacher08, hayes18}, we store the
-formula object for later use.
+task conflict mediates the relationship between team value diversity and
+team commitment.  Using \pkg{robmed}'s formula interface (see
+Section~\ref{sec:formula}), we specify a simple mediation model with the
+dependent variable \code{TeamCommitment} on the left hand side.  On the right
+hand side, we have the hypothesized mediator \code{TaskConflict}, which is
+wrapped in a call to function \code{m()}, as well as the independent variable
+\code{ValueDiversity}.  As we will compare the robust bootstrap test of
+\citet{alfonsXXa} with the OLS bootstrap test \citep[e.g.,][]{preacher04,
+preacher08, hayes18}, we store the formula object for later use.
 %
 <<>>=
 f_simple <- TeamCommitment ~ m(TaskConflict) + ValueDiversity
 @
-%
-% Note that the hypothesized mediator is wrapped in a call to function \code{m()}
-% (see Section~\ref{sec:formula}).
 
 Next, we perform the two bootstrap tests using function
 \code{test_mediation()}.  As usual for functions that fit models, we supply
 the model specification and the data via the \code{formula} and \code{data}
 arguments.  By default, \code{test_mediation()} fits the mediation model via
 regressions (argument \code{method = "regression"}) and performs a bootstrap
-test for the indirect effect (argument \code{test = "boot"}).
-% Argument \code{robust} in that case allows to switch between the robust
-% procedure of \citet{alfonsXXa} (\code{TRUE} or \code{"MM"}; the default)
-% and the nonrobust OLS bootstrap test \citep[e.g.,][]{preacher04, preacher08,
-% hayes18} (\code{FALSE}).
-In that case, setting \code{robust = TRUE} (the default) or
-\code{robust = "MM"} specifies the robust bootstrap procedure of
-\citet{alfonsXXa}, while \code{robust = FALSE} yields the nonrobust
-OLS bootstrap test. %\citep[e.g.,][]{preacher04, preacher08, hayes18}.
-Before each call to \code{test_mediation()}, we set the seed of the random
-number generator.
+test for the indirect effect (argument \code{test = "boot"}) with 5000
+bootstrap replications (argument \code{R = 5000}).  In that case, setting
+\code{robust = TRUE} (the default) or \code{robust = "MM"} specifies the robust
+bootstrap procedure of \citet{alfonsXXa}, while \code{robust = FALSE} yields
+the nonrobust OLS bootstrap test.  Before each call to \code{test_mediation()},
+we set the seed of the random number generator.
 %
 <<cache=TRUE>>=
 set.seed(seed)
@@ -1005,52 +1112,63 @@ combination of arguments, as outlined in Table~\ref{tab:methods-boot}.
 Function \code{test_mediation()} returns an object inheriting from class
 \code{"test_mediation"}.  The corresponding \code{summary()} method shows
 the relevant information on the fitted models and emphasizes the significance
-tests of the total, direct, and indirect effects.
-For bootstrap tests, the information displayed by \code{summary()} by default
-stays within the bootstrap framework.  For effects other than the indirect effect,
-asymptotic tests are performed using the normal approximation of the bootstrap
-distribution.  That is, the sample mean and the sample standard deviation of
-the bootstrap replicates are used for asymptotic $z$~tests.  Furthermore,
-bootstrap estimates of all effects are shown in addition to the estimates on
-the original data.  At the bottom of the output, the indirect effect is
-summarized by the estimate on the original data (column \code{Data}), the
-bootstrap estimate (i.e., the sample mean of the bootstrap replicates; column
-\code{Boot}), and the lower and upper limits of the confidence interval
-(columns \code{Lower} and \code{Upper}, respectively).
+tests of the total, direct, and indirect effects.  For bootstrap tests, the
+information displayed by \code{summary()} by default stays within the bootstrap
+framework.  For effects other than the indirect effect, asymptotic tests are
+performed using the normal approximation of the bootstrap distribution.  That
+is, the sample mean and the sample standard deviation of the bootstrap
+replicates are used for asymptotic $z$~tests.  Furthermore, bootstrap estimates
+of all effects are shown in addition to the estimates on the original data.  At
+the bottom of the output, the indirect effect is summarized by the estimate on
+the original data (column \code{Data}), the bootstrap estimate (i.e., the
+sample mean of the bootstrap replicates; column \code{Boot}), and the lower
+and upper limits of the confidence interval (columns \code{Lower} and
+\code{Upper}, respectively).
 %
-<<summary, fig.width=5, fig.height = 5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="b!">>=
+<<summary, fig.width=5, fig.height=4.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="b!">>=
 summary(robust_boot_simple)
 @
 %
 The above results are very similar to those reported in \citet{alfonsXXa},
-but they are not identical due to a recent change in the random number
-generator in \proglang{R} and the use of a specific seed.  Specifically,
-the robust bootstrap test detects a significant indirect effect, as the
-confidence interval is strictly negative.
+but they are not identical due to a change in the random number generator in
+\proglang{R} and the use of a different seed.  Specifically, the robust
+bootstrap test detects a significant indirect effect, as the confidence
+interval is strictly negative.  This negative indirect effect is composed of
+a positive effect of value diversity on task conflict (see the output of the
+first regression model), and a negative effect of task conflict on team
+commitment (see the output of the second regression model).  For further
+interpretation, recall that value diversity is measured as a coefficient of
+variation averaged over various value dimensions, and that task conflict and
+team commitment are measured as averages of items on a 5-point rating scale.
+On average, an increase in value diversity by one relative standard deviation
+explains an increase in task conflict by about 0.32 points, which in turn
+explains a decrease in team commitment by about 0.11 points.  Furthermore, we
+observe that the direct effect of value diversity on team commitment is not
+significantly different from 0, meaning that value diversity affects team
+commitment only via the indirect path through task conflict. In the typology
+of mediations of \citet{zhao10}, we find indirect-only mediation.
 
 Note that the output corresponding to the regression models is similar to
 that of the \code{summary()} method for \code{"lmrob"} objects from package
 \pkg{robustbase} \citep{robustbase}, but it is shortened as the output is
 already rather long.  In particular, we emphasize that the indices of
-potential outliers are displayed for each regression model.
-% , which is important diagnostic output \citep[see][for a detailed discussion
-% on outliers in the mediation model]{alfonsXXa}
-Those potential outliers should always be investigated further, as they may
-be interesting observations that could lead to new insights when studied
-separately \citep[see][for a detailed discussion on outliers in the mediation
+potential outliers are displayed for each regression model.  Those potential
+outliers should always be investigated further, as they may be interesting
+observations that could lead to new insights when studied separately
+\citep[see][for a detailed discussion on outliers in the mediation
 model]{alfonsXXa}.
 
-Moreover, the \code{summary()} method for the robust bootstrap procedure of
-\citet{alfonsXXa} by default produces a diagnostic plot that allows to detect
-deviations from normality assumptions.  Keep in mind that this procedure uses
-the robust MM-estimator of regression \citep{yohai87, salibian02}, which
-assigns robustness weights to all observations.  Those weights can take any
-value in the interval $[0, 1]$, with lower values indicating a higher degree of
-deviation.  For a varying threshold on the horizontal axis, the diagnostic plot
-displays how many observations have a weight below this threshold.  The plot is
-thereby split into separate panels for negative and positive residuals.  For
-comparison, a reference line is drawn for the expected percentages under
-normally distributed errors.
+Moreover, when the summary output for the robust bootstrap procedure of
+\citet{alfonsXXa} is printed, by default also a diagnostic plot is shown that
+allows to detect deviations from normality assumptions.  Keep in mind that
+this procedure uses the robust MM-estimator of regression \citep{yohai87,
+salibian02}, which assigns robustness weights to all observations.  Those
+weights can take any value in the interval $[0, 1]$, with lower values
+indicating a higher degree of deviation.  For a varying threshold on the
+horizontal axis, the diagnostic plot displays how many observations have a
+weight below this threshold.  The plot is thereby split into separate panels
+for negative and positive residuals.  For comparison, a reference line is
+drawn for the expected percentages under normally distributed errors.
 
 Figure~\ref{fig:summary} shows the plot for this example.  For the regression
 of the hypothesized mediator (\code{TaskConflict}) on the independent variable
@@ -1058,8 +1176,8 @@ in the top row of the plot, it reveals much more downweighted observations with
 positive residuals than expected and fewer with negative residuals.  This
 indicates right skewness with a heavy upper tail.
 
-It is possible to suppress the plot when calling \code{summary()} by setting
-\code{plot = FALSE}.  Function \code{weight_plot()} can then be used to create
+It is possible to suppress the plot by setting \code{plot = FALSE} in
+\code{summary()}.  Then function \code{weight_plot()} can be used to create
 the diagnostic plot.  In this example, Figure~\ref{fig:summary} can also be
 produced with the commands below.
 %
@@ -1101,6 +1219,13 @@ coef(robust_boot_simple)
 confint(robust_boot_simple)
 @
 %
+While the confidence intervals in this example do not add much in terms
+of interpretation over the output of \code{summary()}, the latter reports
+significance tests instead of confidence intervals for the effects other
+than the indirect effect.  For researchers who prefer to report confidence
+intervals, the \code{confint()} method allows to easily extract this
+information.
+
 For objects corresponding to bootstrap tests (class
 \code{"boot_test_mediation"}), argument \code{type} of the \code{coef()} method
 allows to specify whether to extract the bootstrap estimates (\code{"boot"},
@@ -1156,20 +1281,21 @@ effect.  It also adds vertical lines for the point estimates and illustrates
 the confidence intervals by shaded areas.  The plot resulting from the
 following command is displayed in Figure~\ref{fig:density}.
 %
-<<density, fig.width=5, fig.height = 3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
+<<density, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
 density_plot(boot_list)
 @
 
 
 In order to aid with interpretation of the results from mediation analysis,
 function \code{ci_plot()} allows to visualize the point estimates and
-confidence intervals of selected effects.  The direct effect and the indirect
-effect are plotted by default, but argument \code{parm} can be used to specify
-which effects to plot.  Figure~\ref{fig:ci} contains the plot created by the
-command below.
+confidence intervals of selected effects. The direct effect and the indirect
+effect are plotted by default, as the typology of mediations of \citet{zhao10}
+is based on those two effects.  Nevertheless, argument \code{parm} can be used
+to specify which effects to plot.  Figure~\ref{fig:ci} contains the plot
+created by the command below.
 %
-<<ci, fig.width=6, fig.height = 3, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="t!">>=
-ci_plot(boot_list, parm = c("Total", "Direct", "Indirect"))
+<<ci, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="t!">>=
+ci_plot(boot_list, parm = c("a", "b", "Direct", "Indirect"))
 @
 
 Finally, function \code{ellipse_plot()} produces a bivariate scatterplot
@@ -1193,7 +1319,7 @@ mediator on the independent variable.  As the independent variable is the only
 explanatory variable in this regression model, the plot also adds lines
 representing the respective regression coefficients.
 %
-<<ellipse, fig.width=5, fig.height = 3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.">>=
+<<ellipse, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="b!">>=
 ellipse_plot(boot_list, horizontal = "ValueDiversity",
              vertical = "TaskConflict")
 @
@@ -1227,7 +1353,7 @@ information.  With the commands below, we manually produce the same plot as
 before, but only plot the tolerance ellipses and the data without the
 regression lines.  Figure~\ref{fig:ellipse-custom} displays the resulting plot.
 %
-<<ellipse-custom, fig.width=5, fig.height = 3.5, out.width="0.7\\textwidth", fig.cap="Customized diagnostic plot with tolerance ellipses but without regression lines for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.">>=
+<<ellipse-custom, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Customized diagnostic plot with tolerance ellipses but without regression lines for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.">>=
 setup <- setup_ellipse_plot(boot_list, horizontal = "ValueDiversity",
                             vertical = "TaskConflict")
 ggplot() +
@@ -1242,13 +1368,13 @@ ggplot() +
 \subsection{Serial multiple mediators}
 \label{sec:serial}
 
-The second example extends the simple mediation model from the previous section
-to a serial multiple mediator model.
-We investigate the following  illustrative hypothesis: value diversity
-negatively impacts team commitment through increased task conflict, and in
-turn task conflict negatively affects team performance through decreased team
-commitment.  Here the dependent variable is an objective assessment of team
-performance, measured by the team's score on the simulation game.
+The second example extends the simple mediation model from the previous
+section to a serial multiple mediator model.  We investigate the following
+illustrative hypothesis: value diversity negatively impacts team commitment
+through increased task conflict, and in turn task conflict negatively affects
+team performance through decreased team commitment.  Here the dependent
+variable is an objective assessment of team performance, measured by the
+team's score on the simulation game.
 
 The corresponding formula is stored in an object for later use and contains the
 dependent variable \code{TeamScore} on the left hand side.  On the right hand
@@ -1298,7 +1424,7 @@ investigate deviations from normality assumptions that could explain the
 differences in results for the two methods.  The plot created with the
 commands below is shown in Figure~\ref{fig:weight}.
 %
-<<weight, fig.width=5, fig.height = 6, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a serial multiple mediator model.", fig.pos="b!">>=
+<<weight, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a serial multiple mediator model.">>=
 weight_plot(robust_boot_serial) +
   scale_color_manual("", values = c("black", "#00BFC4")) +
   theme(legend.position = "top")
@@ -1324,7 +1450,7 @@ of team performance, as evaluated by the team members themselves.
 In \pkg{robmed}'s formula interface, parallel multiple mediators can be
 specified by wrapping multiple variables in a call to function
 \code{parallel_m()}, and control variables can be specified in a similar
-manner with function \code{covariates()}. %(see Section~\ref{sec:formula}).
+manner with function \code{covariates()}.
 %
 <<>>=
 f_parallel <-
@@ -1344,14 +1470,10 @@ ols_boot_parallel <- test_mediation(f_parallel, data = BSG2014,
                                     robust = FALSE)
 @
 %
-% To save space, we do not show the entire \code{summary()} of the resulting
-% object here.  By printing the object returned by \code{test_mediation()}, only
-% the results for the bootstrap confidence intervals of the indirect effects are
-% shown.
 To save space, we again do not show the entire \code{summary()} of the
 resulting objects, but only the results for the indirect effect by printing
 the objects.  Appendix~\ref{app:output} contains the full \code{summary()}
-output of the robust boostrap test, including the diagnostic plot of the
+output of the robust bootstrap test, including the diagnostic plot of the
 regression weights.
 %
 <<>>=
@@ -1371,27 +1493,27 @@ small that different seeds of the random number generator often yield a
 at least weak support for mediation via procedural justice, and we do find
 support for mediation via interactional justice.
 
-The output of \code{summary()} in Appendix~\ref{app:output}, indicates that the
-residual distributions are fairly normal (see the diagnostic plot in
+The output of \code{summary()} in Appendix~\ref{app:output}, indicates that
+the residual distributions are fairly normal (see the diagnostic plot in
 Figure~\ref{fig:summary-parallel}), but that there is a small number of
-potential outliers that should be investigated further.
-As the regression of the dependent variable (\code{TeamPerformance}) on the
-remaining variables shows more deviations from normality than the other
-regressions (bottom row of Figure~\ref{fig:summary-parallel}), we use
-\code{ellipse_plot()} to create the diagnostic plot with a tolerance ellipse
-that is related to the regression results.  If several explanatory variables
-are included, it is often more insightful to plot the partial residuals on the
-vertical axis, i.e., to subtract from the response the linear predictor without
-the variable that is displayed on the horizontal axis.  This has the additional
-advantage that the regression coefficient can be visualized by a line, which is
-otherwise not possible in the case of multiple explanatory variables.  With
-function \code{ellipse_plot()}, plotting the partial residuals can easily be
-achieved by setting the argument \code{partial = TRUE}.  With the command
-below, we plot the partial residuals of team performance against the
-independent variable shared leadership.  Figure~\ref{fig:ellipse-partial}
-contains the resulting plot, which clearly visualizes the noisy data points.
+potential outliers that should be investigated further.  As the regression of
+the dependent variable (\code{TeamPerformance}) on the remaining variables
+shows more deviations from normality than the other regressions (bottom row of
+Figure~\ref{fig:summary-parallel}), we use \code{ellipse_plot()} to create the
+diagnostic plot with a tolerance ellipse that is related to the regression
+results.  If several explanatory variables are included, it is often more
+insightful to plot the partial residuals on the vertical axis, i.e., to
+subtract from the response the linear predictor without the variable that is
+displayed on the horizontal axis.  This has the additional advantage that the
+regression coefficient can be visualized by a line, which is otherwise not
+possible in the case of multiple explanatory variables.  With function
+\code{ellipse_plot()}, plotting the partial residuals can easily be achieved
+by setting the argument \code{partial = TRUE}.  With the command below, we plot
+the partial residuals of team performance against the independent variable
+shared leadership.  Figure~\ref{fig:ellipse-partial} contains the resulting
+plot, which clearly visualizes the noisy data points.
 %
-<<ellipse-partial, fig.width=5, fig.height = 3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
+<<ellipse-partial, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
 ellipse_plot(robust_boot_parallel, horizontal = "SharedLeadership",
              vertical = "TeamPerformance", partial = TRUE)
 @
@@ -1434,7 +1556,7 @@ The \proglang{R} package \pkg{robmed} provides easy-to-use functionality for
 robust mediation analysis.  It implements the robust bootstrap procedure of
 \citet{alfonsXXa}, which yields reliable results under outliers and other
 deviations from normality assumptions, as well as diagnostic plots that allow
-to detect and futher investigate such deviations.  In addition, package
+to detect and further investigate such deviations.  In addition, package
 \pkg{robmed} provides functionality for various other procedures for mediation
 analysis, as well as plots that allow to visualize and compare results from
 different methods.  All implemented methods thereby share the same function
@@ -1442,24 +1564,25 @@ interface and a clear class structure of the results.  In particular,
 \pkg{robmed} introduces a new formula interface that allows to specify
 various types of mediation models with a single formula.
 
-At present, there are some limitations of package \pkg{robmed}.
-First of all, the current version requires a numeric dependent variable and
-numeric mediators, although the independent variable and additional control
-variables may be binary or categorical.  We aim to extend the fast-and-robust
-bootstrap methodology for robust estimators of logistic regression in order
-to add support for mediation analysis with binary dependent variables or
-mediators.
-Second, adding support for additional mediation models, such as moderated
-mediation and mediated moderation models \citep[e.g.,][]{muller05} is planned
-for future versions.
-Finally, a graphical user interface (GUI) could be beneficial for less
-proficient \proglang{R} users.  Developing such a GUI, for instance as a web
-application based on package \pkg{shiny} \citep{shiny}, is future work.
-In the meantime, we provide the \proglang{R} extension bundle \pkg{ROBMED}
-\citep{ROBMED-RSPSS} for \proglang{SPSS} \citep{SPSS}, which links to the
-\proglang{R} package \pkg{robmed} and allows to use its main functionality
-through a GUI from within \proglang{SPSS}.  Interested readers can obtain the
-extension bundle from \url{https://github.com/aalfons/ROBMED-RSPSS}.
+At present, there are some limitations of package \pkg{robmed}.  First of
+all, the current version requires a numeric dependent variable and numeric
+mediators, although the independent variable and additional control variables
+may be binary or categorical.  We aim to extend the fast-and-robust bootstrap
+methodology for robust estimators of logistic regression in order to add
+support for mediation analysis with binary dependent variables.  Second,
+adding support for additional mediation models, such as moderated mediation
+and mediated moderation models \citep[e.g.,][]{muller05} is planned for future
+versions.  Third, the diagnostic plot of the regression weights would be even
+more useful if it included confidence bands, which could perhaps be constructed
+from the bootstrap procedure.  Finally, a graphical user interface (GUI) could
+be beneficial for less proficient \proglang{R} users.  Developing such a GUI,
+for instance as a web application based on package \pkg{shiny} \citep{shiny},
+is future work.  In the meantime, we provide the \proglang{R} extension bundle
+\pkg{ROBMED} \citep{ROBMED-RSPSS} for \proglang{SPSS} \citep{SPSS}, which links
+to the \proglang{R} package \pkg{robmed} and allows to use its main
+functionality through a GUI from within \proglang{SPSS}.  Interested
+readers can obtain the extension bundle from
+\url{https://github.com/aalfons/ROBMED-RSPSS}.
 
 
 %% -- Optional special unnumbered sections -------------------------------------
@@ -1480,20 +1603,13 @@ version~\Sexpr{paste(R.Version()[c("major", "minor")], collapse = ".")}
 version~\Sexpr{packageVersion("boot")} \citep{boot},
 \pkg{ggplot2} version~\Sexpr{packageVersion("ggplot2")} \citep{wickham16},
 and \pkg{robustbase} version~\Sexpr{packageVersion("robustbase")}
-\citep{robustbase}.
-Package \pkg{robmed} also builds upon packages \pkg{quantreg} \citep{quantreg}
-%, \pkg{sn} \citep{sn}, and \pkg{shiny} \citep{shiny}
-and \pkg{sn} \citep{sn} for functionality not shown in this paper, as well as
-package \pkg{testthat} \citep{wickham11} for unit tests.
-\proglang{R} itself and all mentioned packages are available from the
-Comprehensive \proglang{R} Archive Network (CRAN) at
-\url{https://CRAN.R-project.org/}.
-% The latest development version of package \pkg{robmed} can be obtained from the
-% GitHub repository \url{https://github.com/aalfons/robmed}, and the extension
-% bundle \pkg{ROBMED} for \proglang{SPSS} \citep{SPSS} is available from
-% \url{https://github.com/aalfons/ROBMED-RSPSS}.
-The latest development version of package \pkg{robmed} can be obtained from
-\url{https://github.com/aalfons/robmed}.
+\citep{robustbase}.  Package \pkg{robmed} also builds upon packages
+\pkg{quantreg} \citep{quantreg} and \pkg{sn} \citep{sn} for functionality not
+shown in this paper, as well as package \pkg{testthat} \citep{wickham11} for
+unit tests.  \proglang{R} itself and all mentioned packages are available from
+the Comprehensive \proglang{R} Archive Network (CRAN) at
+\url{https://CRAN.R-project.org/}.  The latest development version of package
+\pkg{robmed} can be obtained from \url{https://github.com/aalfons/robmed}.
 
 
 \section*{Acknowledgments}
@@ -1507,7 +1623,9 @@ The latest development version of package \pkg{robmed} can be obtained from
 % \end{leftbar}
 
 Andreas Alfons is supported by a grant of the Dutch Research Council (NWO),
-research program Vidi, project number \mbox{VI.Vidi.195.141}.
+research program Vidi, project number \mbox{VI.Vidi.195.141}.  N\"{u}fer
+Y.\ Ate\c{s} is supported by the Science Academy Young Scientists Award
+Program (BAGEP) of the Science Academy Society of Turkey.
 
 
 %% -- Bibliography -------------------------------------------------------------
@@ -1518,6 +1636,7 @@ research program Vidi, project number \mbox{VI.Vidi.195.141}.
 %% - Titles in the .bib should be in title case.
 %% - DOIs should be included where available.
 
+\vspace{5ex}  % avoid that the header is left dangling at the bottom of the page
 \bibliography{robmed}
 
 
@@ -1595,7 +1714,7 @@ $\mat{S}$ as
 \obs{m} &=
 \frac{1}{\sum_{i = 1}^{n} w_{i}}
 \sum_{i = 1}^{n} w_{i} \obs{z}_{i}, \\
-\mat{S} &= %\mat{S}(\obs{z}_{1}, \dots, \obs{z_{n}}) =
+\mat{S} &=
 \frac{1}{\left( \sum_{i = 1}^{n} w_{i} \right) - 1}
 \sum_{i = 1}^{n} w_{i} (\obs{z}_{i} - \obs{m}) (\obs{z}_{i} - \obs{m})^\top.
 \end{align*}
@@ -1645,7 +1764,8 @@ $g(-y) = -g(y)$, hence we have $m_{Y}(F) = 0$.  Thus $\vect{\hat{\mu}} =
 \vect{m}$ is Fisher consistent for $\vect{\mu}$.
 
 Since $0 \leq w(\varepsilon) \leq 1$, $\mat{S}(F)$ is expected to underestimate
-(some elements of) the covariance matrix $\mat{\Sigma}$.  However, for the submatrix involving only the explanatory variables $\vect{X}$, we obtain
+(some elements of) the covariance matrix $\mat{\Sigma}$.  However, for the
+submatrix involving only the explanatory variables $\vect{X}$, we obtain
 \begin{align*}
 \mat{S}_{\vect{X}\vect{X}}(F)
 &= \frac{1}{\delta}
@@ -1660,7 +1780,6 @@ Since $0 \leq w(\varepsilon) \leq 1$, $\mat{S}(F)$ is expected to underestimate
    \mat{\Sigma}_{\vect{X}\vect{X}}.
 \end{align*}
 Thus
-%$\mat{\hat{\Sigma}}_{\vect{X}\vect{X}} = \mat{S}_{\vect{X}\vect{X}}$
 \begin{equation*}
 \mat{\hat{\Sigma}}_{\vect{X}\vect{X}} = \mat{S}_{\vect{X}\vect{X}} =
 \frac{1}{\left( \sum_{i = 1}^{n} w_{i} \right) - 1}
@@ -1698,10 +1817,6 @@ $\mat{\hat{\Sigma}}$ of the covariance matrix $\mat{\Sigma}$ by computing
 \section{Additional summary output of robust bootstrap tests}
 \label{app:output}
 
-% For completeness, we show the summary output of the robust bootstrap tests of
-% Section~\ref{sec:serial} and~\ref{sec:parallel} for serial multiple mediators
-% and parallel multiple mediators, respectively.
-
 We first produce the summary of the robust bootstrap test for the serial
 multiple mediator model from Section~\ref{sec:serial}.  Since the diagnostic
 plot for this example is already shown in Figure~\ref{fig:weight}, we set the
@@ -1716,10 +1831,10 @@ Finally, we display the summary of the robust bootstrap test for the parallel
 multiple mediator model with control variables from Section~\ref{sec:parallel}.
 Figure~\ref{fig:summary-parallel} contains the resulting diagnostic plot.
 %
-<<summary-parallel, fig.width=5, fig.height = 6, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
+<<summary-parallel, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
 summary(robust_boot_parallel)
 @
-\newpage  % make sure affiliation is printed fully after diagnostic plot
+\newpage  % make sure affiliation is printed in full after diagnostic plot
 
 %% -----------------------------------------------------------------------------
 

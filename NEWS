@@ -11,6 +11,8 @@ Changes in robmed version 0.11.0
     + Updated the help file of the BSG2014 data with more details on the
       measurement scales of the variables.
 
+    + Updated package vignette.
+
 
 
 Changes in robmed version 0.10.1
