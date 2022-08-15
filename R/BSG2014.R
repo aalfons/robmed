@@ -141,6 +141,7 @@
 #' Carson, J.B., Tesluk, P.E. and Marrone, J.A. (2007) Shared Leadership in
 #' Teams: An Investigation of Antecedent Conditions and Performance.
 #' \emph{Academy of Management Journal}, \bold{50}(5), 1217--1234.
+#' doi:10.5465/amj.2007.20159921.
 #'
 #' Hackman, J.R. (1986) The Psychology of Self-Management in Organizations.
 #' In Pallack, M.S and Perloff, R.O. (Eds.), \emph{Psychology and Work:
@@ -150,34 +151,37 @@
 #' Harrison, D.A. and Klein, K.J. (2007) What's the Difference? Diversity
 #' Constructs as Separation, Variety, or Disparity in Organizations.
 #' \emph{Academy of Management Review}, \bold{32}(4): 1199--1228.
+#' doi:10.5465/amr.2007.26586096.
 #'
 #' Jehn, K.A. (1995) A Multimethod Examination of the Benefits and Detriments
 #' of Intragroup Conflict.  \emph{Administrative Science Quarterly},
-#' \bold{40}(2), 256--285.
+#' \bold{40}(2), 256--285.  doi:10.2307/2393638.
 #'
 #' Lewis, K. (2003) Measuring Transactive Memory Systems in the Field: Scale
 #' Development and Validation.  \emph{Journal of Applied Psychology},
-#' \bold{88}(4), 587--604.
+#' \bold{88}(4), 587--604.  doi:10.1037/0021-9010.88.4.587.
 #'
 #' Li, A. and Cropanzano, R. (2009) Fairness at the Group Level: Justice
-#' Climate and Intraunit Justice Climate. \emph{Journal of Management},
-#' \bold{35}(3), 564--599.
+#' Climate and Intraunit Justice Climate.  \emph{Journal of Management},
+#' \bold{35}(3), 564--599.  doi:10.1177/0149206308330557.
 #'
 #' Lindeman, M. and Verkasalo, M. (2005) Measuring Values With the Short
 #' Schwartz's Value Survey.  \emph{Journal of Personality Assessment},
-#' \bold{85}(2), 170--178.
+#' \bold{85}(2), 170--178.  doi:10.1207/s15327752jpa8502_09.
 #'
 #' Mathieu, J.E. and Rapp, T.L. (2009).  Laying the Foundation for Successful
 #' Team Performance Trajectories: The Roles of Team Charters and Performance
-#' Strategies. \emph{Journal of Applied Psychology}, \bold{94}(1), 90--103.
+#' Strategies.  \emph{Journal of Applied Psychology}, \bold{94}(1), 90--103.
+#' doi:10.1037/a0013257.
 #'
 #' Mowday, R.T., Steers, R.M. and Porter, L.W. (1979) The Measurement of
 #' Organizational Commitment.  \emph{Journal of Vocational Behavior},
-#' \bold{14}(2), 224--247.
+#' \bold{14}(2), 224--247.  doi:10.1016/0001-8791(79)90072-1.
 #'
 #' Shah, P.P. and Jehn, K.A. (1993) Do Friends Perform Better than
 #' Acquaintances? The Interaction of Friendship, Conflict, and Task.
 #' \emph{Group Decision and Negotiation}, \bold{2}(2), 149--165.
+#' doi:10.1007/bf01884769.
 #'
 #' @examples
 #' data("BSG2014")

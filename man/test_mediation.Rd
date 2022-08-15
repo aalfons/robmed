@@ -410,40 +410,48 @@ summary(boot_parallel)
 
 }
 \references{
-Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust bootstrap test
-for mediation analysis.  \emph{Organizational Research Methods},
-doi: 10.1177/1094428121999096.
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) A Robust Bootstrap Test
+for Mediation Analysis.  \emph{Organizational Research Methods},
+\bold{25}(3), 591--617.  doi:10.1177/1094428121999096.
 
-Azzalini, A. and Arellano-Valle, R. B. (2013) Maximum penalized likelihood
-estimation for skew-normal and skew-t distributions.  \emph{Journal of
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) Robust Mediation Analysis:
+The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
+\bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
+
+Azzalini, A. and Arellano-Valle, R. B. (2013) Maximum Penalized Likelihood
+Estimation for Skew-Normal and Skew-t Distributions.  \emph{Journal of
 Statistical Planning and Inference}, \bold{143}(2), 419--433.
+doi:10.1016/j.jspi.2012.06.022.
 
-Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS procedures for estimating
-indirect effects in simple mediation models. \emph{Behavior Research Methods,
-Instruments, & Computers}, \bold{36}(4), 717--731.
+Preacher, K.J. and Hayes, A.F. (2004) SPSS and SAS Procedures for Estimating
+Indirect Effects in Simple Mediation Models.  \emph{Behavior Research
+Methods, Instruments, & Computers}, \bold{36}(4), 717--731.
+doi:10.3758/bf03206553.
 
-Preacher, K.J. and Hayes, A.F. (2008) Asymptotic and resampling strategies
-for assessing and comparing indirect effects in multiple mediator models.
+Preacher, K.J. and Hayes, A.F. (2008) Asymptotic and Resampling Strategies
+for Assessing and Comparing Indirect Effects in Multiple Mediator Models.
 \emph{Behavior Research Methods}, \bold{40}(3), 879--891.
+doi:10.3758/brm.40.3.879.
 
-Salibian-Barrera, M. and Van Aelst, S. (2008) Robust model selection using
-fast and robust bootstrap. \emph{Computational Statistics & Data Analysis},
-\bold{52}(12), 5121--5135
+Salibian-Barrera, M. and Van Aelst, S. (2008) Robust Model Selection Using
+Fast and Robust Bootstrap.  \emph{Computational Statistics & Data Analysis},
+\bold{52}(12), 5121--5135.  doi:10.1016/j.csda.2008.05.007.
 
-Salibian-Barrera, M. and Zamar, R. (2002) Bootstrapping robust estimates of
-regression. \emph{The Annals of Statistics}, \bold{30}(2), 556--582.
+Salibian-Barrera, M. and Zamar, R. (2002) Bootstrapping Robust Estimates of
+Regression.  \emph{The Annals of Statistics}, \bold{30}(2), 556--582.
+doi:10.1214/aos/1021379865.
 
-Sobel, M.E. (1982) Asymptotic confidence intervals for indirect effects in
-structural equation models. \emph{Sociological Methodology}, \bold{13},
-290--312.
+Sobel, M.E. (1982) Asymptotic Confidence Intervals for Indirect Effects in
+Structural Equation Models.  \emph{Sociological Methodology}, \bold{13},
+290--312.  doi:10.2307/270723.
 
-Yuan, Y. and MacKinnon, D.P. (2014) Robust mediation analysis based on
-median regression. \emph{Psychological Methods}, \bold{19}(1),
-1--20.
+Yuan, Y. and MacKinnon, D.P. (2014) Robust Mediation Analysis Based on
+Median Regression.  \emph{Psychological Methods}, \bold{19}(1), 1--20.
+doi:10.1037/a0033820.
 
-Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
-mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
-1--44.
+Zu, J. and Yuan, K.-H. (2010) Local Influence and Robust Procedures for
+Mediation Analysis.  \emph{Multivariate Behavioral Research}, \bold{45}(1),
+1--44.  doi:10.1080/00273170903504695.
 }
 \seealso{
 \code{\link{fit_mediation}()}

@@ -48,12 +48,13 @@ summary(boot)
 
 }
 \references{
-Salibian-Barrera, M. and Yohai, V.J. (1987) A fast algorithm for
-S-regression estimates. \emph{Journal of Computational and Graphical
-Statistics}, \bold{15}(2), 414--427.
+Salibian-Barrera, M. and Yohai, V.J. (2006) A Fast Algorithm for
+S-regression Estimates. \emph{Journal of Computational and Graphical
+Statistics}, \bold{15}(2), 414--427.  doi:10.1198/106186006x113629.
 
-Yohai, V.J. (1987) High breakdown-point and high efficiency estimates for
-regression. \emph{The Annals of Statistics}, \bold{15}(20), 642--656.
+Yohai, V.J. (1987) High Breakdown-Point and High Efficiency Estimates for
+Regression. \emph{The Annals of Statistics}, \bold{15}(20), 642--656.
+doi:10.1214/aos/1176350366.
 }
 \seealso{
 \code{\link[robustbase]{lmrob}()},

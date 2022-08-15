@@ -257,21 +257,26 @@
 #' @author Andreas Alfons
 #'
 #' @references
-#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2021) A robust bootstrap test
-#' for mediation analysis.  \emph{Organizational Research Methods},
-#' doi: 10.1177/1094428121999096.
+#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) A Robust Bootstrap Test
+#' for Mediation Analysis.  \emph{Organizational Research Methods},
+#' \bold{25}(3), 591--617.  doi:10.1177/1094428121999096.
 #'
-#' Azzalini, A. and Arellano-Valle, R. B. (2013) Maximum penalized likelihood
-#' estimation for skew-normal and skew-t distributions.  \emph{Journal of
+#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) Robust Mediation Analysis:
+#' The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
+#' \bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
+#'
+#' Azzalini, A. and Arellano-Valle, R. B. (2013) Maximum Penalized Likelihood
+#' Estimation for Skew-Normal and Skew-t Distributions.  \emph{Journal of
 #' Statistical Planning and Inference}, \bold{143}(2), 419--433.
+#' doi:10.1016/j.jspi.2012.06.022.
 #'
-#' Yuan, Y. and MacKinnon, D.P. (2014) Robust mediation analysis based on
-#' median regression. \emph{Psychological Methods}, \bold{19}(1),
-#' 1--20.
+#' Yuan, Y. and MacKinnon, D.P. (2014) Robust Mediation Analysis Based on
+#' Median Regression.  \emph{Psychological Methods}, \bold{19}(1), 1--20.
+#' doi:10.1037/a0033820.
 #'
-#' Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
-#' mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
-#' 1--44.
+#' Zu, J. and Yuan, K.-H. (2010) Local Influence and Robust Procedures for
+#' Mediation Analysis.  \emph{Multivariate Behavioral Research}, \bold{45}(1),
+#' 1--44.  doi:10.1080/00273170903504695.
 #'
 #' @seealso \code{\link{test_mediation}()}
 #'

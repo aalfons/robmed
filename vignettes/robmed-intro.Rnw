@@ -184,12 +184,12 @@ an unrealistic assumption for a product of coefficients.  \citet{bollen90},
 \citet{shrout02}, \citet{mackinnon04}, and \citet{preacher04, preacher08}
 therefore advocate for a bootstrap test based on OLS regressions, which is
 the most frequently applied method for mediation analysis according to
-literature reviews of \citet{wood08} and \citet{alfonsXXa}.  More recently,
+literature reviews of \citet{wood08} and \citet{alfons22a}.  More recently,
 several authors have emphasized that outliers or deviations from normality
 assumptions are detrimental to the reliability and validity of mediation
 analysis, and introduced more robust procedures.  \citet{zu10} propose a
 bootstrap test after an initial data cleaning step, whereas \citet{yuan14}
-suggest a bootstrap test based on median regressions. \citet{alfonsXXa}
+suggest a bootstrap test based on median regressions. \citet{alfons22a}
 combine the robust MM-estimator of regression \citep{yohai87} with the the
 fast-and-robust bootstrap \citep{salibian02, salibian08}, and demonstrate that
 this procedure outperforms the aforementioned approaches for a wide range of
@@ -227,7 +227,7 @@ results.  Additionally, only package \pkg{WRS2} contains some functionality
 for robust mediation analysis.
 
 Package \pkg{robmed} \citep{robmed} aims to address these issues.  Its main
-functionality is the robust bootstrap procedure proposed in \citet{alfonsXXa},
+functionality is the robust bootstrap procedure proposed in \citet{alfons22a},
 which is highly robust to outliers and other deviations from normality
 assumptions.  Furthermore, \pkg{robmed} implements various other methods of
 estimating mediation models, as well as different tests for the indirect
@@ -277,7 +277,7 @@ with code examples. The final Section~\ref{sec:summary} concludes.
 We first provide overviews of the mediation models and estimation techniques
 supported by package \pkg{robmed} in Sections~\ref{sec:models}
 and~\ref{sec:methods}, respectively.  Section~\ref{sec:ROBMED} then gives
-technical details of the robust bootstrap procedure of \citet{alfonsXXa}.
+technical details of the robust bootstrap procedure of \citet{alfons22a}.
 
 
 \subsection{Extensions of the simple mediation model} \label{sec:models}
@@ -465,7 +465,7 @@ to add support in future versions.
 \code{"boot"} & \code{"regression"} & \code{"MM"} or $\enskip$ \code{TRUE} & &
 MM-regression \citep{yohai87} and the fast-and-robust bootstrap
 \citep{salibian02} are used to construct a confidence interval
-\citep{alfonsXXa}. &
+\citep{alfons22a}. &
 \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
 \noalign{\smallskip}
 %
@@ -571,7 +571,7 @@ empirical analyses.}
 
 
 While package \pkg{robmed} is focused on the fast-and-robust bootstrap
-procedure for mediation analysis introduced by \citet{alfonsXXa}, various
+procedure for mediation analysis introduced by \citet{alfons22a}, various
 other methods are available as well.  Tables~\ref{tab:methods-boot}
 and~\ref{tab:methods-sobel} provide an overview of the available methods
 together with the corresponding argument values to use in function
@@ -600,7 +600,7 @@ median regression.
 the covariance matrix, and then to perform a bootstrap test on the cleaned data
 with coefficient estimation based on the maximum likelihood covariance matrix.
 A discussion of advantages and disadvantages of those approaches, as well as a
-comparison in extensive simulation studies, can be found in \citet{alfonsXXa}.
+comparison in extensive simulation studies, can be found in \citet{alfons22a}.
 
 Besides bootstrap tests, variations of the Sobel test \citep{sobel82} are
 implemented in \pkg{robmed}.
@@ -621,7 +621,7 @@ that they are not recommended for empirical analyses.
 \subsection{Fast-and-robust bootstrap test for mediation analysis}
 \label{sec:ROBMED}
 
-The robust procedure of \citet{alfonsXXa} follows the state-of-the-art
+The robust procedure of \citet{alfons22a} follows the state-of-the-art
 bootstrap approach for testing mediation \citep{bollen90, shrout02,
 mackinnon04, preacher04, preacher08}, but it replaces OLS regressions
 with the robust MM-estimator of regression \citep{yohai87} and the standard
@@ -988,7 +988,7 @@ with one function call.  See Tables~\ref{tab:methods-boot}
 and~\ref{tab:methods-sobel} for an overview of which argument values to use
 in \code{test_mediation()} for the various available methods.  Furthermore,
 function \code{robmed()} is a wrapper function for the fast-and-robust
-bootstrap test of \citet{alfonsXXa}.  The results are returned as an object
+bootstrap test of \citet{alfons22a}.  The results are returned as an object
 inheriting from class \code{"test_mediation"}.  The currently available
 subclasses are \code{"boot_test_mediation"} for bootstrap tests, and
 \code{"sobel_test_mediation"} for tests based on the normal approximation of
@@ -1070,7 +1070,7 @@ with additional control variables (Section~\ref{sec:parallel}).
 \subsection{Simple mediation} \label{sec:simple}
 
 In the first code example, we replicate parts of the empirical example of
-\citet{alfonsXXa}.  The illustrative hypothesis to be investigated is that
+\citet{alfons22a}.  The illustrative hypothesis to be investigated is that
 task conflict mediates the relationship between team value diversity and
 team commitment.  Using \pkg{robmed}'s formula interface (see
 Section~\ref{sec:formula}), we specify a simple mediation model with the
@@ -1078,7 +1078,7 @@ dependent variable \code{TeamCommitment} on the left hand side.  On the right
 hand side, we have the hypothesized mediator \code{TaskConflict}, which is
 wrapped in a call to function \code{m()}, as well as the independent variable
 \code{ValueDiversity}.  As we will compare the robust bootstrap test of
-\citet{alfonsXXa} with the OLS bootstrap test \citep[e.g.,][]{preacher04,
+\citet{alfons22a} with the OLS bootstrap test \citep[e.g.,][]{preacher04,
 preacher08, hayes18}, we store the formula object for later use.
 %
 <<>>=
@@ -1093,7 +1093,7 @@ regressions (argument \code{method = "regression"}) and performs a bootstrap
 test for the indirect effect (argument \code{test = "boot"}) with 5000
 bootstrap replications (argument \code{R = 5000}).  In that case, setting
 \code{robust = TRUE} (the default) or \code{robust = "MM"} specifies the robust
-bootstrap procedure of \citet{alfonsXXa}, while \code{robust = FALSE} yields
+bootstrap procedure of \citet{alfons22a}, while \code{robust = FALSE} yields
 the nonrobust OLS bootstrap test.  Before each call to \code{test_mediation()},
 we set the seed of the random number generator.
 %
@@ -1125,11 +1125,11 @@ sample mean of the bootstrap replicates; column \code{Boot}), and the lower
 and upper limits of the confidence interval (columns \code{Lower} and
 \code{Upper}, respectively).
 %
-<<summary, fig.width=5, fig.height=4.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="b!">>=
+<<summary, fig.width=5, fig.height=4.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 summary(robust_boot_simple)
 @
 %
-The above results are very similar to those reported in \citet{alfonsXXa},
+The above results are very similar to those reported in \citet{alfons22a},
 but they are not identical due to a change in the random number generator in
 \proglang{R} and the use of a different seed.  Specifically, the robust
 bootstrap test detects a significant indirect effect, as the confidence
@@ -1156,10 +1156,10 @@ potential outliers are displayed for each regression model.  Those potential
 outliers should always be investigated further, as they may be interesting
 observations that could lead to new insights when studied separately
 \citep[see][for a detailed discussion on outliers in the mediation
-model]{alfonsXXa}.
+model]{alfons22a}.
 
 Moreover, when the summary output for the robust bootstrap procedure of
-\citet{alfonsXXa} is printed, by default also a diagnostic plot is shown that
+\citet{alfons22a} is printed, by default also a diagnostic plot is shown that
 allows to detect deviations from normality assumptions.  Keep in mind that
 this procedure uses the robust MM-estimator of regression \citep{yohai87,
 salibian02}, which assigns robustness weights to all observations.  Those
@@ -1281,7 +1281,7 @@ effect.  It also adds vertical lines for the point estimates and illustrates
 the confidence intervals by shaded areas.  The plot resulting from the
 following command is displayed in Figure~\ref{fig:density}.
 %
-<<density, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
+<<density, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
 density_plot(boot_list)
 @
 
@@ -1294,7 +1294,7 @@ is based on those two effects.  Nevertheless, argument \code{parm} can be used
 to specify which effects to plot.  Figure~\ref{fig:ci} contains the plot
 created by the command below.
 %
-<<ci, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="t!">>=
+<<ci, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="t!">>=
 ci_plot(boot_list, parm = c("a", "b", "Direct", "Indirect"))
 @
 
@@ -1302,7 +1302,7 @@ Finally, function \code{ellipse_plot()} produces a bivariate scatterplot
 together with a tolerance ellipse that illustrates how well the regression
 results represent the data, exploiting the relationship between regression
 coefficients and the covariance matrix.  For the robust bootstrap procedure of
-\citet{alfonsXXa}, the robustness weights from the robust regression estimator
+\citet{alfons22a}, the robustness weights from the robust regression estimator
 can be used to compute a weighted sample covariance matrix, from which the
 tolerance ellipse is computed.  It is important to note that such a weighted
 covariance matrix is not Fisher consistent (that is, the functional form of the
@@ -1319,7 +1319,7 @@ mediator on the independent variable.  As the independent variable is the only
 explanatory variable in this regression model, the plot also adds lines
 representing the respective regression coefficients.
 %
-<<ellipse, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.", fig.pos="b!">>=
+<<ellipse, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 ellipse_plot(boot_list, horizontal = "ValueDiversity",
              vertical = "TaskConflict")
 @
@@ -1353,7 +1353,7 @@ information.  With the commands below, we manually produce the same plot as
 before, but only plot the tolerance ellipses and the data without the
 regression lines.  Figure~\ref{fig:ellipse-custom} displays the resulting plot.
 %
-<<ellipse-custom, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Customized diagnostic plot with tolerance ellipses but without regression lines for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfonsXXa}.">>=
+<<ellipse-custom, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Customized diagnostic plot with tolerance ellipses but without regression lines for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.">>=
 setup <- setup_ellipse_plot(boot_list, horizontal = "ValueDiversity",
                             vertical = "TaskConflict")
 ggplot() +
@@ -1388,7 +1388,7 @@ f_serial <- TeamScore ~ serial_m(TaskConflict, TeamCommitment) +
 @
 %
 Function \code{test_mediation()} is then called in the same way as in the
-previous section to compare the robust bootstrap procedure of \citet{alfonsXXa}
+previous section to compare the robust bootstrap procedure of \citet{alfons22a}
 with the nonrobust OLS bootstrap.
 %
 <<cache=TRUE>>=
@@ -1424,7 +1424,7 @@ investigate deviations from normality assumptions that could explain the
 differences in results for the two methods.  The plot created with the
 commands below is shown in Figure~\ref{fig:weight}.
 %
-<<weight, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a serial multiple mediator model.">>=
+<<weight, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a serial multiple mediator model.">>=
 weight_plot(robust_boot_serial) +
   scale_color_manual("", values = c("black", "#00BFC4")) +
   theme(legend.position = "top")
@@ -1459,7 +1459,7 @@ f_parallel <-
 @
 
 Function \code{test_mediation()} is then called in the usual way to compare the
-robust bootstrap test of \citet{alfonsXXa} and the nonrobust OLS bootstrap.
+robust bootstrap test of \citet{alfons22a} and the nonrobust OLS bootstrap.
 %
 <<cache=TRUE>>=
 set.seed(seed)
@@ -1486,7 +1486,7 @@ above contains the results for the sum of the two individual indirect effects
 through the hypothesized mediators \code{ProceduralJustice} and
 \code{InteractionalJustice}.  We observe that both individual indirect effects
 are significant at the 5\% level for both the robust procedure of
-\citet{alfonsXXa} and the OLS bootstrap.  However, the lower confidence bound
+\citet{alfons22a} and the OLS bootstrap.  However, the lower confidence bound
 for the indirect effect of procedural justice in the robust bootstrap is so
 small that different seeds of the random number generator often yield a
 (similarly small) negative lower bound.  Overall, we may conclude that we find
@@ -1554,7 +1554,7 @@ parameter settings.  It must not be abused for $p$~hacking.
 
 The \proglang{R} package \pkg{robmed} provides easy-to-use functionality for
 robust mediation analysis.  It implements the robust bootstrap procedure of
-\citet{alfonsXXa}, which yields reliable results under outliers and other
+\citet{alfons22a}, which yields reliable results under outliers and other
 deviations from normality assumptions, as well as diagnostic plots that allow
 to detect and further investigate such deviations.  In addition, package
 \pkg{robmed} provides functionality for various other procedures for mediation
@@ -1831,7 +1831,7 @@ Finally, we display the summary of the robust bootstrap test for the parallel
 multiple mediator model with control variables from Section~\ref{sec:parallel}.
 Figure~\ref{fig:summary-parallel} contains the resulting diagnostic plot.
 %
-<<summary-parallel, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfonsXXa} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
+<<summary-parallel, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
 summary(robust_boot_parallel)
 @
 \newpage  % make sure affiliation is printed in full after diagnostic plot

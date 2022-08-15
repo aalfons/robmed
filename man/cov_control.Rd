@@ -38,7 +38,7 @@ summary(boot)
 
 }
 \references{
-Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
+Huber, P.J. (1981) \emph{Robust Statistics}. John Wiley & Sons.
 }
 \seealso{
 \code{\link{cov_Huber}()}

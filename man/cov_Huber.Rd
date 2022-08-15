@@ -54,11 +54,11 @@ cov_Huber(BSG2014[, c(x, y, m)])
 
 }
 \references{
-Huber, P.J. (1981) \emph{Robust statistics}. John Wiley & Sons.
+Huber, P.J. (1981) \emph{Robust Statistics}. John Wiley & Sons.
 
-Zu, J. and Yuan, K.-H. (2010) Local influence and robust procedures for
-mediation analysis. \emph{Multivariate Behavioral Research}, \bold{45}(1),
-1--44.
+Zu, J. and Yuan, K.-H. (2010) Local Influence and Robust Procedures for
+Mediation Analysis.  \emph{Multivariate Behavioral Research}, \bold{45}(1),
+1--44.  doi:10.1080/00273170903504695.
 }
 \seealso{
 \code{\link{cov_control}()}, \code{\link{test_mediation}()},
