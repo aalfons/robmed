@@ -17,7 +17,7 @@ Imports:
 Suggests:
     knitr,
     testthat
-Description: Perform mediation analysis via the fast-and-robust bootstrap test of Alfons, Ates, and Groenen (2022a) <doi:10.1177/1094428121999096>, as well as various other methods. Details on the implementation and code examples can be found in Alfons, Ates, and Groenen (2022b) <doi:10.18637/jss.v103.i13>.
+Description: Perform mediation analysis via a fast-and-robust bootstrap test, as well as various other methods. Details on the implementation and code examples can be found in Alfons, Ates, and Groenen (2022) <doi:10.18637/jss.v103.i13>.
 License: GPL (>= 2)
 URL: https://github.com/aalfons/robmed
 BugReports: https://github.com/aalfons/robmed/issues
