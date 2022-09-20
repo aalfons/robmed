@@ -3,11 +3,15 @@
 [![CRAN](https://www.R-pkg.org/badges/version/robmed)](https://CRAN.R-project.org/package=robmed) 
 
 
-Perform mediation analysis via the robust bootstrap test ROBMED ([Alfons, Ates & Groenen, 2022](https://doi.org/10.1177/1094428121999096)).  In addition to ROBMED, various other methods for mediation analysis are implemented.
+Perform mediation analysis via the robust bootstrap test ROBMED ([Alfons, Ates & Groenen, 2022a](https://doi.org/10.1177/1094428121999096)).  In addition to ROBMED, various other methods for mediation analysis are implemented.
+
+To cite the robust bootstrap test ROBMED, please use:
+
+Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022a). A Robust Bootstrap Test for Mediation Analysis. *Organizational Research Methods*, **25**(3), 591--617. doi: [10.1177/1094428121999096](https://doi.org/10.1177/1094428121999096).
 
 To cite package `robmed` in publications, please use:
 
-Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022). Robust Mediation Analysis: The `R` Package `robmed`. *Journal of Statistical Software*, **103**(13), 1--45. doi: [10.18637/jss.v103.i13](https://doi.org/10.18637/jss.v103.i13).
+Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022b). Robust Mediation Analysis: The `R` Package `robmed`. *Journal of Statistical Software*, **103**(13), 1--45. doi: [10.18637/jss.v103.i13](https://doi.org/10.18637/jss.v103.i13).
 
 
 ## About ROBMED
@@ -16,7 +20,7 @@ The robust bootstrap test ROBMED for mediation analysis is less sensitive to dev
 
 More information can be found in our article:
 
-Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022). A Robust Bootstrap Test for Mediation Analysis. *Organizational Research Methods*, **25**(3), 591--617. doi: [10.1177/1094428121999096](https://doi.org/10.1177/1094428121999096).
+Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022a). A Robust Bootstrap Test for Mediation Analysis. *Organizational Research Methods*, **25**(3), 591--617. doi: [10.1177/1094428121999096](https://doi.org/10.1177/1094428121999096).
 
 
 ## Installation
