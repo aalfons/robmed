@@ -1,3 +1,11 @@
+Changes in robmed version 1.0.1
+
+    + Package now compatible with R version >= 3.1.0.
+
+    + BSG2014 data now stored as version 2 RData file for compatibility with
+      older R versions.
+
+
 Changes in robmed version 1.0.0
 
     + Updated documentation to include reference to article in the Journal of
