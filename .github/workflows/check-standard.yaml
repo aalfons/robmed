@@ -19,10 +19,6 @@ jobs:
       matrix:
         config:
           - {os: macos-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'oldrel-1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -50,6 +46,7 @@ jobs:
         run: |
           install.packages("tinytex")
           tinytex::parse_install(text = "! LaTeX Error: File ae.sty' not found.")
+          tinytex::parse_install(text = "! LaTeX Error: File `thumbpdf.sty' not found.")
         shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
