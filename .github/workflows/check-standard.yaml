@@ -48,6 +48,7 @@ jobs:
 
       - name: Install LaTeX dependencies
         run: |
+          install.packages("tinytex")
           tinytex::parse_install(text = "! LaTeX Error: File ae.sty' not found.")
         shell: Rscript {0}
 
