@@ -3,3 +3,4 @@
 tests/verified_results/*
 LICENSE
 README.md
+^\.github$
