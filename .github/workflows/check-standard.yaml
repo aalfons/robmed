@@ -47,6 +47,7 @@ jobs:
           install.packages("tinytex")
           tinytex::parse_install(text = "! LaTeX Error: File ae.sty' not found.")
           tinytex::parse_install(text = "! LaTeX Error: File `thumbpdf.sty' not found.")
+          tinytex::parse_install(text = "! LaTeX Error: File `makecell.sty' not found.")
         shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
