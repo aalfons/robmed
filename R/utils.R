@@ -33,7 +33,7 @@ get_contrasts <- function(x, combinations = NULL, type = "estimates") {
   # define function to compute contrasts
   if (type == "estimates") fun <- get_original_contrast
   else if (type == "absolute") fun <- get_absolute_contrast
-  else stop(sprintf("%s contrasts not implemented", type))
+  else stop("type of contrasts not implemented")
   # compute contrasts
   contrasts <- sapply(combinations, fun, x = x)
   if (is.vector(contrasts)) {
@@ -86,7 +86,7 @@ get_contrast_info <- function(names, type = "estimates") {
     fun <- function(names) {
       paste(paste0("|", names, "|"), collapse = " - ")
     }
-  } else stop(sprintf("%s contrasts not implemented", type))
+  } else stop("type of contrasts not implemented")
   # return information on contrasts
   data.frame(Label = labels, Definition = sapply(combinations, fun))
 }
