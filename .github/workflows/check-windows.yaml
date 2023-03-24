@@ -39,6 +39,7 @@ jobs:
 
       - name: Install additional LaTeX packages for vignette
         run: |
+          install.packages("tinytex")
           tinytex::tlmgr_install(c("ae", "thumbpdf", "makecell"))
         shell: Rscript {0}
 
