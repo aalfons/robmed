@@ -478,6 +478,14 @@ for (method in cov_methods) {
                                   method = "covariance", robust = robust)
     )
 
+    # hack in case ATLAS is used as BLAS: signs of eigenvectors may be arbitrary
+    if (robust) {
+      attr(reg_sobel$fit$fit_mx$cov, "eigen") <- NULL
+      attr(reg_sobel$fit$fit_ymx$cov, "eigen") <- NULL
+      attr(cov_sobel$fit$fit_mx$cov, "eigen") <- NULL
+      attr(cov_sobel$fit$fit_ymx$cov, "eigen") <- NULL
+    }
+
     # these should be the same
     expect_equal(cov_sobel, reg_sobel)
 

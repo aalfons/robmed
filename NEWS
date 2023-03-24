@@ -2,6 +2,8 @@ Changes in robmed version 1.0.1
 
     + Minor change in warning message regarding contrasts of indirect effects.
 
+    + Fixed unit tests for the case that ATLAS is used as BLAS.
+
 
 Changes in robmed version 1.0.0
 
