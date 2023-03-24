@@ -1,6 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+dev
 tests/verified_results/*
 LICENSE
 README.md
-^\.github$
