@@ -58,11 +58,11 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' @author Andreas Alfons
 #'
 #' @references
-#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) A Robust Bootstrap Test
+#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022a) A Robust Bootstrap Test
 #' for Mediation Analysis.  \emph{Organizational Research Methods},
 #' \bold{25}(3), 591--617.  doi:10.1177/1094428121999096.
 #'
-#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) Robust Mediation Analysis:
+#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022b) Robust Mediation Analysis:
 #' The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
 #' \bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
 #'
@@ -77,7 +77,7 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' ## simple mediation
 #' # set seed of the random number generator
 #' set.seed(seed)
-#' # The results in Alfons et al. (2021) were obtained with an
+#' # The results in Alfons et al. (2022a) were obtained with an
 #' # older version of the random number generator.  To reproduce
 #' # those results, uncomment the two lines below.
 #' # RNGversion("3.5.3")
