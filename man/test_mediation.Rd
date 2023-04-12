@@ -288,7 +288,7 @@ below, the \eqn{i_j} are intercepts and the \eqn{e_j} are random error terms.
 
 \itemize{
 
-  \item{\emph{Simple mediation model}: The mediatiom model in its simplest
+  \item{\emph{Simple mediation model}: The mediation model in its simplest
   form is given by the equations
   \deqn{M = i_1 + aX + e_1,}
   \deqn{Y = i_2 + bM + cX + e_2,}
