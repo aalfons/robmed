@@ -290,7 +290,7 @@ below, the \eqn{i_j} are intercepts and the \eqn{e_j} are random error terms.
 
   \item{\emph{More complex models}: Some of the models described above can
   be combined, for instance parallel and serial multiple mediator models
-  support multiple independent variables of interest.}
+  support multiple independent variables of interest and control variables.}
 
 }
 }
