@@ -19,7 +19,7 @@ test_mediation(object, ...)
   alternative = c("twosided", "less", "greater"),
   R = 5000,
   level = 0.95,
-  type = c("bca", "perc"),
+  type = NULL,
   order = c("first", "second"),
   method = c("regression", "covariance"),
   robust = TRUE,
@@ -40,7 +40,7 @@ test_mediation(object, ...)
   alternative = c("twosided", "less", "greater"),
   R = 5000,
   level = 0.95,
-  type = c("bca", "perc"),
+  type = NULL,
   order = c("first", "second"),
   method = c("regression", "covariance"),
   robust = TRUE,
@@ -58,7 +58,7 @@ test_mediation(object, ...)
   alternative = c("twosided", "less", "greater"),
   R = 5000,
   level = 0.95,
-  type = c("bca", "perc"),
+  type = NULL,
   order = c("first", "second"),
   ...
 )
@@ -100,9 +100,12 @@ is to use 5000 bootstrap replicates.}
 the bootstrap test.  The default is to compute a 95\% confidence interval.}
 
 \item{type}{a character string specifying the type of confidence interval
-to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
-default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
-for the percentile bootstrap.}
+to be computed in the bootstrap test.  Possible values are \code{"bca"} for
+the bias-corrected and accelerated (BCa) bootstrap, or \code{"perc"} for the
+percentile bootstrap.  The default is to compute BCa bootstrap intervals if
+the number of bootstrap replicates \code{R} is at least as large as the
+number of observations in the data, and percentile bootstrap intervals
+otherwise.}
 
 \item{order}{a character string specifying the order of approximation of
 the standard error in Sobel's test.  Possible values are \code{"first"}

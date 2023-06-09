@@ -21,7 +21,7 @@
 #' the bootstrap test.
 #' @param type  a character string specifying the type of confidence interval
 #' to be computed in the bootstrap test.  Possible values are \code{"bca"} for
-#' the bias-corrected and accelerated bootstrap, or \code{"perc"} for the
+#' the bias-corrected and accelerated (BCa) bootstrap, or \code{"perc"} for the
 #' percentile bootstrap.
 #' @param contrast  a logical indicating whether to compute pairwise contrasts
 #' of the indirect effects.  This can also be a character string, with

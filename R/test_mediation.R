@@ -77,9 +77,12 @@
 #' @param level  numeric; the confidence level of the confidence interval in
 #' the bootstrap test.  The default is to compute a 95\% confidence interval.
 #' @param type  a character string specifying the type of confidence interval
-#' to be computed in the bootstrap test.  Possible values are \code{"bca"} (the
-#' default) for the bias-corrected and accelerated bootstrap, or \code{"perc"}
-#' for the percentile bootstrap.
+#' to be computed in the bootstrap test.  Possible values are \code{"bca"} for
+#' the bias-corrected and accelerated (BCa) bootstrap, or \code{"perc"} for the
+#' percentile bootstrap.  The default is to compute BCa bootstrap intervals if
+#' the number of bootstrap replicates \code{R} is at least as large as the
+#' number of observations in the data, and percentile bootstrap intervals
+#' otherwise.
 #' @param order  a character string specifying the order of approximation of
 #' the standard error in Sobel's test.  Possible values are \code{"first"}
 #' (the default) for a first-order approximation, and \code{"second"} for a
@@ -318,8 +321,7 @@ test_mediation <- function(object, ...) UseMethod("test_mediation")
 
 test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                                    alternative = c("twosided", "less", "greater"),
-                                   R = 5000, level = 0.95,
-                                   type = c("bca", "perc"),
+                                   R = 5000, level = 0.95, type = NULL,
                                    order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
@@ -349,8 +351,7 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
 test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    test = c("boot", "sobel"),
                                    alternative = c("twosided", "less", "greater"),
-                                   R = 5000, level = 0.95,
-                                   type = c("bca", "perc"),
+                                   R = 5000, level = 0.95, type = NULL,
                                    order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
@@ -374,8 +375,7 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
 
 test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
                                          alternative = c("twosided", "less", "greater"),
-                                         R = 5000, level = 0.95,
-                                         type = c("bca", "perc"),
+                                         R = 5000, level = 0.95, type = NULL,
                                          order = c("first", "second"),
                                          ...) {
   ## initializations
@@ -393,7 +393,23 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
     # further inizializations
     level <- rep(as.numeric(level), length.out = 1L)
     if (is.na(level) || level < 0 || level > 1) level <- formals()$level
-    type <- match.arg(type)
+    R <- rep(as.integer(R), length.out = 1L)
+    if (is.na(R) || R <= 0) R <- formals()$R
+    have_type <- !is.null(type)
+    if (have_type) type <- match.arg(type, choices = c("bca", "perc"))
+    else type <- "bca"
+    # check type if BCa confidence intervals can be computed
+    if (type == "bca") {
+      n <- nrow(object$data)
+      if (R < n) {
+        type <- "perc"
+        if (have_type) {
+          warning(sprintf("number of bootstrap samples 'R' must be at least %d ", n),
+                  "to compute BCa confidence intervals; using percentile ",
+                  "confidence intervals")
+        }
+      }
+    }
     # perform bootstrap test
     boot_test_mediation(object, alternative = alternative, R = R,
                         level = level, type = type, ...)
