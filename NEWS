@@ -4,11 +4,15 @@ Changes in robmed version 1.0.2
 
     + Updated package description.
 
-    + Bugfix in test_mediation(): If the number of bootstrap samples is smaller
-      than the number of observations, then the acceleration constant of BCa
-      confidence intervals cannot be computed with (the default behavior of)
-      boot.ci(). Now percentile confidence intervals are computed in such a
-      case (with a warning if the user explicitly asked for BCa intervals).
+    + Bugfix in test_mediation() and retest(): If the number of bootstrap
+      samples is smaller than the number of observations, then the acceleration
+      constant of BCa confidence intervals cannot be computed with (the default
+      behavior of) boot.ci(). Now percentile confidence intervals are computed
+      in such a case (with a warning if the user explicitly asked for BCa
+      intervals).
+
+    + test_mediation() and retest() now give a warning if a confidence level
+      outside the interval [0,1] is supplied.
 
 
 Changes in robmed version 1.0.1

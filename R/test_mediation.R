@@ -392,7 +392,10 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
   if (test == "boot") {
     # further inizializations
     level <- rep(as.numeric(level), length.out = 1L)
-    if (is.na(level) || level < 0 || level > 1) level <- formals()$level
+    if (is.na(level) || level < 0 || level > 1) {
+      level <- formals()$level
+      warning("invalid confidence level; using ", format(100 * level), " %")
+    }
     R <- rep(as.integer(R), length.out = 1L)
     if (is.na(R) || R <= 0) R <- formals()$R
     have_type <- !is.null(type)

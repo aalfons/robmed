@@ -86,13 +86,29 @@ retest.boot_test_mediation <- function(object, alternative, level,
   if (missing(level)) level <- object$level
   else {
     level <- rep(as.numeric(level), length.out = 1L)
-    if(is.na(level) || level < 0 || level > 1) level <- object$level
+    if(is.na(level) || level < 0 || level > 1) {
+      level <- object$level
+      warning("invalid confidence level; not updating it")
+    }
   }
   # check type of confidence intervals
-  if (missing(type)) type <- object$type
-  else type <- match.arg(type, choices = defaults$type)
-  # check contrasts of indirect effect
   fit <- object$fit
+  if (missing(type)) type <- object$type
+  else {
+    # check for a valid value
+    type <- match.arg(type, choices = defaults$type)
+    # check type if BCa confidence intervals can be computed
+    if (type == "bca") {
+      n <- nrow(fit$data)
+      if (object$R < n) {
+        type <- "perc"
+        warning("cannot compute BCa confidence intervals as number of ",
+                "bootstrap samples is smaller than number of observations; ",
+                "using percentile confidence intervals")
+      }
+    }
+  }
+  # check contrasts of indirect effect
   if (inherits(fit, "reg_fit_mediation")) {
     # further initializations
     model <- fit$model
