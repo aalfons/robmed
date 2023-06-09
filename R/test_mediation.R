@@ -390,14 +390,20 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
   }
   ## perform mediation analysis
   if (test == "boot") {
-    # further inizializations
+    # check confidence level and number of bootstrap samples
     level <- rep(as.numeric(level), length.out = 1L)
     if (is.na(level) || level < 0 || level > 1) {
       level <- formals()$level
-      warning("invalid confidence level; using ", format(100 * level), " %")
+      warning("confidence level must be between 0 and 1; using ",
+              format(100 * level), " %")
     }
     R <- rep(as.integer(R), length.out = 1L)
-    if (is.na(R) || R <= 0) R <- formals()$R
+    if (is.na(R) || R <= 0L) {
+      R <- formals()$R
+      warning("number of bootstrap samples must be a positive integer; ",
+              sprintf("using %d samples", R))
+    }
+    # check type of confidence intervals
     have_type <- !is.null(type)
     if (have_type) type <- match.arg(type, choices = c("bca", "perc"))
     else type <- "bca"
@@ -407,7 +413,7 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
       if (R < n) {
         type <- "perc"
         if (have_type) {
-          warning(sprintf("number of bootstrap samples 'R' must be at least %d ", n),
+          warning(sprintf("number of bootstrap samples must be at least %d ", n),
                   "to compute BCa confidence intervals; using percentile ",
                   "confidence intervals")
         }

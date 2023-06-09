@@ -79,6 +79,7 @@ retest.boot_test_mediation <- function(object, alternative, level,
   defaults <- list(alternative = c("twosided", "less", "greater"),
                    type = c("bca", "perc"),
                    contrast = c("estimates", "absolute"))
+  fit <- object$fit
   # check alternative hypothesis
   if (missing(alternative)) alternative <- object$alternative
   else alternative <- match.arg(alternative, choices = defaults$alternative)
@@ -88,24 +89,20 @@ retest.boot_test_mediation <- function(object, alternative, level,
     level <- rep(as.numeric(level), length.out = 1L)
     if(is.na(level) || level < 0 || level > 1) {
       level <- object$level
-      warning("invalid confidence level; not updating it")
+      warning("confidence level must be between 0 and 1; not updating it")
     }
   }
   # check type of confidence intervals
-  fit <- object$fit
   if (missing(type)) type <- object$type
   else {
     # check for a valid value
     type <- match.arg(type, choices = defaults$type)
     # check type if BCa confidence intervals can be computed
-    if (type == "bca") {
-      n <- nrow(fit$data)
-      if (object$R < n) {
-        type <- "perc"
-        warning("cannot compute BCa confidence intervals as number of ",
-                "bootstrap samples is smaller than number of observations; ",
-                "using percentile confidence intervals")
-      }
+    if (type == "bca" && object$R < nrow(fit$data)) {
+      type <- "perc"
+      warning("cannot compute BCa confidence intervals as number of ",
+              "bootstrap samples is smaller than number of observations; ",
+              "using percentile confidence intervals")
     }
   }
   # check contrasts of indirect effect
