@@ -66,16 +66,12 @@ object returned by \code{\link{test_mediation}()} and is simply extracted.
 }
 \examples{
 data("BSG2014")
-
-\donttest{
-# BCa intervals are recommended, but take a while to run
 boot <- test_mediation(BSG2014,
                        x = "ValueDiversity",
                        y = "TeamCommitment",
                        m = "TaskConflict",
-                       type = "bca")
+                       level = 0.9)
 p_value(boot)
-}
 
 }
 \seealso{

@@ -135,6 +135,10 @@
 #' (\url{https://orcid.org/0000-0003-4572-4101}).
 #'
 #' @references
+#' Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) A Robust Bootstrap Test
+#' for Mediation Analysis.  \emph{Organizational Research Methods},
+#' \bold{25}(3), 591--617.  doi:10.1177/1094428121999096.
+#'
 #' Blau, P.M. (1977) \emph{Inequality and Heterogeneity: A Primitive Theory of
 #' Social Structure}. New York, NY: Free Press.
 #'
@@ -188,7 +192,7 @@
 #' summary(BSG2014)
 #'
 #' # scatterplot matrix for the variables included in the
-#' # illustrative mediation analysis
+#' # illustrative mediation analysis of Alfons et al. (2022)
 #' x <- "ValueDiversity"
 #' y <- "TeamCommitment"
 #' m <- "TaskConflict"

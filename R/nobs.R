@@ -15,7 +15,7 @@ nobs.rq <- function(object, ...) {
 #' @export
 #' @import stats
 nobs.cov_Huber <- function(object, ...) {
-  weights <- weights(object, type="relative")
+  weights <- weights(object, type = "relative")
   length(weights)
 }
 

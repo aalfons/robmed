@@ -27,9 +27,9 @@ in the test for the indirect effect.  Possible values are \code{"twosided"},
 the bootstrap test.}
 
 \item{type}{a character string specifying the type of confidence interval
-to be computed in the bootstrap test.  Possible values are \code{"bca"} for
-the bias-corrected and accelerated (BCa) bootstrap, or \code{"perc"} for the
-percentile bootstrap.}
+to be computed in the bootstrap test.  Possible values are \code{"perc"}
+for the percentile bootstrap, or \code{"bca"} for the bias-corrected and
+accelerated (BCa) bootstrap.}
 
 \item{contrast}{a logical indicating whether to compute pairwise contrasts
 of the indirect effects.  This can also be a character string, with
@@ -58,22 +58,29 @@ settings, as it avoids having to re-run the bootstrap procedure.  It must
 not be abused for \eqn{p}{p}-hacking.
 }
 \note{
-From version 0.9.0 onwards, the behavior of this function changed.
-For arguments that are not supplied, the corresponding values of
-\code{object} are now used as defaults.
+From version 0.9.0 onwards, the behavior of this function changed. For
+arguments that are not supplied, the corresponding values of \code{object}
+are now used as defaults.
+
+Since version 1.1.0, bias-corrected and accelerated (BCa) bootstrap
+confidence intervals are no longer recommended, and the option
+\code{type = "bca"} may disappear in the future.
 }
 \examples{
 data("BSG2014")
 
 # run fast-and-robust bootstrap test
 boot <- test_mediation(BSG2014,
-                       x = "ValueDiversity",
-                       y = "TeamCommitment",
-                       m = "TaskConflict")
+                       x = "SharedLeadership",
+                       y = "TeamPerformance",
+                       m = c("ProceduralJustice",
+                             "InteractionalJustice"),
+                       covariates = c("AgeDiversity",
+                                      "GenderDiversity"))
 summary(boot)
 
-# now compute 97.5\% confidence interval
-retest(boot, level = 0.975)
+# now include comparison of indirect effects
+retest(boot, contrast = "estimates")
 
 }
 \seealso{

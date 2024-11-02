@@ -21,6 +21,14 @@ Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022b) Robust mediation analysis:
 The \R package \pkg{robmed}.  \emph{Journal of Statistical Software},
 \bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/aalfons/robmed}
+  \item Report bugs at \url{https://github.com/aalfons/robmed/issues}
+}
+
+}
 \author{
 \packageAuthor{robmed}
 

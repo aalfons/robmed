@@ -6,6 +6,7 @@
 ## compute a robust F-test (which actually uses the chi-squared distribution)
 
 # generic function
+#' @noRd
 rob_F_test <- function(object, ...) UseMethod("rob_F_test")
 
 # # method for mediation model fits via regression
@@ -41,6 +42,7 @@ rob_F_test <- function(object, ...) UseMethod("rob_F_test")
 # has an additional component 'response' that contains the values of the
 # response variable, and the control object has an extra component 'efficiency'
 # that contains the efficiency to which the estimator was tuned.
+#' @noRd
 rob_F_test.lmrob <- function(object, ...) {
   # check if Tukey bisquare loss function is used, otherwise return NULL
   control <- object$control

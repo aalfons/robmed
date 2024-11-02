@@ -76,36 +76,36 @@
 #' @examples
 #' data("BSG2014")
 #'
-#' # run fast-and-robust bootstrap test
-#' robust_boot <- test_mediation(BSG2014,
-#'                               x = "ValueDiversity",
-#'                               y = "TeamCommitment",
-#'                               m = "TaskConflict",
-#'                               robust = TRUE)
+#' # obtain robust fit of mediation model
+#' robust_fit <- fit_mediation(BSG2014,
+#'                             x = "ValueDiversity",
+#'                             y = "TeamCommitment",
+#'                             m = "TaskConflict",
+#'                             robust = TRUE)
 #'
-#' # create plot for robust bootstrap test
-#' ellipse_plot(robust_boot)
+#' # create plot for robust model fit
+#' ellipse_plot(robust_fit)
 #'
 #' # original data and partial residuals
-#' ellipse_plot(robust_boot, horizontal = "TaskConflict",
+#' ellipse_plot(robust_fit, horizontal = "TaskConflict",
 #'              vertical = "TeamCommitment")
-#' ellipse_plot(robust_boot, horizontal = "TaskConflict",
+#' ellipse_plot(robust_fit, horizontal = "TaskConflict",
 #'              vertical = "TeamCommitment", partial = TRUE)
 #'
-#' # run OLS bootstrap test
-#' ols_boot <- test_mediation(BSG2014,
-#'                            x = "ValueDiversity",
-#'                            y = "TeamCommitment",
-#'                            m = "TaskConflict",
-#'                            robust = FALSE)
+#' # obtain OLS fit of mediation model
+#' ols_fit <- fit_mediation(BSG2014,
+#'                          x = "ValueDiversity",
+#'                          y = "TeamCommitment",
+#'                          m = "TaskConflict",
+#'                          robust = FALSE)
 #'
-#' # compare robust and OLS bootstrap tests
-#' boot_list <- list("OLS bootstrap" = ols_boot,
-#'                   "ROBMED" = robust_boot)
-#' ellipse_plot(boot_list)
+#' # compare robust and OLS model fits
+#' fit_list <- list("OLS bootstrap" = ols_fit,
+#'                  "ROBMED" = robust_fit)
+#' ellipse_plot(fit_list)
 #'
 #' # the plot can be customized in the usual way
-#' ellipse_plot(boot_list) + theme_bw() +
+#' ellipse_plot(fit_list) + theme_bw() +
 #'   labs(title = "OLS vs robust estimation")
 #'
 #' @keywords hplot

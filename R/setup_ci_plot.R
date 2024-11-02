@@ -22,7 +22,7 @@
 #' values are \code{"a"}, \code{"b"}, \code{"d"} (only serial multiple mediator
 #' models), \code{"total"}, \code{"direct"}, and \code{"indirect"}.  The
 #' default is to include the direct and the indirect effect(s).
-#' @param type  a character string specifying which point estiamates and
+#' @param type  a character string specifying which point estimates and
 #' confidence intervals to plot: those based on the bootstrap distribution
 #' (\code{"boot"}; the default), or those based on the original data
 #' (\code{"data"}).  If \code{"boot"}, the confidence intervals of effects
@@ -89,7 +89,8 @@
 #' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
-#'                        m = "TaskConflict")
+#'                        m = "TaskConflict",
+#'                        level = 0.9)
 #'
 #' # set up information for plot
 #' setup <- setup_ci_plot(boot, parm = "Indirect")

@@ -43,6 +43,7 @@ boot <- test_mediation(BSG2014,
                        x = "ValueDiversity",
                        y = "TeamCommitment",
                        m = "TaskConflict",
+                       level = 0.9,
                        control = ctrl)
 summary(boot)
 

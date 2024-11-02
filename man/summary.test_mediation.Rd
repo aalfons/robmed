@@ -53,43 +53,49 @@ Summarize results from (robust) mediation analysis for proper interpretation.
 data("BSG2014")
 
 ## seed to be used for the random number generator
-seed <- 20211117
+seed <- 20241101
 
 ## simple mediation
-# set seed of the random number generator
 set.seed(seed)
-# The results in Alfons et al. (2022a) were obtained with an
-# older version of the random number generator.  To reproduce
-# those results, uncomment the two lines below.
-# RNGversion("3.5.3")
-# set.seed(20150601)
-# perform mediation analysis
 boot_simple <- test_mediation(TeamCommitment ~
                                 m(TaskConflict) +
                                   ValueDiversity,
-                              data = BSG2014)
+                              data = BSG2014,
+                              level = 0.9)
 summary(boot_simple)
 # the diagnostic plot is not shown when the summary is
 # computed, only when the resulting object is printed
 summary_simple <- summary(boot_simple)  # does not show plot
 summary_simple                          # shows output and plot
 
+# The results in Alfons et al. (2022a) were obtained with an
+# older version of the random number generator and with BCa
+# bootstrap intervals (which are no longer recommended).
+# To reproduce those results, uncomment the lines below.
+# RNGversion("3.5.3")
+# set.seed(20150601)
+# boot_simple <- test_mediation(TeamCommitment ~
+#                                 m(TaskConflict) +
+#                                   ValueDiversity,
+#                               data = BSG2014,
+#                               level = 0.95,
+#                               type = "bca")
+# summary(boot_simple)
+
+
 \donttest{
 ## serial multiple mediators
-# set seed of the random number generator
 set.seed(seed)
-# perform mediation analysis
 boot_serial <- test_mediation(TeamScore ~
                                 serial_m(TaskConflict,
                                          TeamCommitment) +
                                 ValueDiversity,
-                              data = BSG2014)
+                              data = BSG2014,
+                              level = 0.9)
 summary(boot_serial)
 
 ## parallel multiple mediators and control variables
-# set seed of the random number generator
 set.seed(seed)
-# perform mediation analysis
 boot_parallel <- test_mediation(TeamPerformance ~
                                   parallel_m(ProceduralJustice,
                                              InteractionalJustice) +

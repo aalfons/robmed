@@ -53,6 +53,7 @@
 #'                               x = "ValueDiversity",
 #'                               y = "TeamCommitment",
 #'                               m = "TaskConflict",
+#'                               level = 0.9,
 #'                               robust = TRUE)
 #' confint(robust_boot, type = "boot")
 #'
@@ -61,6 +62,7 @@
 #'                            x = "ValueDiversity",
 #'                            y = "TeamCommitment",
 #'                            m = "TaskConflict",
+#'                            level = 0.9,
 #'                            robust = FALSE)
 #' confint(ols_boot, type = "data")
 #'
@@ -156,8 +158,10 @@ confint.rq <- function(object, parm = NULL, level = 0.95, ...) {
 ## internal function to compute confidence intervals for estimated effects
 ## other than the indirect effect
 
+#' @noRd
 get_ci_list <- function(object, level = 0.95, ...) UseMethod("get_ci_list")
 
+#' @noRd
 get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
                                           boot = NULL, ...) {
   # initializations
@@ -224,6 +228,7 @@ get_ci_list.reg_fit_mediation <- function(object, level = 0.95,
   ci_list
 }
 
+#' @noRd
 get_ci_list.cov_fit_mediation <- function(object, level = 0.95,
                                           boot = NULL, ...) {
   # initializations

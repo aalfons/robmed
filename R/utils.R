@@ -199,11 +199,14 @@ get_indirect_labels <- function(p_m, model = "parallel") {
 
 ## check whether an object corresponds to a robust model fit
 
+#' @noRd
 is_robust <- function(object) UseMethod("is_robust")
 
+#' @noRd
 is_robust.reg_fit_mediation <- function(object) {
   robust <- object$robust
   if (is.character(robust)) TRUE else robust
 }
 
+#' @noRd
 is_robust.cov_fit_mediation <- function(object) object$robust

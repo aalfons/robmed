@@ -51,7 +51,8 @@
 #' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
-#'                        m = "TaskConflict")
+#'                        m = "TaskConflict",
+#'                        level = 0.9)
 #'
 #' # create plots for robust bootstrap test
 #' plot(boot, which = "ci")

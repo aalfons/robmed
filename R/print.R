@@ -4,9 +4,11 @@
 # --------------------------------------
 
 # information to display for different objects in first line of output
+#' @noRd
 print_info <- function(object, ...) UseMethod("print_info")
 
 # information to display for regression fits
+#' @noRd
 print_info.reg_fit_mediation <- function(object, ...) {
   prefix <- if (is_robust(object)) "Robust mediation" else "Mediation"
   if (object$robust == "median") postfix <- "via median regression"
@@ -21,12 +23,14 @@ print_info.reg_fit_mediation <- function(object, ...) {
 }
 
 # information to display for covariance matrix fits
+#' @noRd
 print_info.cov_fit_mediation <- function(object, ...) {
   prefix <- if (is_robust(object)) "Robust mediation" else "Mediation"
   cat(sprintf("%s model fit via covariance matrix\n", prefix))
 }
 
 # information to display for bootstrap tests
+#' @noRd
 print_info.boot_test_mediation <- function(object, ...) {
   # type of test and model fit
   fit <- object$fit
@@ -55,6 +59,7 @@ print_info.boot_test_mediation <- function(object, ...) {
 }
 
 # information to display for sobel tests
+#' @noRd
 print_info.sobel_test_mediation <- function(object, ...) {
   # type of test and model fit
   fit <- object$fit
@@ -79,6 +84,7 @@ print_info.sobel_test_mediation <- function(object, ...) {
 }
 
 # information on variables in summary of mediation analysis
+#' @noRd
 print_info.summary_fit_mediation <- function(object, ...) {
   # initializations
   p_x <- length(object$x)

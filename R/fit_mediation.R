@@ -284,44 +284,47 @@
 #' \code{\link{cov_Huber}()}, \code{\link{cov_ML}()}
 #'
 #' @examples
-#' data("BSG2014")
 #'
 #' ## seed to be used for the random number generator
-#' seed <- 20211117
+#' seed <- 20241101
 #'
 #' ## simple mediation
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # The results in Alfons et al. (2022a) were obtained with an
-#' # older version of the random number generator.  To reproduce
-#' # those results, uncomment the two lines below.
-#' # RNGversion("3.5.3")
-#' # set.seed(20150601)
-#' # perform mediation analysis
 #' fit_simple <- fit_mediation(TeamCommitment ~
 #'                               m(TaskConflict) +
 #'                               ValueDiversity,
 #'                             data = BSG2014)
-#' boot_simple <- test_mediation(fit_simple)
+#' boot_simple <- test_mediation(fit_simple, level = 0.9)
 #' summary(boot_simple)
+#'
+#' # The results in Alfons et al. (2022a) were obtained with an
+#' # older version of the random number generator and with BCa
+#' # bootstrap intervals (which are no longer recommended).
+#' # To reproduce those results, uncomment the lines below.
+#' # RNGversion("3.5.3")
+#' # set.seed(20150601)
+#' # fit_simple <- fit_mediation(TeamCommitment ~
+#' #                               m(TaskConflict) +
+#' #                               ValueDiversity,
+#' #                             data = BSG2014)
+#' # boot_simple <- test_mediation(fit_simple, level = 0.95,
+#' #                               type = "bca")
+#' # summary(boot_simple)
+#'
 #'
 #' \donttest{
 #' ## serial multiple mediators
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # perform mediation analysis
 #' fit_serial <- fit_mediation(TeamScore ~
 #'                               serial_m(TaskConflict,
 #'                                        TeamCommitment) +
 #'                               ValueDiversity,
 #'                             data = BSG2014)
-#' boot_serial <- test_mediation(fit_serial)
+#' boot_serial <- test_mediation(fit_serial, level = 0.9)
 #' summary(boot_serial)
 #'
 #' ## parallel multiple mediators and control variables
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # perform mediation analysis
 #' fit_parallel <- fit_mediation(TeamPerformance ~
 #'                                 parallel_m(ProceduralJustice,
 #'                                            InteractionalJustice) +

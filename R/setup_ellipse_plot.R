@@ -95,14 +95,14 @@
 #' @examples
 #' data("BSG2014")
 #'
-#' # run fast-and-robust bootstrap test
-#' boot <- test_mediation(BSG2014,
-#'                        x = "ValueDiversity",
-#'                        y = "TeamCommitment",
-#'                        m = "TaskConflict")
+#' # fit mediation model
+#' fit <- fit_mediation(BSG2014,
+#'                      x = "ValueDiversity",
+#'                      y = "TeamCommitment",
+#'                      m = "TaskConflict")
 #'
 #' # set up information for plot
-#' setup <- setup_ellipse_plot(boot)
+#' setup <- setup_ellipse_plot(fit)
 #'
 #' # plot only data and tolerance ellipse
 #' ggplot() +

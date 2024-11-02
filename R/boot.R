@@ -161,7 +161,7 @@ boot_ci <- function(t0, t, object, parm = NULL, ...) {
 # parm ..... integer index of a single column of bootstrap replicates
 # object ... object of class "boot" containing bootstrap replicates
 extract_ci <- function(parm = 1L, object, alternative = "twosided",
-                       level = 0.95, type = "bca", ...) {
+                       level = 0.95, type = "perc", ...) {
   # initializations
   which <- if(type == "perc") "percent" else type
   # extract confidence interval
@@ -223,7 +223,7 @@ boot_p_value <- function(t0, t, object, parm = NULL, ...) {
 # object ... object of class "boot" containing bootstrap replicates
 extract_p_value <- function(parm = 1L, object, digits = 4L,
                             alternative = "twosided",
-                            type = "bca", ...) {
+                            type = "perc", ...) {
   # set lower bound of significance level to 0
   lower <- 0
   # loop over the number of digits and determine the corresponding digit after

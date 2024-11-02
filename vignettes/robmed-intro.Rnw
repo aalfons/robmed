@@ -125,6 +125,10 @@ set_header(highlight = "")  # do not use the Sweave.sty package
 %%   of Statistical Software" above) they should be in sentence case (like
 %%   "generalized linear models" below).
 
+This vignette is an updated version of \citet{alfons22c}. Specifically, it
+has been adapted to reflect the change in default values for the bootstrap
+confidence intervals introduced in version~1.1.0.
+
 \section{Introduction} \label{sec:intro}
 
 In the social, behavioral, and medical sciences, mediation analysis is a
@@ -795,9 +799,9 @@ indirect effect.  Note that we do not perform the regression corresponding
 to~\eqref{eq:simpleY'} and instead estimate the total effect by $\hat{c}' =
 \hat{a}\hat{b} + \hat{c}$.  With the empirical distribution of the indirect
 effect over the bootstrap samples, we construct a percentile-based confidence
-interval.  By default, we report a bias-corrected and accelerated confidence
-interval \citep{davison97}.  Furthermore, we advocate to report the mean over
-the bootstrap distribution as the final point estimates of the indirect effect.
+interval.  By default, we report a simple percentile confidence interval
+\citep{davison97}.  Furthermore, we advocate to report the mean over the
+bootstrap distribution as the final point estimates of the indirect effect.
 
 
 % --------------
@@ -1057,7 +1061,7 @@ the random number generator in an object, as it will be needed in all examples
 for the purpose of replicating the results.
 %
 <<>>=
-seed <- 20211117
+seed <- 20241101
 @
 
 The following subsections provide examples for a simple mediation
@@ -1125,17 +1129,19 @@ sample mean of the bootstrap replicates; column \code{Boot}), and the lower
 and upper limits of the confidence interval (columns \code{Lower} and
 \code{Upper}, respectively).
 %
-<<summary, fig.width=5, fig.height=4.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
+<<summary, fig.width=5, fig.height=4.5, out.width="0.67\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 summary(robust_boot_simple)
 @
 %
 The above results are very similar to those reported in \citet{alfons22a},
 but they are not identical due to a change in the random number generator in
-\proglang{R} and the use of a different seed.  Specifically, the robust
-bootstrap test detects a significant indirect effect, as the confidence
-interval is strictly negative.  This negative indirect effect is composed of
-a positive effect of value diversity on task conflict (see the output of the
-first regression model), and a negative effect of task conflict on team
+\proglang{R}, the use of a different seed, and a change in the default type of
+bootstrap confidence intervals in \pkg{robmed} version~1.1.0.  Specifically,
+the robust bootstrap test detects a significant indirect effect, as the
+confidence interval is strictly negative (albeit barely so at the 95\%
+confidence level).  This negative indirect effect is composed of a positive
+effect of value diversity on task conflict (see the output of the first
+regression model), and a negative effect of task conflict on team
 commitment (see the output of the second regression model).  For further
 interpretation, recall that value diversity is measured as a coefficient of
 variation averaged over various value dimensions, and that task conflict and
@@ -1260,8 +1266,11 @@ p_value(robust_boot_simple, parm = "Indirect")
 p_value(ols_boot_simple, parm = "Indirect")
 @
 %
-Here, the $p$~value for the robust bootstrap test shows strong evidence against
-the null hypothesis of no mediation, whereas the OLS bootstrap fails to do so.
+It should be noted that depending on the seed of the random number generator,
+the $p$~value for the robust bootstrap test may fall below or above the common
+5\% significance level. But given the arbitrariness of this threshold, we find
+that robust bootstrap test shows at least weak evidence against the null
+hypothesis of no mediation, whereas the OLS bootstrap fails to do so.
 
 Several plots are implemented to visualize the results of mediation analysis.
 They can be applied to each object individually, but it is also possible to
@@ -1319,7 +1328,7 @@ mediator on the independent variable.  As the independent variable is the only
 explanatory variable in this regression model, the plot also adds lines
 representing the respective regression coefficients.
 %
-<<ellipse, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
+<<ellipse, fig.width=5, fig.height=3.5, out.width="0.68\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 ellipse_plot(boot_list, horizontal = "ValueDiversity",
              vertical = "TaskConflict")
 @
@@ -1353,7 +1362,7 @@ information.  With the commands below, we manually produce the same plot as
 before, but only plot the tolerance ellipses and the data without the
 regression lines.  Figure~\ref{fig:ellipse-custom} displays the resulting plot.
 %
-<<ellipse-custom, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Customized diagnostic plot with tolerance ellipses but without regression lines for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.">>=
+<<ellipse-custom, fig.width=5, fig.height=3.5, out.width="0.68\\textwidth", fig.cap="Customized diagnostic plot with tolerance ellipses but without regression lines for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.">>=
 setup <- setup_ellipse_plot(boot_list, horizontal = "ValueDiversity",
                             vertical = "TaskConflict")
 ggplot() +
@@ -1389,15 +1398,16 @@ f_serial <- TeamScore ~ serial_m(TaskConflict, TeamCommitment) +
 %
 Function \code{test_mediation()} is then called in the same way as in the
 previous section to compare the robust bootstrap procedure of \citet{alfons22a}
-with the nonrobust OLS bootstrap.
+with the nonrobust OLS bootstrap, but here we use confidence level 90\% for the
+confidence intervals of indirect effects.
 %
 <<cache=TRUE>>=
 set.seed(seed)
 robust_boot_serial <- test_mediation(f_serial, data = BSG2014,
-                                     robust = TRUE)
+                                     level = 0.9, robust = TRUE)
 set.seed(seed)
 ols_boot_serial <- test_mediation(f_serial, data = BSG2014,
-                                  robust = FALSE)
+                                  level = 0.9, robust = FALSE)
 @
 
 The output of \code{summary()} looks very similar to that of the previous
@@ -1484,14 +1494,8 @@ ols_boot_parallel
 As for the serial multiple mediator model, the row \code{Total} in the output
 above contains the results for the sum of the two individual indirect effects
 through the hypothesized mediators \code{ProceduralJustice} and
-\code{InteractionalJustice}.  We observe that both individual indirect effects
-are significant at the 5\% level for both the robust procedure of
-\citet{alfons22a} and the OLS bootstrap.  However, the lower confidence bound
-for the indirect effect of procedural justice in the robust bootstrap is so
-small that different seeds of the random number generator often yield a
-(similarly small) negative lower bound.  Overall, we may conclude that we find
-at least weak support for mediation via procedural justice, and we do find
-support for mediation via interactional justice.
+\code{InteractionalJustice}.  We observe that the robust procedure of \citet{alfons22a} finds support for mediation via both procedural justice and interactional justice (since the confidence intervals are strictly positive), whereas only the indirect effect of procedural justice is significant at the
+5\% level for the OLS bootstrap.
 
 The output of \code{summary()} in Appendix~\ref{app:output}, indicates that
 the residual distributions are fairly normal (see the diagnostic plot in
@@ -1513,7 +1517,7 @@ the partial residuals of team performance against the independent variable
 shared leadership.  Figure~\ref{fig:ellipse-partial} contains the resulting
 plot, which clearly visualizes the noisy data points.
 %
-<<ellipse-partial, fig.width=5, fig.height=3.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
+<<ellipse-partial, fig.width=5, fig.height=3.875, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
 ellipse_plot(robust_boot_parallel, horizontal = "SharedLeadership",
              vertical = "TeamPerformance", partial = TRUE)
 @

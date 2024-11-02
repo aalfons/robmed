@@ -247,8 +247,10 @@ rmediation <- function(n, object, ...) sim_mediation(object, n = n, ...)
 
 ## simulate explanatory variables based on a mediation model fit
 
+#' @noRd
 sim_explanatory <- function(object, n, ...) UseMethod("sim_explanatory")
 
+#' @noRd
 sim_explanatory.reg_fit_mediation <- function(object, n, num_discrete = 10,
                                               ...) {
 
@@ -336,6 +338,7 @@ sim_explanatory.reg_fit_mediation <- function(object, n, num_discrete = 10,
 
 }
 
+#' @noRd
 sim_explanatory.cov_fit_mediation <- function(object, n, ...) {
   # initializations
   x <- object$x
@@ -354,8 +357,10 @@ sim_explanatory.cov_fit_mediation <- function(object, n, ...) {
 
 ## simulate error terms based on a mediation model fit
 
+#' @noRd
 sim_errors <- function(object, n) UseMethod("sim_errors")
 
+#' @noRd
 sim_errors.reg_fit_mediation <- function(object, n) {
   # draw errors for mediators
   e_M <- sim_errors(object$fit_mx, n = n)
@@ -371,6 +376,7 @@ sim_errors.reg_fit_mediation <- function(object, n) {
 # sim_errors.list <- function(object, ...) lapply(object, sim_errors, ...)
 # -----
 # dirty hack:
+#' @noRd
 sim_errors.list <- function(object, n) {
   lapply(object, function(x, n) {
     # FIXME: this throws error when MM-estimator doesn't converge
@@ -385,17 +391,20 @@ sim_errors.list <- function(object, n) {
 }
 # -----
 
+#' @noRd
 sim_errors.lmrob <- function(object, n) {
   sigma <- object$scale           # residual scale
   rnorm(n, mean = 0, sd = sigma)  # return error terms
 }
 
+#' @noRd
 sim_errors.rq <- function(object, n) {
   if (object$tau != 0.5) stop("only implemented for median regression")
   sigma <- mad(residuals(object), center = 0)  # residual scale
   rnorm(n, mean = 0, sd = sigma)               # return error terms
 }
 
+#' @noRd
 sim_errors.lm <- function(object, n) {
   rss <- sum(residuals(object)^2)          # residual sum of squares
   sigma <- sqrt(rss / object$df.residual)  # residual scale
@@ -403,6 +412,7 @@ sim_errors.lm <- function(object, n) {
 }
 
 #' @importFrom sn rsn rst
+#' @noRd
 sim_errors.lmse <- function(object, n) {
   # family specification as in package 'sn' (not 'robmed'): either "SN" or "ST"
   which <- object$family
@@ -425,6 +435,7 @@ sim_errors.lmse <- function(object, n) {
   e
 }
 
+#' @noRd
 sim_errors.cov_fit_mediation <- function(object, n) {
   # -----
   # Note: since Zu & Yuan (2010) use the maximum likelihood estimator of the
@@ -456,8 +467,10 @@ sim_errors.cov_fit_mediation <- function(object, n) {
 
 ## extract coefficients
 
+#' @noRd
 get_coefficients <- function(object) UseMethod("get_coefficients")
 
+#' @noRd
 get_coefficients.reg_fit_mediation <- function(object) {
   # initializations
   p_m <- length(object$m)
@@ -470,6 +483,7 @@ get_coefficients.reg_fit_mediation <- function(object) {
   list(M = coef_M, Y = coef_Y)
 }
 
+#' @noRd
 get_coefficients.cov_fit_mediation <- function(object) {
   # initializations
   x <- object$x
@@ -505,8 +519,10 @@ boot_explanatory <- function(object, n) {
 
 ## bootstrap error terms from residuals of a mediation model fit
 
+#' @noRd
 boot_errors <- function(object, n) UseMethod("boot_errors")
 
+#' @noRd
 boot_errors.reg_fit_mediation <- function(object, n) {
   # initializations
   p_m <- length(object$m)
@@ -527,6 +543,7 @@ boot_errors.reg_fit_mediation <- function(object, n) {
   list(M = e_M, Y = e_Y)
 }
 
+#' @noRd
 boot_errors.cov_fit_mediation <- function(object, n) {
   # initializations
   x <- object$x

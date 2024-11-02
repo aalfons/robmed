@@ -77,12 +77,9 @@
 #' @param level  numeric; the confidence level of the confidence interval in
 #' the bootstrap test.  The default is to compute a 95\% confidence interval.
 #' @param type  a character string specifying the type of confidence interval
-#' to be computed in the bootstrap test.  Possible values are \code{"bca"} for
-#' the bias-corrected and accelerated (BCa) bootstrap, or \code{"perc"} for the
-#' percentile bootstrap.  The default is to compute BCa bootstrap intervals if
-#' the number of bootstrap replicates \code{R} is at least as large as the
-#' number of observations in the data, and percentile bootstrap intervals
-#' otherwise.
+#' to be computed in the bootstrap test.  Possible values are \code{"perc"}
+#' (the default) for the percentile bootstrap, or \code{"bca"} for the
+#' bias-corrected and accelerated (BCa) bootstrap.
 #' @param order  a character string specifying the order of approximation of
 #' the standard error in Sobel's test.  Possible values are \code{"first"}
 #' (the default) for a first-order approximation, and \code{"second"} for a
@@ -203,6 +200,10 @@
 #' easily be used with the pipe operator (\R's built-in \code{|>} or
 #' \pkg{magrittr}'s \code{\%>\%}).
 #'
+#' Since version 1.1.0, bias-corrected and accelerated (BCa) bootstrap
+#' confidence intervals are no longer recommended, and the option
+#' \code{type = "bca"} may disappear in the future.
+#'
 #' @author Andreas Alfons
 #'
 #' @references
@@ -262,39 +263,45 @@
 #' data("BSG2014")
 #'
 #' ## seed to be used for the random number generator
-#' seed <- 20211117
+#' seed <- 20241101
 #'
 #' ## simple mediation
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # The results in Alfons et al. (2022a) were obtained with an
-#' # older version of the random number generator.  To reproduce
-#' # those results, uncomment the two lines below.
-#' # RNGversion("3.5.3")
-#' # set.seed(20150601)
-#' # perform mediation analysis
 #' boot_simple <- test_mediation(TeamCommitment ~
 #'                                 m(TaskConflict) +
 #'                                   ValueDiversity,
-#'                               data = BSG2014)
+#'                               data = BSG2014,
+#'                               level = 0.9)
 #' summary(boot_simple)
+#'
+#' # The results in Alfons et al. (2022a) were obtained with an
+#' # older version of the random number generator and with BCa
+#' # bootstrap intervals (which are no longer recommended).
+#' # To reproduce those results, uncomment the lines below.
+#' # RNGversion("3.5.3")
+#' # set.seed(20150601)
+#' # boot_simple <- test_mediation(TeamCommitment ~
+#' #                                 m(TaskConflict) +
+#' #                                   ValueDiversity,
+#' #                               data = BSG2014,
+#' #                               level = 0.95,
+#' #                               type = "bca")
+#' # summary(boot_simple)
+#'
 #'
 #' \donttest{
 #' ## serial multiple mediators
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # perform mediation analysis
 #' boot_serial <- test_mediation(TeamScore ~
 #'                                 serial_m(TaskConflict,
 #'                                          TeamCommitment) +
 #'                                 ValueDiversity,
-#'                               data = BSG2014)
+#'                               data = BSG2014,
+#'                               level = 0.9)
 #' summary(boot_serial)
 #'
 #' ## parallel multiple mediators and control variables
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # perform mediation analysis
 #' boot_parallel <- test_mediation(TeamPerformance ~
 #'                                   parallel_m(ProceduralJustice,
 #'                                              InteractionalJustice) +
@@ -321,7 +328,8 @@ test_mediation <- function(object, ...) UseMethod("test_mediation")
 
 test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
                                    alternative = c("twosided", "less", "greater"),
-                                   R = 5000, level = 0.95, type = NULL,
+                                   R = 5000, level = 0.95,
+                                   type = c("perc", "bca"),
                                    order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
@@ -351,7 +359,8 @@ test_mediation.formula <- function(formula, data, test = c("boot", "sobel"),
 test_mediation.default <- function(object, x, y, m, covariates = NULL,
                                    test = c("boot", "sobel"),
                                    alternative = c("twosided", "less", "greater"),
-                                   R = 5000, level = 0.95, type = NULL,
+                                   R = 5000, level = 0.95,
+                                   type = c("perc", "bca"),
                                    order = c("first", "second"),
                                    method = c("regression", "covariance"),
                                    robust = TRUE, family = "gaussian",
@@ -375,7 +384,8 @@ test_mediation.default <- function(object, x, y, m, covariates = NULL,
 
 test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
                                          alternative = c("twosided", "less", "greater"),
-                                         R = 5000, level = 0.95, type = NULL,
+                                         R = 5000, level = 0.95,
+                                         type = c("perc", "bca"),
                                          order = c("first", "second"),
                                          ...) {
   ## initializations
@@ -404,19 +414,15 @@ test_mediation.fit_mediation <- function(object, test = c("boot", "sobel"),
               sprintf("using %d samples", R))
     }
     # check type of confidence intervals
-    have_type <- !is.null(type)
-    if (have_type) type <- match.arg(type, choices = c("bca", "perc"))
-    else type <- "bca"
+    type <- match.arg(type)
     # check type if BCa confidence intervals can be computed
     if (type == "bca") {
       n <- nrow(object$data)
       if (R < n) {
         type <- "perc"
-        if (have_type) {
-          warning(sprintf("number of bootstrap samples must be at least %d ", n),
-                  "to compute BCa confidence intervals; using percentile ",
-                  "confidence intervals")
-        }
+        warning(sprintf("number of bootstrap samples must be at least %d ", n),
+                "to compute BCa confidence intervals; using percentile ",
+                "confidence intervals")
       }
     }
     # perform bootstrap test
@@ -442,13 +448,15 @@ robmed <- function(..., test = "boot", method = "regression", robust = TRUE) {
 ## internal function for bootstrap test
 
 # generic function
+#' @noRd
 boot_test_mediation <- function(fit, ...) UseMethod("boot_test_mediation")
 
 # method for regression fits
+#' @noRd
 boot_test_mediation.reg_fit_mediation <- function(fit,
                                                   alternative = "twosided",
                                                   R = 5000, level = 0.95,
-                                                  type = "bca", ...) {
+                                                  type = "perc", ...) {
 
   # initializations
   p_x <- length(fit$x)                     # number of independent variables
@@ -938,10 +946,11 @@ boot_test_mediation.reg_fit_mediation <- function(fit,
 }
 
 # method for regression fits
+#' @noRd
 boot_test_mediation.cov_fit_mediation <- function(fit,
                                                   alternative = "twosided",
                                                   R = 5000, level = 0.95,
-                                                  type = "bca", ...) {
+                                                  type = "perc", ...) {
 
   # extract variable names and data
   x <- fit$x

@@ -56,6 +56,7 @@ robust_boot <- test_mediation(BSG2014,
                               x = "ValueDiversity",
                               y = "TeamCommitment",
                               m = "TaskConflict",
+                              level = 0.9,
                               robust = TRUE)
 confint(robust_boot, type = "boot")
 
@@ -64,6 +65,7 @@ ols_boot <- test_mediation(BSG2014,
                            x = "ValueDiversity",
                            y = "TeamCommitment",
                            m = "TaskConflict",
+                           level = 0.9,
                            robust = FALSE)
 confint(ols_boot, type = "data")
 

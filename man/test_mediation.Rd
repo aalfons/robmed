@@ -19,7 +19,7 @@ test_mediation(object, ...)
   alternative = c("twosided", "less", "greater"),
   R = 5000,
   level = 0.95,
-  type = NULL,
+  type = c("perc", "bca"),
   order = c("first", "second"),
   method = c("regression", "covariance"),
   robust = TRUE,
@@ -40,7 +40,7 @@ test_mediation(object, ...)
   alternative = c("twosided", "less", "greater"),
   R = 5000,
   level = 0.95,
-  type = NULL,
+  type = c("perc", "bca"),
   order = c("first", "second"),
   method = c("regression", "covariance"),
   robust = TRUE,
@@ -58,7 +58,7 @@ test_mediation(object, ...)
   alternative = c("twosided", "less", "greater"),
   R = 5000,
   level = 0.95,
-  type = NULL,
+  type = c("perc", "bca"),
   order = c("first", "second"),
   ...
 )
@@ -100,12 +100,9 @@ is to use 5000 bootstrap replicates.}
 the bootstrap test.  The default is to compute a 95\% confidence interval.}
 
 \item{type}{a character string specifying the type of confidence interval
-to be computed in the bootstrap test.  Possible values are \code{"bca"} for
-the bias-corrected and accelerated (BCa) bootstrap, or \code{"perc"} for the
-percentile bootstrap.  The default is to compute BCa bootstrap intervals if
-the number of bootstrap replicates \code{R} is at least as large as the
-number of observations in the data, and percentile bootstrap intervals
-otherwise.}
+to be computed in the bootstrap test.  Possible values are \code{"perc"}
+(the default) for the percentile bootstrap, or \code{"bca"} for the
+bias-corrected and accelerated (BCa) bootstrap.}
 
 \item{order}{a character string specifying the order of approximation of
 the standard error in Sobel's test.  Possible values are \code{"first"}
@@ -283,6 +280,10 @@ proposed correction of Salibian-Barrera & Zamar (2002).
 The default method takes a data frame its first argument so that it can
 easily be used with the pipe operator (\R's built-in \code{|>} or
 \pkg{magrittr}'s \code{\%>\%}).
+
+Since version 1.1.0, bias-corrected and accelerated (BCa) bootstrap
+confidence intervals are no longer recommended, and the option
+\code{type = "bca"} may disappear in the future.
 }
 \section{Mediation models}{
 
@@ -368,39 +369,45 @@ below, the \eqn{i_j} are intercepts and the \eqn{e_j} are random error terms.
 data("BSG2014")
 
 ## seed to be used for the random number generator
-seed <- 20211117
+seed <- 20241101
 
 ## simple mediation
-# set seed of the random number generator
 set.seed(seed)
-# The results in Alfons et al. (2022a) were obtained with an
-# older version of the random number generator.  To reproduce
-# those results, uncomment the two lines below.
-# RNGversion("3.5.3")
-# set.seed(20150601)
-# perform mediation analysis
 boot_simple <- test_mediation(TeamCommitment ~
                                 m(TaskConflict) +
                                   ValueDiversity,
-                              data = BSG2014)
+                              data = BSG2014,
+                              level = 0.9)
 summary(boot_simple)
+
+# The results in Alfons et al. (2022a) were obtained with an
+# older version of the random number generator and with BCa
+# bootstrap intervals (which are no longer recommended).
+# To reproduce those results, uncomment the lines below.
+# RNGversion("3.5.3")
+# set.seed(20150601)
+# boot_simple <- test_mediation(TeamCommitment ~
+#                                 m(TaskConflict) +
+#                                   ValueDiversity,
+#                               data = BSG2014,
+#                               level = 0.95,
+#                               type = "bca")
+# summary(boot_simple)
+
 
 \donttest{
 ## serial multiple mediators
-# set seed of the random number generator
 set.seed(seed)
-# perform mediation analysis
 boot_serial <- test_mediation(TeamScore ~
                                 serial_m(TaskConflict,
                                          TeamCommitment) +
                                 ValueDiversity,
-                              data = BSG2014)
+                              data = BSG2014,
+                              level = 0.9)
 summary(boot_serial)
 
 ## parallel multiple mediators and control variables
-# set seed of the random number generator
 set.seed(seed)
-# perform mediation analysis
 boot_parallel <- test_mediation(TeamPerformance ~
                                   parallel_m(ProceduralJustice,
                                              InteractionalJustice) +

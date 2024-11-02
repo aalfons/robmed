@@ -1,3 +1,14 @@
+Changes in robmed version 1.1.0
+
+    + Changed default bootstrap confidence intervals to simple percentile
+      intervals.
+
+    + Updated vignette and examples in help files.
+
+    + Fixed typos in help files.
+
+
+
 Changes in robmed version 1.0.2
 
     + Fixed typos and references in help files.

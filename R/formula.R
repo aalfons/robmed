@@ -142,7 +142,9 @@ convert_to_df <- function(x, row.names = NULL, optional = FALSE, ...) {
 }
 
 # convert "parallel_mediators" object to data frame
+#' @noRd
 as.data.frame.mediators <- convert_to_df
 
 # convert "covariates" object to data frame
+#' @noRd
 as.data.frame.covariates <- convert_to_df

@@ -49,6 +49,7 @@
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
 #'                        m = "TaskConflict",
+#'                        level = 0.9,
 #'                        control = ctrl)
 #' summary(boot)
 #'

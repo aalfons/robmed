@@ -51,6 +51,7 @@
 #'                               x = "ValueDiversity",
 #'                               y = "TeamCommitment",
 #'                               m = "TaskConflict",
+#'                               level = 0.9,
 #'                               robust = TRUE)
 #'
 #' # create plot for robust bootstrap test
@@ -62,6 +63,7 @@
 #'                            x = "ValueDiversity",
 #'                            y = "TeamCommitment",
 #'                            m = "TaskConflict",
+#'                            level = 0.9,
 #'                            robust = FALSE)
 #'
 #' # compare robust and OLS bootstrap tests

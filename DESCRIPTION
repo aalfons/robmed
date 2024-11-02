@@ -1,8 +1,8 @@
 Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
-Version: 1.0.2
-Date: 2023-06-16
+Version: 1.1.0
+Date: 2024-11-02
 Depends:
     R (>= 3.5.0),
     ggplot2 (>= 3.3.0),
@@ -34,4 +34,4 @@ Authors@R:
 Author: Andreas Alfons [aut, cre] (<https://orcid.org/0000-0002-2513-3788>), Nufer Y. Ates [ctb] (<https://orcid.org/0000-0003-4572-4101>, provided the BSG2014 data)
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2

@@ -57,16 +57,12 @@
 #'
 #' @examples
 #' data("BSG2014")
-#'
-#' \donttest{
-#' # BCa intervals are recommended, but take a while to run
 #' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
 #'                        m = "TaskConflict",
-#'                        type = "bca")
+#'                        level = 0.9)
 #' p_value(boot)
-#' }
 #'
 #' @keywords utilities
 #'
@@ -202,8 +198,10 @@ p_value.rq <- function(object, parm = NULL, ...) {
 ## internal function to compute p-values for estimated effects other than the
 ## indirect effect
 
+#' @noRd
 get_p_value_list <- function(object, ...) UseMethod("get_p_value_list")
 
+#' @noRd
 get_p_value_list.reg_fit_mediation <- function(object, boot = NULL, ...) {
   # initializations
   have_serial <- object$model == "serial"
@@ -265,6 +263,7 @@ get_p_value_list.reg_fit_mediation <- function(object, boot = NULL, ...) {
   p_value_list
 }
 
+#' @noRd
 get_p_value_list.cov_fit_mediation <- function(object, boot = NULL, ...) {
   # extract p-values
   if(is.null(boot)) {

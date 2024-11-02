@@ -74,7 +74,8 @@
 #' boot <- test_mediation(BSG2014,
 #'                        x = "ValueDiversity",
 #'                        y = "TeamCommitment",
-#'                        m = "TaskConflict")
+#'                        m = "TaskConflict",
+#'                        level = 0.9)
 #'
 #' # set up information for plot
 #' setup <- setup_density_plot(boot)

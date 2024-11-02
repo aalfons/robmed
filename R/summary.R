@@ -72,43 +72,49 @@ summary.reg_fit_mediation <- function(object, ...) object
 #' data("BSG2014")
 #'
 #' ## seed to be used for the random number generator
-#' seed <- 20211117
+#' seed <- 20241101
 #'
 #' ## simple mediation
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # The results in Alfons et al. (2022a) were obtained with an
-#' # older version of the random number generator.  To reproduce
-#' # those results, uncomment the two lines below.
-#' # RNGversion("3.5.3")
-#' # set.seed(20150601)
-#' # perform mediation analysis
 #' boot_simple <- test_mediation(TeamCommitment ~
 #'                                 m(TaskConflict) +
 #'                                   ValueDiversity,
-#'                               data = BSG2014)
+#'                               data = BSG2014,
+#'                               level = 0.9)
 #' summary(boot_simple)
 #' # the diagnostic plot is not shown when the summary is
 #' # computed, only when the resulting object is printed
 #' summary_simple <- summary(boot_simple)  # does not show plot
 #' summary_simple                          # shows output and plot
 #'
+#' # The results in Alfons et al. (2022a) were obtained with an
+#' # older version of the random number generator and with BCa
+#' # bootstrap intervals (which are no longer recommended).
+#' # To reproduce those results, uncomment the lines below.
+#' # RNGversion("3.5.3")
+#' # set.seed(20150601)
+#' # boot_simple <- test_mediation(TeamCommitment ~
+#' #                                 m(TaskConflict) +
+#' #                                   ValueDiversity,
+#' #                               data = BSG2014,
+#' #                               level = 0.95,
+#' #                               type = "bca")
+#' # summary(boot_simple)
+#'
+#'
 #' \donttest{
 #' ## serial multiple mediators
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # perform mediation analysis
 #' boot_serial <- test_mediation(TeamScore ~
 #'                                 serial_m(TaskConflict,
 #'                                          TeamCommitment) +
 #'                                 ValueDiversity,
-#'                               data = BSG2014)
+#'                               data = BSG2014,
+#'                               level = 0.9)
 #' summary(boot_serial)
 #'
 #' ## parallel multiple mediators and control variables
-#' # set seed of the random number generator
 #' set.seed(seed)
-#' # perform mediation analysis
 #' boot_parallel <- test_mediation(TeamPerformance ~
 #'                                   parallel_m(ProceduralJustice,
 #'                                              InteractionalJustice) +
@@ -169,9 +175,11 @@ summary.sobel_test_mediation <- function(object, ...) {
 
 ## internal function to compute significance of effects
 
+#' @noRd
 get_summary <- function(object, ...) UseMethod("get_summary")
 
 # ensure that the summary of NULL is NULL
+#' @noRd
 get_summary.NULL <- function(object, ...) NULL
 
 # for a list: get summary for each list element
@@ -181,6 +189,7 @@ get_summary.NULL <- function(object, ...) NULL
 # get_summary.list <- function(object, ...) lapply(object, get_summary, ...)
 # -----
 # dirty hack:
+#' @noRd
 get_summary.list <- function(object, ...) {
   lapply(object, function(x, ...) {
     # FIXME: this throws error when MM-estimator doesn't converge
@@ -197,6 +206,7 @@ get_summary.list <- function(object, ...) {
 
 # for a linear model: return coefficient matrix, regression standard error,
 # R-squared and F-test
+#' @noRd
 get_summary.lm <- function(object, ...) {
   # compute the usual summary and extract coefficient matrix
   summary <- summary(object)
@@ -218,6 +228,7 @@ get_summary.lm <- function(object, ...) {
 
 # for a robust linear model: return coefficient matrix, robust regression
 # standard error, robust R^2 and robust F-test
+#' @noRd
 get_summary.lmrob <- function(object, ...) {
   # compute the usual summary
   summary <- summary(object)
@@ -245,6 +256,7 @@ get_summary.lmrob <- function(object, ...) {
 }
 
 # for median regression: return list that contains only coefficient matrix
+#' @noRd
 get_summary.rq <- function(object, ...) {
   # compute the usual summary and extract coefficient matrix
   summary <- summary(object, se = "iid")
@@ -256,6 +268,7 @@ get_summary.rq <- function(object, ...) {
   result
 }
 
+#' @noRd
 get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   ## initializations
   x <- object$x
@@ -363,6 +376,7 @@ get_summary.reg_fit_mediation <- function(object, boot = NULL, ...) {
   result
 }
 
+#' @noRd
 get_summary.cov_fit_mediation <- function(object, boot = NULL, ...) {
   # extract variable names
   x <- object$x
