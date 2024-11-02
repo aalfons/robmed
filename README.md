@@ -22,6 +22,8 @@ More information can be found in our article:
 
 Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022a). A Robust Bootstrap Test for Mediation Analysis. *Organizational Research Methods*, **25**(3), 591--617. doi: [10.1177/1094428121999096](https://doi.org/10.1177/1094428121999096).
 
+Note that the defaults in `robmed` have since changed to use simple percentile bootstrap confidence intervals for the indirect effects (since version 1.1.0).
+
 
 ## Installation
 
