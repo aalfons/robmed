@@ -1061,7 +1061,7 @@ the random number generator in an object, as it will be needed in all examples
 for the purpose of replicating the results.
 %
 <<>>=
-seed <- 20241101
+seed <- 20150601
 @
 
 The following subsections provide examples for a simple mediation
@@ -1133,10 +1133,10 @@ and upper limits of the confidence interval (columns \code{Lower} and
 summary(robust_boot_simple)
 @
 %
-The above results are very similar to those reported in \citet{alfons22a},
-but they are not identical due to a change in the random number generator in
-\proglang{R}, the use of a different seed, and a change in the default type of
-bootstrap confidence intervals in \pkg{robmed} version~1.1.0.  Specifically,
+The above results are similar to those reported in \citet{alfons22a}, but
+they are not identical due to a change in the random number generator in
+\proglang{R} version~3.6.0 and a change in the default type of bootstrap
+confidence intervals in \pkg{robmed} version~1.1.0.  Specifically,
 the robust bootstrap test detects a significant indirect effect, as the
 confidence interval is strictly negative (albeit barely so at the 95\%
 confidence level).  This negative indirect effect is composed of a positive

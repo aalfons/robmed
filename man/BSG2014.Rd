@@ -139,16 +139,20 @@ data("BSG2014")
 summary(BSG2014)
 
 # scatterplot matrix for the variables included in the
-# illustrative mediation analysis of Alfons et al. (2022)
+# illustrative mediation analysis of Alfons et al. (2022a)
 x <- "ValueDiversity"
 y <- "TeamCommitment"
 m <- "TaskConflict"
 plot(BSG2014[, c(x, y, m)], pch = 21, bg = "black")
 }
 \references{
-Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) A Robust Bootstrap Test
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022a) A Robust Bootstrap Test
 for Mediation Analysis.  \emph{Organizational Research Methods},
 \bold{25}(3), 591--617.  doi:10.1177/1094428121999096.
+
+Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022b) Robust Mediation Analysis:
+The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
+\bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
 
 Blau, P.M. (1977) \emph{Inequality and Heterogeneity: A Primitive Theory of
 Social Structure}. New York, NY: Free Press.

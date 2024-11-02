@@ -53,35 +53,37 @@ Summarize results from (robust) mediation analysis for proper interpretation.
 data("BSG2014")
 
 ## seed to be used for the random number generator
-seed <- 20241101
+seed <- 20150601
 
 ## simple mediation
 set.seed(seed)
 boot_simple <- test_mediation(TeamCommitment ~
                                 m(TaskConflict) +
                                   ValueDiversity,
-                              data = BSG2014,
-                              level = 0.9)
+                              data = BSG2014)
 summary(boot_simple)
 # the diagnostic plot is not shown when the summary is
 # computed, only when the resulting object is printed
 summary_simple <- summary(boot_simple)  # does not show plot
 summary_simple                          # shows output and plot
 
+# depending on the seed of the random number generator, one
+# may get a p value slightly below or above the arbitrary
+# 5\% threshold
+p_value(boot_simple, parm = "indirect")
+
 # The results in Alfons et al. (2022a) were obtained with an
 # older version of the random number generator and with BCa
 # bootstrap intervals (which are no longer recommended).
 # To reproduce those results, uncomment the lines below.
 # RNGversion("3.5.3")
-# set.seed(20150601)
+# set.seed(seed)
 # boot_simple <- test_mediation(TeamCommitment ~
 #                                 m(TaskConflict) +
 #                                   ValueDiversity,
 #                               data = BSG2014,
-#                               level = 0.95,
 #                               type = "bca")
 # summary(boot_simple)
-
 
 \donttest{
 ## serial multiple mediators

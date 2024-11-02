@@ -284,9 +284,10 @@
 #' \code{\link{cov_Huber}()}, \code{\link{cov_ML}()}
 #'
 #' @examples
+#' data("BSG2014")
 #'
 #' ## seed to be used for the random number generator
-#' seed <- 20241101
+#' seed <- 20150601
 #'
 #' ## simple mediation
 #' set.seed(seed)
@@ -294,23 +295,26 @@
 #'                               m(TaskConflict) +
 #'                               ValueDiversity,
 #'                             data = BSG2014)
-#' boot_simple <- test_mediation(fit_simple, level = 0.9)
+#' boot_simple <- test_mediation(fit_simple)
 #' summary(boot_simple)
+#'
+#' # depending on the seed of the random number generator, one
+#' # may get a p value slightly below or above the arbitrary
+#' # 5% threshold
+#' p_value(boot_simple, parm = "indirect")
 #'
 #' # The results in Alfons et al. (2022a) were obtained with an
 #' # older version of the random number generator and with BCa
 #' # bootstrap intervals (which are no longer recommended).
 #' # To reproduce those results, uncomment the lines below.
 #' # RNGversion("3.5.3")
-#' # set.seed(20150601)
+#' # set.seed(seed)
 #' # fit_simple <- fit_mediation(TeamCommitment ~
 #' #                               m(TaskConflict) +
 #' #                               ValueDiversity,
 #' #                             data = BSG2014)
-#' # boot_simple <- test_mediation(fit_simple, level = 0.95,
-#' #                               type = "bca")
+#' # boot_simple <- test_mediation(fit_simple, type = "bca")
 #' # summary(boot_simple)
-#'
 #'
 #' \donttest{
 #' ## serial multiple mediators
