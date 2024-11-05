@@ -30,7 +30,8 @@ covariates <- c("C1", "C2")                # control variables
 R <- 100                                   # number of bootstrap samples
 level <- c(0.9, 0.95)                      # confidence level
 ci_type <- "perc"                          # type of confidence intervals
-ctrl <- reg_control(max_iterations = 500)  # for MM-regression estimator
+robust_ctrl <- MM_reg_control(max_iterations = 500)  # for MM-regression
+median_ctrl <- median_reg_control(algorithm = "fn")  # for median regression
 
 ## perform bootstrap tests
 boot_list <- list(
@@ -38,13 +39,14 @@ boot_list <- list(
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "boot", R = R, level = level[1], type = ci_type,
-                   method = "regression", robust = TRUE, control = ctrl)
+                   method = "regression", robust = TRUE, control = robust_ctrl)
   },
   median = {
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "boot", R = R, level = level[1], type = ci_type,
-                   method = "regression", robust = "median")
+                   method = "regression", robust = "median",
+                   control = median_ctrl)
   },
   # skewnormal = {
   #   set.seed(seed)
@@ -128,10 +130,10 @@ for (method in methods) {
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(boot$fit$robust, "MM")
-      expect_equal(boot$fit$control, ctrl)
+      expect_equal(boot$fit$control, robust_ctrl)
     } else if (method == "median") {
       expect_identical(boot$fit$robust, "median")
-      expect_null(boot$fit$control)
+      expect_equal(boot$fit$control, median_ctrl)
     } else {
       expect_false(boot$fit$robust)
       expect_null(boot$fit$control)

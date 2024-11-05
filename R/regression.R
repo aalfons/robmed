@@ -31,7 +31,7 @@ lm_fit <- function(x, y, intercept = TRUE) {
 }
 
 # MM regression
-lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
+lmrob_fit <- function(x, y, intercept = TRUE, control = MM_reg_control()) {
   # if requested, add constant for intercept
   if (intercept) {
     n <- nrow(x)
@@ -50,7 +50,8 @@ lmrob_fit <- function(x, y, intercept = TRUE, control = reg_control()) {
 }
 
 # quantile (median) regression
-rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
+rq_fit <- function(x, y, intercept = TRUE, tau = 0.5,
+                   control = median_reg_control()) {
   # summary() method requires data frame and formula to extract response and
   # predictor matrix
   data <- data.frame(y, x, check.names = FALSE)
@@ -61,8 +62,8 @@ rq_fit <- function(x, y, intercept = TRUE, tau = 0.5) {
     x <- cbind("(Intercept)" = rep.int(1, n), x)
   }
   # fit the linear model
-  fit <- rq.fit(x, y, tau = tau, method = "br")
-  fit$method <- "br"
+  fit <- rq.fit(x, y, tau = tau, method = control$method)
+  fit$method <- control$method
   # construct terms object from formula that specifies whether there is a
   # response and an intercept
   terms <- formula

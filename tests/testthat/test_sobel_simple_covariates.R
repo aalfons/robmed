@@ -26,7 +26,8 @@ x <- "X"                                   # independent variable
 y <- "Y"                                   # dependent variable
 m <- "M"                                   # mediator variable
 covariates <- c("C1", "C2")                # control variables
-ctrl <- reg_control(max_iterations = 500)  # for MM-regression estimator
+robust_ctrl <- MM_reg_control(max_iterations = 500)  # for MM-regression
+median_ctrl <- median_reg_control(algorithm = "fn")  # for median regression
 
 ## perform Sobel tests
 sobel_list <- list(
@@ -34,11 +35,12 @@ sobel_list <- list(
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "sobel", method = "regression", robust = TRUE,
-                   control = ctrl)
+                   control = robust_ctrl)
   },
   median = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   test = "sobel", method = "regression", robust = "median")
+                   test = "sobel", method = "regression", robust = "median",
+                   control = median_ctrl)
   },
   skewnormal = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
@@ -119,10 +121,10 @@ for (method in methods) {
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(sobel$fit$robust, "MM")
-      expect_equal(sobel$fit$control, ctrl)
+      expect_equal(sobel$fit$control, robust_ctrl)
     } else if (method == "median") {
       expect_identical(sobel$fit$robust, "median")
-      expect_null(sobel$fit$control)
+      expect_equal(sobel$fit$control, median_ctrl)
     } else {
       expect_false(sobel$fit$robust)
       expect_null(sobel$fit$control)

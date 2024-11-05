@@ -27,7 +27,8 @@ x <- "X"                     # independent variable
 y <- "Y"                     # dependent variable
 m <- c("M1", "M2")           # parallel mediator variables
 covariates <- c("C1", "C2")  # control variables
-max_iterations <- 500        # for MM-regression estimator
+max_iterations <- 500        # for MM-regression
+algorithm <- "fn"            # for median regression
 
 ## fit mediation models
 fit_list <- list(
@@ -39,7 +40,8 @@ fit_list <- list(
   },
   median = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                  model = "parallel", method = "regression", robust = "median")
+                  model = "parallel", method = "regression", robust = "median",
+                  algorithm = algorithm)
   },
   skewnormal = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
@@ -117,10 +119,10 @@ for (method in methods) {
     # robust or nonrobust fit
     if (method == "robust") {
       expect_identical(fit$robust, "MM")
-      expect_equal(fit$control, reg_control(max_iterations = max_iterations))
+      expect_equal(fit$control, MM_reg_control(max_iterations = max_iterations))
     } else if (method == "median") {
       expect_identical(fit$robust, "median")
-      expect_null(fit$control)
+      expect_equal(fit$control, median_reg_control(algorithm = algorithm))
     } else {
       expect_false(fit$robust)
       expect_null(fit$control)

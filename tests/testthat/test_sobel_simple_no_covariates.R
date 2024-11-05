@@ -24,7 +24,8 @@ x <- "X"                                    # independent variable
 y <- "Y"                                    # dependent variable
 m <- "M"                                    # mediator variable
 covariates <- character()                   # control variables
-reg_ctrl <- reg_control(efficiency = 0.95)  # for MM-regression estimator
+robust_ctrl <- MM_reg_control(efficiency = 0.95)     # for MM-regression
+median_ctrl <- median_reg_control(algorithm = "fn")  # for median regression
 cov_ctrl <- cov_control(prob = 0.9)         # for winsorized covariance matrix
 
 ## perform Sobel tests
@@ -33,11 +34,12 @@ sobel_list <- list(
     set.seed(seed)
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
                    test = "sobel", method = "regression", robust = TRUE,
-                   control = reg_ctrl)
+                   control = robust_ctrl)
   },
   median = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                   test = "sobel", method = "regression", robust = "median")
+                   test = "sobel", method = "regression", robust = "median",
+                   control = median_ctrl)
   },
   skewnormal = {
     test_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
@@ -118,10 +120,10 @@ for (method in methods) {
     # robust or nonrobust fit and test
     if (method == "robust") {
       expect_identical(sobel$fit$robust, "MM")
-      expect_equal(sobel$fit$control, reg_ctrl)
+      expect_equal(sobel$fit$control, robust_ctrl)
     } else if (method == "median") {
       expect_identical(sobel$fit$robust, "median")
-      expect_null(sobel$fit$control)
+      expect_equal(sobel$fit$control, median_ctrl)
     } else if (method == "winsorized") {
       expect_true(sobel$fit$robust)
       expect_equal(sobel$fit$control, cov_ctrl)

@@ -1,3 +1,12 @@
+Changes in robmed version 1.2.0
+
+    + fit_mediation() and test_mediation() can now pass down control arguments
+      for median regression (currently only the algorithm to be used).
+
+    + Updated unit tests for median regression.
+
+
+
 Changes in robmed version 1.1.0
 
     + Changed default bootstrap confidence intervals to simple percentile

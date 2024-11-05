@@ -25,7 +25,8 @@ x <- c("X1", "X2")           # independent variables
 y <- "Y"                     # dependent variable
 m <- "M"                     # mediator variable
 covariates <- character()    # control variables
-efficiency <- 0.95           # for MM-regression estimator
+efficiency <- 0.95           # for MM-regression
+algorithm <- "fn"            # for median regression
 
 ## fit mediation models
 fit_list <- list(
@@ -36,7 +37,8 @@ fit_list <- list(
   },
   median = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
-                  method = "regression", robust = "median")
+                  method = "regression", robust = "median",
+                  algorithm = algorithm)
   },
   skewnormal = {
     fit_mediation(test_data, x = x, y = y, m = m, covariates = covariates,
@@ -107,10 +109,10 @@ for (method in methods) {
     # robust or nonrobust fit
     if (method == "robust") {
       expect_identical(fit$robust, "MM")
-      expect_equal(fit$control, reg_control(efficiency = efficiency))
+      expect_equal(fit$control, MM_reg_control(efficiency = efficiency))
     } else if (method == "median") {
       expect_identical(fit$robust, "median")
-      expect_null(fit$control)
+      expect_equal(fit$control, median_reg_control(algorithm = algorithm))
     } else {
       expect_false(fit$robust)
       expect_null(fit$control)

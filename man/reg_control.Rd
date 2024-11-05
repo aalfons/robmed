@@ -2,9 +2,20 @@
 % Please edit documentation in R/control.R
 \name{reg_control}
 \alias{reg_control}
-\title{Tuning parameters for MM-regression}
+\alias{MM_reg_control}
+\alias{median_reg_control}
+\title{Tuning parameters for robust regression}
 \usage{
 reg_control(efficiency = 0.85, max_iterations = 200, tol = 1e-07, seed = NULL)
+
+MM_reg_control(
+  efficiency = 0.85,
+  max_iterations = 200,
+  tol = 1e-07,
+  seed = NULL
+)
+
+median_reg_control(algorithm = "br")
 }
 \arguments{
 \item{efficiency}{a numeric value giving the desired efficiency (defaults
@@ -18,27 +29,50 @@ convergence in various parts of the algorithm.}
 
 \item{seed}{optional initial seed for the random number generator (see
 \code{\link{.Random.seed}}).}
+
+\item{algorithm}{a character string specifying the algorithm for computing
+the median regression fit.  See argument \code{method} in
+\code{\link[quantreg]{rq}()} for options. If you experience an infinite
+loop with the default algorithm (\code{"br"}), you may want to try
+\code{"fn"}.}
 }
 \value{
-A list of tuning parameters as returned by
+For \code{MM_reg_control()} and \code{reg_control()}, a list of control
+parameters for the MM-estimator of regression as returned by
 \code{\link[robustbase]{lmrob.control}()}.
+
+For \code{median_reg_control()}, a list of control parameters for median
+regression.
 }
 \description{
-Obtain a list with tuning paramters for \code{\link[robustbase]{lmrob}()}.
+Obtain a list with tuning paramters for the robust MM-estimator of
+regression from \code{\link[robustbase]{lmrob}()} or median regression
+from \code{\link[quantreg]{rq}()}.
+}
+\details{
+Prior to version 1.2.0, the MM-estimator of regression was the only type
+of robust regression in \pkg{robmed} that supported control parameters.
+Starting with version 1.2.0, control parameters can also be passed to median
+regression, specifically the type of algorithm to be used. Function
+\code{reg_control()} is an alias for \code{MM_reg_control()} for backwards
+compatibility, but it is now recommended to use \code{MM_reg_control()} when
+performing MM-regression and \code{median_reg_control()} when performing
+median regression.
 }
 \note{
-This is a simplified wrapper function for
-\code{\link[robustbase]{lmrob.control}()}, as the latter requires detailed
-knowledge of the MM-type regression algorithm.  Currently only 95\%, 90\%,
-85\% (the default) and 80\% efficiency are supported.  For other values,
-please specify the corresponding tuning parameters in
-\code{\link[robustbase]{lmrob.control}()} directly.
+\code{MM_reg_control()} and its alias \code{reg_control()} is a
+simplified wrapper function for \code{\link[robustbase]{lmrob.control}()},
+as the latter requires detailed knowledge of the algorithm for the
+MM-estimator of regression.  Currently only 95\%, 90\%, 85\% (the default)
+and 80\% efficiency are supported.  For other values, please specify the
+corresponding tuning parameters in \code{\link[robustbase]{lmrob.control}()}
+directly.
 }
 \examples{
 data("BSG2014")
 
 # run fast-and-robust bootstrap test
-ctrl <- reg_control(efficiency = 0.95)
+ctrl <- MM_reg_control(efficiency = 0.95)
 boot <- test_mediation(BSG2014,
                        x = "ValueDiversity",
                        y = "TeamCommitment",
@@ -56,6 +90,9 @@ Statistics}, \bold{15}(2), 414--427.  doi:10.1198/106186006x113629.
 Yohai, V.J. (1987) High Breakdown-Point and High Efficiency Estimates for
 Regression. \emph{The Annals of Statistics}, \bold{15}(20), 642--656.
 doi:10.1214/aos/1176350366.
+
+Koenker, R.W. (2005) \emph{Quantile Regression}. Camebridge University
+Press.
 }
 \seealso{
 \code{\link[robustbase]{lmrob}()},
