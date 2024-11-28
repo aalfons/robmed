@@ -14,5 +14,24 @@ bibentry(
   number  = "13",
   pages   = "1--45",
   doi     = "10.18637/jss.v103.i13",
-  header  = "To cite robmed in publications use:"
+  header  = "To cite robmed in publications, please use:"
+)
+
+bibentry(
+  bibtype = "Article",
+  title   = "A robust bootstrap test for mediation analysis",
+  author  = c(person(given = "Andreas",
+                     family = "Alfons",
+                     email = "alfons@ese.eur.nl"),
+              person(given = c("N{\\\"u}fer", "Y."),
+                     family = "Ate\\c{s}"),
+              person(given = c("Patrick", "J.", "F."),
+                     family = "Groenen")),
+  journal = "Organizational Research Methods",
+  year    = "2022",
+  volume  = "25",
+  number  = "3",
+  pages   = "591--617",
+  doi     = "10.1177/1094428121999096",
+  header  = "To cite the underlying robust bootstrap methodology, please use:"
 )
