@@ -1,7 +1,7 @@
 Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
-Version: 1.2.0
+Version: 1.2.1
 Date: 2024-12-09
 Depends:
     R (>= 3.5.0),

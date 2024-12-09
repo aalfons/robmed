@@ -1,5 +1,10 @@
 Changes in robmed version 1.2.0
 
+    + Fixed CITATION info.
+
+
+Changes in robmed version 1.2.0
+
     + fit_mediation() and test_mediation() can now pass down control arguments
       for median regression (currently only the algorithm to be used).
 
