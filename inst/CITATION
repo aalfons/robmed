@@ -14,7 +14,7 @@ bibentry(
   number  = "13",
   pages   = "1--45",
   doi     = "10.18637/jss.v103.i13",
-  header  = "To cite robmed in publications, please use:"
+  header  = "To cite package robmed in publications, please use:"
 )
 
 bibentry(
