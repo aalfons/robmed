@@ -1,8 +1,8 @@
 Package: robmed
 Type: Package
 Title: (Robust) Mediation Analysis
-Version: 1.2.1
-Date: 2025-02-08
+Version: 1.2.2
+Date: 2025-02-28
 Depends:
     R (>= 3.5.0),
     ggplot2 (>= 3.3.0),
@@ -28,10 +28,10 @@ Authors@R:
              email = "alfons@ese.eur.nl", 
              role = c("aut", "cre"),
              comment = c(ORCID = "0000-0002-2513-3788")), 
-      person("Nufer Y.", "Ates", role = "ctb", 
+      person("Nufer Y.", "Ates", role = "dtc", 
              comment = c(ORCID = "0000-0003-4572-4101", 
                          "provided the BSG2014 data")))
-Author: Andreas Alfons [aut, cre] (<https://orcid.org/0000-0002-2513-3788>), Nufer Y. Ates [ctb] (<https://orcid.org/0000-0003-4572-4101>, provided the BSG2014 data)
+Author: Andreas Alfons [aut, cre] (<https://orcid.org/0000-0002-2513-3788>), Nufer Y. Ates [dtc] (<https://orcid.org/0000-0003-4572-4101>, provided the BSG2014 data)
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
 RoxygenNote: 7.3.2
