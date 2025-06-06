@@ -82,10 +82,10 @@
 #'   \item{\code{ValueDiversity}}{Using the short Schwartz’s value survey
 #'   (Lindeman & Verkasalo, 2005), the team members rated ten items on the
 #'   importance of certain values (1 = not important, 10 = highly important).
-#'   For each value item, the coefficient of variation of the individual
-#'   responses across team members was computed, and the resulting coefficients
-#'   of variation were averaged across the value items.  Value diversity was
-#'   measured in the first survey (before the first game).}
+#'   For each value item, the standard deviation of the individual responses
+#'   across team members was computed, and the resulting standard deviations
+#'   were averaged across the value items.  Value diversity was measured in
+#'   the first survey (before the first game).}
 #'
 #'   \item{\code{ProceduralJustice}}{Based on the intra-unit procedural justice
 #'   climate scale of Li & Cropanzano (2009), the team members indicated the
@@ -113,8 +113,8 @@
 #'   games).}
 #'
 #'   \item{\code{AgeDiversity}}{Following Harrison & Klein (2007), age
-#'   diversity was operationalized by the coefficient of variation of the
-#'   team members' ages.}
+#'   diversity was operationalized by the standard deviation of the team
+#'   members' ages.}
 #'
 #'   \item{\code{GenderDiversity}}{Gender diversity was measured with Blau's
 #'   index, \eqn{1 - \sum_{j} p_{j}^{2}}{1 - the sum of the squared values of
