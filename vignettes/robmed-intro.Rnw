@@ -843,9 +843,9 @@ from the console with \code{?BSG2014}.
   \item{\code{ValueDiversity}:}
   Using the short Schwartz’s value survey \citep{lindeman05}, the team members
   rated ten items on the importance of certain values (1~= not important, 10 =
-  highly important).  For each value item, the coefficient of variation of the
+  highly important).  For each value item, the standard deviation of the
   individual responses across team members was computed, and the resulting
-  coefficients of variation were averaged across the value items.
+  standard deviations were averaged across the value items.
   %
   \item{\code{TaskConflict}:} Using the intra-group conflict scale of
   \citet{jehn95}, the team members rated four items on the presence of conflict
@@ -873,7 +873,7 @@ from the console with \code{?BSG2014}.
   among team members.
   %
   \item{\code{AgeDiversity}:} Following \citet{harrison07}, age diversity was
-  operationalized by the coefficient of variation of the team members' ages.
+  operationalized by the standard deviation of the team members' ages.
   %
   \item{\code{GenderDiversity}:} Gender diversity was measured with Blau's
   index, $1 - \sum_{j} p_{j}^{2}$, where $p_{j}$ is the proportion of team
@@ -1143,10 +1143,10 @@ confidence level).  This negative indirect effect is composed of a positive
 effect of value diversity on task conflict (see the output of the first
 regression model), and a negative effect of task conflict on team
 commitment (see the output of the second regression model).  For further
-interpretation, recall that value diversity is measured as a coefficient of
-variation averaged over various value dimensions, and that task conflict and
+interpretation, recall that value diversity is measured as a standard
+deviation averaged over various value dimensions, and that task conflict and
 team commitment are measured as averages of items on a 5-point rating scale.
-On average, an increase in value diversity by one relative standard deviation
+On average, an increase in value diversity by one standard deviation
 explains an increase in task conflict by about 0.32 points, which in turn
 explains a decrease in team commitment by about 0.11 points.  Furthermore, we
 observe that the direct effect of value diversity on team commitment is not
