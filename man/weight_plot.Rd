@@ -84,6 +84,10 @@ weight_plot(fit, outcome = "TaskConflict") +
 Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022) Robust Mediation Analysis:
 The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
 \bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
+
+Alfons, A. and Schley, D.R. (2025) \emph{Robust Mediation Analysis: What We
+Talk About When We Talk About Robustness}.  PsyArXiV,
+doi:10.31234/osf.io/2hqdy.
 }
 \seealso{
 \code{\link{fit_mediation}()}, \code{\link{test_mediation}()},

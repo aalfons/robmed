@@ -19,7 +19,7 @@ bibentry(
 
 bibentry(
   bibtype = "Article",
-  title   = "A robust bootstrap test for mediation analysis",
+  title   = "A Robust Bootstrap Test for Mediation Analysis",
   author  = c(person(given = "Andreas",
                      family = "Alfons",
                      email = "alfons@ese.eur.nl"),
@@ -38,14 +38,14 @@ bibentry(
 
 bibentry(
   bibtype = "Misc",
-  title   = "Robust mediation analysis: What we talk about when we talk about
-robustness",
+  title   = "Robust Mediation Analysis: What We Talk About When We Talk About
+Robustness",
   author  = c(person(given = "Andreas",
                      family = "Alfons",
                      email = "alfons@ese.eur.nl"),
               person(given = c("Dan", "R."),
                      family = "Schley")),
-  year    = "2024",
+  year    = "2025",
   howpublished  = "PsyArXiv",
   doi     = "10.31234/osf.io/2hqdy",
   header  = "Further discussion on the underlying methodology can be found in:"
