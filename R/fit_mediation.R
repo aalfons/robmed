@@ -270,7 +270,7 @@
 #'
 #' Alfons, A. and Schley, D.R. (2025) \emph{Robust Mediation Analysis: What We
 #' Talk About When We Talk About Robustness}.  PsyArXiV,
-#' doi:10.31234/osf.io/2hqdy.
+#' doi:10.31234/osf.io/2hqdy_v2.
 #'
 #' Azzalini, A. and Arellano-Valle, R. B. (2013) Maximum Penalized Likelihood
 #' Estimation for Skew-Normal and Skew-t Distributions.  \emph{Journal of

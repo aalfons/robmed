@@ -15,7 +15,7 @@ Alfons, A., Ates, N.Y., & Groenen, P.J.F. (2022b). Robust Mediation Analysis: Th
 
 Further discussion on robust mediation analysis can be found in:
 
-A. Alfons and D.R. Schley (2025). *Robust Mediation Analysis: What We Talk About When We Talk About Robustness*. PsyArXiv. doi: [10.31234/osf.io/2hqdy](https://doi.org/10.31234/osf.io/2hqdy).
+A. Alfons and D.R. Schley (2025). *Robust Mediation Analysis: What We Talk About When We Talk About Robustness*. PsyArXiv. doi: [10.31234/osf.io/2hqdy_v2](https://doi.org/10.31234/osf.io/2hqdy_v2).
 
 
 ## About ROBMED

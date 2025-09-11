@@ -47,6 +47,6 @@ Robustness",
                      family = "Schley")),
   year    = "2025",
   howpublished  = "PsyArXiv",
-  doi     = "10.31234/osf.io/2hqdy",
+  doi     = "10.31234/osf.io/2hqdy_v2",
   header  = "Further discussion on the underlying methodology can be found in:"
 )

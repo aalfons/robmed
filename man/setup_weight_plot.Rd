@@ -78,7 +78,7 @@ The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
 
 Alfons, A. and Schley, D.R. (2025) \emph{Robust Mediation Analysis: What We
 Talk About When We Talk About Robustness}.  PsyArXiV,
-doi:10.31234/osf.io/2hqdy.
+doi:10.31234/osf.io/2hqdy_v2.
 }
 \seealso{
 \code{\link{fit_mediation}()}, \code{\link{test_mediation}()},

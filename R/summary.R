@@ -68,7 +68,7 @@ summary.reg_fit_mediation <- function(object, ...) object
 #'
 #' Alfons, A. and Schley, D.R. (2025) \emph{Robust Mediation Analysis: What We
 #' Talk About When We Talk About Robustness}.  PsyArXiV,
-#' doi:10.31234/osf.io/2hqdy.
+#' doi:10.31234/osf.io/2hqdy_v2.
 #'
 #' @seealso \code{\link{test_mediation}()}, \code{\link{weight_plot}()}
 #'

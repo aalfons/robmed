@@ -145,7 +145,7 @@
 #'
 #' Alfons, A. and Schley, D.R. (2025) \emph{Robust Mediation Analysis: What We
 #' Talk About When We Talk About Robustness}.  PsyArXiV,
-#' doi:10.31234/osf.io/2hqdy.
+#' doi:10.31234/osf.io/2hqdy_v2.
 #'
 #' Blau, P.M. (1977) \emph{Inequality and Heterogeneity: A Primitive Theory of
 #' Social Structure}. New York, NY: Free Press.
