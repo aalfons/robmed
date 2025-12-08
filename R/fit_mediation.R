@@ -310,18 +310,9 @@
 #' # 5% threshold
 #' p_value(boot_simple, parm = "indirect")
 #'
-#' # The results in Alfons et al. (2022a) were obtained with an
-#' # older version of the random number generator and with BCa
-#' # bootstrap intervals (which are no longer recommended).
-#' # To reproduce those results, uncomment the lines below.
-#' # RNGversion("3.5.3")
-#' # set.seed(seed)
-#' # fit_simple <- fit_mediation(TeamCommitment ~
-#' #                               m(TaskConflict) +
-#' #                               ValueDiversity,
-#' #                             data = BSG2014)
-#' # boot_simple <- test_mediation(fit_simple, type = "bca")
-#' # summary(boot_simple)
+#' # Note that the results in Alfons et al. (2022a) were obtained
+#' # with an older version of the random number generator and with
+#' # BCa bootstrap intervals (which are no longer recommended).
 #'
 #' \donttest{
 #' ## serial multiple mediators
@@ -331,7 +322,7 @@
 #'                                        TeamCommitment) +
 #'                               ValueDiversity,
 #'                             data = BSG2014)
-#' boot_serial <- test_mediation(fit_serial, level = 0.9)
+#' boot_serial <- test_mediation(fit_serial)
 #' summary(boot_serial)
 #'
 #' ## parallel multiple mediators and control variables
