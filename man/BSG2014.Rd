@@ -8,24 +8,33 @@
 A data frame with 89 observations on the following 13 variables.
 \describe{
 
-  \item{\code{ProcessConflict}}{Based on Shah & Jehn (1993), the team
-  members rated three items on the presence of conflict related to the
-  process of working together, using a 5-point scale (1 = none, 5 = a lot).
-  The individual responses were aggregated by taking the average across
-  items and team members.  Process conflict was measured in the second
-  survey (between the two games).}
+  \item{\code{AgeDiversity}}{Following Harrison & Klein (2007), age
+  diversity was operationalized by the standard deviation of the team
+  members' ages.  Age diversity was measured in the first survey (before
+  the first game).}
 
-  \item{\code{SharedExperience}}{As teams were randomly formed, no prior
-  shared group experience is expected, and shared group experience and
-  training is developed during the first game for the second game.  Hence
-  the team performance score on the first game is used as a proxy for the
-  level of shared group experience and training.  Those scores were computed
-  through a mix of five objective performance measures: return on equity,
-  earnings-per-share, stock price, credit rating, and image rating.  The
-  computation of the scores is handled by the simulation game software, and
-  details can be found in Mathieu & Rapp (2009).  The scores ranged from 57
-  to 111, and they were communicated to the teams only after the third
-  survey.}
+  \item{\code{GenderDiversity}}{Gender diversity was operationalized with
+  Blau's index, \eqn{1 - \sum_{j} p_{j}^{2}}{1 - the sum of the squared
+  values of p_j}, where \eqn{p_{j}}{p_j} is the proportion of team members
+  in the \eqn{j}{j}-th category (Blau, 1977).  Gender diversity was measured
+  in the first survey (before the first game).}
+
+  \item{\code{ValueDiversity}}{Using the short Schwartz’s value survey
+  (Lindeman & Verkasalo, 2005), the team members rated ten items on the
+  importance of certain values (1 = not important, 10 = highly important).
+  For each value item, the standard deviation of the individual responses
+  across team members was computed, and the resulting standard deviations
+  were averaged across the value items.  Value diversity was measured in
+  the first survey (before the first game).}
+
+  \item{\code{SharedLeadership}}{Following Carson, Tesluk & Marrone (2007),
+  every team member assessed each of their peers on the question of
+  \sQuote{To what degree does your team rely on this individual for
+  leadership?} using a 5-point scale (1 = not at all, 5 = to a very large
+  extent).  The leadership ratings were aggregated by taking the sum and
+  dividing it by the number of pairwise relationships among team members.
+  Shared leadership was measured in the second survey (between the two
+  games).}
 
   \item{\code{TaskConflict}}{Using the intra-group conflict scale of Jehn
   (1995), the team members rated four items on the presence of conflict
@@ -34,19 +43,12 @@ A data frame with 89 observations on the following 13 variables.
   items and team members.  Task conflict was measured in the second survey
   (between the two games).}
 
-  \item{\code{TeamCommitment}}{The team members indicated the extent to
-  which they agree or disagree with four items on commitment to the team,
-  which are based on Mowday, Steers & Porter (1979), using a 5-point scale
-  (1 = strongly disagree, 5 = strongly agree).  The individual responses
-  were aggregated by taking the average across items and team members.
-  Team commitment was measured in the third survey (after the second game).}
-
-  \item{\code{TeamPerformance}}{Following Hackman (1986), the team members
-  indicated the extent to which they agree or disagree with four items on
-  the team's functioning, using a 5-point scale (1 = strongly disagree, 5 =
-  strongly agree).  The individual responses were aggregated by taking the
-  average across items and team members.  Subjective team performance was
-  measured in the third survey (after the second game).}
+  \item{\code{ProcessConflict}}{Based on Shah & Jehn (1993), the team
+  members rated three items on the presence of conflict related to the
+  process of working together, using a 5-point scale (1 = none, 5 = a lot).
+  The individual responses were aggregated by taking the average across
+  items and team members.  Process conflict was measured in the second
+  survey (between the two games).}
 
   \item{\code{TMS}}{Transactive memory systems (TMS) are defined as shared
   systems that people in relationships develop for encoding, storing, and
@@ -59,14 +61,6 @@ A data frame with 89 observations on the following 13 variables.
   individual responses were aggregated by taking the average across all 15
   items and team members.  TMS was measured in the second survey (between
   the two games).}
-
-  \item{\code{ValueDiversity}}{Using the short Schwartz’s value survey
-  (Lindeman & Verkasalo, 2005), the team members rated ten items on the
-  importance of certain values (1 = not important, 10 = highly important).
-  For each value item, the standard deviation of the individual responses
-  across team members was computed, and the resulting standard deviations
-  were averaged across the value items.  Value diversity was measured in
-  the first survey (before the first game).}
 
   \item{\code{ProceduralJustice}}{Based on the intra-unit procedural justice
   climate scale of Li & Cropanzano (2009), the team members indicated the
@@ -84,23 +78,31 @@ A data frame with 89 observations on the following 13 variables.
   members.  Interactional justice was measured in the third survey (after
   the second game).}
 
-  \item{\code{SharedLeadership}}{Following Carson, Tesluk & Marrone (2007),
-  every team member assessed each of their peers on the question of
-  \sQuote{To what degree does your team rely on this individual for
-  leadership?} using a 5-point scale (1 = not at all, 5 = to a very large
-  extent).  The leadership ratings were aggregated by taking the sum and
-  dividing it by the number of pairwise relationships among team members.
-  Shared leadership was measured in the second survey (between the two
-  games).}
+  \item{\code{TeamPerformance}}{Following Hackman (1986), the team members
+  indicated the extent to which they agree or disagree with four items on
+  the team's functioning, using a 5-point scale (1 = strongly disagree, 5 =
+  strongly agree).  The individual responses were aggregated by taking the
+  average across items and team members.  Subjective team performance was
+  measured in the third survey (after the second game).}
 
-  \item{\code{AgeDiversity}}{Following Harrison & Klein (2007), age
-  diversity was operationalized by the standard deviation of the team
-  members' ages.}
+  \item{\code{TeamCommitment}}{The team members indicated the extent to
+  which they agree or disagree with four items on commitment to the team,
+  which are based on Mowday, Steers & Porter (1979), using a 5-point scale
+  (1 = strongly disagree, 5 = strongly agree).  The individual responses
+  were aggregated by taking the average across items and team members.
+  Team commitment was measured in the third survey (after the second game).}
 
-  \item{\code{GenderDiversity}}{Gender diversity was measured with Blau's
-  index, \eqn{1 - \sum_{j} p_{j}^{2}}{1 - the sum of the squared values of
-  p_j}, where \eqn{p_{j}}{p_j} is the proportion of team members in the
-  \eqn{j}{j}-th category (Blau, 1977).}
+  \item{\code{SharedExperience}}{As teams were randomly formed, no prior
+  shared group experience is expected, and shared group experience and
+  training is developed during the first game for the second game.  Hence
+  the team performance score on the first game is used as a proxy for the
+  level of shared group experience and training.  Those scores were computed
+  through a mix of five objective performance measures: return on equity,
+  earnings-per-share, stock price, credit rating, and image rating.  The
+  computation of the scores is handled by the simulation game software, and
+  details can be found in Mathieu & Rapp (2009).  The scores ranged from 57
+  to 111, and they were communicated to the teams only after the third
+  survey.}
 
   \item{\code{TeamScore}}{The team performance scores on the second game
   were computed at the end of the simulation through a mix of five objective
@@ -134,6 +136,19 @@ were aggregated to the team level.  Leaving out teams with less than 50
 percent response rate yields \eqn{n = 89} teams.  Only a small subset of the
 collected variables are included here.
 }
+\note{
+In version 1.3.0, the order of the variables was changed to reflect the
+order in which they were collected. Moreover, the variables
+\code{ProcessConflict} and \code{TeamCommitment} were corrected to contain
+the measurement from the second and third survey, respectively, as
+documented. In earlier versions, \code{ProcessConflict} mistakenly contained
+the measurement from the third survey, and vice versa \code{TeamCommitment}
+contained the measurement from the second survey. Furthermore, the variable
+\code{SharedLeadership} was corrected to be computed as documented. In
+earlier versions, each combination of team members was by mistake included
+twice in the sum, meaning that values are now half of those from earlier
+versions.
+}
 \examples{
 data("BSG2014")
 summary(BSG2014)
@@ -154,9 +169,9 @@ Alfons, A., Ates, N.Y. and Groenen, P.J.F. (2022b) Robust Mediation Analysis:
 The \R Package \pkg{robmed}.  \emph{Journal of Statistical Software},
 \bold{103}(13), 1--45.  doi:10.18637/jss.v103.i13.
 
-Alfons, A. and Schley, D.R. (2025) \emph{Robust Mediation Analysis: What We
-Talk About When We Talk About Robustness}.  PsyArXiV,
-doi:10.31234/osf.io/2hqdy_v2.
+Alfons, A. and Schley, D.R. (2025) Robust Mediation Analysis: What We
+Talk About When We Talk About Robustness.  \emph{WIREs Computational
+Statistics}, \bold{17}(4), e70051.  doi:10.1002/wics.70051.
 
 Blau, P.M. (1977) \emph{Inequality and Heterogeneity: A Primitive Theory of
 Social Structure}. New York, NY: Free Press.

@@ -37,7 +37,7 @@ bibentry(
 )
 
 bibentry(
-  bibtype = "Misc",
+  bibtype = "Article",
   title   = "Robust Mediation Analysis: What We Talk About When We Talk About
 Robustness",
   author  = c(person(given = "Andreas",
@@ -45,8 +45,11 @@ Robustness",
                      email = "alfons@ese.eur.nl"),
               person(given = c("Dan", "R."),
                      family = "Schley")),
+  journal = "WIREs Computational Statistics",
   year    = "2025",
-  howpublished  = "PsyArXiv",
-  doi     = "10.31234/osf.io/2hqdy_v2",
+  volume  = "17",
+  number  = "4",
+  pages   = "e70051",
+  doi     = "10.1002/wics.70051",
   header  = "Further discussion on the underlying methodology can be found in:"
 )

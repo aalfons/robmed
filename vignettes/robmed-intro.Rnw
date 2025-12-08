@@ -1129,7 +1129,7 @@ sample mean of the bootstrap replicates; column \code{Boot}), and the lower
 and upper limits of the confidence interval (columns \code{Lower} and
 \code{Upper}, respectively).
 %
-<<summary, fig.width=5, fig.height=4.5, out.width="0.67\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
+<<summary, warning=FALSE, fig.width=5, fig.height=4.5, out.width="0.67\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 summary(robust_boot_simple)
 @
 %
@@ -1148,7 +1148,7 @@ deviation averaged over various value dimensions, and that task conflict and
 team commitment are measured as averages of items on a 5-point rating scale.
 On average, an increase in value diversity by one standard deviation
 explains an increase in task conflict by about 0.32 points, which in turn
-explains a decrease in team commitment by about 0.11 points.  Furthermore, we
+explains a decrease in team commitment by about 0.12 points.  Furthermore, we
 observe that the direct effect of value diversity on team commitment is not
 significantly different from 0, meaning that value diversity affects team
 commitment only via the indirect path through task conflict. In the typology
@@ -1290,7 +1290,7 @@ effect.  It also adds vertical lines for the point estimates and illustrates
 the confidence intervals by shaded areas.  The plot resulting from the
 following command is displayed in Figure~\ref{fig:density}.
 %
-<<density, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
+<<density, warning=FALSE, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
 density_plot(boot_list)
 @
 
@@ -1303,7 +1303,7 @@ is based on those two effects.  Nevertheless, argument \code{parm} can be used
 to specify which effects to plot.  Figure~\ref{fig:ci} contains the plot
 created by the command below.
 %
-<<ci, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="t!">>=
+<<ci, warning=FALSE, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="t!">>=
 ci_plot(boot_list, parm = c("a", "b", "Direct", "Indirect"))
 @
 
@@ -1328,7 +1328,7 @@ mediator on the independent variable.  As the independent variable is the only
 explanatory variable in this regression model, the plot also adds lines
 representing the respective regression coefficients.
 %
-<<ellipse, fig.width=5, fig.height=3.5, out.width="0.68\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
+<<ellipse, warning=FALSE, fig.width=5, fig.height=3.5, out.width="0.68\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 ellipse_plot(boot_list, horizontal = "ValueDiversity",
              vertical = "TaskConflict")
 @
@@ -1398,16 +1398,15 @@ f_serial <- TeamScore ~ serial_m(TaskConflict, TeamCommitment) +
 %
 Function \code{test_mediation()} is then called in the same way as in the
 previous section to compare the robust bootstrap procedure of \citet{alfons22a}
-with the nonrobust OLS bootstrap, but here we use confidence level 90\% for the
-confidence intervals of indirect effects.
+with the nonrobust OLS bootstrap.
 %
 <<cache=TRUE>>=
 set.seed(seed)
 robust_boot_serial <- test_mediation(f_serial, data = BSG2014,
-                                     level = 0.9, robust = TRUE)
+                                     robust = TRUE)
 set.seed(seed)
 ols_boot_serial <- test_mediation(f_serial, data = BSG2014,
-                                  level = 0.9, robust = FALSE)
+                                  robust = FALSE)
 @
 
 The output of \code{summary()} looks very similar to that of the previous
@@ -1434,7 +1433,7 @@ investigate deviations from normality assumptions that could explain the
 differences in results for the two methods.  The plot created with the
 commands below is shown in Figure~\ref{fig:weight}.
 %
-<<weight, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a serial multiple mediator model.">>=
+<<weight, warning=FALSE, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a serial multiple mediator model.">>=
 weight_plot(robust_boot_serial) +
   scale_color_manual("", values = c("black", "#00BFC4")) +
   theme(legend.position = "top")
@@ -1517,7 +1516,7 @@ the partial residuals of team performance against the independent variable
 shared leadership.  Figure~\ref{fig:ellipse-partial} contains the resulting
 plot, which clearly visualizes the noisy data points.
 %
-<<ellipse-partial, fig.width=5, fig.height=3.875, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
+<<ellipse-partial, warning=FALSE, fig.width=5, fig.height=3.875, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
 ellipse_plot(robust_boot_parallel, horizontal = "SharedLeadership",
              vertical = "TeamPerformance", partial = TRUE)
 @
@@ -1835,7 +1834,7 @@ Finally, we display the summary of the robust bootstrap test for the parallel
 multiple mediator model with control variables from Section~\ref{sec:parallel}.
 Figure~\ref{fig:summary-parallel} contains the resulting diagnostic plot.
 %
-<<summary-parallel, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
+<<summary-parallel, warning=FALSE, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
 summary(robust_boot_parallel)
 @
 \newpage  % make sure affiliation is printed in full after diagnostic plot
