@@ -101,6 +101,7 @@
 #' @keywords hplot
 #'
 #' @import ggplot2
+#' @importFrom rlang .data
 #' @export
 
 ci_plot <- function(object, ...) UseMethod("ci_plot")
@@ -173,17 +174,17 @@ ci_plot.setup_ci_plot <- function(object, ...) {
   have_p_value <- !is.null(object$p_value)
   # define aesthetic mapping for confidence interval
   if (have_methods) {
-    mapping_ci <- aes_string(x = "Method", y = "Estimate",
-                          ymin="Lower", ymax="Upper")
+    mapping_ci <- aes(x = .data$Method, y = .data$Estimate,
+                      ymin = .data$Lower, ymax = .data$Upper)
   } else {
-    mapping_ci <- aes_string(x = "\"\"", y = "Estimate",
-                          ymin="Lower", ymax="Upper")
+    mapping_ci <- aes(x = "", y = .data$Estimate,
+                      ymin = .data$Lower, ymax = .data$Upper)
   }
   # if requested, plot p-values in the bottom row
   if (have_p_value) {
     # define mapping
-    if (have_methods) mapping_p_value <- aes_string(x = "Method", y = "Value")
-    else mapping_p_value <- aes_string(x = "\"\"", y = "Value")
+    if (have_methods) mapping_p_value <- aes(x = .data$Method, y = .data$Value)
+    else mapping_p_value <- aes(x = "", y = .data$Value)
     # generate plot
     p <- ggplot() +
       geom_point_p_value(mapping_p_value, data = object$p_value, ...) +

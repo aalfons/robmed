@@ -816,7 +816,7 @@ and briefly discuss the main functions as well as the class structure of
 package \pkg{robmed} in Section~\ref{sec:classes}.  Moreover, we load the
 package and the data in order to use them in code examples.
 %
-<<results='hide', message=FALSE, warning=FALSE>>=
+<<results='hide', message=FALSE>>=
 library("robmed")
 data("BSG2014")
 @
@@ -1129,7 +1129,7 @@ sample mean of the bootstrap replicates; column \code{Boot}), and the lower
 and upper limits of the confidence interval (columns \code{Lower} and
 \code{Upper}, respectively).
 %
-<<summary, warning=FALSE, fig.width=5, fig.height=4.5, out.width="0.67\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
+<<summary, fig.width=5, fig.height=4.5, out.width="0.67\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 summary(robust_boot_simple)
 @
 %
@@ -1290,7 +1290,7 @@ effect.  It also adds vertical lines for the point estimates and illustrates
 the confidence intervals by shaded areas.  The plot resulting from the
 following command is displayed in Figure~\ref{fig:density}.
 %
-<<density, warning=FALSE, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
+<<density, fig.width=5, fig.height=3.75, out.width="0.7\\textwidth", fig.cap="Density plot of the bootstrap distributions of the indirect effect, obtained via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.  The vertical lines indicate the the respective point estimates of the indirect effect and the shaded areas represent the confidence intervals.", fig.pos="t!">>=
 density_plot(boot_list)
 @
 
@@ -1303,7 +1303,7 @@ is based on those two effects.  Nevertheless, argument \code{parm} can be used
 to specify which effects to plot.  Figure~\ref{fig:ci} contains the plot
 created by the command below.
 %
-<<ci, warning=FALSE, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="t!">>=
+<<ci, fig.width=6, fig.height=4, out.width="0.85\\textwidth", fig.cap="Point estimates and 95\\% confidence intervals for selected effects in the mediation model, estimated via the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="t!">>=
 ci_plot(boot_list, parm = c("a", "b", "Direct", "Indirect"))
 @
 
@@ -1328,7 +1328,7 @@ mediator on the independent variable.  As the independent variable is the only
 explanatory variable in this regression model, the plot also adds lines
 representing the respective regression coefficients.
 %
-<<ellipse, warning=FALSE, fig.width=5, fig.height=3.5, out.width="0.68\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
+<<ellipse, fig.width=5, fig.height=3.5, out.width="0.68\\textwidth", fig.cap="Diagnostic plot with tolerance ellipses for the OLS bootstrap and the robust bootstrap procedure of \\citet{alfons22a}.", fig.pos="b!">>=
 ellipse_plot(boot_list, horizontal = "ValueDiversity",
              vertical = "TaskConflict")
 @
@@ -1433,7 +1433,7 @@ investigate deviations from normality assumptions that could explain the
 differences in results for the two methods.  The plot created with the
 commands below is shown in Figure~\ref{fig:weight}.
 %
-<<weight, warning=FALSE, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a serial multiple mediator model.">>=
+<<weight, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a serial multiple mediator model.">>=
 weight_plot(robust_boot_serial) +
   scale_color_manual("", values = c("black", "#00BFC4")) +
   theme(legend.position = "top")
@@ -1516,7 +1516,7 @@ the partial residuals of team performance against the independent variable
 shared leadership.  Figure~\ref{fig:ellipse-partial} contains the resulting
 plot, which clearly visualizes the noisy data points.
 %
-<<ellipse-partial, warning=FALSE, fig.width=5, fig.height=3.875, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
+<<ellipse-partial, fig.width=5, fig.height=3.875, out.width="0.7\\textwidth", fig.cap="Diagnostic plot with a tolerance ellipse for partial residuals in a multiple parallel mediator model.">>=
 ellipse_plot(robust_boot_parallel, horizontal = "SharedLeadership",
              vertical = "TeamPerformance", partial = TRUE)
 @
@@ -1834,7 +1834,7 @@ Finally, we display the summary of the robust bootstrap test for the parallel
 multiple mediator model with control variables from Section~\ref{sec:parallel}.
 Figure~\ref{fig:summary-parallel} contains the resulting diagnostic plot.
 %
-<<summary-parallel, warning=FALSE, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
+<<summary-parallel, fig.width=5, fig.height=5.5, out.width="0.7\\textwidth", fig.cap="Diagnostic plot of the regression weights from the robust bootstrap procedure of \\citet{alfons22a} in the example for a parallel multiple mediator model.", fig.pos="t!">>=
 summary(robust_boot_parallel)
 @
 \newpage  % make sure affiliation is printed in full after diagnostic plot

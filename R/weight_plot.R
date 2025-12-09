@@ -86,6 +86,7 @@
 #' @keywords hplot
 #'
 #' @import ggplot2
+#' @importFrom rlang .data
 #' @export
 
 weight_plot <- function(object, ...) UseMethod("weight_plot")
@@ -119,7 +120,8 @@ weight_plot.setup_weight_plot <- function(object, ...) {
   # and barely visible.  So "darkgray" is used instead.
   p <- ggplot() +
     geom_vline(xintercept = 1, color = "darkgray") +
-    geom_line(aes_string(x = "Threshold", y = "Percentage", color = "Weights"),
+    geom_line(aes(x = .data$Threshold, y = .data$Percentage,
+                  color = .data$Weights),
               data = object$data)
   if (p_outcomes == 1L) {
     p <- p +

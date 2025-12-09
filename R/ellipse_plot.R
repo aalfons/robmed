@@ -111,6 +111,7 @@
 #' @keywords hplot
 #'
 #' @import ggplot2
+#' @importFrom rlang .data
 #' @export
 
 ellipse_plot <- function(object, ...) UseMethod("ellipse_plot")
@@ -146,21 +147,21 @@ ellipse_plot.setup_ellipse_plot <- function(object, ...) {
   use_facets <- have_methods && tmp
   # define aesthetic mapping for plotting ellipses and lines
   if (use_color) {
-    aes_ellipse <- aes_string(x = "x", y = "y", color = "Method")
+    aes_ellipse <- aes(x = .data$x, y = .data$y, color = .data$Method)
     if (have_line) {
-      aes_line <- aes_string(intercept = "intercept", slope = "slope",
-                             color = "Method")
+      aes_line <- aes(intercept = .data$intercept, slope = .data$slope,
+                      color = .data$Method)
     }
   } else {
-    aes_ellipse <- aes_string(x = "x", y = "y")
+    aes_ellipse <- aes(x = .data$x, y = .data$y)
     if (have_line) {
-      aes_line <- aes_string(intercept = "intercept", slope = "slope")
+      aes_line <- aes(intercept = .data$intercept, slope = .data$slope)
     }
   }
   # define aesthetic mapping for plotting points
   if (robust) {
-    aes_data <- aes_string(x = "x", y = "y", fill = "Weight")
-  } else aes_data <- aes_string(x = "x", y = "y")
+    aes_data <- aes(x = .data$x, y = .data$y, fill = .data$Weight)
+  } else aes_data <- aes(x = .data$x, y = .data$y)
   # create plot
   p <- ggplot() +
     geom_path_ellipse(aes_ellipse, data = object$ellipse, ...) +

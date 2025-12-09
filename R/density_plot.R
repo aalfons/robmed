@@ -78,6 +78,7 @@
 #' @keywords hplot
 #'
 #' @import ggplot2
+#' @importFrom rlang .data
 #' @export
 
 density_plot <- function(object, ...) UseMethod("density_plot")
@@ -128,17 +129,16 @@ density_plot.setup_density_plot <- function(object, ...) {
   # define aesthetic mappings for density estimate, point estimate and
   # confidence interval
   if(object$have_methods) {
-    mapping_density <- aes_string(x = "Indirect", y = "Density",
-                                  color = "Method")
-    mapping_estimate <- aes_string(xintercept = "Estimate", color = "Method")
-    mapping_ci <- aes_string(xmin = "Lower", xmax = "Upper",
-                             ymin = -Inf, ymax = Inf,
-                             fill = "Method")
+    mapping_density <- aes(x = .data$Indirect, y = .data$Density,
+                           color = .data$Method)
+    mapping_estimate <- aes(xintercept = .data$Estimate, color = .data$Method)
+    mapping_ci <- aes(xmin = .data$Lower, xmax = .data$Upper,
+                      ymin = -Inf, ymax = Inf, fill = .data$Method)
   } else {
-    mapping_density <- aes_string(x = "Indirect", y = "Density")
-    mapping_estimate <- aes_string(xintercept = "Estimate")
-    mapping_ci <- aes_string(xmin = "Lower", xmax = "Upper",
-                             ymin = -Inf, ymax = Inf)
+    mapping_density <- aes(x = .data$Indirect, y = .data$Density)
+    mapping_estimate <- aes(xintercept = .data$Estimate)
+    mapping_ci <- aes(xmin = .data$Lower, xmax = .data$Upper,
+                      ymin = -Inf, ymax = Inf)
   }
   # define default title
   if (all(object$test == "boot")) title <- "Bootstrap distribution"

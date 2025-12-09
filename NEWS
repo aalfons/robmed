@@ -1,8 +1,15 @@
+Changes in robmed version 1.3.1
+
+    + Replaced deprecated function aes_string() from package ggplot2 with
+      aes() and .data pronoun.
+
+
 Changes in robmed version 1.3.0
 
     + Updated reference of Alfons & Schley (2025).
 
     + Fixed BSG2014 data with respective changes in documentation and vignette.
+
 
 
 Changes in robmed version 1.2.2
